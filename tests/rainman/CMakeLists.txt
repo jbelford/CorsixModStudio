@@ -11,6 +11,12 @@ add_executable(rainman_tests
     ucsfile_test.cpp
     chunkyfile_test.cpp
     modulefile_test.cpp
+    rgdhashtable_test.cpp
+    inherittable_test.cpp
+    internal_util_test.cpp
+    md5_test.cpp
+    callbacks_test.cpp
+    writetime_test.cpp
 )
 
 target_link_libraries(rainman_tests
