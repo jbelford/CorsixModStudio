@@ -78,7 +78,13 @@ CorsixModStudio/
 │       ├── CMakeLists.txt
 │       ├── exception_test.cpp
 │       ├── memorystore_test.cpp
-│       └── crc32_case_idt_test.cpp
+│       ├── crc32_case_idt_test.cpp
+│       ├── filesystemstore_test.cpp
+│       ├── sgafile_test.cpp
+│       ├── rgdfile_test.cpp
+│       ├── ucsfile_test.cpp
+│       ├── chunkyfile_test.cpp
+│       └── modulefile_test.cpp
 └── CDMSSrc_055/                    # Original source archives (reference)
 ```
 
@@ -130,14 +136,20 @@ ctest --test-dir build -C Debug -j8 --output-on-failure
 - Vendored Lua 5.0.2 builds as static library (26 C files + patched ltm/lvm)
 - **Result: 0 errors, warnings only (size_t → unsigned long narrowing, expected for 32→64-bit port)**
 
-### ✅ Phase 3: Rainman Tests — IN PROGRESS (partial)
+### ✅ Phase 3: Rainman Tests — COMPLETE
 - Google Test framework wired up with `gtest_discover_tests` + `ctest -j` parallelism
-- **19 tests passing** across 3 test suites:
+- **80 tests passing** across 11 test suites:
   - `CRainmanException` (7 tests) — creation, chaining, formatted messages, macros, CHECK_MEM
   - `MemoryStoreTest` (5 tests) — memory range I/O, seek/tell, output streams, multi-write
   - `Crc32CaseIdt` (6 tests) — null safety, case insensitivity, path hashing, long strings
+  - `FileSystemStoreTest` (7 tests) — init, write/read round-trip, seek (root/current/end), error on missing file
+  - `SgaFileTest` (6 tests) — null stream, invalid header, truncated stream, bad version, create folder, no init
+  - `RgdFileTest` (7 tests) — New, Save/Load round-trip (float/string/bool/integer/nested table), null stream, descriptor
+  - `UcsFileTest` (15 tests) — New, Set/Resolve strings, Load from memory, invalid header, IsDollarString, GetRawMap
+  - `ChunkyFileTest` (12 tests) — New, append/nested chunks, SetData, version/descriptor, Save/Load round-trip, invalid header
+  - `ModuleFileTest` (14 tests) — LoadModuleFile parsing (DoW format), version parsing, folder/archive/required details, comments
   - Smoke test (1 test)
-- Remaining: CFileSystemStore, CSgaFile, CRgdFile, CUcsFile, CChunkyFile, CModuleFile
+- Fixed missing `lauxlib.c` in lua502 build (needed for CRgdFile's Lua integration)
 
 ### ⬜ Phase 4: CDMS GUI Compilation — NOT STARTED
 - Copy CDMS sources, create CMakeLists

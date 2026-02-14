@@ -5,6 +5,12 @@ add_executable(rainman_tests
     exception_test.cpp
     memorystore_test.cpp
     crc32_case_idt_test.cpp
+    filesystemstore_test.cpp
+    sgafile_test.cpp
+    rgdfile_test.cpp
+    ucsfile_test.cpp
+    chunkyfile_test.cpp
+    modulefile_test.cpp
 )
 
 target_link_libraries(rainman_tests

@@ -28,6 +28,7 @@ add_library(lua502 STATIC
     lua502/loadlib.c
     lua502/lstrlib.c
     lua502/ltablib.c
+    lua502/lauxlib.c
 )
 
 target_include_directories(lua502 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/lua502)
@@ -59,6 +60,10 @@ target_link_libraries(rainman
         lua502
         ZLIB::ZLIB
 )
+
+if(WIN32)
+    target_link_libraries(rainman PRIVATE shlwapi)
+endif()
 
 target_compile_definitions(rainman
     PUBLIC
