@@ -485,12 +485,6 @@ ConstructFrame::ConstructFrame(const wxString& sTitle, const wxPoint& oPos, cons
 	m_pRgdHashTable = 0;
 	m_sRgdHashCustomOut = 0;
 
-	// Load Squish
-	if(!oSquishLibrary.Load(AppStr(app_squishfile)))
-	{
-		::wxMessageBox(wxT("The squish library could not be loaded; some RGT features may not be available"), wxT("Error") , wxICON_ERROR);
-	}
-
 	// Load lua 5.1.2
 	if(!oLua512Library.Load(AppStr(app_lua5file)))
 	{

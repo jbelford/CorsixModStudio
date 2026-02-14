@@ -51,7 +51,6 @@ protected:
 	char* m_sRgdHashCustomOut;
 
 public:
-	wxDynamicLibrary oSquishLibrary;
 	wxDynamicLibrary oLua512Library;
 
 	class ITool

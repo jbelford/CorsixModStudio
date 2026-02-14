@@ -783,7 +783,6 @@ public:
 
 							CRgtFile* pRgt = new CRgtFile;
 							pRgt->Load(pStream);
-							pRgt->setDXTCodec((CRgtFile::tfnDXTCodec)TheConstruct->oSquishLibrary.GetSymbol(wxT("CompressImage")), (CRgtFile::tfnDXTCodec)TheConstruct->oSquishLibrary.GetSymbol(wxT("DecompressImage")));
 
 							strcpy(strrchr(saFile,'.'),".tga");
 							IFileStore::IOutputStream* pOutStr = TheConstruct->GetModule()->VOpenOutputStream(saFile, true);
@@ -900,7 +899,6 @@ public:
 
 		CRgtFile* pRgt = new CRgtFile;
 		pRgt->Load(pStream);
-		pRgt->setDXTCodec((CRgtFile::tfnDXTCodec)TheConstruct->oSquishLibrary.GetSymbol(wxT("CompressImage")), (CRgtFile::tfnDXTCodec)TheConstruct->oSquishLibrary.GetSymbol(wxT("DecompressImage")));
 
 		delete pStream;
 
@@ -936,7 +934,6 @@ public:
 
 		CRgtFile* pRgt = new CRgtFile;
 		pRgt->LoadDDS(pStream);
-		pRgt->setDXTCodec((CRgtFile::tfnDXTCodec)TheConstruct->oSquishLibrary.GetSymbol(wxT("CompressImage")), (CRgtFile::tfnDXTCodec)TheConstruct->oSquishLibrary.GetSymbol(wxT("DecompressImage")));
 
 		delete pStream;
 
@@ -974,7 +971,6 @@ public:
 		bool bIs32 = true;
 		CRgtFile* pRgt = new CRgtFile;
 		pRgt->LoadTGA(pStream, false, &bIs32);
-		pRgt->setDXTCodec((CRgtFile::tfnDXTCodec)TheConstruct->oSquishLibrary.GetSymbol(wxT("CompressImage")), (CRgtFile::tfnDXTCodec)TheConstruct->oSquishLibrary.GetSymbol(wxT("DecompressImage")));
 
 		delete pStream;
 
@@ -1066,7 +1062,6 @@ public:
 			sOutFormat = wxT("TGA 32bit RGBA");
 			break;
 		case CRgtFile::IF_Dxtc:
-			oRgt.setDXTCodec((CRgtFile::tfnDXTCodec)TheConstruct->oSquishLibrary.GetSymbol(wxT("CompressImage")), (CRgtFile::tfnDXTCodec)TheConstruct->oSquishLibrary.GetSymbol(wxT("DecompressImage")));
 			strcpy(strchr(saOutFile, '.'), ".dds");
 			sOutFormat = wxT("DDS ");
 			switch(oRgt.GetProperty(CRgtFile::IP_CompressionLevel))

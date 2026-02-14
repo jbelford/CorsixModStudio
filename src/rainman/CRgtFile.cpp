@@ -22,6 +22,17 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "Exception.h"
 #include "memdebug.h"
 #include <time.h>
+#include <squish.h>
+
+static void SquishCompress(unsigned char* rgba, int width, int height, void* blocks, int flags)
+{
+	squish::CompressImage(rgba, width, height, blocks, flags);
+}
+
+static void SquishDecompress(unsigned char* rgba, int width, int height, void* blocks, int flags)
+{
+	squish::DecompressImage(rgba, width, height, blocks, flags);
+}
 
 CRgtFile::CRgtFile()
 {
@@ -38,8 +49,8 @@ CRgtFile::CRgtFile()
 
 	m_pData = 0;
 
-	m_fnCompress = 0;
-	m_fnDecompress = 0;
+	m_fnCompress = SquishCompress;
+	m_fnDecompress = SquishDecompress;
 }
 
 bool CRgtFile::isDXTCodecPresent()

@@ -37,6 +37,7 @@ set_target_properties(lua502 PROPERTIES C_STANDARD 99)
 
 # Rainman library
 find_package(ZLIB REQUIRED)
+find_package(unofficial-libsquish CONFIG REQUIRED)
 
 file(GLOB RAINMAN_SOURCES "*.cpp" "*.c")
 # Exclude gnuc_defines.cpp on MSVC (it provides GNUC compatibility shims)
@@ -59,6 +60,8 @@ target_link_libraries(rainman
     PUBLIC
         lua502
         ZLIB::ZLIB
+    PRIVATE
+        unofficial::libsquish::squish
 )
 
 if(WIN32)

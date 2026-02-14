@@ -8,9 +8,10 @@ original Corsix's Mod Studio 0.5.5 distribution.
 
 | File | Purpose | Impact if missing |
 |------|---------|-------------------|
-| `squish.dll` | DXT1/3/5 texture compression (Simon Brown's squish library) | RGT texture viewing/editing unavailable |
 | `lua512.dll` | Lua 5.1.2 runtime (release build) | SCAR script editor features reduced |
 | `debug\lua512d.dll` | Lua 5.1.2 runtime (debug build) | SCAR script editor features reduced |
+
+Note: `squish.dll` is no longer needed — libsquish is now statically linked into the rainman library.
 
 ## Optional data files
 

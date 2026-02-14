@@ -61,7 +61,6 @@ SE(app_luareffile, wxString().Append(AppStr(app_filespath)).Append(wxT("lua.dat"
 SE(app_bfxmapfile, wxString().Append(AppStr(app_filespath)).Append(wxT("bfx.dat")))
 SE(app_scarreffile, wxString().Append(AppStr(app_filespath)).Append(wxT("scardoc.dat")))
 SE(app_cohscarreffile, wxString().Append(AppStr(app_filespath)).Append(wxT("scardoc_coh.dat")))
-SE(app_squishfile, wxString().Append(AppStr(app_filespath)).Append(wxT("squish")))
 SE(app_lua5file, wxString().Append(AppStr(app_filespath)).Append(wxT("lua512")))
 #ifdef _DEBUG
 SE(app_lua51file, wxString().Append(AppStr(app_filespath)).Append(wxT("debug\\lua512d.dll")))
