@@ -897,6 +897,7 @@ char *CLuaFile::GetReferencedFile(IFileStore::IStream *pStream)
 	    lua_settable(m_pLua, LUA_GLOBALSINDEX);
 void CLuaFile::Load(IFileStore::IStream *pStream, IFileStore *pFiles, const char *sFileName)
 {
+	RAINMAN_LOG_INFO("CLuaFile::Load() — parsing Lua file \"{}\"", sFileName ? sFileName : "(null)");
 	_Clean();
 	if (!pStream)
 		throw new CRainmanException(__FILE__, __LINE__, "No input stream");

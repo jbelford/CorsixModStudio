@@ -33,7 +33,11 @@ CMemoryStore::CStream::~CStream(void)
 		delete[] m_pBegin;
 }
 
-void CMemoryStore::VInit(void *pUnused) { m_bInited = true; }
+void CMemoryStore::VInit(void *pUnused)
+{
+	m_bInited = true;
+	RAINMAN_LOG_INFO("CMemoryStore initialised");
+}
 
 char *CMemoryStore::MemoryRange(void *pBegin, unsigned long iLength)
 {
@@ -48,6 +52,7 @@ char *CMemoryStore::MemoryRange(void *pBegin, unsigned long iLength)
 
 IFileStore::IStream *CMemoryStore::VOpenStream(const char *sFile)
 {
+	RAINMAN_LOG_DEBUG("CMemoryStore::VOpenStream(\"{}\")", sFile ? sFile : "(null)");
 	if (sFile == 0)
 		throw new CRainmanException(__FILE__, __LINE__, "No stream descriptor");
 	_MemRange *Range = (_MemRange *)sFile;
@@ -81,6 +86,7 @@ CMemoryStore::CStream *CMemoryStore::OpenStreamExt(char *pBegin, unsigned long i
 
 IFileStore::IOutputStream *CMemoryStore::VOpenOutputStream(const char *sIdentifier, bool bEraseIfPresent)
 {
+	RAINMAN_LOG_DEBUG("CMemoryStore::VOpenOutputStream(\"{}\")", sIdentifier ? sIdentifier : "(null)");
 	return new COutStream;
 }
 

@@ -25,6 +25,7 @@
 #include <errno.h>
 #include <wx/textdlg.h>
 #include "Common.h"
+#include "RainmanLog.h"
 
 BEGIN_EVENT_TABLE(frmNewMod, wxDialog)
 EVT_BUTTON(IDC_New, frmNewMod::OnNewClick)
@@ -384,6 +385,7 @@ void frmNewMod::_MakeCOH(char *sNiceName, char *sDirectoryFullPath, char *sDirec
 void frmNewMod::OnNewClick(wxCommandEvent &event)
 {
 	UNUSED(event);
+	CDMS_LOG_INFO("Creating new mod");
 	wxString sModNiceName = _UpdatePath(m_pName->GetValue());
 	char *saNice = wxStringToAscii(sModNiceName);
 

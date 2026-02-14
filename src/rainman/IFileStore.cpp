@@ -25,10 +25,11 @@ IFileStore::IFileStore(void) { m_bInited = false; }
 
 IFileStore::~IFileStore(void) {}
 
-void IFileStore::VInit(void *pInitData) {}
+void IFileStore::VInit(void *pInitData) { RAINMAN_LOG_DEBUG("IFileStore::VInit() base — no-op"); }
 
 IFileStore::IOutputStream *IFileStore::VOpenOutputStream(const char *sIdentifier, bool bEraseIfPresent)
 {
+	RAINMAN_LOG_WARN("IFileStore::VOpenOutputStream() — not supported by this store");
 	throw new CRainmanException(0, __FILE__, __LINE__, "Cannot open file \'%s\'", sIdentifier);
 }
 

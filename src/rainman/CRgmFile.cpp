@@ -27,6 +27,7 @@ CRgmFile::~CRgmFile() { _Free(); }
 
 void CRgmFile::Load(IFileStore::IStream *pStream)
 {
+	RAINMAN_LOG_INFO("CRgmFile::Load() — parsing RGM model file");
 	_Free();
 	m_pChunky = CHECK_MEM(new CChunkyFile);
 
@@ -99,6 +100,7 @@ bool CRgmFile::_TSETPrune(CChunkyFile::CChunk *pChunk, std::vector<std::pair<boo
 
 void CRgmFile::Save(IFileStore::IOutputStream *pStream)
 {
+	RAINMAN_LOG_INFO("CRgmFile::Save() — writing RGM model file");
 	for (std::vector<CMaterial *>::iterator itr = m_vMaterials.begin(); itr != m_vMaterials.end(); ++itr)
 	{
 		(**itr)._WriteChunk();

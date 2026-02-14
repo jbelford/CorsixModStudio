@@ -62,6 +62,7 @@ void CLuaScript::Load(const char *sFile)
 
 void CLuaScript::Execute()
 {
+	RAINMAN_LOG_DEBUG("CLuaScript::Execute() — running Lua script");
 	if (!m_pLua)
 	{
 		m_sLuaError = strdup("No lua state");

@@ -166,6 +166,7 @@ bool CRgdFile::_SortOutEntries(CRgdFile::_RgdEntry *a, CRgdFile::_RgdEntry *b) {
 
 void CRgdFile::Save(IFileStore::IOutputStream *pStream)
 {
+	RAINMAN_LOG_INFO("CRgdFile::Save() — writing RGD to stream");
 	// Write RGD Header
 	if (pStream == 0)
 		throw new CRainmanException(__FILE__, __LINE__, "No stream present");
@@ -267,6 +268,7 @@ void CRgdFile::Save(IFileStore::IOutputStream *pStream)
 
 void CRgdFile::Load(CLuaFile *pLuaFile, long iVersion)
 {
+	RAINMAN_LOG_INFO("CRgdFile::Load() — parsing RGD from Lua file");
 	try
 	{
 		New(iVersion);
@@ -567,6 +569,7 @@ void CRgdFile::_LoadLua(lua_State *L, _RgdEntry *pDest, bool bSkipThisLevelRef)
 
 void CRgdFile::Load(IFileStore::IStream *pStream)
 {
+	RAINMAN_LOG_INFO("CRgdFile::Load() — parsing RGD from stream");
 	// Load RGD Header
 	_Clean();
 	if (pStream == 0)

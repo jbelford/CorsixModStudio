@@ -46,3 +46,9 @@ lua-5.*/
 *.swp
 *.swo
 *~
+
+# Log output
+logs/
+test_logs/
+
+PHASES.md

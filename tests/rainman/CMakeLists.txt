@@ -1,6 +1,7 @@
 find_package(GTest CONFIG REQUIRED)
 
 add_executable(rainman_tests
+    test_main.cpp
     placeholder_test.cpp
     exception_test.cpp
     memorystore_test.cpp
@@ -23,7 +24,6 @@ target_link_libraries(rainman_tests
     PRIVATE
         rainman
         GTest::gtest
-        GTest::gtest_main
 )
 
 include(GoogleTest)

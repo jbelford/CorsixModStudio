@@ -608,6 +608,7 @@ void CRgtFile::LoadDDS(IFileStore::IStream *pFile)
 
 void CRgtFile::Save(IFileStore::IOutputStream *pFile)
 {
+	RAINMAN_LOG_INFO("CRgtFile::Save() — writing RGT texture file");
 	try
 	{
 		m_pChunky->Save(pFile);
@@ -665,6 +666,7 @@ void CRgtFile::_LoadFromChunky()
 
 void CRgtFile::Load(IFileStore::IStream *pFile)
 {
+	RAINMAN_LOG_INFO("CRgtFile::Load() — parsing RGT texture file");
 	_Clean();
 	m_pChunky = CHECK_MEM(new CChunkyFile);
 	try

@@ -83,6 +83,7 @@ unsigned long CDoWModule::GetFileviewHash() const { return m_iFileViewState; }
 // IFileStore Interface
 void CDoWModule::VInit(void *pUnused)
 {
+	RAINMAN_LOG_INFO("CDoWModule::VInit() — initialising Dawn of War module");
 	if (m_pFiles == 0)
 		QUICK_THROW("No file view")
 	QUICK_TRYCAT(m_pFiles->VInit(pUnused);)
@@ -469,6 +470,7 @@ void CDoWModule::_TryLoadDataGeneric(const char *sModName, const char *sDoWPath,
 
 void CDoWModule::Load(const char *sFile, CALLBACK_ARG)
 {
+	RAINMAN_LOG_INFO("CDoWModule::Load() — loading module from \"{}\"", sFile ? sFile : "(null)");
 	CDoWFileView *pTempFileViewPtr = m_pFiles;
 	bool bTempCustomFS = m_bLoadFSToCustom;
 	// Load up module file
@@ -1171,6 +1173,7 @@ void CDoWModule::Load(const char *sFile, CALLBACK_ARG)
 
 void CDoWModule::Save(const char *sFile)
 {
+	RAINMAN_LOG_INFO("CDoWModule::Save() — saving module to \"{}\"", sFile ? sFile : "(null)");
 	if (sFile == 0)
 		QUICK_THROW("No file specified")
 	FILE *f = fopen(sFile, "wb");

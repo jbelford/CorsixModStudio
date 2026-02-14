@@ -159,6 +159,7 @@ CModuleFile::eModuleType CModuleFile::GetModuleType() const { return m_eModuleTy
 // IFileStore Interface
 void CModuleFile::VInit(void *pUnused)
 {
+	RAINMAN_LOG_INFO("CModuleFile::VInit() — initialising module file");
 	if (m_pNewFileMap == 0)
 		m_pNewFileMap = new CFileMap;
 	QUICK_TRYCAT(m_pNewFileMap->VInit(pUnused);)
@@ -501,6 +502,7 @@ void CModuleFile::_CleanResources()
 
 void CModuleFile::LoadSgaAsMod(const char *sFileName, CALLBACK_ARG)
 {
+	RAINMAN_LOG_INFO("CModuleFile::LoadSgaAsMod(\"{}\")", sFileName ? sFileName : "(null)");
 	_Clean();
 
 	m_bIsFauxModule = true;
@@ -546,6 +548,7 @@ void CModuleFile::LoadSgaAsMod(const char *sFileName, CALLBACK_ARG)
 
 void CModuleFile::LoadModuleFile(const char *sFileName, CALLBACK_ARG)
 {
+	RAINMAN_LOG_INFO("CModuleFile::LoadModuleFile(\"{}\")", sFileName ? sFileName : "(null)");
 	_Clean();
 
 	// Set m_sApplicationPath and m_sFilename from sFileName

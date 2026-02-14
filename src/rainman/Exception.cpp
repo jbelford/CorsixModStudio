@@ -18,6 +18,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 #include "Exception.h"
+#include "RainmanLog.h"
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
@@ -32,6 +33,7 @@ CRainmanException::CRainmanException(const char *sFile, unsigned long iLine, con
     : m_sFile(sFile), m_iLine(iLine), m_pPrecursor(pPrecursor)
 {
 	m_sMessage = strdup(sMessage);
+	RAINMAN_LOG_ERROR("Exception at {}:{} — {}", sFile ? sFile : "?", iLine, sMessage ? sMessage : "(null)");
 }
 
 CRainmanException::CRainmanException(CRainmanException *pPrecursor, const char *sFile, unsigned long iLine,
@@ -54,6 +56,7 @@ CRainmanException::CRainmanException(CRainmanException *pPrecursor, const char *
 		{
 			va_end(marker);
 			m_sMessage = sBuf;
+			RAINMAN_LOG_ERROR("Exception at {}:{} — {}", sFile ? sFile : "?", iLine, m_sMessage);
 			return;
 		}
 	}

@@ -102,6 +102,7 @@ CLuaFileCache::~CLuaFileCache(void)
 
 void CLuaFileCache::AddToCache(const char *sName, lua_State *L)
 {
+	RAINMAN_LOG_DEBUG("CLuaFileCache::AddToCache(\"{}\")", sName ? sName : "(null)");
 	_tEntry *pItr = m_oEntires.pNext;
 	while (pItr)
 	{
@@ -119,6 +120,7 @@ void CLuaFileCache::AddToCache(const char *sName, lua_State *L)
 
 lua_State *CLuaFileCache::Fetch(const char *sName)
 {
+	RAINMAN_LOG_DEBUG("CLuaFileCache::Fetch(\"{}\")", sName ? sName : "(null)");
 	_tEntry *pItr = m_oEntires.pNext;
 	while (pItr)
 	{

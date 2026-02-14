@@ -113,6 +113,7 @@ CChunkyFile::CChunk *CChunkyFile::AppendNew(const char *sName, CChunk::eTypes eT
 
 void CChunkyFile::Load(IFileStore::IStream *pStream)
 {
+	RAINMAN_LOG_INFO("CChunkyFile::Load() — parsing chunky file");
 	try
 	{
 		pStream->VRead(16, 1, (void *)m_sHeader);
@@ -158,6 +159,7 @@ void CChunkyFile::Load(IFileStore::IStream *pStream)
 
 void CChunkyFile::Save(IFileStore::IOutputStream *pStream)
 {
+	RAINMAN_LOG_INFO("CChunkyFile::Save() — writing chunky file");
 	try
 	{
 		pStream->VWrite(16, 1, (void *)m_sHeader);

@@ -24,6 +24,7 @@
 #include "Tool_AESetup.h"
 #include <vector>
 #include "Common.h"
+#include "RainmanLog.h"
 
 BEGIN_EVENT_TABLE(frmUCSToDAT, wxDialog)
 EVT_BUTTON(IDC_BrowseOut, frmUCSToDAT::OnBrowseOutClick)
@@ -94,6 +95,7 @@ void frmUCSToDAT::OnBrowseOutClick(wxCommandEvent &event)
 void frmUCSToDAT::OnGoClick(wxCommandEvent &event)
 {
 	UNUSED(event);
+	CDMS_LOG_INFO("Running AE Setup tool");
 	if (m_pOutFile->GetValue().empty())
 	{
 		::wxMessageBox(AppStr(aesetup_novalue), wxT("Error"), wxICON_ERROR, wxTheApp->GetTopWindow());

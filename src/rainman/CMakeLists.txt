@@ -82,6 +82,7 @@ endif()
 # Rainman library
 find_package(ZLIB REQUIRED)
 find_package(unofficial-libsquish CONFIG REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
 
 file(GLOB RAINMAN_SOURCES "*.cpp" "*.c")
 # Exclude gnuc_defines.cpp on MSVC (it provides GNUC compatibility shims)
@@ -104,6 +105,7 @@ target_link_libraries(rainman
         lua502
         lua512
         ZLIB::ZLIB
+        spdlog::spdlog
     PRIVATE
         unofficial::libsquish::squish
 )

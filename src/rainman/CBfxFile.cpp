@@ -24,6 +24,7 @@ CBfxFile::CBfxFile() { m_bConvertTableIntToTable = false; }
 
 void CBfxFile::SaveAsBfxLua(IFileStore::IOutputStream *pStream, lua_State *Lmap)
 {
+	RAINMAN_LOG_INFO("CBfxFile::SaveAsBfxLua() — writing BFX Lua data");
 	size_t iKeyCount = m_pDataChunk->RootEntry.Data.t->size();
 	for (size_t i = 0; i < iKeyCount; ++i)
 	{

@@ -677,7 +677,9 @@ void CLuaFile2::CTable::VDoRefresh()
 }
 
 void CLuaFile2::CTable::_DoLoad()
-{                         // T
+{
+	RAINMAN_LOG_DEBUG("CLuaFile2 — loading Lua data");
+	// T
 	lua_pushvalue(L, -1); // T T
 	do
 	{

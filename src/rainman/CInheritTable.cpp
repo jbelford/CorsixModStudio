@@ -104,6 +104,7 @@ bool CInheritTable::CNode::getIsNil() const { return m_bIsNil; }
 
 CInheritTable::CInheritTable()
 {
+	RAINMAN_LOG_DEBUG("CInheritTable — constructing inheritance table");
 	m_pRootNode = new CNode;
 	m_pRootNode->setName("");
 	m_mapNodes[crc32_case_idt(0, (const Bytef *)"", 0)] = m_pRootNode;
@@ -115,6 +116,7 @@ CInheritTable::CNode *CInheritTable::getRoot() { return m_pRootNode; }
 
 CInheritTable::CNode *CInheritTable::findOrMake(const char *sPath)
 {
+	RAINMAN_LOG_TRACE("CInheritTable::findOrMake(\"{}\")", sPath ? sPath : "(null)");
 	unsigned long iHash = crc32_case_idt(0, (const Bytef *)sPath, (uInt)strlen(sPath));
 	CNode *pNode = m_mapNodes[iHash], *pNode2;
 	pNode2 = pNode;
@@ -138,6 +140,7 @@ CInheritTable::CNode *CInheritTable::findOrMake(const char *sPath)
 
 void CInheritTable::assignOrphansTo(CNode *pNode)
 {
+	RAINMAN_LOG_TRACE("CInheritTable::assignOrphansTo()");
 	CNode *pNode2;
 	for (std::map<unsigned long, CNode *>::iterator itr = m_mapNodes.begin(); itr != m_mapNodes.end(); ++itr)
 	{

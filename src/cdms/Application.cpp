@@ -25,11 +25,14 @@
 #include <wx/sysopt.h>
 #include <wx/image.h>
 #include "Common.h"
+#include "RainmanLog.h"
 
 IMPLEMENT_APP(CDMSApplication)
 
 bool CDMSApplication::OnInit()
 {
+	RainmanLog::init();
+	CDMS_LOG_INFO("CorsixModStudio application starting");
 	wxSystemOptions::SetOption(wxT("msw.remap"), 0);
 
 	wxConfigBase::Set(new wxFileConfig(wxEmptyString, wxEmptyString, AppStr(configfile_name), wxEmptyString,
@@ -52,6 +55,7 @@ bool CDMSApplication::OnInit()
 
 int CDMSApplication::OnExit()
 {
+	CDMS_LOG_INFO("CorsixModStudio application shutting down");
 	wxFileConfig *pConfig = (wxFileConfig *)wxConfigBase::Get();
 	pConfig->Flush();
 	return wxApp::OnExit();

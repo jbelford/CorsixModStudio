@@ -65,6 +65,7 @@ void CUcsFile::New()
 
 void CUcsFile::Save(const char *sFile)
 {
+	RAINMAN_LOG_INFO("CUcsFile::Save() — writing UCS file");
 	FILE *f = fopen(sFile, "wb");
 	if (!f)
 		throw new CRainmanException(0, __FILE__, __LINE__, "Cannot open file \'%s\' in mode \'wb\'", sFile);
@@ -261,6 +262,7 @@ void CUcsFile::LoadDat(IFileStore::IStream *pStream)
 
 void CUcsFile::Load(IFileStore::IStream *pStream)
 {
+	RAINMAN_LOG_INFO("CUcsFile::Load() — parsing UCS string table");
 	_Clean();
 
 	unsigned short iHeader;

@@ -26,6 +26,7 @@
 #include <wx/textdlg.h>
 #include <wx/filename.h>
 #include "Common.h"
+#include "RainmanLog.h"
 
 BEGIN_EVENT_TABLE(frmSgaMake, wxDialog)
 EVT_BUTTON(IDC_BrowseIn, frmSgaMake::OnBrowseInClick)
@@ -167,6 +168,7 @@ void frmSgaMake::OnBrowseOutClick(wxCommandEvent &event)
 void frmSgaMake::OnGoClick(wxCommandEvent &event)
 {
 	UNUSED(event);
+	CDMS_LOG_INFO("Starting SGA archive creation from UI");
 	if (m_pInDir->GetValue().empty() || m_pOutFile->GetValue().empty() || m_pTocName->GetValue().empty())
 	{
 		::wxMessageBox(AppStr(sgapack_novalue), wxT("Error"), wxICON_ERROR, wxTheApp->GetTopWindow());

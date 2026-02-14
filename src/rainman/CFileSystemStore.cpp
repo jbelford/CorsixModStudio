@@ -55,10 +55,15 @@ CFileSystemStore::CStream::~CStream(void)
 #endif
 }
 
-void CFileSystemStore::VInit(void *pUnused) { m_bInited = true; }
+void CFileSystemStore::VInit(void *pUnused)
+{
+	m_bInited = true;
+	RAINMAN_LOG_INFO("CFileSystemStore initialised");
+}
 
 IFileStore::IStream *CFileSystemStore::VOpenStream(const char *sFile)
 {
+	RAINMAN_LOG_DEBUG("CFileSystemStore::VOpenStream(\"{}\")", sFile ? sFile : "(null)");
 	FILE *fFile = fopen(sFile, "rb");
 	if (fFile == 0)
 	{
@@ -180,6 +185,7 @@ IFileStore::IOutputStream *CFileSystemStore::OpenOutputStreamW(const wchar_t *sF
 
 IFileStore::IOutputStream *CFileSystemStore::VOpenOutputStream(const char *sFile, bool bEraseIfPresent)
 {
+	RAINMAN_LOG_DEBUG("CFileSystemStore::VOpenOutputStream(\"{}\")", sFile ? sFile : "(null)");
 	FILE *fFile = 0;
 	if (!bEraseIfPresent)
 		fFile = fopen(sFile, "r+b");

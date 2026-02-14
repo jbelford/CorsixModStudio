@@ -183,6 +183,8 @@ endwhile:
 void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileStore *pStore, const char *_sTocName,
                             const char *sOutputFile, long iVersion, const char *sArchiveTitle, const char *sTocTitle)
 {
+	RAINMAN_LOG_INFO("CSgaCreator — building SGA archive \"{}\" (version {})", sOutputFile ? sOutputFile : "(null)",
+	                 iVersion);
 	if (iVersion != 2 && iVersion != 4)
 		throw new CRainmanException(0, __FILE__, __LINE__, "Version %li not supported", iVersion);
 	CSgaCreator::CInputDirectory *pInput = 0;

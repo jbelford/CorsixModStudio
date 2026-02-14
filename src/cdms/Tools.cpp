@@ -32,6 +32,7 @@
 #include <memory>
 // Rainman_RGDDump.h removed; RgdDump usage is commented-out dead code
 #include "Common.h"
+#include "RainmanLog.h"
 
 wxString CLocaleTool::GetName() { return AppStr(locale); }
 wxString CLocaleTool::GetHelpString() { return wxT(""); }
@@ -226,6 +227,7 @@ wxString CDpsCalculatorTool::GetHelpString() { return wxT(""); }
 wxString CDpsCalculatorTool::GetBitmapName() { return wxT("IDB_TOOL_CALCULATOR"); }
 void CDpsCalculatorTool::DoAction()
 {
+	CDMS_LOG_INFO("Running Auto DPS tool");
 	wxString sOutFile = wxFileSelector(AppStr(dpscalculator_outselect), wxT(""), wxT(""), wxT("html"),
 	                                   AppStr(dpscalculator_filter), wxFD_SAVE | wxFD_OVERWRITE_PROMPT, TheConstruct);
 

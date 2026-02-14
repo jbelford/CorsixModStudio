@@ -121,6 +121,7 @@ static int __cdecl CompareDirHash(const void *elem1, const void *elem2)
 
 void CSgaFile::Load(IFileStore::IStream *pStream, tLastWriteTime oWriteTime)
 {
+	RAINMAN_LOG_INFO("CSgaFile::Load() — loading SGA archive");
 	_Clean(); // Reset the class to a blank state
 
 	if (pStream == 0)
@@ -489,6 +490,7 @@ void CSgaFile::_Clean()
 
 void CSgaFile::VInit(void *pInitData)
 {
+	RAINMAN_LOG_INFO("CSgaFile::VInit() — initialising SGA file store");
 	m_pFileStoreInputStream = (IFileStore::IStream *)pInitData;
 	m_bInited = m_pFileStoreInputStream ? true : false;
 	if (!m_bInited)
