@@ -1,0 +1,48 @@
+# Build output
+build/
+out/
+cmake-build-*/
+
+# vcpkg installed packages (restored by vcpkg on build)
+vcpkg_installed/
+
+# Visual Studio
+.vs/
+*.vcxproj.user
+*.suo
+*.sdf
+*.opensdf
+*.opendb
+*.db
+*.ipch
+x64/
+Debug/
+Release/
+
+# CMake
+CMakeUserPresets.json
+
+# Compiled objects / libraries / executables
+*.obj
+*.o
+*.lib
+*.a
+*.dll
+*.exe
+*.pdb
+*.ilk
+*.exp
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Lua source tarballs (vendored sources are in src/rainman/lua502/)
+lua-*.tar.gz
+lua-5.*/
+
+# Editor
+*.swp
+*.swo
+*~

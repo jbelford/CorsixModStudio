@@ -1,0 +1,38 @@
+RE: http://wxforum.shadonet.com/viewtopic.php?t=11264&highlight=wxtreectrl+selection+menu
+
+Edit wxMSW's treectrl.cpp (project "core") in function wxTreeCtrl::MSWWindowProc from:
+
+        if (ItemRect.Contains(MenuPoint))
+        {
+            event.m_pointDrag = MenuPoint;
+        }
+        // Use the Explorer standard of putting the menu at the left edge of the text,
+        // in the vertical middle of the text. Should be the case for the "menu" key
+        else
+        {
+            // Use the bounding rectangle of only the text part
+            GetBoundingRect(event.m_item, ItemRect, true);
+            event.m_pointDrag = wxPoint(ItemRect.GetX(), ItemRect.GetY() + ItemRect.GetHeight() / 2);
+        }
+
+        if ( GetEventHandler()->ProcessEvent(event) )
+
+to this:
+
+        if (ItemRect.Contains(MenuPoint))
+        {
+            event.m_pointDrag = MenuPoint;
+        }
+        // Use the Explorer standard of putting the menu at the left edge of the text,
+        // in the vertical middle of the text. Should be the case for the "menu" key
+        else
+        {
+            // Use the bounding rectangle of only the text part
+            GetBoundingRect(event.m_item, ItemRect, true);
+            // CORSIX HACKS (http://wxforum.shadonet.com/viewtopic.php?t=11264&highlight=wxtreectrl+selection+menu)
+            event.m_pointDrag = MenuPoint; 
+            //event.m_pointDrag = wxPoint(ItemRect.GetX(), ItemRect.GetY() + ItemRect.GetHeight() / 2);
+            // END CORSIX HACKS
+        }
+
+        if ( GetEventHandler()->ProcessEvent(event) )
