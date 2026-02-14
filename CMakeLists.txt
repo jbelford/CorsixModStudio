@@ -35,9 +35,9 @@ set(CTEST_PARALLEL_LEVEL ${NPROC} CACHE STRING "Number of parallel tests")
 
 # Subdirectories
 add_subdirectory(src/rainman)
-# add_subdirectory(src/cdms)      # Phase 4: uncomment when ready
+add_subdirectory(src/cdms)
 
 if(BUILD_TESTING)
     add_subdirectory(tests/rainman)
-    # add_subdirectory(tests/cdms)  # Phase 5: uncomment when ready
+    add_subdirectory(tests/cdms)
 endif()
