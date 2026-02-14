@@ -63,28 +63,28 @@ The wxWidgets GUI application built on top of Rainman.
 ```
 CorsixModStudio/
 ├── CMakeLists.txt                  # Top-level CMake build
-├── vcpkg.json                      # Dependency manifest (zlib, gtest)
+├── vcpkg.json                      # Dependency manifest (zlib, gtest, libsquish, wxwidgets)
 ├── src/
 │   ├── rainman/                    # Rainman library (static lib)
 │   │   ├── CMakeLists.txt
 │   │   ├── include/rainman/        # Public umbrella header
 │   │   ├── lua502/                 # Vendored Lua 5.0.2 (game compatibility)
-│   │   ├── lua512/                 # Lua 5.1.2 luaconf.h (for runtime loading types)
+│   │   ├── lua512/                 # Lua 5.1.2 type headers (runtime-loading path)
+│   │   ├── lua512src/              # Vendored Lua 5.1.2 (statically linked, symbols renamed)
 │   │   ├── crc32_case_idt.c/.h     # Case-insensitive CRC32 (extracted from old zlib patch)
 │   │   └── *.cpp, *.h              # Rainman sources
-│   └── cdms/                       # CDMS application (Phase 4)
-├── tests/
-│   └── rainman/                    # Rainman unit tests (Google Test)
+│   └── cdms/                       # CDMS GUI application (wxWidgets)
 │       ├── CMakeLists.txt
-│       ├── exception_test.cpp
-│       ├── memorystore_test.cpp
-│       ├── crc32_case_idt_test.cpp
-│       ├── filesystemstore_test.cpp
-│       ├── sgafile_test.cpp
-│       ├── rgdfile_test.cpp
-│       ├── ucsfile_test.cpp
-│       ├── chunkyfile_test.cpp
-│       └── modulefile_test.cpp
+│       ├── res/                    # Icons and bitmaps
+│       └── *.cpp, *.h              # CDMS sources
+├── tests/
+│   ├── rainman/                    # Rainman unit tests (Google Test)
+│   │   ├── CMakeLists.txt
+│   │   └── *_test.cpp              # 15 test files
+│   └── cdms/                       # CDMS unit tests (Google Test)
+│       ├── CMakeLists.txt
+│       └── *_test.cpp              # 5 test files
+├── Mod_Studio_Files/               # Runtime data files (game definitions, templates)
 └── CDMSSrc_055/                    # Original source archives (reference)
 ```
 
@@ -114,7 +114,8 @@ ctest --test-dir build -C Debug -j8 --output-on-failure
 ### Dependencies (auto-installed by vcpkg)
 - **zlib 1.3.1** — compression for SGA archives
 - **Google Test 1.17** — unit testing framework
-- **wxWidgets 3.x** — GUI framework (Phase 4, not yet in vcpkg.json)
+- **libsquish** — DXT texture compression (for CRgtFile)
+- **wxWidgets 3.x** — GUI framework
 
 ## Progress
 
@@ -134,31 +135,23 @@ ctest --test-dir build -C Debug -j8 --output-on-failure
   - Updated `Rainman.h` umbrella header to use direct includes (no `../` paths)
   - Set `RAINMAN_NO_EXPORTS` (static lib, no `__declspec(dllimport/export)` needed)
 - Vendored Lua 5.0.2 builds as static library (26 C files + patched ltm/lvm)
+- Replaced runtime-loaded Lua 5.1.2 DLL with statically linked `lua512` library (symbols renamed via `lua512_rename.h` to avoid conflicts with Lua 5.0.2)
+- Replaced runtime-loaded `squish.dll` with statically linked libsquish (via vcpkg)
 - **Result: 0 errors, warnings only (size_t → unsigned long narrowing, expected for 32→64-bit port)**
 
 ### ✅ Phase 3: Rainman Tests — COMPLETE
 - Google Test framework wired up with `gtest_discover_tests` + `ctest -j` parallelism
-- **80 tests passing** across 11 test suites:
-  - `CRainmanException` (7 tests) — creation, chaining, formatted messages, macros, CHECK_MEM
-  - `MemoryStoreTest` (5 tests) — memory range I/O, seek/tell, output streams, multi-write
-  - `Crc32CaseIdt` (6 tests) — null safety, case insensitivity, path hashing, long strings
-  - `FileSystemStoreTest` (7 tests) — init, write/read round-trip, seek (root/current/end), error on missing file
-  - `SgaFileTest` (6 tests) — null stream, invalid header, truncated stream, bad version, create folder, no init
-  - `RgdFileTest` (7 tests) — New, Save/Load round-trip (float/string/bool/integer/nested table), null stream, descriptor
-  - `UcsFileTest` (15 tests) — New, Set/Resolve strings, Load from memory, invalid header, IsDollarString, GetRawMap
-  - `ChunkyFileTest` (12 tests) — New, append/nested chunks, SetData, version/descriptor, Save/Load round-trip, invalid header
-  - `ModuleFileTest` (14 tests) — LoadModuleFile parsing (DoW format), version parsing, folder/archive/required details, comments
-  - Smoke test (1 test)
-- Fixed missing `lauxlib.c` in lua502 build (needed for CRgdFile's Lua integration)
+- Test suites covering: `CRainmanException`, `CMemoryStore`, `Crc32CaseIdt`, `CFileSystemStore`, `CSgaFile`, `CRgdFile`, `CUcsFile`, `CChunkyFile`, `CModuleFile`, `CRgdHashTable`, `CInheritTable`, `CCallbacks`, `Internal_Util`, `Md5`, `WriteTime`
 
-### ⬜ Phase 4: CDMS GUI Compilation — NOT STARTED
-- Copy CDMS sources, create CMakeLists
-- Port wxWidgets 2.8 → 3.2 (wxPropGrid now in core, wxSTC now in core, TRUE→true, etc.)
-- Fix C++17 issues, Windows resources
-- **Blocked on:** wxWidgets vcpkg install (large build, ~20 min)
+### ✅ Phase 4: CDMS GUI Compilation — COMPLETE
+- All 65+ CDMS source files copied and building under CMake
+- Ported wxWidgets 2.8 → 3.2 (`wxPGId` → `wxPGProperty*`, `wxFileConfig` constructor, `TRUE` → `true`)
+- Fixed C++17 issues, Windows resource file (`resource.rc`) with application icon
+- Added wxWidgets and libsquish to vcpkg dependencies
 
-### ⬜ Phase 5: CDMS GUI Tests — NOT STARTED
-- Test non-UI logic: strconv, config, strings modules
+### ✅ Phase 5: CDMS GUI Tests — COMPLETE
+- Google Test infrastructure for CDMS non-UI logic
+- Test suites covering: `strconv` (string conversions), `config` (colour settings), `strings` (UI string constants), `Utility` (helper functions)
 
 ### ⬜ Phase 6: Integration Testing — NOT STARTED
 - Full end-to-end build, app launch verification, .module file loading
@@ -168,9 +161,9 @@ ctest --test-dir build -C Debug -j8 --output-on-failure
 ### Lua Strategy
 The original code uses two Lua versions for different purposes:
 - **Lua 5.0.2** — compiled and linked statically for core game data parsing (RGD files use Lua internally)
-- **Lua 5.1.2** — loaded at runtime via `LoadLibraryW()` + `GetProcAddress()` for script editing features
+- **Lua 5.1.2** — now statically linked (originally runtime-loaded via `LoadLibraryW`). All public symbols are renamed via `lua512_rename.h` (`lua_` → `lua51_`) to avoid linker conflicts with Lua 5.0.2.
 
-We vendor Lua 5.0.2 source directly (including Corsix's patches to `ltm.c/h` and `lvm.c/h`). Lua 5.1 remains runtime-loaded — only type headers are needed at compile time.
+We vendor both Lua versions' source directly (including Corsix's patches to `ltm.c/h` and `lvm.c/h` in 5.0.2).
 
 ### zLib Strategy
 The original bundled a modified zlib with a custom `crc32_case_idt()` function for case-insensitive file path hashing (essential for Windows file system compatibility in Relic's formats). We now use system zlib from vcpkg and extracted `crc32_case_idt()` into a standalone file with its own CRC table.
