@@ -28,7 +28,6 @@
 #include "strconv.h"
 #include <Rainman.h>
 #include <memory>
-RAINMAN_API bool Lua51_Load(const wchar_t* sDll);
 #include "Tools.h"
 extern "C" {
 #include "md5.h"
@@ -484,16 +483,6 @@ ConstructFrame::ConstructFrame(const wxString& sTitle, const wxPoint& oPos, cons
 	m_sModuleFile = wxT("");
 	m_pRgdHashTable = 0;
 	m_sRgdHashCustomOut = 0;
-
-	// Load lua 5.1.2
-	if(!oLua512Library.Load(AppStr(app_lua5file)))
-	{
-		::wxMessageBox(wxT("The lua 5.1.2 library could not be loaded; some SCAR features may not be available"), wxT("Error") , wxICON_ERROR);
-	}
-	if(!Lua51_Load(AppStr(app_lua51file)))
-	{
-		::wxMessageBox(wxT("The lua 5.1.2p library could not be loaded; RGD macros will not work"), wxT("Error") , wxICON_ERROR);
-	}
 
 	// Initiate tools
 	m_vTools.push_back(new CLocaleTool);

@@ -33,7 +33,6 @@
 #endif
 // ----------------------------
 #include "wx/splitter.h"
-#include <wx/dynlib.h>
 #include "frmLoading.h"
 #include "frmFiles.h"
 #include <Rainman.h>
@@ -51,7 +50,6 @@ protected:
 	char* m_sRgdHashCustomOut;
 
 public:
-	wxDynamicLibrary oLua512Library;
 
 	class ITool
 	{

@@ -61,12 +61,6 @@ SE(app_luareffile, wxString().Append(AppStr(app_filespath)).Append(wxT("lua.dat"
 SE(app_bfxmapfile, wxString().Append(AppStr(app_filespath)).Append(wxT("bfx.dat")))
 SE(app_scarreffile, wxString().Append(AppStr(app_filespath)).Append(wxT("scardoc.dat")))
 SE(app_cohscarreffile, wxString().Append(AppStr(app_filespath)).Append(wxT("scardoc_coh.dat")))
-SE(app_lua5file, wxString().Append(AppStr(app_filespath)).Append(wxT("lua512")))
-#ifdef _DEBUG
-SE(app_lua51file, wxString().Append(AppStr(app_filespath)).Append(wxT("debug\\lua512d.dll")))
-#else
-SE(app_lua51file, wxString().Append(AppStr(app_filespath)).Append(wxT("lua512p.dll")))
-#endif
 S(app_helpurl, ".\\Mod_Studio_Files\\docs\\general-1.html")
 S(app_backuperror, "The file could not be backed up. In the unlikely event that the save operation corrupts the file, a backup would be useful. If you wish to make a backup, do it manually now.")
 S(app_backuperror_title, "Backup before Saving")

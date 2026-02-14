@@ -20,9 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef _C_RGD_FILE_MACRO_H_
 #define _C_RGD_FILE_MACRO_H_
 
-extern "C" {
 #include "Lua51.h"
-};
 #include "CRgdFile.h"
 #include "CModuleFile.h"
 

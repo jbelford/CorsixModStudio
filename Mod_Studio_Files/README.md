@@ -1,17 +1,10 @@
-# Mod_Studio_Files — Runtime Dependencies
+# Mod_Studio_Files — Runtime Data Files
 
-CorsixModStudio looks for optional DLLs and data files in this directory
-at startup. These are **not** built from source — they come from the
-original Corsix's Mod Studio 0.5.5 distribution.
+CorsixModStudio looks for optional data files in this directory at startup.
+These come from the original Corsix's Mod Studio 0.5.5 distribution.
 
-## Required files
-
-| File | Purpose | Impact if missing |
-|------|---------|-------------------|
-| `lua512.dll` | Lua 5.1.2 runtime (release build) | SCAR script editor features reduced |
-| `debug\lua512d.dll` | Lua 5.1.2 runtime (debug build) | SCAR script editor features reduced |
-
-Note: `squish.dll` is no longer needed — libsquish is now statically linked into the rainman library.
+Note: `squish.dll` and `lua512.dll` are no longer needed — libsquish and
+Lua 5.1.2 are now statically linked into the rainman library.
 
 ## Optional data files
 
@@ -28,7 +21,4 @@ Note: `squish.dll` is no longer needed — libsquish is now statically linked in
 ## Where to get these files
 
 Extract them from the original Corsix's Mod Studio 0.5.5 installer or
-distribution archive. The `squish.dll` can also be rebuilt from the
-[squish source](https://sourceforge.net/projects/libsquish/) (must match
-the `CompressImage`/`DecompressImage` function signatures expected by
-`CRgtFile`).
+distribution archive.

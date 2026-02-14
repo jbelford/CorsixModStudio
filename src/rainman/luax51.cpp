@@ -17,10 +17,9 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-extern "C" {
 #include "Lua51.h"
 #include "Lua51Aux.h"
-};
+#include <lua.h>
 #include <string.h>
 #include "memdebug.h"
 #include "Exception.h"
@@ -63,7 +62,7 @@ int luax51_string_split(lua_State* L)
 
 	// Put string.find onto stack stack
 	lua51_pushstring(L, "string");
-	lua51_gettable(L, LUA_GLOBALSINDEX);
+	lua51_gettable(L, LUA51_GLOBALSINDEX);
 	lua51_pushstring(L, "find");
 	lua51_gettable(L, kStringFind);
 	lua51_replace(L, kStringFind);

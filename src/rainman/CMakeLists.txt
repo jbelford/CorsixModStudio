@@ -35,6 +35,50 @@ target_include_directories(lua502 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/lua502)
 target_compile_definitions(lua502 PRIVATE _CRT_SECURE_NO_WARNINGS)
 set_target_properties(lua502 PROPERTIES C_STANDARD 99)
 
+# Lua 5.1.2 - vendored static library with renamed symbols
+# All public symbols are prefixed lua51_ to avoid conflicts with Lua 5.0.2
+add_library(lua512 STATIC
+    lua512src/lapi.c
+    lua512src/lauxlib.c
+    lua512src/lbaselib.c
+    lua512src/lcode.c
+    lua512src/ldblib.c
+    lua512src/ldebug.c
+    lua512src/ldo.c
+    lua512src/ldump.c
+    lua512src/lfunc.c
+    lua512src/lgc.c
+    lua512src/linit.c
+    lua512src/liolib.c
+    lua512src/llex.c
+    lua512src/lmathlib.c
+    lua512src/lmem.c
+    lua512src/loadlib.c
+    lua512src/lobject.c
+    lua512src/lopcodes.c
+    lua512src/loslib.c
+    lua512src/lparser.c
+    lua512src/lstate.c
+    lua512src/lstring.c
+    lua512src/lstrlib.c
+    lua512src/ltable.c
+    lua512src/ltablib.c
+    lua512src/ltm.c
+    lua512src/lundump.c
+    lua512src/lvm.c
+    lua512src/lzio.c
+)
+
+target_include_directories(lua512 PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lua512src)
+target_compile_definitions(lua512 PRIVATE _CRT_SECURE_NO_WARNINGS)
+set_target_properties(lua512 PROPERTIES C_STANDARD 99)
+# Force-include the rename header so all symbols get lua51_ prefix
+if(MSVC)
+    target_compile_options(lua512 PRIVATE /FI"lua512_rename.h" /FS)
+else()
+    target_compile_options(lua512 PRIVATE -include lua512_rename.h)
+endif()
+
 # Rainman library
 find_package(ZLIB REQUIRED)
 find_package(unofficial-libsquish CONFIG REQUIRED)
@@ -53,12 +97,12 @@ target_include_directories(rainman
         ${CMAKE_CURRENT_SOURCE_DIR}/include/rainman
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/lua502
-        ${CMAKE_CURRENT_SOURCE_DIR}/lua512
 )
 
 target_link_libraries(rainman
     PUBLIC
         lua502
+        lua512
         ZLIB::ZLIB
     PRIVATE
         unofficial::libsquish::squish

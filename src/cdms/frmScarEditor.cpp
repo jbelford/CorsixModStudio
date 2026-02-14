@@ -24,6 +24,8 @@
 extern "C" {
 #include <lua.h>
 #include <lauxlib.h>
+#include <Lua51.h>
+#include <Lua51Aux.h>
 }
 #include <wx/toolbar.h>
 #include <wx/tbarbase.h>
@@ -483,7 +485,7 @@ const char* lua_tolstring(lua_State *L, int index, size_t *len)
 	return lua_tostring(L, index);
 }
 
-template <class T> static inline void loadLuaFn(T& oP, wxString sN) {oP = (T)GetConstruct()->oLua512Library.GetSymbol(sN);}
+template <class T> static inline void loadLuaFn(T& oP, wxString sN) {(void)oP; (void)sN;}
 
 void frmScarEditor::OnCheckLua(wxCommandEvent &event)
 { UNUSED(event);
@@ -494,13 +496,10 @@ void frmScarEditor::OnCheckLua(wxCommandEvent &event)
 
 	if(GetConstruct()->GetModule()->GetModuleType() != CModuleFile::MT_DawnOfWar)
 	{
-		if(GetConstruct()->oLua512Library.IsLoaded())
-		{
-			loadLuaFn(pfn_lua_open, wxT("luaL_newstate"));
-			loadLuaFn(pfn_luaL_loadbuffer, wxT("luaL_loadbuffer"));
-			loadLuaFn(pfn_lua_tolstring, wxT("lua_tolstring"));
-			loadLuaFn(pfn_lua_close, wxT("lua_close"));
-		}
+		pfn_lua_open = (lua_State*(*)(void))lua51L_newstate;
+		pfn_luaL_loadbuffer = lua51L_loadbuffer;
+		pfn_lua_tolstring = lua51_tolstring;
+		pfn_lua_close = lua51_close;
 	}
 
 	char *sLua = wxStringToAscii(m_pSTC->GetText());
