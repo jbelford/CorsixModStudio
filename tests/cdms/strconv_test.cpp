@@ -83,3 +83,58 @@ TEST_F(StrconvTest, wxStringToAsciiRoundTrip) {
     EXPECT_STREQ(result, "round trip");
     delete[] result;
 }
+
+TEST_F(StrconvTest, AsciiToUnicodeHighAsciiRange) {
+    // Characters 0x80-0xFF should be preserved as wchar_t values
+    char input[] = { (char)0x80, (char)0xC0, (char)0xFF, 0x00 };
+    wchar_t* result = AsciiToUnicode(input);
+    ASSERT_NE(result, nullptr);
+    // char is signed on MSVC, so (char)0x80 sign-extends to (wchar_t)(signed char)0x80
+    // The function does pUnicode[i] = (wchar_t)sAscii[i], which sign-extends
+    EXPECT_EQ(result[2], (wchar_t)(char)0xFF);
+    EXPECT_EQ(result[3], L'\0');
+    delete[] result;
+}
+
+TEST_F(StrconvTest, UnicodeToAsciiBoundaryFF) {
+    // 0xFF is within the ASCII-extended range and should pass through
+    wchar_t input[] = { 0x00FF, 0x0000 };
+    char* result = UnicodeToAscii(input);
+    ASSERT_NE(result, nullptr);
+    // 0xFF has no bits set outside 0xFF, so it should NOT become '?'
+    EXPECT_EQ((unsigned char)result[0], 0xFF);
+    delete[] result;
+}
+
+TEST_F(StrconvTest, UnicodeToAsciiAllHighChars) {
+    wchar_t input[] = { 0x0100, 0x4E2D, 0xFFFF, 0x0000 };
+    char* result = UnicodeToAscii(input);
+    ASSERT_NE(result, nullptr);
+    EXPECT_STREQ(result, "???");
+    delete[] result;
+}
+
+TEST_F(StrconvTest, AsciiTowxStringEmptyString) {
+    wxString result = AsciiTowxString("");
+    EXPECT_TRUE(result.IsEmpty());
+}
+
+TEST_F(StrconvTest, wxStringToAsciiEmptyString) {
+    wxString input(wxT(""));
+    char* result = wxStringToAscii(input);
+    ASSERT_NE(result, nullptr);
+    EXPECT_STREQ(result, "");
+    delete[] result;
+}
+
+TEST_F(StrconvTest, wxStringToAsciiUnicodeContent) {
+    // wxString with a character > 0xFF should become '?'
+    wxString input;
+    input += (wchar_t)0x4E2D; // Chinese character
+    input += wxT("A");
+    char* result = wxStringToAscii(input);
+    ASSERT_NE(result, nullptr);
+    EXPECT_EQ(result[0], '?');
+    EXPECT_EQ(result[1], 'A');
+    delete[] result;
+}

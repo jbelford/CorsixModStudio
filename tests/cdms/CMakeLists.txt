@@ -10,6 +10,7 @@ add_executable(cdms_tests
     strconv_test.cpp
     config_test.cpp
     strings_test.cpp
+    utility_test.cpp
     ${CDMS_SRC_DIR}/strconv.cpp
     ${CDMS_SRC_DIR}/strings.cpp
     ${CDMS_SRC_DIR}/Utility.cpp

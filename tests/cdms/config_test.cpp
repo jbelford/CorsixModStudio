@@ -49,3 +49,46 @@ TEST_F(ConfigTest, ConfGetColourPartialOverride) {
     EXPECT_EQ(colour.Green(), 50);
     EXPECT_EQ(colour.Blue(), 100);
 }
+
+TEST_F(ConfigTest, ConfGetColourBoundaryZeros) {
+    wxColour colour = ConfGetColour(wxT("/test/zeros"), 0, 0, 0);
+    EXPECT_EQ(colour.Red(), 0);
+    EXPECT_EQ(colour.Green(), 0);
+    EXPECT_EQ(colour.Blue(), 0);
+}
+
+TEST_F(ConfigTest, ConfGetColourBoundaryMax) {
+    wxColour colour = ConfGetColour(wxT("/test/max"), 255, 255, 255);
+    EXPECT_EQ(colour.Red(), 255);
+    EXPECT_EQ(colour.Green(), 255);
+    EXPECT_EQ(colour.Blue(), 255);
+}
+
+TEST_F(ConfigTest, ConfGetColourAllOverridden) {
+    wxConfigBase::Get()->Write(wxT("/test/full/r"), 11);
+    wxConfigBase::Get()->Write(wxT("/test/full/g"), 22);
+    wxConfigBase::Get()->Write(wxT("/test/full/b"), 33);
+    wxColour colour = ConfGetColour(wxT("/test/full"), 0, 0, 0);
+    EXPECT_EQ(colour.Red(), 11);
+    EXPECT_EQ(colour.Green(), 22);
+    EXPECT_EQ(colour.Blue(), 33);
+}
+
+TEST_F(ConfigTest, ConfGetColourMultipleKeysIndependent) {
+    wxConfigBase::Get()->Write(wxT("/test/keyA/r"), 10);
+    wxConfigBase::Get()->Write(wxT("/test/keyA/g"), 20);
+    wxConfigBase::Get()->Write(wxT("/test/keyA/b"), 30);
+    wxConfigBase::Get()->Write(wxT("/test/keyB/r"), 200);
+    wxConfigBase::Get()->Write(wxT("/test/keyB/g"), 210);
+    wxConfigBase::Get()->Write(wxT("/test/keyB/b"), 220);
+
+    wxColour colourA = ConfGetColour(wxT("/test/keyA"), 0, 0, 0);
+    wxColour colourB = ConfGetColour(wxT("/test/keyB"), 0, 0, 0);
+
+    EXPECT_EQ(colourA.Red(), 10);
+    EXPECT_EQ(colourA.Green(), 20);
+    EXPECT_EQ(colourA.Blue(), 30);
+    EXPECT_EQ(colourB.Red(), 200);
+    EXPECT_EQ(colourB.Green(), 210);
+    EXPECT_EQ(colourB.Blue(), 220);
+}
