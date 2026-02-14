@@ -1,0 +1,26 @@
+---
+BasedOnStyle: LLVM
+Language: Cpp
+Standard: c++17
+ColumnLimit: 120
+IndentWidth: 4
+UseTab: ForIndentation
+TabWidth: 4
+InsertNewlineAtEOF: true
+BreakBeforeBraces: Allman
+
+SortIncludes: CaseInsensitive
+IncludeBlocks: Regroup
+IncludeCategories:
+  # Project headers (quoted)
+  - Regex: '^"'
+    Priority: 1
+  # Third-party libraries
+  - Regex: "<(zlib|lua|gtest|gmock|squish|wx)/"
+    Priority: 2
+  # Platform/system headers
+  - Regex: '<.+\.h>'
+    Priority: 3
+  # C++ standard library
+  - Regex: ".*"
+    Priority: 4

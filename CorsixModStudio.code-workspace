@@ -1,0 +1,98 @@
+{
+  "folders": [
+    {
+      "path": ".",
+    },
+  ],
+  "settings": {
+    // ── CMake Tools ─────────────────────────────────────────────
+    "cmake.buildDirectory": "${workspaceFolder}/build",
+    "cmake.configureOnOpen": true,
+    "cmake.generator": "Visual Studio 18 2026",
+    "cmake.debugConfig": {
+      "stopAtEntry": false,
+      "console": "integratedTerminal",
+      "logging": {
+        "moduleLoad": false,
+      },
+    },
+
+    // ── C/C++ IntelliSense ──────────────────────────────────────
+    "C_Cpp.default.cppStandard": "c++17",
+    "C_Cpp.default.intelliSenseMode": "windows-msvc-x64",
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+
+    // ── Formatting ──────────────────────────────────────────────
+    "editor.formatOnSave": true,
+    "[cpp]": {
+      "editor.defaultFormatter": "ms-vscode.cpptools",
+    },
+    "[c]": {
+      "editor.defaultFormatter": "ms-vscode.cpptools",
+    },
+    "C_Cpp.clang_format_fallbackStyle": "LLVM",
+
+    // ── File associations ───────────────────────────────────────
+    "files.associations": {
+      "*.h": "cpp",
+      "*.hpp": "cpp",
+    },
+
+    // ── Editor defaults ─────────────────────────────────────────
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+
+    // ── Exclude build artifacts ─────────────────────────────────
+    "search.exclude": {
+      "build": true,
+      "CDMSSrc_055": true,
+    },
+    "git.ignoredRepositories": ["build"],
+
+    // ── Test integration ────────────────────────────────────────
+    "cmake.ctestArgs": ["--output-on-failure"],
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Debug CorsixModStudio",
+        "type": "cppvsdbg",
+        "request": "launch",
+        "program": "${workspaceFolder}/build/bin/Debug/CorsixModStudio.exe",
+        "cwd": "${workspaceFolder}",
+        "stopAtEntry": false,
+        "console": "integratedTerminal",
+      },
+      {
+        "name": "Debug Rainman Tests",
+        "type": "cppvsdbg",
+        "request": "launch",
+        "program": "${workspaceFolder}/build/bin/Debug/rainman_tests.exe",
+        "args": ["--gtest_color=yes"],
+        "cwd": "${workspaceFolder}",
+        "stopAtEntry": false,
+        "console": "integratedTerminal",
+      },
+      {
+        "name": "Debug CDMS Tests",
+        "type": "cppvsdbg",
+        "request": "launch",
+        "program": "${workspaceFolder}/build/bin/Debug/cdms_tests.exe",
+        "args": ["--gtest_color=yes"],
+        "cwd": "${workspaceFolder}",
+        "stopAtEntry": false,
+        "console": "integratedTerminal",
+      },
+    ],
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-vscode.cpptools",
+      "ms-vscode.cmake-tools",
+      "ms-vscode.cpptools-extension-pack",
+    ],
+  },
+}
