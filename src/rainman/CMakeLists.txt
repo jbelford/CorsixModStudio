@@ -74,7 +74,7 @@ target_compile_definitions(lua512 PRIVATE _CRT_SECURE_NO_WARNINGS)
 set_target_properties(lua512 PROPERTIES C_STANDARD 99)
 # Force-include the rename header so all symbols get lua51_ prefix
 if(MSVC)
-    target_compile_options(lua512 PRIVATE /FI"lua512_rename.h" /FS)
+    target_compile_options(lua512 PRIVATE /FI"lua512_rename.h")
 else()
     target_compile_options(lua512 PRIVATE -include lua512_rename.h)
 endif()
@@ -127,3 +127,8 @@ if(MSVC)
         /wd4996  # Deprecated CRT functions
     )
 endif()
+
+# Precompiled header for C++ sources (skip C files — PCH has C++ content)
+set_source_files_properties(crc32_case_idt.c hash.c md5.c
+    PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
+target_precompile_headers(rainman PRIVATE pch_rainman.h)

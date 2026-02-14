@@ -104,8 +104,8 @@ $env:VCPKG_ROOT = "C:\vcpkg"
 cmake -B build -S . -G "Visual Studio 18 2026" -A x64 `
     -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake"
 
-# Build
-cmake --build build --config Debug
+# Build (--parallel enables multi-project concurrency)
+cmake --build build --config Debug --parallel
 
 # Run tests (parallel)
 ctest --test-dir build -C Debug -j8 --output-on-failure
