@@ -1,5 +1,7 @@
 // CorsixModStudio Windows resources
-#include "resource.h"
+// NOTE: resource.h is intentionally NOT included here. The C++ code loads
+// bitmaps by string name (e.g. wxT("IDB_DONATE")), so the RC compiler must
+// treat identifiers as string resource names, not numeric IDs.
 #include <winres.h>
 
 /////////////////////////////////////////////////////////////////////////////
