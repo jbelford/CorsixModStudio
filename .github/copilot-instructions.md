@@ -31,7 +31,9 @@ This is a modernization of a ~2006 C++ modding IDE for Dawn of War / Company of 
 
 **CDMS** (`src/cdms/`) — wxWidgets GUI application built on Rainman. Not yet ported (Phase 4, blocked on wxWidgets 3.2 migration).
 
-**Vendored Lua** (`src/rainman/lua502/`) — Lua 5.0.2 with Corsix's patches to `ltm.c/h` and `lvm.c/h`. Built as a separate static library. Do not upgrade — game data compatibility requires this exact version. Lua 5.1.2 is runtime-loaded via `LoadLibraryW()`; only type headers exist in `lua512/`.
+**Vendored Lua 5.0.2** (`src/rainman/lua502/`) — Corsix's patched Lua 5.0.2, built as static library `lua502`. Do not modify or upgrade — game data compatibility requires this exact version.
+
+**Vendored Lua 5.1.2** (`src/rainman/lua512src/`) — Built as static library `lua512` with all public symbols renamed via `lua512_rename.h` (`lua_` → `lua51_`) to avoid linker conflicts with Lua 5.0.2. The `lua512/` directory contains only type headers for the older runtime-loading path (`LoadLibraryW` / `GetProcAddress` in `Lua51.cpp`).
 
 ## Key Conventions
 
@@ -53,7 +55,24 @@ All public Rainman classes use `RAINMAN_API` (defined in `Api.h`). It expands to
 - Virtual methods: `V` prefix (`VInit`, `VRead`, `VSeek`)
 
 ### Tests
-Tests use Google Test in `tests/rainman/`. Test files are named `*_test.cpp` and must be added to `tests/rainman/CMakeLists.txt`. Tests are auto-discovered via `gtest_discover_tests()`.
+Tests use Google Test in `tests/rainman/`. Test files are named `*_test.cpp` and must be manually added to `tests/rainman/CMakeLists.txt`. Tests are auto-discovered via `gtest_discover_tests()`.
+
+### Source file discovery
+Rainman and CDMS source files are auto-discovered via `file(GLOB)` — just create the file and rebuild. Test files are **not** globbed; they must be explicitly listed in the test `CMakeLists.txt`.
+
+### Stream ownership
+`VOpenStream()` / `VOpenOutputStream()` return heap-allocated streams. The **caller** owns the returned stream and must `delete` it. `Load()` / `Save()` methods on parser classes do **not** take ownership of the stream passed to them.
+
+### Testing with CMemoryStore
+Use `CMemoryStore` for in-memory I/O in tests instead of touching the filesystem:
+```cpp
+CMemoryStore store;
+store.VInit();
+// Wrap raw data as a readable stream:
+char* pRange = store.MemoryRange((void*)data, dataLen);
+IFileStore::IStream* pStream = store.VOpenStream(pRange);
+// ... read from pStream, then delete pStream
+```
 
 ### Legacy code considerations
 This is a 2006 codebase being ported to C++17/x64. Expect and preserve:
@@ -61,3 +80,4 @@ This is a 2006 codebase being ported to C++17/x64. Expect and preserve:
 - Raw `new`/`delete` memory management (no smart pointers in existing code)
 - Windows-only APIs (`LoadLibraryW`, `GetProcAddress`, `_wfopen`)
 - Original file headers with LGPL v2.1 copyright notices must be preserved
+- Include guards use `_C_CLASS_NAME_H_` style (e.g., `_C_SGA_FILE_H_`)
