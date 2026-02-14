@@ -22,13 +22,13 @@
 #include <wx/wxprec.h>
 
 #ifdef __BORLANDC__
-    #pragma hdrstop
+#pragma hdrstop
 #endif
 
 // for all others, include the necessary headers (this file is usually all you
 // need because it includes almost all "standard" wxWidgets headers)
 #ifndef WX_PRECOMP
-    #include "wx/wx.h"
+#include "wx/wx.h"
 #endif
 // ----------------------------
 #include <Rainman.h>
@@ -36,10 +36,11 @@
 
 class frmModule : public wxWindow
 {
-public:
-	frmModule(wxWindow* parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize);
+  public:
+	frmModule(wxWindow *parent, wxWindowID id, const wxPoint &pos = wxDefaultPosition,
+	          const wxSize &size = wxDefaultSize);
 
-	void OnSize(wxSizeEvent& event);
+	void OnSize(wxSizeEvent &event);
 
 	enum
 	{
@@ -50,15 +51,17 @@ public:
 		IDP_CompatibleMods
 	};
 
-protected:
+  protected:
 	class pgMain : public wxWindow
 	{
-	protected:
+	  protected:
 		bool m_bDoneInit;
-	public:
-		pgMain(wxWindow* parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize);
 
-		void OnSize(wxSizeEvent& event);
+	  public:
+		pgMain(wxWindow *parent, wxWindowID id, const wxPoint &pos = wxDefaultPosition,
+		       const wxSize &size = wxDefaultSize);
+
+		void OnSize(wxSizeEvent &event);
 
 		enum
 		{
@@ -74,24 +77,26 @@ protected:
 			IDC_VersionHelp
 		};
 
-		void InitModFolderList(wxControlWithItems* pList);
-		void InitDllList(wxControlWithItems* pList);
+		void InitModFolderList(wxControlWithItems *pList);
+		void InitDllList(wxControlWithItems *pList);
 
-		void OnDescriptionUpdate(wxCommandEvent& event);
-		void OnUINameUpdate(wxCommandEvent& event);
-		void OnTextureFEUpdate(wxCommandEvent& event);
-		void OnTextureIconUpdate(wxCommandEvent& event);
+		void OnDescriptionUpdate(wxCommandEvent &event);
+		void OnUINameUpdate(wxCommandEvent &event);
+		void OnTextureFEUpdate(wxCommandEvent &event);
+		void OnTextureIconUpdate(wxCommandEvent &event);
 
 		DECLARE_EVENT_TABLE()
 	};
 
 	class pgDataFolders : public wxWindow
 	{
-	public:
-		pgDataFolders(wxWindow* parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize,
-			const wxString& sTitle = AppStr(mod_datafolders_caption), const wxString& sItemName = AppStr(mod_datafolder), bool bUpdateMessage = true, void (* pInitList)(wxArrayString &) = FillInitialValues);
+	  public:
+		pgDataFolders(wxWindow *parent, wxWindowID id, const wxPoint &pos = wxDefaultPosition,
+		              const wxSize &size = wxDefaultSize, const wxString &sTitle = AppStr(mod_datafolders_caption),
+		              const wxString &sItemName = AppStr(mod_datafolder), bool bUpdateMessage = true,
+		              void (*pInitList)(wxArrayString &) = FillInitialValues);
 
-		void OnSize(wxSizeEvent& event);
+		void OnSize(wxSizeEvent &event);
 
 		static void FillInitialValues(wxArrayString &aInitialValues);
 
@@ -100,24 +105,27 @@ protected:
 
 	class pgDataArchives : public pgDataFolders
 	{
-	public:
-		pgDataArchives(wxWindow* parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize);
+	  public:
+		pgDataArchives(wxWindow *parent, wxWindowID id, const wxPoint &pos = wxDefaultPosition,
+		               const wxSize &size = wxDefaultSize);
 
 		static void FillInitialValues(wxArrayString &aInitialValues);
 	};
 
 	class pgRequiredMods : public pgDataFolders
 	{
-	public:
-		pgRequiredMods(wxWindow* parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize);
+	  public:
+		pgRequiredMods(wxWindow *parent, wxWindowID id, const wxPoint &pos = wxDefaultPosition,
+		               const wxSize &size = wxDefaultSize);
 
 		static void FillInitialValues(wxArrayString &aInitialValues);
 	};
 
 	class pgCompatibleMods : public pgDataFolders
 	{
-	public:
-		pgCompatibleMods(wxWindow* parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize);
+	  public:
+		pgCompatibleMods(wxWindow *parent, wxWindowID id, const wxPoint &pos = wxDefaultPosition,
+		                 const wxSize &size = wxDefaultSize);
 
 		static void FillInitialValues(wxArrayString &aInitialValues);
 	};

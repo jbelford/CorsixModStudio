@@ -22,39 +22,42 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include <stdarg.h>
 #include "Exception.h"
 
-RAINMAN_API void CallCallback(CALLBACK_ARG, const char* sFormat, ...)
+RAINMAN_API void CallCallback(CALLBACK_ARG, const char *sFormat, ...)
 {
 	/*
-		Uses _vsnprintf to create the formatted string
-		Doubles the buffer size and tries again if the buffer allocated was too small (begins with a 256 byte buffer)
-		This way most messages make do with 256, and bigger ones will quickly get up to the buffer size needed and also always be using at least half of the buffer
+	    Uses _vsnprintf to create the formatted string
+	    Doubles the buffer size and tries again if the buffer allocated was too small (begins with a 256 byte buffer)
+	    This way most messages make do with 256, and bigger ones will quickly get up to the buffer size needed and also
+	   always be using at least half of the buffer
 	*/
 
-	// Check if a callback function was passed (if one wasn't then it's not an error - the application may not want callbacks)
-	if(fnStatusCallback)
+	// Check if a callback function was passed (if one wasn't then it's not an error - the application may not want
+	// callbacks)
+	if (fnStatusCallback)
 	{
 		size_t iSize = 256;
 		va_list marker;
-		char* sBuffer = 0;
+		char *sBuffer = 0;
 		do
 		{
-			if(iSize < 256) // If iSize is less than 256 then it must have exceeded its maximum value and looped back round again -> error
+			if (iSize < 256) // If iSize is less than 256 then it must have exceeded its maximum value and looped back
+			                 // round again -> error
 			{
 				va_end(marker);
 				delete[] sBuffer;
 				throw new CRainmanException(__FILE__, __LINE__, "Message too large");
 			}
-			if(iSize != 256)
+			if (iSize != 256)
 			{
 				va_end(marker);
 				delete[] sBuffer;
 			}
 			sBuffer = CHECK_MEM(new char[iSize <<= 1]);
 			va_start(marker, sFormat);
-		} while(_vsnprintf(sBuffer, iSize - 1, sFormat, marker) == -1); // -1 is the return value for "bigger buffer needed"
+		} while (_vsnprintf(sBuffer, iSize - 1, sFormat, marker) ==
+		         -1); // -1 is the return value for "bigger buffer needed"
 		va_end(marker);
 		fnStatusCallback(sBuffer, fnStatusCallbackTag);
 		delete[] sBuffer;
 	}
 }
-

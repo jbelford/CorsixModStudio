@@ -38,18 +38,17 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #define _snwprintf swprintf
 #define _vsnprintf vsnprintf
 
-wchar_t* _ltow(long iVal, wchar_t* sStr, int iRadix);
-wchar_t* _ultow(unsigned long iVal, wchar_t* sStr, int iRadix);
-char* _ultoa(unsigned long iVal, char* sStr, int iRadix);
+wchar_t *_ltow(long iVal, wchar_t *sStr, int iRadix);
+wchar_t *_ultow(unsigned long iVal, wchar_t *sStr, int iRadix);
+char *_ultoa(unsigned long iVal, char *sStr, int iRadix);
 
 #else
 
 #define RAINMAN_MSVC
-#pragma warning(disable: 4251)
+#pragma warning(disable : 4251)
 
 #endif
 
-#define UNUSED(s) ( (s) )
+#define UNUSED(s) ((s))
 
 #endif
-

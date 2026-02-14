@@ -26,97 +26,100 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 class RAINMAN_API CMemoryStore : public IFileStore
 {
-public:
+  public:
 	//! Constructor
 	/*!
-		\return Returns nothing and never throws an exception
+	    \return Returns nothing and never throws an exception
 	*/
 	CMemoryStore(void);
 	virtual ~CMemoryStore(void);
 
 	//! A input/read stream implementation
 	/*!
-		\sa IFileStore::IStream
+	    \sa IFileStore::IStream
 	*/
 	class RAINMAN_API CStream : public IFileStore::IStream
 	{
-	protected:
+	  protected:
 		friend class CMemoryStore;
 		CStream(void);
 		char *m_pBegin, *m_pCurrent;
 		unsigned long m_iLength, m_iLengthLeft;
 		bool m_bDeleteWhenDone;
 
-	public:
+	  public:
 		virtual ~CStream(void);
 
-		virtual void VRead(unsigned long iItemCount, unsigned long iItemSize, void* pDestination);
+		virtual void VRead(unsigned long iItemCount, unsigned long iItemSize, void *pDestination);
 		virtual void VSeek(long iPosition, IFileStore::IStream::SeekLocation SeekFrom = SL_Current);
 		virtual long VTell();
 	};
 
 	class RAINMAN_API COutStream : public IFileStore::IOutputStream
 	{
-	protected:
+	  protected:
 		friend class CMemoryStore;
 		COutStream();
 		char *m_pBegin, *m_pCurrent;
 		unsigned long m_iLength, m_iLengthLeft, m_iBufferLength;
-	public:
+
+	  public:
 		virtual ~COutStream(void);
-		virtual void VWrite(unsigned long iItemCount, unsigned long iItemSize, const void* pSource);
-		const char* GetData();
+		virtual void VWrite(unsigned long iItemCount, unsigned long iItemSize, const void *pSource);
+		const char *GetData();
 		unsigned long GetDataLength();
 
-		virtual void VRead(unsigned long iItemCount, unsigned long iItemSize, void* pDestination);
+		virtual void VRead(unsigned long iItemCount, unsigned long iItemSize, void *pDestination);
 		virtual void VSeek(long iPosition, IFileStore::IStream::SeekLocation SeekFrom = SL_Current);
 		virtual long VTell();
 	};
 
 	//! Get the memory store read to create memory stream
 	/*!
-		\param[in] pUnused Currently unused
-		\return Returns nothing and never throws an exception
+	    \param[in] pUnused Currently unused
+	    \return Returns nothing and never throws an exception
 	*/
-	virtual void VInit(void* pUnused = 0);
+	virtual void VInit(void *pUnused = 0);
 
 	//! Open an input/read stream
 	/*!
-		\param[in] sFile This must be a memory range defined by MemoryRange() - this value will also by "delete"d - so only pass the return value from MemoryRange() to VOpenStream() once.
-		\return Returns a valid stream (a CMemoryStore::CStream* via runtime polymorphism) or throws an exception. Cannot return zero. Remember to delete this pointer when you are done using it.
+	    \param[in] sFile This must be a memory range defined by MemoryRange() - this value will also by "delete"d - so
+	   only pass the return value from MemoryRange() to VOpenStream() once.
+	    \return Returns a valid stream (a CMemoryStore::CStream* via runtime polymorphism) or throws an exception.
+	   Cannot return zero. Remember to delete this pointer when you are done using it.
 	*/
-	virtual IStream* VOpenStream(const char* sFile);
+	virtual IStream *VOpenStream(const char *sFile);
 
-	static CStream* OpenStreamExt(char* pBegin, unsigned long iLength, bool bDeleteWhenDone);
+	static CStream *OpenStreamExt(char *pBegin, unsigned long iLength, bool bDeleteWhenDone);
 
 	//! Open an output/write stream
 	/*!
-		Creates a block of automatically resizing memory that can be written to as a stream
-		\param[in] sIdentifier Ignored
-		\param[in] bEraseIfPresent Ignored
-		\return Returns a valid stream (a CMemoryStore::COutStream* via runtime polymorphism) or throws an exception. Cannot return zero. You must delete this returned pointer when you are finished with it.
+	    Creates a block of automatically resizing memory that can be written to as a stream
+	    \param[in] sIdentifier Ignored
+	    \param[in] bEraseIfPresent Ignored
+	    \return Returns a valid stream (a CMemoryStore::COutStream* via runtime polymorphism) or throws an exception.
+	   Cannot return zero. You must delete this returned pointer when you are finished with it.
 	*/
-	virtual IOutputStream* VOpenOutputStream(const char* sIdentifier, bool bEraseIfPresent);
+	virtual IOutputStream *VOpenOutputStream(const char *sIdentifier, bool bEraseIfPresent);
 
-	static COutStream* OpenOutputStreamExt();
+	static COutStream *OpenOutputStreamExt();
 
 	//! Define a memory range to pass to VOpenStream()
 	/*!
-		\param[in] pBegin The position in memory at which the memory range begins
-		\param[in] iLength The length of the memory range (in bytes)
-		\return Returns a valid pointer or throws a CRainmanException
+	    \param[in] pBegin The position in memory at which the memory range begins
+	    \param[in] iLength The length of the memory range (in bytes)
+	    \return Returns a valid pointer or throws a CRainmanException
 	*/
-	char* MemoryRange(void* pBegin, unsigned long iLength);
+	char *MemoryRange(void *pBegin, unsigned long iLength);
 
-protected:
+  protected:
 	bool m_bInited;
 
 	struct _MemRange
 	{
-		char* p;
+		char *p;
 		unsigned long i;
 	};
 };
 
 #endif
-

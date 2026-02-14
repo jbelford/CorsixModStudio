@@ -29,18 +29,18 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "CModuleFile.h"
 #include "Api.h"
 
-RAINMAN_API void MakeLuaFromRgdQuickly(CRgdFile* pRgd, IFileStore::IOutputStream* pOut);
+RAINMAN_API void MakeLuaFromRgdQuickly(CRgdFile *pRgd, IFileStore::IOutputStream *pOut);
 
 //! Creates a LUA source file from an RGD
 /*!
-	\param[in] pRgdIn The RGD to create a LUA from (Shouldn't be NULL)
-	\param[in] pNilIn The NIL file which the RGD inherits from (Can be NULL)
-	\param[in] pStore A filestore to read the Reference()d LUAs/RGDs from (Shouldn't be NULL)
-	\param[in] pLuaOut The output stream for the created LUA
-	\param[in] pUcsResolver The module class to use to resolve UCS values
-	\return Returns no value, but throws a CRainmanException on error
+    \param[in] pRgdIn The RGD to create a LUA from (Shouldn't be NULL)
+    \param[in] pNilIn The NIL file which the RGD inherits from (Can be NULL)
+    \param[in] pStore A filestore to read the Reference()d LUAs/RGDs from (Shouldn't be NULL)
+    \param[in] pLuaOut The output stream for the created LUA
+    \param[in] pUcsResolver The module class to use to resolve UCS values
+    \return Returns no value, but throws a CRainmanException on error
 */
-RAINMAN_API void MakeLuaFromRgdAndNil(CRgdFile* pRgdIn, CLuaFile* pNilIn, IFileStore* pStore, IFileStore::IOutputStream* pLuaOut, CModuleFile* pUcsResolver);
+RAINMAN_API void MakeLuaFromRgdAndNil(CRgdFile *pRgdIn, CLuaFile *pNilIn, IFileStore *pStore,
+                                      IFileStore::IOutputStream *pLuaOut, CModuleFile *pUcsResolver);
 
 #endif
-

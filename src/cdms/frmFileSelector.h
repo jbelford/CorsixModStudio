@@ -22,13 +22,13 @@
 #include <wx/wxprec.h>
 
 #ifdef __BORLANDC__
-    #pragma hdrstop
+#pragma hdrstop
 #endif
 
 // for all others, include the necessary headers (this file is usually all you
 // need because it includes almost all "standard" wxWidgets headers)
 #ifndef WX_PRECOMP
-    #include "wx/wx.h"
+#include "wx/wx.h"
 #endif
 // ----------------------------
 #include <Rainman.h>
@@ -37,42 +37,42 @@
 
 class CFileSelectorTreeItemData : public wxTreeItemData
 {
-public:
-	CFileSelectorTreeItemData(IDirectoryTraverser::IIterator* pItr, bool bToFillWith);
-	const char* sMod;
-	const char* sSource;
+  public:
+	CFileSelectorTreeItemData(IDirectoryTraverser::IIterator *pItr, bool bToFillWith);
+	const char *sMod;
+	const char *sSource;
 
-	IDirectoryTraverser::IIterator* pToFillWith;
+	IDirectoryTraverser::IIterator *pToFillWith;
 };
 
 class frmFileSelector : public wxDialog
 {
-protected:
+  protected:
 	wxString m_sBaseFolder;
 	wxString m_sFile;
 	wxString m_sRgdModeExt;
-	wxTreeCtrl* m_pTree;
-	wxTextCtrl* m_pText;
+	wxTreeCtrl *m_pTree;
+	wxTextCtrl *m_pText;
 	wxColour m_cThisMod, m_cOtherMod, m_cEngine;
 
-	void MakeChildren(const wxTreeItemId& parent);
+	void MakeChildren(const wxTreeItemId &parent);
 	bool m_bRgdMode;
 
 	void FindAndSelect(wxString sFile);
 
-public:
+  public:
 	frmFileSelector(wxString sBaseFolder, wxString sExistingSelection, bool bRgdMode);
 	virtual ~frmFileSelector();
 
-	void OnSize(wxSizeEvent& event);
+	void OnSize(wxSizeEvent &event);
 
-	void OnOkClick(wxCommandEvent& event);
-	void OnCloseClick(wxCommandEvent& event);
-	void OnTreeExpanding(wxTreeEvent& event);
-	void OnTreeSelect(wxTreeEvent& event);
+	void OnOkClick(wxCommandEvent &event);
+	void OnCloseClick(wxCommandEvent &event);
+	void OnTreeExpanding(wxTreeEvent &event);
+	void OnTreeSelect(wxTreeEvent &event);
 
-	inline wxString& GetBaseFolder() {return m_sBaseFolder;}
-	inline wxString& GetFile() {return m_sFile;}
+	inline wxString &GetBaseFolder() { return m_sBaseFolder; }
+	inline wxString &GetFile() { return m_sFile; }
 
 	enum
 	{

@@ -21,7 +21,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #define _C_LUA_SCRIPT_H_
 
 #include "gnuc_defines.h"
-extern "C" {
+extern "C"
+{
 #include <lua.h>
 };
 #include "CLuaScript_Interface.h"
@@ -29,14 +30,14 @@ extern "C" {
 
 class RAINMAN_API CLuaScript
 {
-public:
+  public:
 	CLuaScript(void);
 	~CLuaScript(void);
 
-	void Load(const char* sFile);
+	void Load(const char *sFile);
 	void Execute();
-	const char* GetLuaError(); // Obsolete?
-protected:
+	const char *GetLuaError(); // Obsolete?
+  protected:
 	lua_State *m_pLua;
 	char *m_sLuaError;
 
@@ -44,4 +45,3 @@ protected:
 };
 
 #endif
-

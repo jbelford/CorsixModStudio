@@ -26,26 +26,25 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 #ifndef RAINMAN_GNUC
 #ifdef _DEBUG
-	#include <crtdbg.h>
-	#include <memory.h>
-	#include <string.h>
-	#define DEBUG_NEW new(_NORMAL_BLOCK ,__FILE__, __LINE__)
-	#define strdup(s) strdup_memdebug(s, __FILE__, __LINE__)
-	static char* strdup_memdebug(const char* s, const char* sFile, unsigned long iLine)
-	{
-		size_t iL = strlen(s);
-		char* sR = new(_NORMAL_BLOCK, sFile, iLine) char[iL + 1];
-		memcpy((void*)sR, (const void*)s, iL);
-		sR[iL] = 0;
-		return sR;
-	}
+#include <crtdbg.h>
+#include <memory.h>
+#include <string.h>
+#define DEBUG_NEW new (_NORMAL_BLOCK, __FILE__, __LINE__)
+#define strdup(s) strdup_memdebug(s, __FILE__, __LINE__)
+static char *strdup_memdebug(const char *s, const char *sFile, unsigned long iLine)
+{
+	size_t iL = strlen(s);
+	char *sR = new (_NORMAL_BLOCK, sFile, iLine) char[iL + 1];
+	memcpy((void *)sR, (const void *)s, iL);
+	sR[iL] = 0;
+	return sR;
+}
 #else
-	#define DEBUG_NEW new
+#define DEBUG_NEW new
 #endif
 
 #ifdef _DEBUG
-	#define new DEBUG_NEW
+#define new DEBUG_NEW
 #endif
 #endif
 #endif
-

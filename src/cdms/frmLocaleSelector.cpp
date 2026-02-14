@@ -22,18 +22,19 @@
 #include "Common.h"
 
 BEGIN_EVENT_TABLE(frmLocaleSelector, wxDialog)
-	EVT_SIZE(frmLocaleSelector::OnSize)
-	EVT_BUTTON(wxID_OPEN, frmLocaleSelector::OnNewClick)
+EVT_SIZE(frmLocaleSelector::OnSize)
+EVT_BUTTON(wxID_OPEN, frmLocaleSelector::OnNewClick)
 END_EVENT_TABLE()
 
-frmLocaleSelector::frmLocaleSelector(const wxString& sTitle, ConstructFrame::eLoadModGames eGame)
-	:wxDialog(wxTheApp->GetTopWindow(), -1, sTitle, wxPoint(0, 0) , wxSize(320, 480), wxFRAME_FLOAT_ON_PARENT | wxFRAME_TOOL_WINDOW | wxCAPTION)
+frmLocaleSelector::frmLocaleSelector(const wxString &sTitle, ConstructFrame::eLoadModGames eGame)
+    : wxDialog(wxTheApp->GetTopWindow(), -1, sTitle, wxPoint(0, 0), wxSize(320, 480),
+               wxFRAME_FLOAT_ON_PARENT | wxFRAME_TOOL_WINDOW | wxCAPTION)
 {
 	CentreOnParent();
-	wxBoxSizer *pTopSizer = new wxBoxSizer( wxVERTICAL );
+	wxBoxSizer *pTopSizer = new wxBoxSizer(wxVERTICAL);
 
 	wxArrayString aLocales;
-	switch(eGame)
+	switch (eGame)
 	{
 	default:
 	case ConstructFrame::LM_Any:
@@ -75,10 +76,12 @@ frmLocaleSelector::frmLocaleSelector(const wxString& sTitle, ConstructFrame::eLo
 
 	wxWindow *pBgTemp;
 	pTopSizer->Add(pBgTemp = new wxStaticText(this, -1, AppStr(localeselect_caption)), 0, wxALIGN_LEFT | wxALL, 3);
-	pTopSizer->Add(m_pList = new wxListBox(this, IDC_LocaleList, wxDefaultPosition, wxDefaultSize, aLocales), 1, wxALL | wxEXPAND, 3);
-	pTopSizer->Add(m_pCheckbox = new wxCheckBox(this, IDC_Remember, AppStr(localeselect_remember)), 0, wxALIGN_LEFT | wxALL, 3);
+	pTopSizer->Add(m_pList = new wxListBox(this, IDC_LocaleList, wxDefaultPosition, wxDefaultSize, aLocales), 1,
+	               wxALL | wxEXPAND, 3);
+	pTopSizer->Add(m_pCheckbox = new wxCheckBox(this, IDC_Remember, AppStr(localeselect_remember)), 0,
+	               wxALIGN_LEFT | wxALL, 3);
 
-	wxBoxSizer *pButtonSizer = new wxBoxSizer( wxHORIZONTAL );
+	wxBoxSizer *pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
 
 	pButtonSizer->Add(new wxButton(this, wxID_OPEN, AppStr(localeselect_use)), 0, wxEXPAND | wxALL, 3);
 
@@ -91,19 +94,21 @@ frmLocaleSelector::frmLocaleSelector(const wxString& sTitle, ConstructFrame::eLo
 	m_pCheckbox->SetValue(bTicked);
 
 	SetSizer(pTopSizer);
-	pTopSizer->SetSizeHints( this );
+	pTopSizer->SetSizeHints(this);
 	SetBackgroundColour(pBgTemp->GetBackgroundColour());
 }
 
-void frmLocaleSelector::OnSize(wxSizeEvent& event)
-{  UNUSED(event);
+void frmLocaleSelector::OnSize(wxSizeEvent &event)
+{
+	UNUSED(event);
 	Layout();
 }
 
-void frmLocaleSelector::OnNewClick(wxCommandEvent& event)
-{  UNUSED(event);
+void frmLocaleSelector::OnNewClick(wxCommandEvent &event)
+{
+	UNUSED(event);
 	wxString sSel = m_pList->GetStringSelection();
-	if(!sSel.IsEmpty())
+	if (!sSel.IsEmpty())
 	{
 		TheConfig->Write(AppStr(config_mod_locale), sSel);
 		TheConfig->Write(AppStr(config_mod_localeremember), m_pCheckbox->GetValue());

@@ -24,45 +24,35 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 //! A typemapping for write time
 /*!
-	This implementation of write time uses the number of seconds since the unix epoch.
-	The application should not depend upon the format of tLastWriteTime and must use the functions in this file.
-	If you change the format of tLastWriteTime, you should update CSgaFile
-	\sa GetLastWriteTime() IsValidWriteTime() GetInvalidWriteTime() IsWriteTimeNewer()
+    This implementation of write time uses the number of seconds since the unix epoch.
+    The application should not depend upon the format of tLastWriteTime and must use the functions in this file.
+    If you change the format of tLastWriteTime, you should update CSgaFile
+    \sa GetLastWriteTime() IsValidWriteTime() GetInvalidWriteTime() IsWriteTimeNewer()
 */
 typedef unsigned long long tLastWriteTime;
 
 //! Gets the last write time of a file on harddisk
 /*!
-	\param[in] sFile The name of a file on harddisk (eg. can be opened with _open() )
-	\return Returns a valid write time or throws a CRainmanException
+    \param[in] sFile The name of a file on harddisk (eg. can be opened with _open() )
+    \return Returns a valid write time or throws a CRainmanException
 */
-tLastWriteTime GetLastWriteTime(const char* sFile);
+tLastWriteTime GetLastWriteTime(const char *sFile);
 
 //! Verifies whether a tLastWriteTime is valid or not
 /*!
-	\deprecated
-		This function should no longer be needed as a CRainmanException should be thrown instead of returning an invalid time.
-		As such, this function may be removed in future builds.
-	\return Returns true if oTime is a valid write time
+    \deprecated
+        This function should no longer be needed as a CRainmanException should be thrown instead of returning an invalid
+   time. As such, this function may be removed in future builds.
+    \return Returns true if oTime is a valid write time
 */
-inline bool IsValidWriteTime(tLastWriteTime oTime)
-{
-	return oTime != 0;
-}
+inline bool IsValidWriteTime(tLastWriteTime oTime) { return oTime != 0; }
 
-inline tLastWriteTime GetInvalidWriteTime()
-{
-	return 0;
-}
+inline tLastWriteTime GetInvalidWriteTime() { return 0; }
 
 /*!
-	Returns true if A is newer than B
-	Otherwise, returns false
+    Returns true if A is newer than B
+    Otherwise, returns false
 */
-inline bool IsWriteTimeNewer(tLastWriteTime oA, tLastWriteTime oB)
-{
-	return (oA > oB);
-}
+inline bool IsWriteTimeNewer(tLastWriteTime oA, tLastWriteTime oB) { return (oA > oB); }
 
 #endif
-

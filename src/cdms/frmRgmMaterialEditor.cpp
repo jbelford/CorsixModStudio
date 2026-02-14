@@ -25,53 +25,46 @@
 #include "Common.h"
 
 BEGIN_EVENT_TABLE(frmRgmMaterialEditor, wxWindow)
-	EVT_SIZE(frmRgmMaterialEditor::OnSize)
-	EVT_PG_CHANGED(IDC_PropertyGrid, frmRgmMaterialEditor::OnPropertyChange)
-	EVT_TREE_SEL_CHANGING(IDC_TablesTree, frmRgmMaterialEditor::OnTreeSelect)
-	EVT_TREE_ITEM_MENU(IDC_TablesTree, frmRgmMaterialEditor::OnTreeRightClick)
-	EVT_BUTTON(wxID_SAVE, frmRgmMaterialEditor::OnSave)
+EVT_SIZE(frmRgmMaterialEditor::OnSize)
+EVT_PG_CHANGED(IDC_PropertyGrid, frmRgmMaterialEditor::OnPropertyChange)
+EVT_TREE_SEL_CHANGING(IDC_TablesTree, frmRgmMaterialEditor::OnTreeSelect)
+EVT_TREE_ITEM_MENU(IDC_TablesTree, frmRgmMaterialEditor::OnTreeRightClick)
+EVT_BUTTON(wxID_SAVE, frmRgmMaterialEditor::OnSave)
 END_EVENT_TABLE()
 
 class CRgmMaterialTreeData : public wxTreeItemData
 {
-public:
-	CRgmMaterialTreeData(CRgmFile::CMaterial* pMat)
-		: pMaterial(pMat), pVariable(0) {}
+  public:
+	CRgmMaterialTreeData(CRgmFile::CMaterial *pMat) : pMaterial(pMat), pVariable(0) {}
 
-		CRgmMaterialTreeData(CRgmFile::CMaterial::CVariable* pVar)
-		: pMaterial(0), pVariable(pVar) {}
+	CRgmMaterialTreeData(CRgmFile::CMaterial::CVariable *pVar) : pMaterial(0), pVariable(pVar) {}
 
-	~CRgmMaterialTreeData()
-	{
+	~CRgmMaterialTreeData() {}
 
-	}
-
-public:
-	CRgmFile::CMaterial* pMaterial;
-	CRgmFile::CMaterial::CVariable* pVariable;
+  public:
+	CRgmFile::CMaterial *pMaterial;
+	CRgmFile::CMaterial::CVariable *pVariable;
 };
 
 class RgmMaterialwxPropertyGridManager : public wxPropertyGridManager
 {
-public:
-	RgmMaterialwxPropertyGridManager( wxWindow *parent, wxWindowID id = wxID_ANY,
-               	           const wxPoint& pos = wxDefaultPosition,
-               	           const wxSize& size = wxDefaultSize,
-               	           long style = wxPGMAN_DEFAULT_STYLE,
-               	           const wxString& name = wxASCII_STR(wxPropertyGridManagerNameStr) )
-		: wxPropertyGridManager(parent, id, pos, size, style, name)
+  public:
+	RgmMaterialwxPropertyGridManager(wxWindow *parent, wxWindowID id = wxID_ANY, const wxPoint &pos = wxDefaultPosition,
+	                                 const wxSize &size = wxDefaultSize, long style = wxPGMAN_DEFAULT_STYLE,
+	                                 const wxString &name = wxASCII_STR(wxPropertyGridManagerNameStr))
+	    : wxPropertyGridManager(parent, id, pos, size, style, name)
 	{
 	}
 
-	void OnSize(wxSizeEvent& event)
+	void OnSize(wxSizeEvent &event)
 	{
 		event.Skip();
-		if(m_pTxtHelpCaption)
+		if (m_pTxtHelpCaption)
 		{
 			m_pTxtHelpCaption->SetBackgroundColour(GetBackgroundColour());
 			m_pTxtHelpCaption->SetWindowStyleFlag(m_pTxtHelpCaption->GetWindowStyleFlag() | wxST_NO_AUTORESIZE);
 		}
-		if(m_pTxtHelpContent)
+		if (m_pTxtHelpContent)
 		{
 			m_pTxtHelpContent->SetBackgroundColour(GetBackgroundColour());
 		}
@@ -81,16 +74,17 @@ public:
 };
 
 BEGIN_EVENT_TABLE(RgmMaterialwxPropertyGridManager, wxPropertyGridManager)
-	EVT_SIZE(RgmMaterialwxPropertyGridManager::OnSize)
+EVT_SIZE(RgmMaterialwxPropertyGridManager::OnSize)
 END_EVENT_TABLE()
 
 void frmRgmMaterialEditor::OnSave(wxCommandEvent &event)
-{ UNUSED(event);
+{
+	UNUSED(event);
 	BackupFile(TheConstruct->GetModule(), m_sFilename);
-	char* saNewFile = wxStringToAscii(m_sFilename);
-	char* saDir = strdup(saNewFile), *pSlash;
+	char *saNewFile = wxStringToAscii(m_sFilename);
+	char *saDir = strdup(saNewFile), *pSlash;
 	pSlash = strrchr(saDir, '\\');
-	if(pSlash)
+	if (pSlash)
 		*pSlash = 0;
 	else
 		*saDir = 0;
@@ -99,7 +93,7 @@ void frmRgmMaterialEditor::OnSave(wxCommandEvent &event)
 	{
 		pDir = TheConstruct->GetModule()->VIterate(saDir);
 	}
-	catch(CRainmanException *pE)
+	catch (CRainmanException *pE)
 	{
 		ErrorBoxE(pE);
 		free(saDir);
@@ -108,20 +102,20 @@ void frmRgmMaterialEditor::OnSave(wxCommandEvent &event)
 	}
 	free(saDir);
 
-	if(!saNewFile)
+	if (!saNewFile)
 	{
 		ErrorBoxAS(err_memory);
 		delete pDir;
 		return;
 	}
 
-	IFileStore::IOutputStream* pStream = 0;
+	IFileStore::IOutputStream *pStream = 0;
 	try
 	{
 		pStream = TheConstruct->GetModule()->VOpenOutputStream(saNewFile, true);
 		TheConstruct->GetFilesList()->UpdateDirectoryChildren(m_oFileParent, pDir);
 	}
-	catch(CRainmanException *pE)
+	catch (CRainmanException *pE)
 	{
 		ErrorBoxE(pE);
 		delete pDir;
@@ -131,7 +125,7 @@ void frmRgmMaterialEditor::OnSave(wxCommandEvent &event)
 	}
 	delete pDir;
 
-	if(!pStream)
+	if (!pStream)
 	{
 		ErrorBoxAS(err_couldnotopenoutput);
 		delete[] saNewFile;
@@ -143,21 +137,22 @@ void frmRgmMaterialEditor::OnSave(wxCommandEvent &event)
 	{
 		m_pRgmFile->Save(pStream);
 	}
-	catch(CRainmanException *pE)
+	catch (CRainmanException *pE)
 	{
 		RestoreBackupFile(TheConstruct->GetModule(), m_sFilename);
 		ErrorBoxE(pE);
 		delete pStream;
 		return;
 	}
-	wxMessageBox(AppStr(rgd_savegood),AppStr(rgd_save),wxICON_INFORMATION,this);
+	wxMessageBox(AppStr(rgd_savegood), AppStr(rgd_save), wxICON_INFORMATION, this);
 
 	delete pStream;
 }
 
-void frmRgmMaterialEditor::SetObject(CRgmFile* pRgmFile, bool bTakeOwnership)
+void frmRgmMaterialEditor::SetObject(CRgmFile *pRgmFile, bool bTakeOwnership)
 {
-	if(m_bOwnRgm) delete m_pRgmFile;
+	if (m_bOwnRgm)
+		delete m_pRgmFile;
 	m_pRgmFile = pRgmFile;
 	m_bOwnRgm = bTakeOwnership;
 
@@ -167,85 +162,91 @@ void frmRgmMaterialEditor::SetObject(CRgmFile* pRgmFile, bool bTakeOwnership)
 void frmRgmMaterialEditor::_FillLeft()
 {
 	m_pTables->SetWindowStyle(m_pTables->GetWindowStyle() | wxTR_HIDE_ROOT);
-	wxTreeItemId oRoot = m_pTables->AddRoot(wxT(""), -1, -1, 0 );
+	wxTreeItemId oRoot = m_pTables->AddRoot(wxT(""), -1, -1, 0);
 
 	size_t iMaterialCount = m_pRgmFile->GetMaterialCount();
-	for(size_t i = 0; i < iMaterialCount; ++i)
+	for (size_t i = 0; i < iMaterialCount; ++i)
 	{
-		CRgmFile::CMaterial* pMaterial = m_pRgmFile->GetMaterial(i);
+		CRgmFile::CMaterial *pMaterial = m_pRgmFile->GetMaterial(i);
 
-		wxTreeItemId oMatNode = m_pTables->AppendItem(oRoot, AsciiTowxString(pMaterial->GetName()), -1, -1, new CRgmMaterialTreeData(pMaterial));
+		wxTreeItemId oMatNode = m_pTables->AppendItem(oRoot, AsciiTowxString(pMaterial->GetName()), -1, -1,
+		                                              new CRgmMaterialTreeData(pMaterial));
 
-		if(i == 0)
+		if (i == 0)
 		{
 			m_pTables->SelectItem(oMatNode);
 		}
 	}
 }
 
-wxPGProperty* frmRgmMaterialEditor::GetVariableEditor(CRgmFile::CMaterial::CVariable* pVar)
+wxPGProperty *frmRgmMaterialEditor::GetVariableEditor(CRgmFile::CMaterial::CVariable *pVar)
 {
 	wxString sName = AsciiTowxString(pVar->GetName());
 	try
 	{
-		switch(pVar->GetType())
+		switch (pVar->GetType())
 		{
-		case CRgmFile::CMaterial::CVariable::VT_Number :
+		case CRgmFile::CMaterial::CVariable::VT_Number:
 			return new wxFloatProperty(sName, sName, pVar->GetValueNumber());
 
-		case CRgmFile::CMaterial::CVariable::VT_Text :
+		case CRgmFile::CMaterial::CVariable::VT_Text:
 			return new wxStringProperty(sName, sName, AsciiTowxString(pVar->GetValueText()));
 		}
 	}
-	catch(CRainmanException *pE)
+	catch (CRainmanException *pE)
 	{
 		pE->destroy();
 		return 0;
 	}
-	wxPGProperty* pTmp = new wxStringProperty(sName, sName, wxT("This property cannot be edited"));
+	wxPGProperty *pTmp = new wxStringProperty(sName, sName, wxT("This property cannot be edited"));
 	pTmp->Enable(false);
 	return pTmp;
 }
 
-void frmRgmMaterialEditor::_FillRight(CRgmFile::CMaterial* pMaterial)
+void frmRgmMaterialEditor::_FillRight(CRgmFile::CMaterial *pMaterial)
 {
 	m_pPropertyGrid->Append(new wxPropertyCategory(wxT("Material")));
 
-	wxPGProperty* oEntry = m_pPropertyGrid->Append(new wxStringProperty(wxT("Name"), wxT("Name"), AsciiTowxString(pMaterial->GetName())));
+	wxPGProperty *oEntry =
+	    m_pPropertyGrid->Append(new wxStringProperty(wxT("Name"), wxT("Name"), AsciiTowxString(pMaterial->GetName())));
 	m_pPropertyGrid->SetPropertyHelpString(oEntry, wxT("Name of this material"));
-	m_pPropertyGrid->SetPropertyClientData(oEntry, (void*)0);
+	m_pPropertyGrid->SetPropertyClientData(oEntry, (void *)0);
 
-	oEntry = m_pPropertyGrid->Append(new wxStringProperty(wxT("Shader"), wxT("Shader"), AsciiTowxString(pMaterial->GetDxName())));
+	oEntry = m_pPropertyGrid->Append(
+	    new wxStringProperty(wxT("Shader"), wxT("Shader"), AsciiTowxString(pMaterial->GetDxName())));
 	m_pPropertyGrid->SetPropertyHelpString(oEntry, wxT("The shader used by this material (see Data\\shaders folder)"));
-	m_pPropertyGrid->SetPropertyClientData(oEntry, (void*)0);
+	m_pPropertyGrid->SetPropertyClientData(oEntry, (void *)0);
 
 	m_pPropertyGrid->Append(new wxPropertyCategory(wxT("Children")));
 
 	size_t iChildren = pMaterial->GetVariableCount();
-	for(size_t i = 0; i < iChildren; ++i)
+	for (size_t i = 0; i < iChildren; ++i)
 	{
 		CRgmFile::CMaterial::CVariable *pVar = pMaterial->GetVariable(i);
 		oEntry = m_pPropertyGrid->Append(GetVariableEditor(pVar));
 		m_pPropertyGrid->SetPropertyHelpString(oEntry, wxT("No help available"));
-		m_pPropertyGrid->SetPropertyClientData(oEntry, (void*)pVar);
+		m_pPropertyGrid->SetPropertyClientData(oEntry, (void *)pVar);
 	}
 }
 
-frmRgmMaterialEditor::frmRgmMaterialEditor(wxTreeItemId& oFileParent, wxString sFilename, wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size)
-	: m_oFileParent(oFileParent), m_sFilename(sFilename), wxWindow(parent, id, pos, size)
+frmRgmMaterialEditor::frmRgmMaterialEditor(wxTreeItemId &oFileParent, wxString sFilename, wxWindow *parent,
+                                           wxWindowID id, const wxPoint &pos, const wxSize &size)
+    : m_oFileParent(oFileParent), m_sFilename(sFilename), wxWindow(parent, id, pos, size)
 {
-	wxBoxSizer *pTopSizer = new wxBoxSizer( wxVERTICAL );
+	wxBoxSizer *pTopSizer = new wxBoxSizer(wxVERTICAL);
 
 	pTopSizer->Add(m_pSplitter = new wxSplitterWindow(this, -1), 1, wxEXPAND | wxALL, 0);
 
-	wxBoxSizer *pButtonSizer = new wxBoxSizer( wxHORIZONTAL );
+	wxBoxSizer *pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
 	wxWindow *pBgTemp;
 	pButtonSizer->Add(pBgTemp = new wxButton(this, wxID_SAVE, AppStr(rgd_save)), 0, wxEXPAND | wxALL, 3);
 	pTopSizer->Add(pButtonSizer, 0, wxALIGN_RIGHT);
 
-	m_pTables = new wxTreeCtrl(m_pSplitter, IDC_TablesTree, wxDefaultPosition, wxDefaultSize, wxTR_EDIT_LABELS | wxTR_HAS_BUTTONS | wxTR_LINES_AT_ROOT | wxTR_SINGLE);
-	m_pPropManager = new RgmMaterialwxPropertyGridManager(m_pSplitter, IDC_PropertyGrid, wxDefaultPosition, wxDefaultSize, wxPG_DEFAULT_STYLE | wxPG_DESCRIPTION);
-	m_pPropertyGrid = m_pPropManager->GetGrid(); 
+	m_pTables = new wxTreeCtrl(m_pSplitter, IDC_TablesTree, wxDefaultPosition, wxDefaultSize,
+	                           wxTR_EDIT_LABELS | wxTR_HAS_BUTTONS | wxTR_LINES_AT_ROOT | wxTR_SINGLE);
+	m_pPropManager = new RgmMaterialwxPropertyGridManager(m_pSplitter, IDC_PropertyGrid, wxDefaultPosition,
+	                                                      wxDefaultSize, wxPG_DEFAULT_STYLE | wxPG_DESCRIPTION);
+	m_pPropertyGrid = m_pPropManager->GetGrid();
 
 	m_pSplitter->SplitVertically(m_pTables, m_pPropManager);
 	m_pSplitter->SetSashGravity(0.0);
@@ -253,7 +254,7 @@ frmRgmMaterialEditor::frmRgmMaterialEditor(wxTreeItemId& oFileParent, wxString s
 
 	SetBackgroundColour(pBgTemp->GetBackgroundColour());
 	SetSizer(pTopSizer);
-	pTopSizer->SetSizeHints( this );
+	pTopSizer->SetSizeHints(this);
 
 	m_pRgmFile = 0;
 	m_bOwnRgm = false;
@@ -261,25 +262,26 @@ frmRgmMaterialEditor::frmRgmMaterialEditor(wxTreeItemId& oFileParent, wxString s
 
 frmRgmMaterialEditor::~frmRgmMaterialEditor()
 {
-	if(m_bOwnRgm) delete m_pRgmFile;
+	if (m_bOwnRgm)
+		delete m_pRgmFile;
 }
 
-void frmRgmMaterialEditor::OnTreeSelect(wxTreeEvent& event)
+void frmRgmMaterialEditor::OnTreeSelect(wxTreeEvent &event)
 {
 	m_pPropertyGrid->Freeze();
 	m_pPropertyGrid->Clear();
 
-	if(!event.GetItem().IsOk())
+	if (!event.GetItem().IsOk())
 	{
 		m_pPropertyGrid->Thaw();
 		m_pPropertyGrid->Refresh();
 		return;
 	}
 
-	CRgmMaterialTreeData *pData = (CRgmMaterialTreeData*)m_pTables->GetItemData(event.GetItem());
-	if(pData)
+	CRgmMaterialTreeData *pData = (CRgmMaterialTreeData *)m_pTables->GetItemData(event.GetItem());
+	if (pData)
 	{
-		if(pData->pMaterial)
+		if (pData->pMaterial)
 		{
 			_FillRight(pData->pMaterial);
 		}
@@ -289,54 +291,56 @@ void frmRgmMaterialEditor::OnTreeSelect(wxTreeEvent& event)
 	m_pPropertyGrid->Refresh();
 }
 
-void frmRgmMaterialEditor::OnSize(wxSizeEvent& event)
-{ UNUSED(event);
+void frmRgmMaterialEditor::OnSize(wxSizeEvent &event)
+{
+	UNUSED(event);
 	Layout();
 }
 
-void frmRgmMaterialEditor::OnPropertyChange(wxPropertyGridEvent& event)
+void frmRgmMaterialEditor::OnPropertyChange(wxPropertyGridEvent &event)
 {
-	CRgmFile::CMaterial::CVariable* pVar = (CRgmFile::CMaterial::CVariable*)m_pPropertyGrid->GetPropertyClientData(event.GetProperty());
-	if(pVar == 0)
+	CRgmFile::CMaterial::CVariable *pVar =
+	    (CRgmFile::CMaterial::CVariable *)m_pPropertyGrid->GetPropertyClientData(event.GetProperty());
+	if (pVar == 0)
 	{
-		CRgmMaterialTreeData *pData = (CRgmMaterialTreeData*)m_pTables->GetItemData(m_pTables->GetSelection());
-		if(event.GetPropertyName().IsSameAs(wxT("Name")))
+		CRgmMaterialTreeData *pData = (CRgmMaterialTreeData *)m_pTables->GetItemData(m_pTables->GetSelection());
+		if (event.GetPropertyName().IsSameAs(wxT("Name")))
 		{
-			char* sAscii = wxStringToAscii(event.GetPropertyValue().GetString());
+			char *sAscii = wxStringToAscii(event.GetPropertyValue().GetString());
 			pData->pMaterial->SetName(sAscii);
 			delete[] sAscii;
 			m_pTables->SetItemText(m_pTables->GetSelection(), event.GetPropertyValue().GetString());
 		}
-		else if(event.GetPropertyName().IsSameAs(wxT("Shader")))
+		else if (event.GetPropertyName().IsSameAs(wxT("Shader")))
 		{
-			char* sAscii = wxStringToAscii(event.GetPropertyValue().GetString());
+			char *sAscii = wxStringToAscii(event.GetPropertyValue().GetString());
 			pData->pMaterial->SetDxName(sAscii);
 			delete[] sAscii;
 		}
 	}
 	else
 	{
-		switch(pVar->GetType())
+		switch (pVar->GetType())
 		{
 		case CRgmFile::CMaterial::CVariable::VT_Text:
-			{
-				char* sAscii = wxStringToAscii(event.GetPropertyValue().GetString());
-				pVar->SetValueText(sAscii);
-				delete[] sAscii;
-				break;
-			}
+		{
+			char *sAscii = wxStringToAscii(event.GetPropertyValue().GetString());
+			pVar->SetValueText(sAscii);
+			delete[] sAscii;
+			break;
+		}
 		case CRgmFile::CMaterial::CVariable::VT_Number:
-			pVar->SetValueNumber((float) event.GetPropertyValue().GetDouble());
+			pVar->SetValueNumber((float)event.GetPropertyValue().GetDouble());
 			break;
 		}
 	}
 }
 
-void frmRgmMaterialEditor::OnTreeRightClick(wxTreeEvent& event)
+void frmRgmMaterialEditor::OnTreeRightClick(wxTreeEvent &event)
 {
 	int flags;
-    wxTreeItemId oItemID = m_pTables->HitTest(event.GetPoint(), flags);
-	if(oItemID.IsOk())
+	wxTreeItemId oItemID = m_pTables->HitTest(event.GetPoint(), flags);
+	if (oItemID.IsOk())
 		m_pTables->SelectItem(oItemID);
 	else
 		return;

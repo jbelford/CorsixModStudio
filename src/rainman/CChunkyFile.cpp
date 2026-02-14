@@ -32,7 +32,7 @@ CChunkyFile::CChunkyFile()
 
 CChunkyFile::~CChunkyFile()
 {
-	for(std::vector<CChunk*>::iterator itr = m_vChunks.begin(); itr != m_vChunks.end(); ++itr)
+	for (std::vector<CChunk *>::iterator itr = m_vChunks.begin(); itr != m_vChunks.end(); ++itr)
 	{
 		delete *itr;
 	}
@@ -40,12 +40,12 @@ CChunkyFile::~CChunkyFile()
 
 void CChunkyFile::New(long iVersion)
 {
-	for(std::vector<CChunk*>::iterator itr = m_vChunks.begin(); itr != m_vChunks.end(); ++itr)
+	for (std::vector<CChunk *>::iterator itr = m_vChunks.begin(); itr != m_vChunks.end(); ++itr)
 	{
 		delete *itr;
 	}
 
-	strcpy( (char*)m_sHeader, "Relic Chunky\x0D\x0A\x1A");
+	strcpy((char *)m_sHeader, "Relic Chunky\x0D\x0A\x1A");
 
 	m_iVersion = iVersion;
 	m_iUnknown1 = 1;
@@ -54,7 +54,7 @@ void CChunkyFile::New(long iVersion)
 	m_iUnknown4 = 1;
 }
 
-CChunkyFile::CChunk* CChunkyFile::CChunk::InsertBefore(size_t iBefore, const char* sName, CChunk::eTypes eType)
+CChunkyFile::CChunk *CChunkyFile::CChunk::InsertBefore(size_t iBefore, const char *sName, CChunk::eTypes eType)
 {
 	CChunk *pChunk = CHECK_MEM(new CChunk);
 
@@ -73,7 +73,7 @@ CChunkyFile::CChunk* CChunkyFile::CChunk::InsertBefore(size_t iBefore, const cha
 	return pChunk;
 }
 
-CChunkyFile::CChunk* CChunkyFile::CChunk::AppendNew(const char* sName, CChunk::eTypes eType)
+CChunkyFile::CChunk *CChunkyFile::CChunk::AppendNew(const char *sName, CChunk::eTypes eType)
 {
 	CChunk *pChunk = CHECK_MEM(new CChunk);
 
@@ -92,7 +92,7 @@ CChunkyFile::CChunk* CChunkyFile::CChunk::AppendNew(const char* sName, CChunk::e
 	return pChunk;
 }
 
-CChunkyFile::CChunk* CChunkyFile::AppendNew(const char* sName, CChunk::eTypes eType)
+CChunkyFile::CChunk *CChunkyFile::AppendNew(const char *sName, CChunk::eTypes eType)
 {
 	CChunk *pChunk = CHECK_MEM(new CChunk);
 
@@ -111,27 +111,27 @@ CChunkyFile::CChunk* CChunkyFile::AppendNew(const char* sName, CChunk::eTypes eT
 	return pChunk;
 }
 
-void CChunkyFile::Load(IFileStore::IStream* pStream)
+void CChunkyFile::Load(IFileStore::IStream *pStream)
 {
 	try
 	{
-		pStream->VRead(16, 1, (void*) m_sHeader);
+		pStream->VRead(16, 1, (void *)m_sHeader);
 
-		if(strcmp(m_sHeader, "Relic Chunky\x0D\x0A\x1A") != 0)
+		if (strcmp(m_sHeader, "Relic Chunky\x0D\x0A\x1A") != 0)
 		{
 			throw new CRainmanException(0, __FILE__, __LINE__, "Unrecognised header (%s)", m_sHeader);
 		}
 
 		pStream->Read(m_iVersion);
 		pStream->VRead(1, sizeof(long), &m_iUnknown1);
-		if(m_iVersion >= 3)
+		if (m_iVersion >= 3)
 		{
 			pStream->VRead(1, sizeof(long), &m_iUnknown2);
 			pStream->VRead(1, sizeof(long), &m_iUnknown3);
 			pStream->VRead(1, sizeof(long), &m_iUnknown4);
 		}
 	}
-	catch(CRainmanException *pE)
+	catch (CRainmanException *pE)
 	{
 		throw new CRainmanException(__FILE__, __LINE__, "Error reading from stream", pE);
 	}
@@ -141,112 +141,118 @@ void CChunkyFile::Load(IFileStore::IStream* pStream)
 	try
 	{
 		pChunk = CHECK_MEM(new CChunk);
-		while(pChunk->_Load(pStream, m_iVersion))
+		while (pChunk->_Load(pStream, m_iVersion))
 		{
 			m_vChunks.push_back(pChunk);
 			pChunk = CHECK_MEM(new CChunk);
 		}
 	}
-	catch(CRainmanException *pE)
+	catch (CRainmanException *pE)
 	{
-		throw new CRainmanException(pE, __FILE__, __LINE__, "Error loading root chunk (#%lu)", (unsigned long)m_vChunks.size() );
+		throw new CRainmanException(pE, __FILE__, __LINE__, "Error loading root chunk (#%lu)",
+		                            (unsigned long)m_vChunks.size());
 	}
 
 	delete pChunk;
 }
 
-void CChunkyFile::Save(IFileStore::IOutputStream* pStream)
+void CChunkyFile::Save(IFileStore::IOutputStream *pStream)
 {
 	try
 	{
-		pStream->VWrite(16, 1, (void*) m_sHeader);
+		pStream->VWrite(16, 1, (void *)m_sHeader);
 		pStream->VWrite(1, sizeof(long), &m_iVersion);
 		pStream->VWrite(1, sizeof(long), &m_iUnknown1);
 		pStream->VWrite(1, sizeof(long), &m_iUnknown2);
 		pStream->VWrite(1, sizeof(long), &m_iUnknown3);
 		pStream->VWrite(1, sizeof(long), &m_iUnknown4);
 	}
-	catch(CRainmanException *pE)
+	catch (CRainmanException *pE)
 	{
 		throw new CRainmanException(__FILE__, __LINE__, "Error writing to stream", pE);
 	}
 
-	for(std::vector<CChunk*>::iterator itr = m_vChunks.begin(); itr != m_vChunks.end(); ++itr)
+	for (std::vector<CChunk *>::iterator itr = m_vChunks.begin(); itr != m_vChunks.end(); ++itr)
 	{
 		(**itr)._Save(pStream);
 	}
 }
 
-bool CChunkyFile::CChunk::_Load(IFileStore::IStream* pStream, long iChunkyVersion)
+bool CChunkyFile::CChunk::_Load(IFileStore::IStream *pStream, long iChunkyVersion)
 {
 	char sType[5];
 	sType[4] = 0;
 
 	try
 	{
-		pStream->VRead(4, 1, (void*)sType);
+		pStream->VRead(4, 1, (void *)sType);
 	}
-	catch(CRainmanException *pE)
+	catch (CRainmanException *pE)
 	{
 		pE->destroy();
 		return false;
 	}
 
-	if(strcmp(sType, "DATA") == 0) m_eType = T_Data;
-	else if(strcmp(sType, "FOLD") == 0) m_eType = T_Folder;
-	else throw new CRainmanException(0, __FILE__, __LINE__, "Unrecognised chunk type \'%s\'", sType);
+	if (strcmp(sType, "DATA") == 0)
+		m_eType = T_Data;
+	else if (strcmp(sType, "FOLD") == 0)
+		m_eType = T_Folder;
+	else
+		throw new CRainmanException(0, __FILE__, __LINE__, "Unrecognised chunk type \'%s\'", sType);
 
 	unsigned long iDescriptorLength = 0;
 	try
 	{
-		pStream->VRead(4, 1, (void*)m_sName);
+		pStream->VRead(4, 1, (void *)m_sName);
 		pStream->VRead(1, sizeof(long), &m_iVersion);
 		pStream->VRead(1, sizeof(unsigned long), &m_iDataLength);
 		pStream->VRead(1, sizeof(unsigned long), &iDescriptorLength);
-		if(iChunkyVersion >= 3)
+		if (iChunkyVersion >= 3)
 		{
 			pStream->VRead(1, sizeof(unsigned long), &m_iUnknown1);
 			pStream->VRead(1, sizeof(unsigned long), &m_iUnknown2);
 		}
 	}
-	catch(CRainmanException *pE)
+	catch (CRainmanException *pE)
 	{
 		throw new CRainmanException(__FILE__, __LINE__, "Error reading from stream", pE);
 	}
 
-	if(m_sDescriptor) delete[] m_sDescriptor;
+	if (m_sDescriptor)
+		delete[] m_sDescriptor;
 	m_sDescriptor = 0;
 	m_sDescriptor = CHECK_MEM(new char[iDescriptorLength + 1]);
 	m_sDescriptor[iDescriptorLength] = 0;
 
 	try
 	{
-		pStream->VRead(iDescriptorLength, 1, (void*)m_sDescriptor);
+		pStream->VRead(iDescriptorLength, 1, (void *)m_sDescriptor);
 	}
-	catch(CRainmanException *pE)
+	catch (CRainmanException *pE)
 	{
 		throw new CRainmanException(__FILE__, __LINE__, "Error reading from stream", pE);
 	}
 
-	if(m_eType == T_Folder)
+	if (m_eType == T_Folder)
 	{
 		long iDataEnd = 0;
 		try
 		{
-			iDataEnd = pStream->VTell() + (long) m_iDataLength;
+			iDataEnd = pStream->VTell() + (long)m_iDataLength;
 		}
-		catch(CRainmanException *pE)
+		catch (CRainmanException *pE)
 		{
 			throw new CRainmanException(__FILE__, __LINE__, "Cannot get position from stream", pE);
 		}
 		unsigned long iChildN = 0;
-		while(1)
+		while (1)
 		{
 			try
 			{
-				if(pStream->VTell() >= iDataEnd) break;
+				if (pStream->VTell() >= iDataEnd)
+					break;
 			}
-			catch(CRainmanException *pE)
+			catch (CRainmanException *pE)
 			{
 				throw new CRainmanException(__FILE__, __LINE__, "Cannot get position from stream", pE);
 			}
@@ -255,12 +261,14 @@ bool CChunkyFile::CChunk::_Load(IFileStore::IStream* pStream, long iChunkyVersio
 
 			try
 			{
-				if(!pChunk->_Load(pStream, iChunkyVersion)) throw new CRainmanException(__FILE__, __LINE__, "End of stream reached");
+				if (!pChunk->_Load(pStream, iChunkyVersion))
+					throw new CRainmanException(__FILE__, __LINE__, "End of stream reached");
 			}
-			catch(CRainmanException *pE)
+			catch (CRainmanException *pE)
 			{
 				delete pChunk;
-				throw new CRainmanException(pE, __FILE__, __LINE__, "Error reading child #%lu of FOLD%s", iChildN, m_sName);
+				throw new CRainmanException(pE, __FILE__, __LINE__, "Error reading child #%lu of FOLD%s", iChildN,
+				                            m_sName);
 			}
 
 			m_vChildren.push_back(pChunk);
@@ -269,14 +277,15 @@ bool CChunkyFile::CChunk::_Load(IFileStore::IStream* pStream, long iChunkyVersio
 	}
 	else
 	{
-		if(m_pData) delete[] m_pData;
+		if (m_pData)
+			delete[] m_pData;
 		m_pData = 0;
 		m_pData = CHECK_MEM(new char[m_iDataLength]);
 		try
 		{
-			pStream->VRead(m_iDataLength, 1, (void*)m_pData);
+			pStream->VRead(m_iDataLength, 1, (void *)m_pData);
 		}
-		catch(CRainmanException *pE)
+		catch (CRainmanException *pE)
 		{
 			throw new CRainmanException(__FILE__, __LINE__, "Error reading from stream", pE);
 		}
@@ -289,10 +298,10 @@ unsigned long CChunkyFile::CChunk::_FoldUpdateSize()
 {
 	unsigned long iDataLength;
 	iDataLength = 0;
-	if(m_eType == T_Folder)
+	if (m_eType == T_Folder)
 	{
 		iDataLength = 0;
-		for(std::vector<CChunk*>::iterator itr = m_vChildren.begin(); itr != m_vChildren.end(); ++itr)
+		for (std::vector<CChunk *>::iterator itr = m_vChildren.begin(); itr != m_vChildren.end(); ++itr)
 		{
 			iDataLength += (**itr)._FoldUpdateSize();
 		}
@@ -304,13 +313,14 @@ unsigned long CChunkyFile::CChunk::_FoldUpdateSize()
 	m_iDataLength = iDataLength;
 
 	iDataLength += 8 + (5 * sizeof(long));
-	if(m_sDescriptor != 0 && strlen(m_sDescriptor)) iDataLength += strlen(m_sDescriptor) + 1;
+	if (m_sDescriptor != 0 && strlen(m_sDescriptor))
+		iDataLength += strlen(m_sDescriptor) + 1;
 	return iDataLength;
 }
 
-void CChunkyFile::CChunk::_Save(IFileStore::IOutputStream* pStream)
+void CChunkyFile::CChunk::_Save(IFileStore::IOutputStream *pStream)
 {
-	switch(m_eType)
+	switch (m_eType)
 	{
 	case T_Data:
 		pStream->VWrite(4, 1, "DATA");
@@ -324,35 +334,36 @@ void CChunkyFile::CChunk::_Save(IFileStore::IOutputStream* pStream)
 	};
 
 	unsigned long iDescriptorLength = m_sDescriptor ? (strlen(m_sDescriptor) + 1) : 0;
-	if(iDescriptorLength == 1) iDescriptorLength = 0;
+	if (iDescriptorLength == 1)
+		iDescriptorLength = 0;
 
 	_FoldUpdateSize();
 
 	try
 	{
-		pStream->VWrite(4, 1, (void*)m_sName);
+		pStream->VWrite(4, 1, (void *)m_sName);
 		pStream->VWrite(1, sizeof(long), &m_iVersion);
 		pStream->VWrite(1, sizeof(unsigned long), &m_iDataLength);
 		pStream->VWrite(1, sizeof(unsigned long), &iDescriptorLength);
 		pStream->VWrite(1, sizeof(unsigned long), &m_iUnknown1);
 		pStream->VWrite(1, sizeof(unsigned long), &m_iUnknown2);
-		pStream->VWrite(iDescriptorLength, 1, (void*)m_sDescriptor);
+		pStream->VWrite(iDescriptorLength, 1, (void *)m_sDescriptor);
 	}
-	catch(CRainmanException *pE)
+	catch (CRainmanException *pE)
 	{
 		throw new CRainmanException(__FILE__, __LINE__, "Error writing to stream", pE);
 	}
 
-	if(m_eType == T_Folder)
+	if (m_eType == T_Folder)
 	{
-		for(std::vector<CChunk*>::iterator itr = m_vChildren.begin(); itr != m_vChildren.end(); ++itr)
+		for (std::vector<CChunk *>::iterator itr = m_vChildren.begin(); itr != m_vChildren.end(); ++itr)
 		{
 			(**itr)._Save(pStream);
 		}
 	}
 	else
 	{
-		pStream->VWrite(m_iDataLength, 1, (void*)m_pData);
+		pStream->VWrite(m_iDataLength, 1, (void *)m_pData);
 	}
 }
 
@@ -372,124 +383,87 @@ CChunkyFile::CChunk::CChunk()
 	m_iDataLength = 0;
 }
 
-CChunkyFile::CChunk::eTypes CChunkyFile::CChunk::GetType() const
-{
-	return m_eType;
-}
+CChunkyFile::CChunk::eTypes CChunkyFile::CChunk::GetType() const { return m_eType; }
 
-long CChunkyFile::CChunk::GetVersion() const
-{
-	return m_iVersion;
-}
+long CChunkyFile::CChunk::GetVersion() const { return m_iVersion; }
 
-const char* CChunkyFile::CChunk::GetName() const
-{
-	return (const char*) m_sName;
-}
+const char *CChunkyFile::CChunk::GetName() const { return (const char *)m_sName; }
 
-const char* CChunkyFile::CChunk::GetDescriptor() const
-{
-	return (const char*)(m_sDescriptor ? m_sDescriptor : "");
-}
+const char *CChunkyFile::CChunk::GetDescriptor() const { return (const char *)(m_sDescriptor ? m_sDescriptor : ""); }
 
-CChunkyFile::CChunk* CChunkyFile::GetChildByName(const char* sName, CChunkyFile::CChunk::eTypes eType) const
+CChunkyFile::CChunk *CChunkyFile::GetChildByName(const char *sName, CChunkyFile::CChunk::eTypes eType) const
 {
-	for(std::vector<CChunk*>::const_iterator itr = m_vChunks.begin(); itr != m_vChunks.end(); ++itr)
+	for (std::vector<CChunk *>::const_iterator itr = m_vChunks.begin(); itr != m_vChunks.end(); ++itr)
 	{
 		CChunkyFile::CChunk::eTypes eT = (**itr).m_eType;
-		const char* s = (**itr).m_sName;
-		if( (**itr).m_eType == eType && strcmp(sName, (**itr).m_sName) == 0) return *itr;
+		const char *s = (**itr).m_sName;
+		if ((**itr).m_eType == eType && strcmp(sName, (**itr).m_sName) == 0)
+			return *itr;
 	}
 	return 0;
 }
 
-size_t CChunkyFile::CChunk::GetChildCount() const
-{
-	return m_vChildren.size();
-}
+size_t CChunkyFile::CChunk::GetChildCount() const { return m_vChildren.size(); }
 
-CChunkyFile::CChunk* CChunkyFile::CChunk::GetChild(size_t iN) const
-{
-	return m_vChildren[iN];
-}
+CChunkyFile::CChunk *CChunkyFile::CChunk::GetChild(size_t iN) const { return m_vChildren[iN]; }
 
-void CChunkyFile::CChunk::RemoveChild(size_t iN)
-{
-	m_vChildren.erase(m_vChildren.begin() + iN);
-}
+void CChunkyFile::CChunk::RemoveChild(size_t iN) { m_vChildren.erase(m_vChildren.begin() + iN); }
 
-CChunkyFile::CChunk* CChunkyFile::GetChild(size_t iN) const
-{
-	return m_vChunks[iN];
-}
+CChunkyFile::CChunk *CChunkyFile::GetChild(size_t iN) const { return m_vChunks[iN]; }
 
-size_t CChunkyFile::GetChildCount() const
-{
-	return m_vChunks.size();
-}
+size_t CChunkyFile::GetChildCount() const { return m_vChunks.size(); }
 
-void CChunkyFile::RemoveChild(size_t iN)
-{
-	m_vChunks.erase(m_vChunks.begin() + iN);
-}
+void CChunkyFile::RemoveChild(size_t iN) { m_vChunks.erase(m_vChunks.begin() + iN); }
 
-CChunkyFile::CChunk* CChunkyFile::CChunk::GetChildByName(const char* sName, CChunkyFile::CChunk::eTypes eType) const
+CChunkyFile::CChunk *CChunkyFile::CChunk::GetChildByName(const char *sName, CChunkyFile::CChunk::eTypes eType) const
 {
-	for(std::vector<CChunk*>::const_iterator itr = m_vChildren.begin(); itr != m_vChildren.end(); ++itr)
+	for (std::vector<CChunk *>::const_iterator itr = m_vChildren.begin(); itr != m_vChildren.end(); ++itr)
 	{
-		if( (**itr).m_eType == eType && strcmp(sName, (**itr).m_sName) == 0) return *itr;
+		if ((**itr).m_eType == eType && strcmp(sName, (**itr).m_sName) == 0)
+			return *itr;
 	}
 	return 0;
 }
 
-CMemoryStore::CStream* CChunkyFile::CChunk::GetData()
+CMemoryStore::CStream *CChunkyFile::CChunk::GetData()
 {
 	return CMemoryStore::OpenStreamExt(m_pData, m_iDataLength, false);
 }
 
-char* CChunkyFile::CChunk::GetDataRaw()
-{
-	return m_pData;
-}
+char *CChunkyFile::CChunk::GetDataRaw() { return m_pData; }
 
-unsigned long CChunkyFile::CChunk::GetDataLength()
-{
-	return m_iDataLength;
-}
+unsigned long CChunkyFile::CChunk::GetDataLength() { return m_iDataLength; }
 
-void CChunkyFile::CChunk::SetVersion(long iValue)
-{
-	m_iVersion = iValue;
-}
+void CChunkyFile::CChunk::SetVersion(long iValue) { m_iVersion = iValue; }
 
-void CChunkyFile::CChunk::SetUnknown1(long iValue)
-{
-	m_iUnknown1 = iValue;
-}
+void CChunkyFile::CChunk::SetUnknown1(long iValue) { m_iUnknown1 = iValue; }
 
-void CChunkyFile::CChunk::SetDescriptor(const char* sValue)
+void CChunkyFile::CChunk::SetDescriptor(const char *sValue)
 {
-	if(m_sDescriptor) delete[] m_sDescriptor;
+	if (m_sDescriptor)
+		delete[] m_sDescriptor;
 	size_t iL = strlen(sValue) + 1;
 	m_sDescriptor = new char[iL];
 	memcpy(m_sDescriptor, sValue, iL);
 }
 
-void CChunkyFile::CChunk::SetData(CMemoryStore::COutStream* pStream)
+void CChunkyFile::CChunk::SetData(CMemoryStore::COutStream *pStream)
 {
-	if(m_pData) delete[] m_pData;
+	if (m_pData)
+		delete[] m_pData;
 	m_pData = new char[m_iDataLength = pStream->GetDataLength()];
 	memcpy(m_pData, pStream->GetData(), m_iDataLength);
 }
 
 CChunkyFile::CChunk::~CChunk()
 {
-	if(m_sDescriptor) delete[] m_sDescriptor;
-	if(m_pData) delete[] m_pData;
+	if (m_sDescriptor)
+		delete[] m_sDescriptor;
+	if (m_pData)
+		delete[] m_pData;
 
-	for(std::vector<CChunk*>::iterator itr = m_vChildren.begin(); itr != m_vChildren.end(); ++itr)
+	for (std::vector<CChunk *>::iterator itr = m_vChildren.begin(); itr != m_vChildren.end(); ++itr)
 	{
 		delete *itr;
 	}
 }
-

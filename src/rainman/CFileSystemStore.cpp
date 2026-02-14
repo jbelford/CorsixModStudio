@@ -30,69 +30,67 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 CFileSystemStore::CFileSystemStore(void)
 {
 #ifdef EXTEND_FILESTORE_WITH_TRAVERSE
-	for(int i = 0; i < 26; ++i) m_bDrivePresent[i] = false;
+	for (int i = 0; i < 26; ++i)
+		m_bDrivePresent[i] = false;
 #endif
 }
 
-CFileSystemStore::~CFileSystemStore(void)
-{
-}
+CFileSystemStore::~CFileSystemStore(void) {}
 
 CFileSystemStore::CStream::CStream(void)
 {
 	m_fFile = 0;
-	#ifdef _DEBUG
+#ifdef _DEBUG
 	m_sFile = 0;
-	#endif
+#endif
 }
 
 CFileSystemStore::CStream::~CStream(void)
 {
-	if(m_fFile) fclose(m_fFile);
-	#ifdef _DEBUG
-	if(m_sFile) delete[] m_sFile;
-	#endif
+	if (m_fFile)
+		fclose(m_fFile);
+#ifdef _DEBUG
+	if (m_sFile)
+		delete[] m_sFile;
+#endif
 }
 
-void CFileSystemStore::VInit(void* pUnused)
-{
-	m_bInited = true;
-}
+void CFileSystemStore::VInit(void *pUnused) { m_bInited = true; }
 
-IFileStore::IStream* CFileSystemStore::VOpenStream(const char* sFile)
+IFileStore::IStream *CFileSystemStore::VOpenStream(const char *sFile)
 {
-	FILE* fFile = fopen(sFile, "rb");
-	if(fFile == 0)
+	FILE *fFile = fopen(sFile, "rb");
+	if (fFile == 0)
 	{
 		throw new CRainmanException(0, __FILE__, __LINE__, "Could not open \'%s\'", sFile);
 	}
 
 	CStream *pStream = new CStream();
-	if(pStream == 0)
+	if (pStream == 0)
 	{
 		fclose(fFile);
 		throw new CRainmanException(__FILE__, __LINE__, "Failed to allocate memory");
 	}
 
 	pStream->m_fFile = fFile;
-	#ifdef _DEBUG
+#ifdef _DEBUG
 	pStream->m_sFile = new char[strlen(sFile) + 1];
 	strcpy(pStream->m_sFile, sFile);
-	#endif
+#endif
 
 	return pStream;
 }
 
-IFileStore::IStream* CFileSystemStore::OpenStreamW(const wchar_t* sFile)
+IFileStore::IStream *CFileSystemStore::OpenStreamW(const wchar_t *sFile)
 {
-	FILE* fFile = _wfopen(sFile, L"rb");
-	if(fFile == 0)
+	FILE *fFile = _wfopen(sFile, L"rb");
+	if (fFile == 0)
 	{
 		throw new CRainmanException(0, __FILE__, __LINE__, "Could not open \'%S\'", sFile);
 	}
 
 	CStream *pStream = new CStream();
-	if(pStream == 0)
+	if (pStream == 0)
 	{
 		fclose(fFile);
 		throw new CRainmanException(__FILE__, __LINE__, "Failed to allocate memory");
@@ -104,19 +102,19 @@ IFileStore::IStream* CFileSystemStore::OpenStreamW(const wchar_t* sFile)
 }
 
 #ifdef RAINMAN_MSVC
-bool TryMakeDirectory(char* sPath)
+bool TryMakeDirectory(char *sPath)
 {
 	bool bReturn = false;
-	char* sSep = strrchr(sPath, '\\');
-	if(sSep && strlen(sPath) > 3)
+	char *sSep = strrchr(sPath, '\\');
+	if (sSep && strlen(sPath) > 3)
 	{
 		*sSep = 0;
 		DWORD ret = GetFileAttributesA(sPath);
 		bool bIsDir = (ret != (DWORD)-1) && (ret & FILE_ATTRIBUTE_DIRECTORY);
-		if(!bIsDir)
+		if (!bIsDir)
 		{
 			TryMakeDirectory(sPath);
-			if(_mkdir(sPath) == 0)
+			if (_mkdir(sPath) == 0)
 				bReturn = true;
 		}
 		*sSep = '\\';
@@ -124,19 +122,19 @@ bool TryMakeDirectory(char* sPath)
 	return bReturn;
 }
 
-bool TryMakeDirectoryW(wchar_t* sPath)
+bool TryMakeDirectoryW(wchar_t *sPath)
 {
 	bool bReturn = false;
-	wchar_t* sSep = wcsrchr(sPath, '\\');
-	if(sSep && wcslen(sPath) > 3)
+	wchar_t *sSep = wcsrchr(sPath, '\\');
+	if (sSep && wcslen(sPath) > 3)
 	{
 		*sSep = 0;
 		DWORD ret = GetFileAttributesW(sPath);
 		bool bIsDir = (ret != (DWORD)-1) && (ret & FILE_ATTRIBUTE_DIRECTORY);
-		if(!bIsDir)
+		if (!bIsDir)
 		{
 			TryMakeDirectoryW(sPath);
-			if(_wmkdir(sPath) == 0)
+			if (_wmkdir(sPath) == 0)
 				bReturn = true;
 		}
 		*sSep = '\\';
@@ -145,32 +143,32 @@ bool TryMakeDirectoryW(wchar_t* sPath)
 }
 #endif
 
-IFileStore::IOutputStream* CFileSystemStore::OpenOutputStreamW(const wchar_t* sFile, bool bEraseIfPresent)
+IFileStore::IOutputStream *CFileSystemStore::OpenOutputStreamW(const wchar_t *sFile, bool bEraseIfPresent)
 {
-	FILE* fFile = 0;
-	if(!bEraseIfPresent)
+	FILE *fFile = 0;
+	if (!bEraseIfPresent)
 		fFile = _wfopen(sFile, L"r+b");
-	if(fFile == 0)
+	if (fFile == 0)
 		fFile = _wfopen(sFile, L"w+b");
-	if(fFile == 0)
+	if (fFile == 0)
 	{
 		// Maybe folder doesn't exist?
 #ifdef RAINMAN_MSVC
-		wchar_t* sFile2 = wcsdup(sFile);
-		if(TryMakeDirectoryW(sFile2))
+		wchar_t *sFile2 = wcsdup(sFile);
+		if (TryMakeDirectoryW(sFile2))
 		{
-			if(!bEraseIfPresent)
+			if (!bEraseIfPresent)
 				fFile = _wfopen(sFile, L"r+b");
-			if(fFile == 0)
+			if (fFile == 0)
 				fFile = _wfopen(sFile, L"w+b");
 		}
 		free(sFile2);
 #endif
 	}
-	if(fFile == 0)
+	if (fFile == 0)
 		throw new CRainmanException(0, __FILE__, __LINE__, "Could not open \'%S\'", sFile);
 	COutputStream *pStream = new COutputStream();
-	if(pStream == 0)
+	if (pStream == 0)
 	{
 		fclose(fFile);
 		throw new CRainmanException(__FILE__, __LINE__, "Failed to allocate memory");
@@ -180,32 +178,32 @@ IFileStore::IOutputStream* CFileSystemStore::OpenOutputStreamW(const wchar_t* sF
 	return pStream;
 }
 
-IFileStore::IOutputStream* CFileSystemStore::VOpenOutputStream(const char* sFile, bool bEraseIfPresent)
+IFileStore::IOutputStream *CFileSystemStore::VOpenOutputStream(const char *sFile, bool bEraseIfPresent)
 {
-	FILE* fFile = 0;
-	if(!bEraseIfPresent)
+	FILE *fFile = 0;
+	if (!bEraseIfPresent)
 		fFile = fopen(sFile, "r+b");
-	if(fFile == 0)
+	if (fFile == 0)
 		fFile = fopen(sFile, "w+b");
-	if(fFile == 0)
+	if (fFile == 0)
 	{
 		// Maybe folder doesn't exist?
 #ifdef RAINMAN_MSVC
-		char* sFile2 = strdup(sFile);
-		if(TryMakeDirectory(sFile2))
+		char *sFile2 = strdup(sFile);
+		if (TryMakeDirectory(sFile2))
 		{
-			if(!bEraseIfPresent)
+			if (!bEraseIfPresent)
 				fFile = fopen(sFile, "r+b");
-			if(fFile == 0)
+			if (fFile == 0)
 				fFile = fopen(sFile, "w+b");
 		}
 		free(sFile2);
 #endif
 	}
-	if(fFile == 0)
+	if (fFile == 0)
 		throw new CRainmanException(0, __FILE__, __LINE__, "Could not open \'%s\' for writing", sFile);
 	COutputStream *pStream = new COutputStream();
-	if(pStream == 0)
+	if (pStream == 0)
 	{
 		fclose(fFile);
 		throw new CRainmanException(__FILE__, __LINE__, "Failed to allocate memory");
@@ -215,26 +213,25 @@ IFileStore::IOutputStream* CFileSystemStore::VOpenOutputStream(const char* sFile
 	return pStream;
 }
 
-CFileSystemStore::COutputStream::COutputStream(void)
-{
-	m_fFile = 0;
-}
+CFileSystemStore::COutputStream::COutputStream(void) { m_fFile = 0; }
 
 CFileSystemStore::COutputStream::~COutputStream(void)
 {
-	if(m_fFile) fclose(m_fFile);
+	if (m_fFile)
+		fclose(m_fFile);
 }
 
-void CFileSystemStore::COutputStream::VWrite(unsigned long iItemCount, unsigned long iItemSize, const void* pSource)
+void CFileSystemStore::COutputStream::VWrite(unsigned long iItemCount, unsigned long iItemSize, const void *pSource)
 {
-	if(m_fFile == 0) throw new CRainmanException(__FILE__, __LINE__, "No file associated with stream");
+	if (m_fFile == 0)
+		throw new CRainmanException(__FILE__, __LINE__, "No file associated with stream");
 
 	long iOldPos = ftell(m_fFile);
 	size_t iItemsWritten = fwrite(pSource, iItemSize, iItemCount, m_fFile);
 
-	if(iItemsWritten == iItemCount)
+	if (iItemsWritten == iItemCount)
 	{
-		//return true;
+		// return true;
 	}
 	else
 	{
@@ -243,18 +240,20 @@ void CFileSystemStore::COutputStream::VWrite(unsigned long iItemCount, unsigned 
 	}
 }
 
-void CFileSystemStore::COutputStream::VRead(unsigned long iItemCount, unsigned long iItemSize, void* pDestination)
+void CFileSystemStore::COutputStream::VRead(unsigned long iItemCount, unsigned long iItemSize, void *pDestination)
 {
-	if(m_fFile == 0) throw new CRainmanException(__FILE__, __LINE__, "No file associated with stream");
+	if (m_fFile == 0)
+		throw new CRainmanException(__FILE__, __LINE__, "No file associated with stream");
 	unsigned long iByteCount = iItemCount * iItemSize;
 
-	unsigned char* pTempDest = new unsigned char[iByteCount];
-	if(pTempDest == 0) throw new CRainmanException(__FILE__, __LINE__, "Failed to allocate memory");
+	unsigned char *pTempDest = new unsigned char[iByteCount];
+	if (pTempDest == 0)
+		throw new CRainmanException(__FILE__, __LINE__, "Failed to allocate memory");
 
 	long iOldPos = ftell(m_fFile);
 	size_t iItemsRead = fread(pTempDest, iItemSize, iItemCount, m_fFile);
 
-	if(iItemsRead == iItemCount)
+	if (iItemsRead == iItemCount)
 	{
 		memcpy(pDestination, pTempDest, iByteCount);
 		delete[] pTempDest;
@@ -269,20 +268,24 @@ void CFileSystemStore::COutputStream::VRead(unsigned long iItemCount, unsigned l
 
 void CFileSystemStore::COutputStream::VSeek(long iPosition, IFileStore::IOutputStream::SeekLocation SeekFrom)
 {
-	if(m_fFile == 0) throw new CRainmanException(__FILE__, __LINE__, "No file associated with stream");
+	if (m_fFile == 0)
+		throw new CRainmanException(__FILE__, __LINE__, "No file associated with stream");
 
-	switch(SeekFrom)
+	switch (SeekFrom)
 	{
 	case IFileStore::IStream::SL_Current:
-		if(fseek(m_fFile, iPosition, SEEK_CUR) != 0) throw new CRainmanException(__FILE__, __LINE__, "Seek failed");
+		if (fseek(m_fFile, iPosition, SEEK_CUR) != 0)
+			throw new CRainmanException(__FILE__, __LINE__, "Seek failed");
 		break;
 
 	case IFileStore::IStream::SL_End:
-		if(fseek(m_fFile, iPosition, SEEK_END) != 0) throw new CRainmanException(__FILE__, __LINE__, "Seek failed");
+		if (fseek(m_fFile, iPosition, SEEK_END) != 0)
+			throw new CRainmanException(__FILE__, __LINE__, "Seek failed");
 		break;
 
 	case IFileStore::IStream::SL_Root:
-		if(fseek(m_fFile, iPosition, SEEK_SET) != 0) throw new CRainmanException(__FILE__, __LINE__, "Seek failed");
+		if (fseek(m_fFile, iPosition, SEEK_SET) != 0)
+			throw new CRainmanException(__FILE__, __LINE__, "Seek failed");
 		break;
 
 	default:
@@ -292,22 +295,25 @@ void CFileSystemStore::COutputStream::VSeek(long iPosition, IFileStore::IOutputS
 
 long CFileSystemStore::COutputStream::VTell()
 {
-	if(m_fFile == 0) throw new CRainmanException(__FILE__, __LINE__, "No file associated with stream");
+	if (m_fFile == 0)
+		throw new CRainmanException(__FILE__, __LINE__, "No file associated with stream");
 	return ftell(m_fFile);
 }
 
-void CFileSystemStore::CStream::VRead(unsigned long iItemCount, unsigned long iItemSize, void* pDestination)
+void CFileSystemStore::CStream::VRead(unsigned long iItemCount, unsigned long iItemSize, void *pDestination)
 {
-	if(m_fFile == 0) throw new CRainmanException(__FILE__, __LINE__, "No file associated with stream");
+	if (m_fFile == 0)
+		throw new CRainmanException(__FILE__, __LINE__, "No file associated with stream");
 	unsigned long iByteCount = iItemCount * iItemSize;
 
-	unsigned char* pTempDest = new unsigned char[iByteCount];
-	if(pTempDest == 0) throw new CRainmanException(__FILE__, __LINE__, "Failed to allocate memory");
+	unsigned char *pTempDest = new unsigned char[iByteCount];
+	if (pTempDest == 0)
+		throw new CRainmanException(__FILE__, __LINE__, "Failed to allocate memory");
 
 	long iOldPos = ftell(m_fFile);
 	size_t iItemsRead = fread(pTempDest, iItemSize, iItemCount, m_fFile);
 
-	if(iItemsRead == iItemCount)
+	if (iItemsRead == iItemCount)
 	{
 		memcpy(pDestination, pTempDest, iByteCount);
 		delete[] pTempDest;
@@ -323,20 +329,24 @@ void CFileSystemStore::CStream::VRead(unsigned long iItemCount, unsigned long iI
 
 void CFileSystemStore::CStream::VSeek(long iPosition, IFileStore::IStream::SeekLocation SeekFrom)
 {
-	if(m_fFile == 0) throw new CRainmanException(__FILE__, __LINE__, "No file associated with stream");
+	if (m_fFile == 0)
+		throw new CRainmanException(__FILE__, __LINE__, "No file associated with stream");
 
-	switch(SeekFrom)
+	switch (SeekFrom)
 	{
 	case IFileStore::IStream::SL_Current:
-		if(fseek(m_fFile, iPosition, SEEK_CUR) != 0) throw new CRainmanException(__FILE__, __LINE__, "Seek failed");
+		if (fseek(m_fFile, iPosition, SEEK_CUR) != 0)
+			throw new CRainmanException(__FILE__, __LINE__, "Seek failed");
 		break;
 
 	case IFileStore::IStream::SL_End:
-		if(fseek(m_fFile, iPosition, SEEK_END) != 0) throw new CRainmanException(__FILE__, __LINE__, "Seek failed");
+		if (fseek(m_fFile, iPosition, SEEK_END) != 0)
+			throw new CRainmanException(__FILE__, __LINE__, "Seek failed");
 		break;
 
 	case IFileStore::IStream::SL_Root:
-		if(fseek(m_fFile, iPosition, SEEK_SET) != 0) throw new CRainmanException(__FILE__, __LINE__, "Seek failed");
+		if (fseek(m_fFile, iPosition, SEEK_SET) != 0)
+			throw new CRainmanException(__FILE__, __LINE__, "Seek failed");
 		break;
 
 	default:
@@ -346,45 +356,45 @@ void CFileSystemStore::CStream::VSeek(long iPosition, IFileStore::IStream::SeekL
 
 long CFileSystemStore::CStream::VTell()
 {
-	if(m_fFile == 0) throw new CRainmanException(__FILE__, __LINE__, "No file associated with stream");
+	if (m_fFile == 0)
+		throw new CRainmanException(__FILE__, __LINE__, "No file associated with stream");
 	return ftell(m_fFile);
 }
 
-static char* mystrdup(const char* sStr)
+static char *mystrdup(const char *sStr)
 {
-	char* s = new char[strlen(sStr) + 1];
-	if(s == 0) return 0;
+	char *s = new char[strlen(sStr) + 1];
+	if (s == 0)
+		return 0;
 	strcpy(s, sStr);
 	return s;
 }
 
-static wchar_t* mystrdup(const wchar_t* sStr)
+static wchar_t *mystrdup(const wchar_t *sStr)
 {
-	wchar_t* s = new wchar_t[wcslen(sStr) + 1];
-	if(s == 0) return 0;
+	wchar_t *s = new wchar_t[wcslen(sStr) + 1];
+	if (s == 0)
+		return 0;
 	wcscpy(s, sStr);
 	return s;
 }
 
 #ifdef EXTEND_FILESTORE_WITH_TRAVERSE
-tLastWriteTime CFileSystemStore::VGetLastWriteTime(const char* sPath)
-{
-	return GetLastWriteTime(sPath);
-}
+tLastWriteTime CFileSystemStore::VGetLastWriteTime(const char *sPath) { return GetLastWriteTime(sPath); }
 
-void CFileSystemStore::VCreateFolderIn(const char* sPath, const char* sNewFolderName)
+void CFileSystemStore::VCreateFolderIn(const char *sPath, const char *sNewFolderName)
 {
-	char* sNewPath = new char[strlen(sPath) + strlen(sNewFolderName) + 2];
+	char *sNewPath = new char[strlen(sPath) + strlen(sNewFolderName) + 2];
 	strcpy(sNewPath, sPath);
 	strcat(sNewPath, "\\");
 	strcat(sNewPath, sNewFolderName);
 	bool bRet = (_mkdir(sNewPath) == 0);
-	if(!bRet)
+	if (!bRet)
 	{
 #ifdef WIN32
-		if(errno == EEXIST)
+		if (errno == EEXIST)
 		{
-			if(PathIsDirectory(sNewPath))
+			if (PathIsDirectory(sNewPath))
 			{
 				delete[] sNewPath;
 				return;
@@ -397,7 +407,7 @@ void CFileSystemStore::VCreateFolderIn(const char* sPath, const char* sNewFolder
 	delete[] sNewPath;
 }
 
-CFileSystemStore::CIteratorW::CIteratorW(const wchar_t* sFolder,const CFileSystemStore *pStore)
+CFileSystemStore::CIteratorW::CIteratorW(const wchar_t *sFolder, const CFileSystemStore *pStore)
 {
 	m_HandFD = 0;
 	m_wParentPath = mystrdup(sFolder);
@@ -407,9 +417,9 @@ CFileSystemStore::CIteratorW::CIteratorW(const wchar_t* sFolder,const CFileSyste
 	m_sFullPath = 0;
 	m_sFileName = 0;
 
-	wchar_t* sTmp;
+	wchar_t *sTmp;
 	sTmp = new wchar_t[wcslen(sFolder) + 3];
-	if(sTmp == 0)
+	if (sTmp == 0)
 	{
 		delete[] m_wParentPath;
 		throw new CRainmanException(__FILE__, __LINE__, "Failed to allocate memory");
@@ -419,15 +429,15 @@ CFileSystemStore::CIteratorW::CIteratorW(const wchar_t* sFolder,const CFileSyste
 
 	m_HandFD = FindFirstFileW(sTmp, &m_W32FD);
 	delete[] sTmp;
-	if(m_HandFD == INVALID_HANDLE_VALUE)
+	if (m_HandFD == INVALID_HANDLE_VALUE)
 	{
 		m_HandFD = 0;
 		delete[] m_wParentPath;
 		throw new CRainmanException(0, __FILE__, __LINE__, "FindFirstFile failed (%S)", sFolder);
 	}
-	while(wcscmp(m_W32FD.cFileName,L".") == 0 || wcscmp(m_W32FD.cFileName,L"..") == 0)
+	while (wcscmp(m_W32FD.cFileName, L".") == 0 || wcscmp(m_W32FD.cFileName, L"..") == 0)
 	{
-		if(!FindNextFileW(m_HandFD, &m_W32FD))
+		if (!FindNextFileW(m_HandFD, &m_W32FD))
 		{
 			FindClose(m_HandFD);
 			m_HandFD = 0;
@@ -436,7 +446,7 @@ CFileSystemStore::CIteratorW::CIteratorW(const wchar_t* sFolder,const CFileSyste
 	}
 
 	m_wFullPath = new wchar_t[wcslen(m_wParentPath) + wcslen(m_W32FD.cFileName) + 2];
-	if(m_wFullPath == 0)
+	if (m_wFullPath == 0)
 	{
 		delete[] m_wParentPath;
 		FindClose(m_HandFD);
@@ -448,9 +458,9 @@ CFileSystemStore::CIteratorW::CIteratorW(const wchar_t* sFolder,const CFileSyste
 	wcscat(m_wFullPath, m_W32FD.cFileName);
 }
 
-CFileSystemStore::CIterator::CIterator(const char* sFolder,const CFileSystemStore *pStore)
+CFileSystemStore::CIterator::CIterator(const char *sFolder, const CFileSystemStore *pStore)
 {
-	#ifdef RAINMAN_GNUC
+#ifdef RAINMAN_GNUC
 
 	m_pDirectory = 0;
 	m_pDirEnt = 0;
@@ -460,7 +470,7 @@ CFileSystemStore::CIterator::CIterator(const char* sFolder,const CFileSystemStor
 	m_sFullPath = 0;
 	m_pStore = pStore;
 
-	if( (m_pDirectory = opendir(m_sParentPath)) == 0)
+	if ((m_pDirectory = opendir(m_sParentPath)) == 0)
 	{
 		delete[] m_sParentPath;
 		throw new CRainmanException(0, __FILE__, __LINE__, "opendir failed (%s)", sFolder);
@@ -468,29 +478,28 @@ CFileSystemStore::CIterator::CIterator(const char* sFolder,const CFileSystemStor
 
 	while ((m_pDirEnt = readdir(m_pDirectory)) != 0)
 	{
-		if( (!strcmp(m_pDirEnt->d_name, ".")) ||
-			(!strcmp(m_pDirEnt->d_name, "..")) )
+		if ((!strcmp(m_pDirEnt->d_name, ".")) || (!strcmp(m_pDirEnt->d_name, "..")))
 		{
 			continue;
-        }
+		}
 		break;
 	}
 
-	if(m_pDirEnt != 0)
+	if (m_pDirEnt != 0)
 	{
 		m_sFullPath = new char[strlen(m_sParentPath) + strlen(m_pDirEnt->d_name) + 1];
 		sprintf(m_sFullPath, "%s%s", m_sParentPath, m_pDirEnt->d_name);
 	}
 
-	#else
+#else
 	m_HandFD = 0;
 	m_sParentPath = mystrdup(sFolder);
 	m_sFullPath = 0;
 	m_pStore = pStore;
 
-	char* sTmp;
+	char *sTmp;
 	sTmp = new char[strlen(sFolder) + 3];
-	if(sTmp == 0)
+	if (sTmp == 0)
 	{
 		delete[] m_sParentPath;
 		throw new CRainmanException(__FILE__, __LINE__, "Failed to allocate memory");
@@ -500,15 +509,15 @@ CFileSystemStore::CIterator::CIterator(const char* sFolder,const CFileSystemStor
 
 	m_HandFD = FindFirstFileA(sTmp, &m_W32FD);
 	delete[] sTmp;
-	if(m_HandFD == INVALID_HANDLE_VALUE)
+	if (m_HandFD == INVALID_HANDLE_VALUE)
 	{
 		m_HandFD = 0;
 		delete[] m_sParentPath;
 		throw new CRainmanException(0, __FILE__, __LINE__, "FindFirstFile failed (%s)", sFolder);
 	}
-	while(strcmp(m_W32FD.cFileName,".") == 0 || strcmp(m_W32FD.cFileName,"..") == 0)
+	while (strcmp(m_W32FD.cFileName, ".") == 0 || strcmp(m_W32FD.cFileName, "..") == 0)
 	{
-		if(!FindNextFileA(m_HandFD, &m_W32FD))
+		if (!FindNextFileA(m_HandFD, &m_W32FD))
 		{
 			FindClose(m_HandFD);
 			m_HandFD = 0;
@@ -517,7 +526,7 @@ CFileSystemStore::CIterator::CIterator(const char* sFolder,const CFileSystemStor
 	}
 
 	m_sFullPath = new char[strlen(m_sParentPath) + strlen(m_W32FD.cFileName) + 2];
-	if(m_sFullPath == 0)
+	if (m_sFullPath == 0)
 	{
 		delete[] m_sParentPath;
 		FindClose(m_HandFD);
@@ -527,7 +536,7 @@ CFileSystemStore::CIterator::CIterator(const char* sFolder,const CFileSystemStor
 	strcpy(m_sFullPath, m_sParentPath);
 	strcat(m_sFullPath, "\\");
 	strcat(m_sFullPath, m_W32FD.cFileName);
-	#endif
+#endif
 }
 
 CFileSystemStore::CIteratorW::~CIteratorW()
@@ -537,79 +546,99 @@ CFileSystemStore::CIteratorW::~CIteratorW()
 	delete[] m_sFileName;
 	delete[] m_wParentPath;
 	delete[] m_wFullPath;
-	if(m_HandFD) FindClose(m_HandFD);
+	if (m_HandFD)
+		FindClose(m_HandFD);
 }
 
 CFileSystemStore::CIterator::~CIterator()
 {
 	delete[] m_sParentPath;
 	delete[] m_sFullPath;
-	#ifdef RAINMAN_GNUC
-	if(m_pDirectory) closedir(m_pDirectory);
-	#else
-	if(m_HandFD) FindClose(m_HandFD);
-	#endif
+#ifdef RAINMAN_GNUC
+	if (m_pDirectory)
+		closedir(m_pDirectory);
+#else
+	if (m_HandFD)
+		FindClose(m_HandFD);
+#endif
 }
 
 IDirectoryTraverser::IIterator::eTypes CFileSystemStore::CIteratorW::VGetType()
 {
-	if(m_HandFD == 0) return IDirectoryTraverser::IIterator::T_Nothing;
-	return (m_W32FD.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ? IDirectoryTraverser::IIterator::T_Directory : IDirectoryTraverser::IIterator::T_File);
+	if (m_HandFD == 0)
+		return IDirectoryTraverser::IIterator::T_Nothing;
+	return (m_W32FD.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ? IDirectoryTraverser::IIterator::T_Directory
+	                                                            : IDirectoryTraverser::IIterator::T_File);
 }
 
 IDirectoryTraverser::IIterator::eTypes CFileSystemStore::CIterator::VGetType()
 {
-	#ifdef RAINMAN_GNUC
-	if(m_pDirEnt == 0) return IDirectoryTraverser::IIterator::T_Nothing;
-	return (m_pDirEnt->d_type == DT_DIR) ? IDirectoryTraverser::IIterator::T_Directory : IDirectoryTraverser::IIterator::T_File;
-	#else
-	if(m_HandFD == 0) return IDirectoryTraverser::IIterator::T_Nothing;
-	return (m_W32FD.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ? IDirectoryTraverser::IIterator::T_Directory : IDirectoryTraverser::IIterator::T_File);
-	#endif
+#ifdef RAINMAN_GNUC
+	if (m_pDirEnt == 0)
+		return IDirectoryTraverser::IIterator::T_Nothing;
+	return (m_pDirEnt->d_type == DT_DIR) ? IDirectoryTraverser::IIterator::T_Directory
+	                                     : IDirectoryTraverser::IIterator::T_File;
+#else
+	if (m_HandFD == 0)
+		return IDirectoryTraverser::IIterator::T_Nothing;
+	return (m_W32FD.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ? IDirectoryTraverser::IIterator::T_Directory
+	                                                            : IDirectoryTraverser::IIterator::T_File);
+#endif
 }
 
-IDirectoryTraverser::IIterator* CFileSystemStore::CIteratorW::VOpenSubDir()
+IDirectoryTraverser::IIterator *CFileSystemStore::CIteratorW::VOpenSubDir()
 {
-	if(m_HandFD == 0) throw new CRainmanException(__FILE__, __LINE__, "Nothing to open");
-	if(m_W32FD.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) return new CIteratorW(m_wFullPath, m_pStore);
+	if (m_HandFD == 0)
+		throw new CRainmanException(__FILE__, __LINE__, "Nothing to open");
+	if (m_W32FD.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+		return new CIteratorW(m_wFullPath, m_pStore);
 	throw new CRainmanException(__FILE__, __LINE__, "Cannot iterate something which is not a folder");
 }
 
-IDirectoryTraverser::IIterator* CFileSystemStore::CIterator::VOpenSubDir()
+IDirectoryTraverser::IIterator *CFileSystemStore::CIterator::VOpenSubDir()
 {
-	#ifdef RAINMAN_GNUC
-	if(m_pDirEnt == 0) throw new CRainmanException(__FILE__, __LINE__, "Nothing to open");
-	if(m_pDirEnt->d_type == DT_DIR) return new CIterator(m_sFullPath, m_pStore);
+#ifdef RAINMAN_GNUC
+	if (m_pDirEnt == 0)
+		throw new CRainmanException(__FILE__, __LINE__, "Nothing to open");
+	if (m_pDirEnt->d_type == DT_DIR)
+		return new CIterator(m_sFullPath, m_pStore);
 	throw new CRainmanException(__FILE__, __LINE__, "Cannot iterate something which is not a folder");
-	#else
-	if(m_HandFD == 0) throw new CRainmanException(__FILE__, __LINE__, "Nothing to open");
-	if(m_W32FD.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) return new CIterator(m_sFullPath, m_pStore);
+#else
+	if (m_HandFD == 0)
+		throw new CRainmanException(__FILE__, __LINE__, "Nothing to open");
+	if (m_W32FD.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+		return new CIterator(m_sFullPath, m_pStore);
 	throw new CRainmanException(__FILE__, __LINE__, "Cannot iterate something which is not a folder");
-	#endif
+#endif
 }
 
-IFileStore::IStream* CFileSystemStore::CIteratorW::VOpenFile()
+IFileStore::IStream *CFileSystemStore::CIteratorW::VOpenFile()
 {
-	if(m_HandFD == 0 || m_pStore == 0) throw new CRainmanException(__FILE__, __LINE__, "Handle or store invalid");
-	if(m_W32FD.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) throw new CRainmanException(__FILE__, __LINE__, "Cannot open a folder");
-	return ((CFileSystemStore*)m_pStore)->OpenStreamW(m_wFullPath);
+	if (m_HandFD == 0 || m_pStore == 0)
+		throw new CRainmanException(__FILE__, __LINE__, "Handle or store invalid");
+	if (m_W32FD.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+		throw new CRainmanException(__FILE__, __LINE__, "Cannot open a folder");
+	return ((CFileSystemStore *)m_pStore)->OpenStreamW(m_wFullPath);
 }
 
-IFileStore::IStream* CFileSystemStore::CIterator::VOpenFile()
+IFileStore::IStream *CFileSystemStore::CIterator::VOpenFile()
 {
-	#ifdef RAINMAN_GNUC
-	if(m_pDirEnt == 0 || m_pStore == 0) throw new CRainmanException(__FILE__, __LINE__, "Handle or store invalid");
-	return ((CFileSystemStore*)m_pStore)->VOpenStream(m_sFullPath);
-	#else
-	if(m_HandFD == 0 || m_pStore == 0) throw new CRainmanException(__FILE__, __LINE__, "Handle or store invalid");
-	if(m_W32FD.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) throw new CRainmanException(__FILE__, __LINE__, "Cannot open a folder");
-	return ((CFileSystemStore*)m_pStore)->VOpenStream(m_sFullPath);
-	#endif
+#ifdef RAINMAN_GNUC
+	if (m_pDirEnt == 0 || m_pStore == 0)
+		throw new CRainmanException(__FILE__, __LINE__, "Handle or store invalid");
+	return ((CFileSystemStore *)m_pStore)->VOpenStream(m_sFullPath);
+#else
+	if (m_HandFD == 0 || m_pStore == 0)
+		throw new CRainmanException(__FILE__, __LINE__, "Handle or store invalid");
+	if (m_W32FD.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+		throw new CRainmanException(__FILE__, __LINE__, "Cannot open a folder");
+	return ((CFileSystemStore *)m_pStore)->VOpenStream(m_sFullPath);
+#endif
 }
 
-void CFileSystemStore::CIteratorW::_ensureAsciiVersionOf(const wchar_t* wString, char* &sString)
+void CFileSystemStore::CIteratorW::_ensureAsciiVersionOf(const wchar_t *wString, char *&sString)
 {
-	if(sString == 0)
+	if (sString == 0)
 	{
 		sString = new char[wcslen(wString) + 1];
 		int i = -1;
@@ -617,69 +646,69 @@ void CFileSystemStore::CIteratorW::_ensureAsciiVersionOf(const wchar_t* wString,
 		{
 			++i;
 			sString[i] = (char)wString[i];
-		} while(wString[i]);
+		} while (wString[i]);
 	}
 }
 
-const char* CFileSystemStore::CIteratorW::VGetName()
+const char *CFileSystemStore::CIteratorW::VGetName()
 {
-	if(m_HandFD == 0) throw new CRainmanException(__FILE__, __LINE__, "Invalid handle");
+	if (m_HandFD == 0)
+		throw new CRainmanException(__FILE__, __LINE__, "Invalid handle");
 	_ensureAsciiVersionOf(m_W32FD.cFileName, m_sFileName);
 	return m_sFileName;
 }
 
-const char* CFileSystemStore::CIterator::VGetName()
+const char *CFileSystemStore::CIterator::VGetName()
 {
-	#ifdef RAINMAN_GNUC
-	if(m_pDirEnt == 0) throw new CRainmanException(__FILE__, __LINE__, "Invalid handle");
+#ifdef RAINMAN_GNUC
+	if (m_pDirEnt == 0)
+		throw new CRainmanException(__FILE__, __LINE__, "Invalid handle");
 	return m_pDirEnt->d_name;
-	#else
-	if(m_HandFD == 0) throw new CRainmanException(__FILE__, __LINE__, "Invalid handle");
+#else
+	if (m_HandFD == 0)
+		throw new CRainmanException(__FILE__, __LINE__, "Invalid handle");
 	return m_W32FD.cFileName;
-	#endif
+#endif
 }
 
-const char* CFileSystemStore::CIteratorW::VGetFullPath()
+const char *CFileSystemStore::CIteratorW::VGetFullPath()
 {
 	_ensureAsciiVersionOf(m_wFullPath, m_sFullPath);
 	return m_sFullPath;
 }
 
-const char* CFileSystemStore::CIterator::VGetFullPath()
-{
-	return m_sFullPath;
-}
+const char *CFileSystemStore::CIterator::VGetFullPath() { return m_sFullPath; }
 
-const char* CFileSystemStore::CIteratorW::VGetDirectoryPath()
+const char *CFileSystemStore::CIteratorW::VGetDirectoryPath()
 {
 	_ensureAsciiVersionOf(m_wParentPath, m_sParentPath);
 	return m_sParentPath;
 }
 
-const char* CFileSystemStore::CIterator::VGetDirectoryPath()
-{
-	return m_sParentPath;
-}
+const char *CFileSystemStore::CIterator::VGetDirectoryPath() { return m_sParentPath; }
 
 tLastWriteTime CFileSystemStore::CIterator::VGetLastWriteTime()
 {
-	#ifdef RAINMAN_GNUC
-	if(m_pDirEnt == 0 || m_pStore == 0) throw new CRainmanException(__FILE__, __LINE__, "Handle or store invalid");
-	return ((CFileSystemStore*)m_pStore)->VGetLastWriteTime(m_sFullPath);
-	#else
-	if(m_HandFD == 0) throw new CRainmanException(__FILE__, __LINE__, "Invalid handle");
+#ifdef RAINMAN_GNUC
+	if (m_pDirEnt == 0 || m_pStore == 0)
+		throw new CRainmanException(__FILE__, __LINE__, "Handle or store invalid");
+	return ((CFileSystemStore *)m_pStore)->VGetLastWriteTime(m_sFullPath);
+#else
+	if (m_HandFD == 0)
+		throw new CRainmanException(__FILE__, __LINE__, "Invalid handle");
 	tLastWriteTime oRet = m_W32FD.ftLastWriteTime.dwHighDateTime;
 	oRet <<= 32;
 	oRet += m_W32FD.ftLastWriteTime.dwLowDateTime;
 	oRet /= 10;
 	oRet -= 0x2B6109100;
 	return oRet;
-	#endif
+#endif
 }
 
 tLastWriteTime CFileSystemStore::CIteratorW::VGetLastWriteTime()
 {
-	if(m_HandFD == 0) throw new CRainmanException(__FILE__, __LINE__, "Invalid handle");
+	if (m_HandFD == 0)
+		throw new CRainmanException(__FILE__, __LINE__, "Invalid handle");
 	tLastWriteTime oRet = m_W32FD.ftLastWriteTime.dwHighDateTime;
 	oRet <<= 32;
 	oRet += m_W32FD.ftLastWriteTime.dwLowDateTime;
@@ -690,8 +719,9 @@ tLastWriteTime CFileSystemStore::CIteratorW::VGetLastWriteTime()
 
 IDirectoryTraverser::IIterator::eErrors CFileSystemStore::CIterator::VNextItem()
 {
-	#ifdef RAINMAN_GNUC
-	if(m_pDirEnt == 0) throw new CRainmanException(__FILE__, __LINE__, "Invalid handle");
+#ifdef RAINMAN_GNUC
+	if (m_pDirEnt == 0)
+		throw new CRainmanException(__FILE__, __LINE__, "Invalid handle");
 
 	if ((m_pDirEnt = readdir(m_pDirectory)) != 0)
 	{
@@ -705,13 +735,14 @@ IDirectoryTraverser::IIterator::eErrors CFileSystemStore::CIterator::VNextItem()
 		return E_AtEnd;
 	}
 
-	#else
-	if(m_HandFD == 0) throw new CRainmanException(__FILE__, __LINE__, "Invalid handle");
-	if(FindNextFileA(m_HandFD, &m_W32FD) == TRUE)
+#else
+	if (m_HandFD == 0)
+		throw new CRainmanException(__FILE__, __LINE__, "Invalid handle");
+	if (FindNextFileA(m_HandFD, &m_W32FD) == TRUE)
 	{
 		delete[] m_sFullPath;
 		m_sFullPath = new char[strlen(m_sParentPath) + strlen(m_W32FD.cFileName) + 2];
-		if(m_sFullPath == 0)
+		if (m_sFullPath == 0)
 		{
 			FindClose(m_HandFD);
 			m_HandFD = 0;
@@ -725,7 +756,7 @@ IDirectoryTraverser::IIterator::eErrors CFileSystemStore::CIterator::VNextItem()
 	}
 	else
 	{
-		if(GetLastError() == ERROR_NO_MORE_FILES)
+		if (GetLastError() == ERROR_NO_MORE_FILES)
 		{
 			return E_AtEnd;
 		}
@@ -736,17 +767,18 @@ IDirectoryTraverser::IIterator::eErrors CFileSystemStore::CIterator::VNextItem()
 			throw new CRainmanException(__FILE__, __LINE__, "Unknown error");
 		}
 	}
-	#endif
+#endif
 }
 
 IDirectoryTraverser::IIterator::eErrors CFileSystemStore::CIteratorW::VNextItem()
 {
-	if(m_HandFD == 0) throw new CRainmanException(__FILE__, __LINE__, "Invalid handle");
-	if(FindNextFileW(m_HandFD, &m_W32FD) == TRUE)
+	if (m_HandFD == 0)
+		throw new CRainmanException(__FILE__, __LINE__, "Invalid handle");
+	if (FindNextFileW(m_HandFD, &m_W32FD) == TRUE)
 	{
 		delete[] m_wFullPath;
 		m_wFullPath = new wchar_t[wcslen(m_wParentPath) + wcslen(m_W32FD.cFileName) + 2];
-		if(m_sFullPath == 0)
+		if (m_sFullPath == 0)
 		{
 			FindClose(m_HandFD);
 			m_HandFD = 0;
@@ -756,14 +788,16 @@ IDirectoryTraverser::IIterator::eErrors CFileSystemStore::CIteratorW::VNextItem(
 		wcscat(m_wFullPath, L"\\");
 		wcscat(m_wFullPath, m_W32FD.cFileName);
 
-		delete[] m_sFullPath; m_sFullPath = 0;
-		delete[] m_sFileName; m_sFileName = 0;
+		delete[] m_sFullPath;
+		m_sFullPath = 0;
+		delete[] m_sFileName;
+		m_sFileName = 0;
 
 		return E_OK;
 	}
 	else
 	{
-		if(GetLastError() == ERROR_NO_MORE_FILES)
+		if (GetLastError() == ERROR_NO_MORE_FILES)
 		{
 			return E_AtEnd;
 		}
@@ -776,28 +810,22 @@ IDirectoryTraverser::IIterator::eErrors CFileSystemStore::CIteratorW::VNextItem(
 	}
 }
 
-IDirectoryTraverser::IIterator* CFileSystemStore::VIterate(const char* sPath)
-{
-	return new CIterator(sPath, this);
-}
+IDirectoryTraverser::IIterator *CFileSystemStore::VIterate(const char *sPath) { return new CIterator(sPath, this); }
 
-CFileSystemStore::CIteratorW* CFileSystemStore::IterateW(const wchar_t* sPath)
-{
-	return new CIteratorW(sPath, this);
-}
+CFileSystemStore::CIteratorW *CFileSystemStore::IterateW(const wchar_t *sPath) { return new CIteratorW(sPath, this); }
 
 unsigned long CFileSystemStore::VGetEntryPointCount()
 {
-	#ifdef RAINMAN_GNUC
+#ifdef RAINMAN_GNUC
 	m_sDriveStrings[0][0] = '/';
 	m_sDriveStrings[0][1] = 0;
 	return 1;
-	#else
+#else
 	unsigned long iCount = 0;
 	int curdrive = _getdrive();
-	for(int i = 1; i <= 26; ++i)
+	for (int i = 1; i <= 26; ++i)
 	{
-		if(_chdrive(i) == 0)
+		if (_chdrive(i) == 0)
 		{
 			m_sDriveStrings[iCount][0] = i + 'A' - 1;
 			m_sDriveStrings[iCount][1] = ':';
@@ -807,12 +835,8 @@ unsigned long CFileSystemStore::VGetEntryPointCount()
 	}
 	_chdrive(curdrive);
 	return iCount;
-	#endif
-}
-
-const char* CFileSystemStore::VGetEntryPoint(unsigned long iID)
-{
-	return m_sDriveStrings[iID];
-}
 #endif
+}
 
+const char *CFileSystemStore::VGetEntryPoint(unsigned long iID) { return m_sDriveStrings[iID]; }
+#endif

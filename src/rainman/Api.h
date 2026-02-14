@@ -21,7 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #define _RAINMAN_API_H_
 #include "gnuc_defines.h"
 
-//#pragma warning( disable : 4251 )
+// #pragma warning( disable : 4251 )
 
 #ifdef RAINMAN_GNUC
 #define RAINMAN_NO_EXPORTS
@@ -37,4 +37,3 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #endif // RAINMAN_EXPORTS
 #endif // RAINMAN_GNUC
 #endif
-

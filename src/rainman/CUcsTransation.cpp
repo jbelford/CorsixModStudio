@@ -21,19 +21,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "memdebug.h"
 #include "Exception.h"
 
-CUcsTransaction::CUcsTransaction(CUcsFile* pUcsObject)
-{
-	m_pRawFile = pUcsObject;
-}
+CUcsTransaction::CUcsTransaction(CUcsFile *pUcsObject) { m_pRawFile = pUcsObject; }
 
-CUcsTransaction::~CUcsTransaction(void)
-{
-	_Clean();
-}
+CUcsTransaction::~CUcsTransaction(void) { _Clean(); }
 
-void CUcsTransaction::Save(const char* sFile)
+void CUcsTransaction::Save(const char *sFile)
 {
-	for(std::map<unsigned long, wchar_t*>::iterator itr = m_mapValues.begin(); itr != m_mapValues.end(); ++itr)
+	for (std::map<unsigned long, wchar_t *>::iterator itr = m_mapValues.begin(); itr != m_mapValues.end(); ++itr)
 	{
 		m_pRawFile->ReplaceString(itr->first, itr->second);
 	}
@@ -46,15 +40,16 @@ void CUcsTransaction::Save(const char* sFile)
 	CATCH_THROW("Raw object failed to write")
 }
 
-std::map<unsigned long, wchar_t*>* CUcsTransaction::GetRawMap()
+std::map<unsigned long, wchar_t *> *CUcsTransaction::GetRawMap()
 {
-	if(m_mapValues.size() == 0) return m_pRawFile->GetRawMap();
+	if (m_mapValues.size() == 0)
+		return m_pRawFile->GetRawMap();
 
 	// Need to make a faux map of a combination of our edits and the original
 	m_mapCombinationValues.clear();
 	m_mapCombinationValues = *m_pRawFile->GetRawMap();
 
-	for(std::map<unsigned long, wchar_t*>::iterator itr = m_mapValues.begin(); itr != m_mapValues.end(); ++itr)
+	for (std::map<unsigned long, wchar_t *>::iterator itr = m_mapValues.begin(); itr != m_mapValues.end(); ++itr)
 	{
 		m_mapCombinationValues[itr->first] = itr->second;
 	}
@@ -73,14 +68,12 @@ void CUcsTransaction::Load(IFileStore::IStream *pStream)
 	CATCH_THROW("Raw object failed to load")
 }
 
-const wchar_t* CUcsTransaction::ResolveStringID(unsigned long iID) 
+const wchar_t *CUcsTransaction::ResolveStringID(unsigned long iID)
 {
-	const wchar_t* pS = m_mapValues[iID];
-	if(!pS) return m_pRawFile->ResolveStringID(iID);
+	const wchar_t *pS = m_mapValues[iID];
+	if (!pS)
+		return m_pRawFile->ResolveStringID(iID);
 	return pS;
 }
 
-CUcsFile* CUcsTransaction::GetRawObject()
-{
-	return m_pRawFile;
-}
+CUcsFile *CUcsTransaction::GetRawObject() { return m_pRawFile; }

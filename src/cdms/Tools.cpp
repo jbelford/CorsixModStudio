@@ -33,13 +33,13 @@
 // Rainman_RGDDump.h removed; RgdDump usage is commented-out dead code
 #include "Common.h"
 
-wxString CLocaleTool::GetName() {return AppStr(locale);}
-wxString CLocaleTool::GetHelpString() {return wxT("");}
-wxString CLocaleTool::GetBitmapName() {return wxT("IDB_TOOL_LOC");}
+wxString CLocaleTool::GetName() { return AppStr(locale); }
+wxString CLocaleTool::GetHelpString() { return wxT(""); }
+wxString CLocaleTool::GetBitmapName() { return wxT("IDB_TOOL_LOC"); }
 void CLocaleTool::DoAction()
 {
 	ConstructFrame::eLoadModGames eGame;
-	switch(TheConstruct->GetModule()->GetModuleType())
+	switch (TheConstruct->GetModule()->GetModuleType())
 	{
 	case CModuleFile::MT_CompanyOfHeroesEarly:
 	case CModuleFile::MT_CompanyOfHeroes:
@@ -58,53 +58,54 @@ void CLocaleTool::DoAction()
 	frmLocaleSelector *pLocaleSelect = new frmLocaleSelector(AppStr(localeselect_title), eGame);
 	pLocaleSelect->ShowModal();
 	delete pLocaleSelect;
-	
+
 	CRefreshFilesTool oReload;
 	oReload.DoAction();
 }
 
-wxString CAESetupTool::GetName() {return AppStr(aesetup_name);}
-wxString CAESetupTool::GetHelpString() {return AppStr(aesetup_help);}
-wxString CAESetupTool::GetBitmapName() {return wxT("IDB_TOOL_AESETUP");}
+wxString CAESetupTool::GetName() { return AppStr(aesetup_name); }
+wxString CAESetupTool::GetHelpString() { return AppStr(aesetup_help); }
+wxString CAESetupTool::GetBitmapName() { return wxT("IDB_TOOL_AESETUP"); }
 void CAESetupTool::DoAction()
 {
 	frmUCSToDAT oMake;
 	oMake.ShowModal();
 }
 
-wxString CUcsTool::GetName() {return AppStr(ucs_editor);}
-wxString CUcsTool::GetHelpString() {return wxT("");}
-wxString CUcsTool::GetBitmapName() {return wxT("IDB_TOOL_UCS");}
+wxString CUcsTool::GetName() { return AppStr(ucs_editor); }
+wxString CUcsTool::GetHelpString() { return wxT(""); }
+wxString CUcsTool::GetBitmapName() { return wxT("IDB_TOOL_UCS"); }
 
-void CUcsTool::HandleSelectorResponse(frmUCSSelector* pSelector, wxAuiNotebook* pTabsDestination, unsigned long* pResult, bool bRegisterTabStrip)
+void CUcsTool::HandleSelectorResponse(frmUCSSelector *pSelector, wxAuiNotebook *pTabsDestination,
+                                      unsigned long *pResult, bool bRegisterTabStrip)
 {
-	frmUCSEditor* pForm;
+	frmUCSEditor *pForm;
 
-	switch(pSelector->ShowModal())
+	switch (pSelector->ShowModal())
 	{
 	case wxID_NEW:
-		{
+	{
 		size_t iUCSCount = TheConstruct->GetModule()->GetUcsCount();
-		for(size_t i = 0; i < iUCSCount; ++i)
+		for (size_t i = 0; i < iUCSCount; ++i)
 		{
-			CModuleFile::CUcsHandler* pUcs = TheConstruct->GetModule()->GetUcs(i);
-			if(AsciiTowxString(pUcs->GetFileName()) == pSelector->GetAnswer())
+			CModuleFile::CUcsHandler *pUcs = TheConstruct->GetModule()->GetUcs(i);
+			if (AsciiTowxString(pUcs->GetFileName()) == pSelector->GetAnswer())
 			{
-				wxMessageBox(AppStr(file_newucs_dup_caption),AppStr(file_newucs_title),wxICON_ERROR,TheConstruct);
+				wxMessageBox(AppStr(file_newucs_dup_caption), AppStr(file_newucs_title), wxICON_ERROR, TheConstruct);
 				delete pSelector;
 				return;
 			}
 		}
 		wxString sNewFile = TheConstruct->GetModuleFile().BeforeLast('\\');
 		sNewFile.Append(wxT("\\"));
-		if(TheConstruct->GetModule()->GetModuleType() == CModuleFile::MT_CompanyOfHeroes)
+		if (TheConstruct->GetModule()->GetModuleType() == CModuleFile::MT_CompanyOfHeroes)
 		{
 			sNewFile.Append(wxT("Engine\\Locale\\"));
 		}
 		else
 		{
-			const char* sLocFolder = TheConstruct->GetModule()->GetLocaleFolder();
-			if(sLocFolder && *sLocFolder)
+			const char *sLocFolder = TheConstruct->GetModule()->GetLocaleFolder();
+			if (sLocFolder && *sLocFolder)
 			{
 				sNewFile.Append(AsciiTowxString(sLocFolder));
 				sNewFile.Append(wxT("\\"));
@@ -119,13 +120,13 @@ void CUcsTool::HandleSelectorResponse(frmUCSSelector* pSelector, wxAuiNotebook* 
 		sNewFile.Append(wxT("\\"));
 		sNewFile.Append(pSelector->GetAnswer());
 
-		char* saNewFile = wxStringToAscii(sNewFile);
+		char *saNewFile = wxStringToAscii(sNewFile);
 		CUcsFile *pNewUcs = new CUcsFile;
 		try
 		{
 			pNewUcs->Save(saNewFile);
 		}
-		catch(CRainmanException *pE)
+		catch (CRainmanException *pE)
 		{
 			delete[] saNewFile;
 			delete pNewUcs;
@@ -139,40 +140,54 @@ void CUcsTool::HandleSelectorResponse(frmUCSSelector* pSelector, wxAuiNotebook* 
 		{
 			TheConstruct->GetModule()->NewUCS(saNewFile, pNewUcs);
 		}
-		catch(CRainmanException *pE)
+		catch (CRainmanException *pE)
 		{
 			delete pNewUcs;
 			delete[] saNewFile;
 			ErrorBoxE(pE);
 			return;
 		}
-		pTabsDestination->AddPage(pForm = new frmUCSEditor(pTabsDestination, -1, false, wxDefaultPosition, wxDefaultSize, pResult), wxString().Append(AppStr(ucsedit_tabname)).Append(wxT(" [")).Append(pSelector->GetAnswer()).Append(wxT("]")), true);
+		pTabsDestination->AddPage(
+		    pForm = new frmUCSEditor(pTabsDestination, -1, false, wxDefaultPosition, wxDefaultSize, pResult),
+		    wxString()
+		        .Append(AppStr(ucsedit_tabname))
+		        .Append(wxT(" ["))
+		        .Append(pSelector->GetAnswer())
+		        .Append(wxT("]")),
+		    true);
 		pForm->FillFromCUcsFile(pNewUcs);
 		delete[] saNewFile;
 		break;
-		}
+	}
 	case wxID_OPEN:
-		{
-		pTabsDestination->AddPage(pForm = new frmUCSEditor(pTabsDestination, -1, pSelector->IsAnswerUcsReadOnly(), wxDefaultPosition, wxDefaultSize, pResult), wxString().Append(AppStr(ucsedit_tabname)).Append(wxT(" [")).Append(pSelector->GetAnswer()).Append(wxT("]")), true);
+	{
+		pTabsDestination->AddPage(pForm = new frmUCSEditor(pTabsDestination, -1, pSelector->IsAnswerUcsReadOnly(),
+		                                                   wxDefaultPosition, wxDefaultSize, pResult),
+		                          wxString()
+		                              .Append(AppStr(ucsedit_tabname))
+		                              .Append(wxT(" ["))
+		                              .Append(pSelector->GetAnswer())
+		                              .Append(wxT("]")),
+		                          true);
 		pForm->FillFromCUcsFile(pSelector->GetAnswerUcs());
 		/*
 		size_t iUCSCount = TheConstruct->GetModule()->GetUcsCount();
 		for(size_t i = 0; i < iUCSCount; ++i)
 		{
-			CModuleFile::CUcsHandler* pUcs = TheConstruct->GetModule()->GetUcs(i);
-			if(AsciiTowxString(pUcs->GetFileName()) == pSelector->GetAnswer())
-			{
-				pForm->FillFromCUcsFile(pUcs->GetUcsHandle());
-			}
+		    CModuleFile::CUcsHandler* pUcs = TheConstruct->GetModule()->GetUcs(i);
+		    if(AsciiTowxString(pUcs->GetFileName()) == pSelector->GetAnswer())
+		    {
+		        pForm->FillFromCUcsFile(pUcs->GetUcsHandle());
+		    }
 		}
 		*/
 		break;
-		}
+	}
 	default:
 		return; // should never happen?
 	};
 
-	if(bRegisterTabStrip)
+	if (bRegisterTabStrip)
 		pForm->SetTabStripForLoad(pTabsDestination);
 
 	delete pSelector;
@@ -183,50 +198,50 @@ void CUcsTool::DoAction()
 	HandleSelectorResponse(new frmUCSSelector(AppStr(ucsselect_title)), TheConstruct->GetTabs());
 }
 
-wxString CAttribSnapshotTool::GetName() {return AppStr(xml_export);}
-wxString CAttribSnapshotTool::GetHelpString() {return wxT("");}
-wxString CAttribSnapshotTool::GetBitmapName() {return wxT("IDB_SNAPSHOT");}
-void CAttribSnapshotTool::DoAction()
-{
-}
+wxString CAttribSnapshotTool::GetName() { return AppStr(xml_export); }
+wxString CAttribSnapshotTool::GetHelpString() { return wxT(""); }
+wxString CAttribSnapshotTool::GetBitmapName() { return wxT("IDB_SNAPSHOT"); }
+void CAttribSnapshotTool::DoAction() {}
 
-wxString CSgaPackerTool::GetName() {return AppStr(sgapack_title);}
-wxString CSgaPackerTool::GetHelpString() {return wxT("");}
-wxString CSgaPackerTool::GetBitmapName() {return wxT("IDB_SGAPACK");}
+wxString CSgaPackerTool::GetName() { return AppStr(sgapack_title); }
+wxString CSgaPackerTool::GetHelpString() { return wxT(""); }
+wxString CSgaPackerTool::GetBitmapName() { return wxT("IDB_SGAPACK"); }
 void CSgaPackerTool::DoAction()
 {
 	frmSgaMake oMake;
 	oMake.ShowModal();
 }
 
-wxString CExtractAllTool::GetName() {return AppStr(massext_toolname);}
-wxString CExtractAllTool::GetHelpString() {return wxT("");}
-wxString CExtractAllTool::GetBitmapName() {return wxT("IDB_TOOL_EXTALL");}
+wxString CExtractAllTool::GetName() { return AppStr(massext_toolname); }
+wxString CExtractAllTool::GetHelpString() { return wxT(""); }
+wxString CExtractAllTool::GetBitmapName() { return wxT("IDB_TOOL_EXTALL"); }
 void CExtractAllTool::DoAction()
 {
-	frmMassExtract oMassExtract(wxT(""), TheConstruct->GetFilesList()->GetTree()->GetRootItem(), true );
+	frmMassExtract oMassExtract(wxT(""), TheConstruct->GetFilesList()->GetTree()->GetRootItem(), true);
 	oMassExtract.ShowModal();
 }
 
-wxString CDpsCalculatorTool::GetName() {return AppStr(dpscalculator_title);}
-wxString CDpsCalculatorTool::GetHelpString() {return wxT("");}
-wxString CDpsCalculatorTool::GetBitmapName() {return wxT("IDB_TOOL_CALCULATOR");}
+wxString CDpsCalculatorTool::GetName() { return AppStr(dpscalculator_title); }
+wxString CDpsCalculatorTool::GetHelpString() { return wxT(""); }
+wxString CDpsCalculatorTool::GetBitmapName() { return wxT("IDB_TOOL_CALCULATOR"); }
 void CDpsCalculatorTool::DoAction()
 {
-	wxString sOutFile = wxFileSelector(AppStr(dpscalculator_outselect), wxT(""), wxT(""), wxT("html"), AppStr(dpscalculator_filter) , wxFD_SAVE | wxFD_OVERWRITE_PROMPT, TheConstruct);
+	wxString sOutFile = wxFileSelector(AppStr(dpscalculator_outselect), wxT(""), wxT(""), wxT("html"),
+	                                   AppStr(dpscalculator_filter), wxFD_SAVE | wxFD_OVERWRITE_PROMPT, TheConstruct);
 
-	if(sOutFile.Len() == 0) return;
+	if (sOutFile.Len() == 0)
+		return;
 
-	char* sOut = wxStringToAscii(sOutFile);
+	char *sOut = wxStringToAscii(sOutFile);
 
 	frmMessage *pMsg = new frmMessage(wxT("IDB_TOOL_CALCULATOR"), AppStr(dpscalculator_message));
 	pMsg->Show(true);
 	wxSafeYield(pMsg);
 
-	CModuleFile* pMod = TheConstruct->GetModule();
+	CModuleFile *pMod = TheConstruct->GetModule();
 
-	IDirectoryTraverser::IIterator* pItr = 0;
-	AutoDPS_Internal::tAutoDPS_Package* pPack = 0;
+	IDirectoryTraverser::IIterator *pItr = 0;
+	AutoDPS_Internal::tAutoDPS_Package *pPack = 0;
 
 	try
 	{
@@ -234,7 +249,7 @@ void CDpsCalculatorTool::DoAction()
 		{
 			pItr = pMod->VIterate("data\\attrib\\weapon");
 		}
-		catch(CRainmanException *pE)
+		catch (CRainmanException *pE)
 		{
 			throw new CModStudioException(__FILE__, __LINE__, "Cannot iterate over weapon files", pE);
 		}
@@ -243,7 +258,7 @@ void CDpsCalculatorTool::DoAction()
 		{
 			pPack = AutoDPS::AutoDPS_Scan(pItr);
 		}
-		catch(CRainmanException *pE)
+		catch (CRainmanException *pE)
 		{
 			throw new CModStudioException(__FILE__, __LINE__, "Error scanning weapon files", pE);
 		}
@@ -252,7 +267,7 @@ void CDpsCalculatorTool::DoAction()
 		{
 			AutoDPS::AutoDPS_Analyse(pPack);
 		}
-		catch(CRainmanException *pE)
+		catch (CRainmanException *pE)
 		{
 			throw new CModStudioException(__FILE__, __LINE__, "Error calculating DPS values", pE);
 		}
@@ -261,7 +276,7 @@ void CDpsCalculatorTool::DoAction()
 		{
 			AutoDPS::AutoDPS_AddUnitList(pPack, pMod);
 		}
-		catch(CRainmanException *pE)
+		catch (CRainmanException *pE)
 		{
 			throw new CModStudioException(__FILE__, __LINE__, "Error getting unit list", pE);
 		}
@@ -270,28 +285,30 @@ void CDpsCalculatorTool::DoAction()
 		{
 			AutoDPS::AutoDPS_OutputHTML(pPack, sOut);
 		}
-		catch(CRainmanException *pE)
+		catch (CRainmanException *pE)
 		{
 			throw new CModStudioException(pE, __FILE__, __LINE__, "Error saving output to \'%s\'", sOut);
 		}
 
-		wxMessageBox(AppStr(dpscalculator_done),AppStr(dpscalculator_title),wxICON_INFORMATION,TheConstruct);
+		wxMessageBox(AppStr(dpscalculator_done), AppStr(dpscalculator_title), wxICON_INFORMATION, TheConstruct);
 	}
-	catch(CRainmanException *pE)
+	catch (CRainmanException *pE)
 	{
 		ErrorBoxE(pE);
 	}
 
-	if(pPack) delete pPack;
-	if(pItr) delete pItr;
+	if (pPack)
+		delete pPack;
+	if (pItr)
+		delete pItr;
 	delete[] sOut;
 	delete pMsg;
 }
 
-wxString CMakeLuaInheritTree::GetName() {return wxT("Make Lua Inheritance Tree");}
-wxString CMakeLuaInheritTree::GetHelpString() {return wxT("");}
-wxString CMakeLuaInheritTree::GetBitmapName() {return wxT("IDB_REDBUTTON");}
-bool CMakeLuaInheritTree::_DoesExist(const char* sFol)
+wxString CMakeLuaInheritTree::GetName() { return wxT("Make Lua Inheritance Tree"); }
+wxString CMakeLuaInheritTree::GetHelpString() { return wxT(""); }
+wxString CMakeLuaInheritTree::GetBitmapName() { return wxT("IDB_REDBUTTON"); }
+bool CMakeLuaInheritTree::_DoesExist(const char *sFol)
 {
 	IDirectoryTraverser::IIterator *pItr = 0;
 
@@ -299,7 +316,7 @@ bool CMakeLuaInheritTree::_DoesExist(const char* sFol)
 	{
 		pItr = TheConstruct->GetModule()->VIterate(sFol);
 	}
-	catch(CRainmanException* pE)
+	catch (CRainmanException *pE)
 	{
 		pE->destroy();
 		return false;
@@ -309,37 +326,37 @@ bool CMakeLuaInheritTree::_DoesExist(const char* sFol)
 	return true;
 }
 
-void CMakeLuaInheritTree::_ForEach(IDirectoryTraverser::IIterator* pItr, void* pTag)
+void CMakeLuaInheritTree::_ForEach(IDirectoryTraverser::IIterator *pItr, void *pTag)
 {
-	const char* sN = pItr->VGetName();
+	const char *sN = pItr->VGetName();
 	sN = strrchr(sN, '.');
-	if(sN)
+	if (sN)
 	{
-		if( (strnicmp(sN, ".lua", 4) == 0) || (strnicmp(sN, ".nil", 4) == 0) )
+		if ((strnicmp(sN, ".lua", 4) == 0) || (strnicmp(sN, ".nil", 4) == 0))
 		{
-			CMakeLuaInheritTree* pC = (CMakeLuaInheritTree*)pTag;
+			CMakeLuaInheritTree *pC = (CMakeLuaInheritTree *)pTag;
 			pC->_DoLua(pItr);
 		}
 	}
 }
 
-void CMakeLuaInheritTree::_DoLua(IDirectoryTraverser::IIterator* pItr)
+void CMakeLuaInheritTree::_DoLua(IDirectoryTraverser::IIterator *pItr)
 {
-	IFileStore::IStream* pStream = pItr->VOpenFile();
-	char* sRef = 0;
+	IFileStore::IStream *pStream = pItr->VOpenFile();
+	char *sRef = 0;
 
 	CLuaFile oLua;
 	try
 	{
 		sRef = oLua.GetReferencedFile(pStream);
 	}
-	catch(CRainmanException* pE)
+	catch (CRainmanException *pE)
 	{
 		pE->destroy();
 		sRef = 0;
 	}
 
-	if(sRef == 0)
+	if (sRef == 0)
 	{
 		unsigned long iChildCount;
 		try
@@ -348,48 +365,48 @@ void CMakeLuaInheritTree::_DoLua(IDirectoryTraverser::IIterator* pItr)
 			oLua.Load(pStream, TheConstruct->GetModule(), pItr->VGetFullPath());
 			iChildCount = oLua.VGetChildCount();
 		}
-		catch(CRainmanException* pE)
+		catch (CRainmanException *pE)
 		{
 			delete pStream;
 			ErrorBoxE(pE);
 			return;
 		}
 
-		for(unsigned long i = 0; i < iChildCount; ++i)
+		for (unsigned long i = 0; i < iChildCount; ++i)
 		{
-			IMetaNode* pChild = 0;
-			IMetaNode::IMetaTable* pTable = 0;
+			IMetaNode *pChild = 0;
+			IMetaNode::IMetaTable *pTable = 0;
 
 			try
 			{
 				pChild = oLua.VGetChild(i);
-				if(strcmp(pChild->VGetName(), "GameData") != 0)
+				if (strcmp(pChild->VGetName(), "GameData") != 0)
 				{
 					delete pChild;
 					continue;
 				}
 				pTable = pChild->VGetValueMetatable();
-				if(pTable->VGetReferenceType() == IMetaNode::DT_String)
+				if (pTable->VGetReferenceType() == IMetaNode::DT_String)
 				{
 					sRef = strdup(pTable->VGetReferenceString());
 				}
-				else if(pTable->VGetReferenceType() == IMetaNode::DT_WString)
+				else if (pTable->VGetReferenceType() == IMetaNode::DT_WString)
 				{
-					const wchar_t* pS = pTable->VGetReferenceWString();
+					const wchar_t *pS = pTable->VGetReferenceWString();
 					signed long iS = -1;
-					sRef = (char*)malloc(wcslen(pS) + 1);
+					sRef = (char *)malloc(wcslen(pS) + 1);
 					do
 					{
 						++iS;
 						sRef[iS] = pS[iS];
-					}while(pS[iS]);
+					} while (pS[iS]);
 				}
 				else
 				{
 					sRef = strdup("");
 				}
 			}
-			catch(CRainmanException* pE)
+			catch (CRainmanException *pE)
 			{
 				delete pStream;
 				delete pChild;
@@ -401,7 +418,7 @@ void CMakeLuaInheritTree::_DoLua(IDirectoryTraverser::IIterator* pItr)
 			delete pTable;
 			break;
 		}
-		if(sRef == 0)
+		if (sRef == 0)
 		{
 			delete pStream;
 			QUICK_THROW("Cannot find Reference for file");
@@ -409,19 +426,16 @@ void CMakeLuaInheritTree::_DoLua(IDirectoryTraverser::IIterator* pItr)
 	}
 	delete pStream;
 
-	CInheritTable::CNode* pThis = pTable->findOrMake(pItr->VGetFullPath() + iAttribL);
-	CInheritTable::CNode* pReff = pTable->findOrMake(sRef);
+	CInheritTable::CNode *pThis = pTable->findOrMake(pItr->VGetFullPath() + iAttribL);
+	CInheritTable::CNode *pReff = pTable->findOrMake(sRef);
 	pThis->setParent(pReff);
 
 	free(sRef);
 }
 
-CMakeLuaInheritTree::CMakeLuaInheritTree()
-{
-	pTable = 0;
-}
+CMakeLuaInheritTree::CMakeLuaInheritTree() { pTable = 0; }
 
-void CMakeLuaInheritTree::Do(const char* sAttrib)
+void CMakeLuaInheritTree::Do(const char *sAttrib)
 {
 	iAttribL = strlen(sAttrib);
 
@@ -431,16 +445,16 @@ void CMakeLuaInheritTree::Do(const char* sAttrib)
 	{
 		pItr = TheConstruct->GetModule()->VIterate(sAttrib);
 	}
-	catch(CRainmanException* pE)
+	catch (CRainmanException *pE)
 	{
 		throw new CModStudioException(__FILE__, __LINE__, "Cannot iterate attrib", pE);
 	}
 
 	try
 	{
-		Rainman_ForEach(pItr, _ForEach, (void*)this, true);
+		Rainman_ForEach(pItr, _ForEach, (void *)this, true);
 	}
-	catch(CRainmanException* pE)
+	catch (CRainmanException *pE)
 	{
 		delete pItr;
 		throw new CModStudioException(__FILE__, __LINE__, "Error processing luas", pE);
@@ -454,12 +468,12 @@ void CMakeLuaInheritTree::DoAction()
 {
 	pTable = new CInheritTable;
 
-	const char* sAttrib = _DoesExist("attrib\\") ? "attrib\\attrib\\" : "data\\attrib\\";
+	const char *sAttrib = _DoesExist("attrib\\") ? "attrib\\attrib\\" : "data\\attrib\\";
 	try
 	{
 		Do(sAttrib);
 	}
-	catch(CRainmanException* pE)
+	catch (CRainmanException *pE)
 	{
 		ErrorBoxE(pE);
 		delete pTable;
@@ -469,9 +483,9 @@ void CMakeLuaInheritTree::DoAction()
 	delete pTable;
 }
 
-wxString CRedButtonTool::GetName() {return AppStr(redbutton_toolname);}
-wxString CRedButtonTool::GetHelpString() {return wxT("");}
-wxString CRedButtonTool::GetBitmapName() {return wxT("IDB_REDBUTTON");}
+wxString CRedButtonTool::GetName() { return AppStr(redbutton_toolname); }
+wxString CRedButtonTool::GetHelpString() { return wxT(""); }
+wxString CRedButtonTool::GetBitmapName() { return wxT("IDB_REDBUTTON"); }
 void CRedButtonTool::DoAction()
 {
 	CFileSystemStore oFSO;
@@ -480,7 +494,7 @@ void CRedButtonTool::DoAction()
 	{
 		delete oFSO.VOpenOutputStream("I:\\j\\k\\l\\m\\n\\o\\p\\q.test", true);
 	}
-	catch(CRainmanException *pE)
+	catch (CRainmanException *pE)
 	{
 		ErrorBoxE(pE);
 	}
@@ -491,7 +505,8 @@ void CRedButtonTool::DoAction()
 	*/
 
 	/*
-	wxString sOutFile = wxFileSelector(wxT("Select strings list"), wxT(""), wxT(""), wxT("txt"), wxT("Text File (*.txt)|*.txt") , wxFD_OPEN, TheConstruct);
+	wxString sOutFile = wxFileSelector(wxT("Select strings list"), wxT(""), wxT(""), wxT("txt"), wxT("Text File
+	(*.txt)|*.txt") , wxFD_OPEN, TheConstruct);
 
 	if(sOutFile.Len() == 0) return;
 
@@ -512,21 +527,22 @@ void CRedButtonTool::DoAction()
 	*/
 }
 
-wxString CRefreshFilesTool::GetName() {return AppStr(refreshfiles_name);}
-wxString CRefreshFilesTool::GetHelpString() {return wxT("");}
-wxString CRefreshFilesTool::GetBitmapName() {return wxT("IDB_REFRESH");}
+wxString CRefreshFilesTool::GetName() { return AppStr(refreshfiles_name); }
+wxString CRefreshFilesTool::GetHelpString() { return wxT(""); }
+wxString CRefreshFilesTool::GetBitmapName() { return wxT("IDB_REFRESH"); }
 void CRefreshFilesTool::DoAction()
 {
-	CModuleFile* pMod = TheConstruct->GetModule();
+	CModuleFile *pMod = TheConstruct->GetModule();
 
-	frmLoading* m_pLoadingForm = new frmLoading(AppStr(mod_loading));
+	frmLoading *m_pLoadingForm = new frmLoading(AppStr(mod_loading));
 	TheConstruct->SetLoadingForm(m_pLoadingForm);
 
 	m_pLoadingForm->Show(true);
 	m_pLoadingForm->SetMessage(wxString(wxT("Initializing")));
 	wxSafeYield(m_pLoadingForm);
-	
-	pMod->ReloadResources(CModuleFile::RR_All, CModuleFile::RR_All, CModuleFile::RR_All, ConstructFrame::LoadModCallback);
+
+	pMod->ReloadResources(CModuleFile::RR_All, CModuleFile::RR_All, CModuleFile::RR_All,
+	                      ConstructFrame::LoadModCallback);
 
 	m_pLoadingForm->SetMessage(wxString(wxT("Refreshing GUI")));
 

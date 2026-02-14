@@ -25,12 +25,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 class RAINMAN_API CBfxFile : public CRgdFile
 {
-public:
+  public:
 	CBfxFile();
 	void SaveAsBfxLua(IFileStore::IOutputStream *pStream, lua_State *Lmap);
 
-protected:
-	void _SaveRaw(IFileStore::IOutputStream *pStream, _RgdEntry *pSource, lua_State *Lmap, bool bNumericID = false, size_t iIndentLvl = 0);
+  protected:
+	void _SaveRaw(IFileStore::IOutputStream *pStream, _RgdEntry *pSource, lua_State *Lmap, bool bNumericID = false,
+	              size_t iIndentLvl = 0);
 };
 
 #endif

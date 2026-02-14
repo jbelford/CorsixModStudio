@@ -21,7 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #define _RAINMAN_H_
 
 #ifdef _MSC_VER
-#pragma warning( disable : 4251 )
+#pragma warning(disable : 4251)
 #endif
 #define EXCEPTION_CLASS CModStudioException
 

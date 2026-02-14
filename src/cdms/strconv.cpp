@@ -19,28 +19,29 @@
 #include <malloc.h>
 #include "Common.h"
 
-wchar_t* AsciiToUnicode(const char* sAscii)
+wchar_t *AsciiToUnicode(const char *sAscii)
 {
 	size_t iLen = strlen(sAscii) + 1;
 	wchar_t *pUnicode = new wchar_t[iLen];
-	if(!pUnicode) return 0;
-	for(size_t i = 0; i < iLen; ++i)
+	if (!pUnicode)
+		return 0;
+	for (size_t i = 0; i < iLen; ++i)
 	{
 		pUnicode[i] = (wchar_t)sAscii[i];
 	}
 	return pUnicode;
 }
 
-wchar_t* AsciiToUnicodeDel(char* sAscii)
+wchar_t *AsciiToUnicodeDel(char *sAscii)
 {
 	size_t iLen = strlen(sAscii) + 1;
 	wchar_t *pUnicode = new wchar_t[iLen];
-	if(!pUnicode)
+	if (!pUnicode)
 	{
 		delete[] sAscii;
 		return 0;
 	}
-	for(size_t i = 0; i < iLen; ++i)
+	for (size_t i = 0; i < iLen; ++i)
 	{
 		pUnicode[i] = (wchar_t)sAscii[i];
 	}
@@ -48,16 +49,16 @@ wchar_t* AsciiToUnicodeDel(char* sAscii)
 	return pUnicode;
 }
 
-wchar_t* AsciiToUnicodeFree(char* sAscii)
+wchar_t *AsciiToUnicodeFree(char *sAscii)
 {
 	size_t iLen = strlen(sAscii) + 1;
 	wchar_t *pUnicode = new wchar_t[iLen];
-	if(!pUnicode)
+	if (!pUnicode)
 	{
 		free(sAscii);
 		return 0;
 	}
-	for(size_t i = 0; i < iLen; ++i)
+	for (size_t i = 0; i < iLen; ++i)
 	{
 		pUnicode[i] = (wchar_t)sAscii[i];
 	}
@@ -65,15 +66,16 @@ wchar_t* AsciiToUnicodeFree(char* sAscii)
 	return pUnicode;
 }
 
-char* UnicodeToAscii(const wchar_t* pUnicode)
+char *UnicodeToAscii(const wchar_t *pUnicode)
 {
 	size_t iLen = wcslen(pUnicode) + 1;
 	char *sAscii = new char[iLen];
-	if(!sAscii) return 0;
-	for(size_t i = 0; i < iLen; ++i)
+	if (!sAscii)
+		return 0;
+	for (size_t i = 0; i < iLen; ++i)
 	{
 		wchar_t iChar = pUnicode[i];
-		if(iChar & ~0xFF)
+		if (iChar & ~0xFF)
 			sAscii[i] = '?';
 		else
 			sAscii[i] = (char)iChar;
@@ -81,9 +83,10 @@ char* UnicodeToAscii(const wchar_t* pUnicode)
 	return sAscii;
 }
 
-wxString AsciiTowxString(const char* sAscii)
+wxString AsciiTowxString(const char *sAscii)
 {
-	if(sAscii == 0) return wxString();
+	if (sAscii == 0)
+		return wxString();
 	/*
 	wchar_t* pUnicode = AsciiToUnicode(sAscii);
 	if(!pUnicode) return wxString();
@@ -94,7 +97,4 @@ wxString AsciiTowxString(const char* sAscii)
 	return wxString(sAscii, wxConvUTF8);
 }
 
-char* wxStringToAscii(const wxString& oStr)
-{
-	return UnicodeToAscii(oStr.c_str());
-}
+char *wxStringToAscii(const wxString &oStr) { return UnicodeToAscii(oStr.c_str()); }

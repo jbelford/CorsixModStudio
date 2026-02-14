@@ -26,16 +26,18 @@
 #include "Common.h"
 
 BEGIN_EVENT_TABLE(frmImageViewer, wxWindow)
-	EVT_SIZE(frmImageViewer::OnSize)
-	EVT_RADIOBOX(IDC_SaveFileExt, frmImageViewer::OnRadioButtonSaveExt)
-	EVT_BUTTON(wxID_SAVE, frmImageViewer::OnSave)
+EVT_SIZE(frmImageViewer::OnSize)
+EVT_RADIOBOX(IDC_SaveFileExt, frmImageViewer::OnRadioButtonSaveExt)
+EVT_BUTTON(wxID_SAVE, frmImageViewer::OnSave)
 END_EVENT_TABLE()
 
 class wxMyScrolledWindow : public wxScrolledWindow
 {
-public:
-	wxMyScrolledWindow(wxWindow* parent, wxBitmap* pBitmap, wxWindowID id = -1, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxHSCROLL | wxVSCROLL, const wxString& name = wxT("scrolledWindow"))
-		: wxScrolledWindow(parent, id, pos, size, style, name) , m_pBitmap(pBitmap)
+  public:
+	wxMyScrolledWindow(wxWindow *parent, wxBitmap *pBitmap, wxWindowID id = -1, const wxPoint &pos = wxDefaultPosition,
+	                   const wxSize &size = wxDefaultSize, long style = wxHSCROLL | wxVSCROLL,
+	                   const wxString &name = wxT("scrolledWindow"))
+	    : wxScrolledWindow(parent, id, pos, size, style, name), m_pBitmap(pBitmap)
 	{
 		m_pDC = new wxMemoryDC(*m_pBitmap);
 
@@ -43,38 +45,33 @@ public:
 		SetScrollRate(8, 8);
 	}
 
-	~wxMyScrolledWindow()
-	{
-		delete m_pDC;
-	}
+	~wxMyScrolledWindow() { delete m_pDC; }
 
-	virtual void OnDraw(wxDC& dc)
-	{
-		dc.Blit(0, 0, m_pBitmap->GetWidth(), m_pBitmap->GetHeight(), m_pDC, 0, 0);
-	}
+	virtual void OnDraw(wxDC &dc) { dc.Blit(0, 0, m_pBitmap->GetWidth(), m_pBitmap->GetHeight(), m_pDC, 0, 0); }
 
-protected:
-	wxBitmap* m_pBitmap;
-	wxMemoryDC* m_pDC;
+  protected:
+	wxBitmap *m_pBitmap;
+	wxMemoryDC *m_pDC;
 };
 
 /*
 BEGIN_EVENT_TABLE(wxMyScrolledWindow, wxScrolledWindow)
-	EVT_PAINT(wxMyScrolledWindow::OnPaint)
+    EVT_PAINT(wxMyScrolledWindow::OnPaint)
 END_EVENT_TABLE()
 */
 
-frmImageViewer::frmImageViewer(wxTreeItemId& oFileParent, wxString sFilename, wxWindow* parent, wxWindowID id, CRgtFile* pImage, bool bOwnImage, const wxPoint& pos, const wxSize& size)
-	: m_oFileParent(oFileParent), m_sFilename(sFilename), wxWindow(parent, id, pos, size)
+frmImageViewer::frmImageViewer(wxTreeItemId &oFileParent, wxString sFilename, wxWindow *parent, wxWindowID id,
+                               CRgtFile *pImage, bool bOwnImage, const wxPoint &pos, const wxSize &size)
+    : m_oFileParent(oFileParent), m_sFilename(sFilename), wxWindow(parent, id, pos, size)
 {
-	wxBoxSizer *pTopSizer = new wxBoxSizer( wxVERTICAL );
+	wxBoxSizer *pTopSizer = new wxBoxSizer(wxVERTICAL);
 
 	m_pRgtFile = pImage;
 	m_pImageBitmap = 0;
 	m_bOwnRgt = bOwnImage;
 
 	{
-		CMemoryStore::COutStream* pTgaSpace = CMemoryStore::OpenOutputStreamExt();
+		CMemoryStore::COutStream *pTgaSpace = CMemoryStore::OpenOutputStreamExt();
 		pImage->SaveTGA(pTgaSpace);
 		wxMemoryInputStream oTgaSpace(pTgaSpace->GetData(), pTgaSpace->GetDataLength());
 		wxImage oTga(oTgaSpace, wxBITMAP_TYPE_TGA);
@@ -82,7 +79,7 @@ frmImageViewer::frmImageViewer(wxTreeItemId& oFileParent, wxString sFilename, wx
 		delete pTgaSpace;
 	}
 
-	wxStaticBoxSizer *pImgSizer = new wxStaticBoxSizer( wxVERTICAL, this, wxT("Current Image") );
+	wxStaticBoxSizer *pImgSizer = new wxStaticBoxSizer(wxVERTICAL, this, wxT("Current Image"));
 
 	wxArrayString aFileTypes, aCompressionTypes;
 
@@ -96,21 +93,25 @@ frmImageViewer::frmImageViewer(wxTreeItemId& oFileParent, wxString sFilename, wx
 	aCompressionTypes.Add(wxT("DXT3 (4 bit alpha)"));
 	aCompressionTypes.Add(wxT("DXT5 (4 bit alpha)"));
 
-	wxRadioBox* pRadioBox;
-	pImgSizer->Add(m_pCurrentExt = pRadioBox = new wxRadioBox(this, -1, wxT("File"), wxDefaultPosition, wxDefaultSize, aFileTypes), 0, wxEXPAND | wxALL, 0);
+	wxRadioBox *pRadioBox;
+	pImgSizer->Add(m_pCurrentExt = pRadioBox =
+	                   new wxRadioBox(this, -1, wxT("File"), wxDefaultPosition, wxDefaultSize, aFileTypes),
+	               0, wxEXPAND | wxALL, 0);
 
 	pRadioBox->SetSelection(0); // RGT
 	pRadioBox->Enable(false);
 
-	pImgSizer->Add(m_pCurrentCompression = pRadioBox = new wxRadioBox(this, -1, wxT("Compression"), wxDefaultPosition, wxDefaultSize, aCompressionTypes), 0, wxEXPAND | wxALL, 0);
+	pImgSizer->Add(m_pCurrentCompression = pRadioBox = new wxRadioBox(this, -1, wxT("Compression"), wxDefaultPosition,
+	                                                                  wxDefaultSize, aCompressionTypes),
+	               0, wxEXPAND | wxALL, 0);
 
-	switch(pImage->GetImageFormat())
+	switch (pImage->GetImageFormat())
 	{
 	case CRgtFile::IF_Tga:
 		pRadioBox->SetSelection(1); // RGBA
 		break;
 	case CRgtFile::IF_Dxtc:
-		switch(pImage->GetProperty(CRgtFile::IP_CompressionLevel))
+		switch (pImage->GetProperty(CRgtFile::IP_CompressionLevel))
 		{
 		case 1:
 			pRadioBox->SetSelection(2);
@@ -126,7 +127,7 @@ frmImageViewer::frmImageViewer(wxTreeItemId& oFileParent, wxString sFilename, wx
 	}
 	pRadioBox->Enable(false);
 
-	wxCheckBox* pCheckBox;
+	wxCheckBox *pCheckBox;
 	pImgSizer->Add(pCheckBox = new wxCheckBox(this, -1, wxT("Mip Levels")), 0, wxEXPAND | wxALL, 3);
 
 	pCheckBox->SetValue(pImage->GetProperty(CRgtFile::IP_MipLevelCount) > 1);
@@ -136,15 +137,19 @@ frmImageViewer::frmImageViewer(wxTreeItemId& oFileParent, wxString sFilename, wx
 
 	pTopSizer->Add(pImgSizer, 1, wxEXPAND | wxALL, 3);
 
-	wxStaticBoxSizer *pSaveSizer = new wxStaticBoxSizer( wxVERTICAL, this, wxT("Save Copy") );
+	wxStaticBoxSizer *pSaveSizer = new wxStaticBoxSizer(wxVERTICAL, this, wxT("Save Copy"));
 
-	pSaveSizer->Add(m_pSaveFileExt = new wxRadioBox(this, IDC_SaveFileExt, wxT("File"), wxDefaultPosition, wxDefaultSize, aFileTypes), 0, wxEXPAND | wxALL, 0);
-	pSaveSizer->Add(m_pSaveFileCompression = new wxRadioBox(this, -1, wxT("Compression"), wxDefaultPosition, wxDefaultSize, aCompressionTypes), 0, wxEXPAND | wxALL, 0);
+	pSaveSizer->Add(m_pSaveFileExt = new wxRadioBox(this, IDC_SaveFileExt, wxT("File"), wxDefaultPosition,
+	                                                wxDefaultSize, aFileTypes),
+	                0, wxEXPAND | wxALL, 0);
+	pSaveSizer->Add(m_pSaveFileCompression = new wxRadioBox(this, -1, wxT("Compression"), wxDefaultPosition,
+	                                                        wxDefaultSize, aCompressionTypes),
+	                0, wxEXPAND | wxALL, 0);
 	pSaveSizer->Add(m_pSaveFileMips = new wxCheckBox(this, -1, wxT("Mip Levels")), 0, wxEXPAND | wxALL, 3);
 
-	pSaveSizer->Add(new wxButton(this, wxID_SAVE,wxT("Save Copy")), 0, wxALL, 3);
+	pSaveSizer->Add(new wxButton(this, wxID_SAVE, wxT("Save Copy")), 0, wxALL, 3);
 
-	switch(pImage->GetImageFormat())
+	switch (pImage->GetImageFormat())
 	{
 	case CRgtFile::IF_Tga:
 		m_pSaveFileExt->SetSelection(2);
@@ -165,7 +170,7 @@ frmImageViewer::frmImageViewer(wxTreeItemId& oFileParent, wxString sFilename, wx
 	pTopSizer->Add(pSaveSizer, 0, wxEXPAND | wxALL, 3);
 
 	SetSizer(pTopSizer);
-	pTopSizer->SetSizeHints( this );
+	pTopSizer->SetSizeHints(this);
 }
 
 void frmImageViewer::SetIsTga(bool bOnlyRGB)
@@ -179,7 +184,8 @@ void frmImageViewer::SetIsTga(bool bOnlyRGB)
 	m_pSaveFileCompression->Enable(2, true);
 	m_pSaveFileCompression->Enable(3, true);
 	m_pSaveFileCompression->Enable(4, true);
-	if(m_pSaveFileCompression->GetSelection() == 0) m_pSaveFileCompression->SetSelection(1);
+	if (m_pSaveFileCompression->GetSelection() == 0)
+		m_pSaveFileCompression->SetSelection(1);
 	m_pSaveFileMips->Enable(true);
 }
 
@@ -193,24 +199,28 @@ void frmImageViewer::SetIsDds()
 	m_pSaveFileCompression->Enable(2, true);
 	m_pSaveFileCompression->Enable(3, true);
 	m_pSaveFileCompression->Enable(4, true);
-	if(m_pSaveFileCompression->GetSelection() == 0) m_pSaveFileCompression->SetSelection(2);
-	if(m_pSaveFileCompression->GetSelection() == 1) m_pSaveFileCompression->SetSelection(3);
+	if (m_pSaveFileCompression->GetSelection() == 0)
+		m_pSaveFileCompression->SetSelection(2);
+	if (m_pSaveFileCompression->GetSelection() == 1)
+		m_pSaveFileCompression->SetSelection(3);
 	m_pSaveFileMips->Enable(true);
 }
 
 frmImageViewer::~frmImageViewer()
 {
-	if(m_bOwnRgt && m_pRgtFile) delete m_pRgtFile;
+	if (m_bOwnRgt && m_pRgtFile)
+		delete m_pRgtFile;
 }
 
-void frmImageViewer::OnSize(wxSizeEvent& event)
-{  UNUSED(event);
+void frmImageViewer::OnSize(wxSizeEvent &event)
+{
+	UNUSED(event);
 	Layout();
 }
 
-void frmImageViewer::OnRadioButtonSaveExt(wxCommandEvent& event)
+void frmImageViewer::OnRadioButtonSaveExt(wxCommandEvent &event)
 {
-	switch(event.GetSelection())
+	switch (event.GetSelection())
 	{
 	case 0: // RGT
 		m_pSaveFileCompression->Enable(0, false);
@@ -218,7 +228,8 @@ void frmImageViewer::OnRadioButtonSaveExt(wxCommandEvent& event)
 		m_pSaveFileCompression->Enable(2, true);
 		m_pSaveFileCompression->Enable(3, true);
 		m_pSaveFileCompression->Enable(4, true);
-		if(m_pSaveFileCompression->GetSelection() == 0) m_pSaveFileCompression->SetSelection(1);
+		if (m_pSaveFileCompression->GetSelection() == 0)
+			m_pSaveFileCompression->SetSelection(1);
 		m_pSaveFileMips->Enable(true);
 		break;
 	case 1: // DDS
@@ -227,8 +238,10 @@ void frmImageViewer::OnRadioButtonSaveExt(wxCommandEvent& event)
 		m_pSaveFileCompression->Enable(2, true);
 		m_pSaveFileCompression->Enable(3, true);
 		m_pSaveFileCompression->Enable(4, true);
-		if(m_pSaveFileCompression->GetSelection() == 0) m_pSaveFileCompression->SetSelection(2);
-		if(m_pSaveFileCompression->GetSelection() == 1) m_pSaveFileCompression->SetSelection(3);
+		if (m_pSaveFileCompression->GetSelection() == 0)
+			m_pSaveFileCompression->SetSelection(2);
+		if (m_pSaveFileCompression->GetSelection() == 1)
+			m_pSaveFileCompression->SetSelection(3);
 		m_pSaveFileMips->Enable(true);
 		break;
 	case 2: // TGA
@@ -237,39 +250,43 @@ void frmImageViewer::OnRadioButtonSaveExt(wxCommandEvent& event)
 		m_pSaveFileCompression->Enable(2, false);
 		m_pSaveFileCompression->Enable(3, false);
 		m_pSaveFileCompression->Enable(4, false);
-		if(m_pSaveFileCompression->GetSelection() > 1) m_pSaveFileCompression->SetSelection(1);
+		if (m_pSaveFileCompression->GetSelection() > 1)
+			m_pSaveFileCompression->SetSelection(1);
 		m_pSaveFileMips->Enable(false);
 		m_pSaveFileMips->SetValue(false);
 		break;
 	}
 }
 
-void frmImageViewer::OnSave(wxCommandEvent& event)
-{  UNUSED(event);
-	if(m_pSaveFileExt->GetSelection() == m_pCurrentExt->GetSelection())
+void frmImageViewer::OnSave(wxCommandEvent &event)
+{
+	UNUSED(event);
+	if (m_pSaveFileExt->GetSelection() == m_pCurrentExt->GetSelection())
 	{
-		if(::wxMessageBox(wxT("The options selected will result in the original file being overwritten. Continue?"), wxT("Save"), wxOK | wxCANCEL) == wxCANCEL) return;
+		if (::wxMessageBox(wxT("The options selected will result in the original file being overwritten. Continue?"),
+		                   wxT("Save"), wxOK | wxCANCEL) == wxCANCEL)
+			return;
 	}
 
 	wxString sNewFile = m_sFilename.BeforeLast('.');
 	sNewFile.Append(wxT("."));
 	sNewFile.Append(m_pSaveFileExt->GetStringSelection().Lower());
 
-	char* saNewFile = wxStringToAscii(sNewFile);
-	char* saDir = strdup(saNewFile), *pSlash;
+	char *saNewFile = wxStringToAscii(sNewFile);
+	char *saDir = strdup(saNewFile), *pSlash;
 	pSlash = strrchr(saDir, '\\');
-	if(pSlash)
+	if (pSlash)
 		*pSlash = 0;
 	else
 		*saDir = 0;
 
 	// START
-	IFileStore::IOutputStream* pStream = 0;
+	IFileStore::IOutputStream *pStream = 0;
 	try
 	{
 		pStream = TheConstruct->GetModule()->VOpenOutputStream(saNewFile, true);
 	}
-	catch(CRainmanException *pE)
+	catch (CRainmanException *pE)
 	{
 		ErrorBoxE(pE);
 		free(saDir);
@@ -283,7 +300,7 @@ void frmImageViewer::OnSave(wxCommandEvent& event)
 	{
 		pDir = TheConstruct->GetModule()->VIterate(saDir);
 	}
-	catch(CRainmanException *pE)
+	catch (CRainmanException *pE)
 	{
 		ErrorBoxE(pE);
 		free(saDir);
@@ -297,7 +314,7 @@ void frmImageViewer::OnSave(wxCommandEvent& event)
 	{
 		TheConstruct->GetFilesList()->UpdateDirectoryChildren(m_oFileParent, pDir);
 	}
-	catch(CRainmanException *pE)
+	catch (CRainmanException *pE)
 	{
 		ErrorBoxE(pE);
 		delete pDir;
@@ -308,7 +325,7 @@ void frmImageViewer::OnSave(wxCommandEvent& event)
 	delete pDir;
 	// END
 
-	if(!pStream)
+	if (!pStream)
 	{
 		ErrorBoxAS(err_couldnotopenoutput);
 		delete[] saNewFile;
@@ -316,10 +333,10 @@ void frmImageViewer::OnSave(wxCommandEvent& event)
 	}
 	delete[] saNewFile;
 
-	if(m_pSaveFileExt->GetSelection() == 0)
+	if (m_pSaveFileExt->GetSelection() == 0)
 	{
 		// RGT
-		if(m_pSaveFileCompression->GetSelection() == 1)
+		if (m_pSaveFileCompression->GetSelection() == 1)
 		{
 			// RGT -> RGBA
 			CMemoryStore::COutStream *pTempOut = CMemoryStore::OpenOutputStreamExt();
@@ -342,12 +359,12 @@ void frmImageViewer::OnSave(wxCommandEvent& event)
 			oRgtOut.Save(pStream);
 		}
 	}
-	else if(m_pSaveFileExt->GetSelection() == 1)
+	else if (m_pSaveFileExt->GetSelection() == 1)
 	{
 		// DDS
 		m_pRgtFile->SaveDDS(pStream, m_pSaveFileCompression->GetSelection() * 2 - 3, m_pSaveFileMips->GetValue());
 	}
-	else if(m_pSaveFileExt->GetSelection() == 2)
+	else if (m_pSaveFileExt->GetSelection() == 2)
 	{
 		// TGA
 		m_pRgtFile->SaveTGA(pStream, m_pSaveFileCompression->GetSelection() == 1);

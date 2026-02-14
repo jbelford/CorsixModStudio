@@ -23,27 +23,28 @@
 #include <wx/wxprec.h>
 
 #ifdef __BORLANDC__
-    #pragma hdrstop
+#pragma hdrstop
 #endif
 
 // for all others, include the necessary headers (this file is usually all you
 // need because it includes almost all "standard" wxWidgets headers)
 #ifndef WX_PRECOMP
-    #include "wx/wx.h"
+#include "wx/wx.h"
 #endif
 // ----------------------------
 #include <Rainman.h>
 
 class frmUCSToDAT : public wxDialog
 {
-protected:
+  protected:
 	wxTextCtrl *m_pOutFile, *m_pRangeStart, *m_pRangeEnd;
-public:
+
+  public:
 	frmUCSToDAT();
 
-	void OnBrowseOutClick(wxCommandEvent& event);
-	void OnGoClick(wxCommandEvent& event);
-	void OnCancelClick(wxCommandEvent& event);
+	void OnBrowseOutClick(wxCommandEvent &event);
+	void OnGoClick(wxCommandEvent &event);
+	void OnCancelClick(wxCommandEvent &event);
 
 	enum
 	{
@@ -58,30 +59,30 @@ public:
 
 class UCSToDATConvertor
 {
-public:
+  public:
 	UCSToDATConvertor();
 	~UCSToDATConvertor();
 
-	void setOutputFilename(const char* sFilename);
+	void setOutputFilename(const char *sFilename);
 	void setRange(unsigned long iStart, unsigned long iEnd);
-	void setModule(const CModuleFile* pModule);
+	void setModule(const CModuleFile *pModule);
 
 	void doConvertion();
 
-protected:
-	char* m_sOutputName;
+  protected:
+	char *m_sOutputName;
 	unsigned long m_iRangeStart, m_iRangeEnd;
-	const CModuleFile* m_pModule;
+	const CModuleFile *m_pModule;
 
 	// Used while converting:
 	void _startRange(unsigned long iValue);
 	void _endRange();
-	bool _nextEntry(unsigned long*, wchar_t**);
+	bool _nextEntry(unsigned long *, wchar_t **);
 
-	FILE* m_fDAT;
+	FILE *m_fDAT;
 	size_t m_iUCSCount;
-	std::map<unsigned long, wchar_t*>::const_iterator* m_aUCSFiles;
-	std::map<unsigned long, wchar_t*>::const_iterator* m_aUCSFileEnds;
+	std::map<unsigned long, wchar_t *>::const_iterator *m_aUCSFiles;
+	std::map<unsigned long, wchar_t *>::const_iterator *m_aUCSFileEnds;
 };
 
 #endif

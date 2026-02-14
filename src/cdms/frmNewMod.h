@@ -22,40 +22,41 @@
 #include <wx/wxprec.h>
 
 #ifdef __BORLANDC__
-    #pragma hdrstop
+#pragma hdrstop
 #endif
 
 // for all others, include the necessary headers (this file is usually all you
 // need because it includes almost all "standard" wxWidgets headers)
 #ifndef WX_PRECOMP
-    #include "wx/wx.h"
+#include "wx/wx.h"
 #endif
 // ----------------------------
 #include <Rainman.h>
 
 class frmNewMod : public wxDialog
 {
-protected:
-	wxTextCtrl* m_pName;
-	wxChoice* m_pList;
-	wxStaticText* m_pCreation;
+  protected:
+	wxTextCtrl *m_pName;
+	wxChoice *m_pList;
+	wxStaticText *m_pCreation;
 	wxString m_sDoWPath, m_sCoHPath, m_sDCPath, m_sSSPath;
 	wxString _UpdatePath(wxString sName);
 
-	void _MakeCOH(char* sNiceName, char* sDirectoryFullPath, char* sDirectoryName, FILE* fModule);
-	void _MakeCOH_Language(char* sToc, char* sName1, char* sName2, char* sDirectoryName, FILE* fModule);
-public:
+	void _MakeCOH(char *sNiceName, char *sDirectoryFullPath, char *sDirectoryName, FILE *fModule);
+	void _MakeCOH_Language(char *sToc, char *sName1, char *sName2, char *sDirectoryName, FILE *fModule);
+
+  public:
 	/*!
-		may throw a CRainmanException
+	    may throw a CRainmanException
 	*/
 	frmNewMod();
 
-	void OnNewClick(wxCommandEvent& event);
-	void OnCancelClick(wxCommandEvent& event);
+	void OnNewClick(wxCommandEvent &event);
+	void OnCancelClick(wxCommandEvent &event);
 	wxString GetPath();
 
-	void OnGameChange(wxCommandEvent& event);
-	void OnBrowseClick(wxCommandEvent& event);
+	void OnGameChange(wxCommandEvent &event);
+	void OnBrowseClick(wxCommandEvent &event);
 
 	enum
 	{

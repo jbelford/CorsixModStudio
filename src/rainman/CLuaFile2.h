@@ -24,7 +24,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "IMetaTable.h"
 #include "IFileStore.h"
 #include "CLuaFileCache.h"
-extern "C" {
+extern "C"
+{
 #include <lua.h>
 };
 #include <map>
@@ -35,152 +36,155 @@ class CLuaStateStackNode;
 
 class RAINMAN_API CLuaStateTable : public IMetaNode::IMetaTable
 {
-protected:
+  protected:
 	lua_State *mL;
-	std::vector<CLuaStateNode*> m_vNodes;
+	std::vector<CLuaStateNode *> m_vNodes;
 	bool bDeleteNodes;
 	friend class CLuaStateStackNode;
 
-public:
+  public:
 	CLuaStateTable(lua_State *L, bool bCustom = false);
 	virtual ~CLuaStateTable();
 
-	void add(CLuaStateNode* p);
+	void add(CLuaStateNode *p);
 
 	virtual unsigned long VGetChildCount();
-	virtual IMetaNode* VGetChild(unsigned long iIndex);
+	virtual IMetaNode *VGetChild(unsigned long iIndex);
 
 	virtual IMetaNode::eDataTypes VGetReferenceType();
-	virtual const char* VGetReferenceString();
-	virtual const wchar_t* VGetReferenceWString();
+	virtual const char *VGetReferenceString();
+	virtual const wchar_t *VGetReferenceWString();
 
 	// Set
 	virtual void VSetReferenceType(IMetaNode::eDataTypes eType);
-	virtual void VSetReferenceString(const char* sValue);
-	virtual void VSetReferenceWString(const wchar_t* wsValue);
-	virtual IMetaNode* VAddChild(const char* sName);
+	virtual void VSetReferenceString(const char *sValue);
+	virtual void VSetReferenceWString(const wchar_t *wsValue);
+	virtual IMetaNode *VAddChild(const char *sName);
 	virtual void VDeleteChild(unsigned long iIndex);
 };
 
 class RAINMAN_API CLuaFile2
 {
-public:
+  public:
 	CLuaFile2();
 	virtual ~CLuaFile2();
 
-	void newFile(const char* sFileName);
-	void loadFile(IFileStore::IStream *pStream, IFileStore* pFiles, const char* sFileName);
-	void saveFile(IFileStore::IOutputStream *pStream, const char* sFileName);
+	void newFile(const char *sFileName);
+	void loadFile(IFileStore::IStream *pStream, IFileStore *pFiles, const char *sFileName);
+	void saveFile(IFileStore::IOutputStream *pStream, const char *sFileName);
 
-	bool setCache(CLuaFileCache* pCache, bool bOwn);
-	void setRootFolder(const char* sRootFolder);
+	bool setCache(CLuaFileCache *pCache, bool bOwn);
+	void setRootFolder(const char *sRootFolder);
 
-	IMetaNode::IMetaTable* asMetaTable();
+	IMetaNode::IMetaTable *asMetaTable();
 
 	class RAINMAN_API _LuaLocator
 	{
-	protected:
-		unsigned long* pRefCount;
-	public:
-		_LuaLocator(_LuaLocator* P);
-		_LuaLocator(lua_State* L, int Index);
-		void kill(lua_State* L);
-		void push(lua_State* L);
+	  protected:
+		unsigned long *pRefCount;
+
+	  public:
+		_LuaLocator(_LuaLocator *P);
+		_LuaLocator(lua_State *L, int Index);
+		void kill(lua_State *L);
+		void push(lua_State *L);
 	};
 
 	class CTable;
 
 	class RAINMAN_API CNode : public IMetaNode
 	{
-	protected:
+	  protected:
 		friend class CLuaFile2::CTable;
 		CLuaFile2::_LuaLocator m_oTablePtr;
 		CLuaFile2::_LuaLocator m_oKeyPtr;
-		char* m_sName;
+		char *m_sName;
 		unsigned long m_iNodeHash;
 		int m_iType;
-		lua_State* L;
+		lua_State *L;
 
 		void _pushTable();
 		void _pushKey();
 		void _pushVal();
 
-		CNode(lua_State* Lua, int iKey, int iTable);
-		CNode(lua_State* Lua, _LuaLocator* pTable, _LuaLocator* pKey);
-	public:
+		CNode(lua_State *Lua, int iKey, int iTable);
+		CNode(lua_State *Lua, _LuaLocator *pTable, _LuaLocator *pKey);
+
+	  public:
 		virtual ~CNode();
 		virtual eDataTypes VGetType();
-		virtual const char* VGetName();
+		virtual const char *VGetName();
 		virtual unsigned long VGetNameHash();
 
 		// Floats, Bools, Strings , WStrings
 		virtual float VGetValueFloat();
 		virtual unsigned long VGetValueInteger();
 		virtual bool VGetValueBool();
-		virtual const char* VGetValueString();
-		virtual const wchar_t* VGetValueWString();
-		virtual IMetaNode::IMetaTable* VGetValueMetatable();
+		virtual const char *VGetValueString();
+		virtual const wchar_t *VGetValueWString();
+		virtual IMetaNode::IMetaTable *VGetValueMetatable();
 
 		// Set
 		/*!
-			\todo Implement set routines for lua classes
+		    \todo Implement set routines for lua classes
 		*/
 		virtual void VSetType(eDataTypes eType);
-		virtual void VSetName(const char* sName);
+		virtual void VSetName(const char *sName);
 		virtual void VSetNameHash(unsigned long iHash);
 		virtual void VSetValueFloat(float fValue);
 		virtual void VSetValueInteger(unsigned long iValue);
 		virtual void VSetValueBool(bool bValue);
-		virtual void VSetValueString(const char* sValue);
-		virtual void VSetValueWString(const wchar_t* wsValue);
+		virtual void VSetValueString(const char *sValue);
+		virtual void VSetValueWString(const wchar_t *wsValue);
 
-		virtual CMemoryStore::COutStream* VGetNodeAsRainmanRgd();
-		virtual void SGetNodeFromRainmanRgd(IFileStore::IStream* pInput, bool bSetName = false);
+		virtual CMemoryStore::COutStream *VGetNodeAsRainmanRgd();
+		virtual void SGetNodeFromRainmanRgd(IFileStore::IStream *pInput, bool bSetName = false);
 	};
 
 	class RAINMAN_API CTable : public IMetaNode::IMetaTable
 	{
-	protected:
+	  protected:
 		lua_State *L;
 		CLuaFile2::_LuaLocator m_oTablePtr;
-		std::vector<CLuaFile2::CNode*> m_vNodes;
-		char* m_sRef;
+		std::vector<CLuaFile2::CNode *> m_vNodes;
+		char *m_sRef;
 		bool m_bGlobals;
 
 		void _DoLoad();
-		static bool _SortNodes(CLuaFile2::CNode* p1, CLuaFile2::CNode* p2);
-	public:
+		static bool _SortNodes(CLuaFile2::CNode *p1, CLuaFile2::CNode *p2);
+
+	  public:
 		CTable(lua_State *pL, bool bG = false);
 		virtual ~CTable();
 
 		virtual unsigned long VGetChildCount();
-		virtual IMetaNode* VGetChild(unsigned long iIndex);
+		virtual IMetaNode *VGetChild(unsigned long iIndex);
 		virtual IMetaNode::eDataTypes VGetReferenceType();
-		virtual const char* VGetReferenceString();
-		virtual const wchar_t* VGetReferenceWString();
+		virtual const char *VGetReferenceString();
+		virtual const wchar_t *VGetReferenceWString();
 		virtual void VSetReferenceType(IMetaNode::eDataTypes eType);
-		virtual void VSetReferenceString(const char* sValue);
-		virtual void VSetReferenceWString(const wchar_t* wsValue);
-		virtual IMetaNode* VAddChild(const char* sName);
+		virtual void VSetReferenceString(const char *sValue);
+		virtual void VSetReferenceWString(const wchar_t *wsValue);
+		virtual IMetaNode *VAddChild(const char *sName);
 		virtual void VDeleteChild(unsigned long iIndex);
 
 		virtual bool VSupportsRefresh();
 		virtual void VDoRefresh();
 	};
 
-protected:
-	CLuaFileCache* m_pCache;
+  protected:
+	CLuaFileCache *m_pCache;
 	bool m_bOwnCache;
-	char* m_sRootFolder;
-	lua_State* L;
-	char* m_sFileName;
+	char *m_sRootFolder;
+	lua_State *L;
+	char *m_sFileName;
 
 	typedef std::map<unsigned long, int> _tRefMap;
-	_tRefMap* m_pRefMap;
+	_tRefMap *m_pRefMap;
 	bool m_bOwnRefMap;
 
-	void _saveTable(const char* sPrefix, IFileStore::IOutputStream* pStream, int iMode);
-	void _appendEscapedString(char* sDest, const char* sSrc);
+	void _saveTable(const char *sPrefix, IFileStore::IOutputStream *pStream, int iMode);
+	void _appendEscapedString(char *sDest, const char *sSrc);
 
 	void _clean();
 	bool _checkCache();
@@ -189,108 +193,108 @@ protected:
 	{
 		union
 		{
-			int b; // 3
-			const char* s; // 2
-			lua_Number f; // 1
+			int b;         // 3
+			const char *s; // 2
+			lua_Number f;  // 1
 		};
 		int iWhat;
-		static bool _Sort(_SaveKey* p1, _SaveKey* p2);
+		static bool _Sort(_SaveKey *p1, _SaveKey *p2);
 	};
 
 	struct _AutoClean
 	{
-		CLuaFile2* p;
-		_AutoClean(CLuaFile2* pp) : p(pp) {}
-		~_AutoClean() {p->_clean();}
+		CLuaFile2 *p;
+		_AutoClean(CLuaFile2 *pp) : p(pp) {}
+		~_AutoClean() { p->_clean(); }
 	};
 
-	int _luaParent(const char* sFnName, const char* sTableToGrab);
+	int _luaParent(const char *sFnName, const char *sTableToGrab);
 
-	static int _luaInherit(lua_State* L);
-	static int _luaInheritMeta(lua_State* L);
-	static int _luaReference(lua_State* L);
-	static int _luaIndexEvent(lua_State* L);
+	static int _luaInherit(lua_State *L);
+	static int _luaInheritMeta(lua_State *L);
+	static int _luaReference(lua_State *L);
+	static int _luaIndexEvent(lua_State *L);
 
-	static CLuaFile2* _getOwner(lua_State* L);
+	static CLuaFile2 *_getOwner(lua_State *L);
 };
 
 class RAINMAN_API CLuaStateNode : public IMetaNode
 {
-protected:
-	lua_State* L;
+  protected:
+	lua_State *L;
 	CLuaFile2::_LuaLocator m_L;
-	char* sName;
+	char *sName;
 	friend class CLuaStateTable;
 	friend class CLuaStateStackNode;
-	CLuaStateNode(lua_State* pL, int iVal, int iKey);
+	CLuaStateNode(lua_State *pL, int iVal, int iKey);
 
-public:
+  public:
 	virtual ~CLuaStateNode();
 	virtual eDataTypes VGetType();
-	virtual const char* VGetName();
+	virtual const char *VGetName();
 	virtual unsigned long VGetNameHash();
 
 	// Floats, Bools, Strings , WStrings
 	virtual float VGetValueFloat();
 	virtual unsigned long VGetValueInteger();
 	virtual bool VGetValueBool();
-	virtual const char* VGetValueString();
-	virtual const wchar_t* VGetValueWString();
-	virtual IMetaNode::IMetaTable* VGetValueMetatable();
+	virtual const char *VGetValueString();
+	virtual const wchar_t *VGetValueWString();
+	virtual IMetaNode::IMetaTable *VGetValueMetatable();
 
 	// Set
 	/*!
-		\todo Implement set routines for lua classes
+	    \todo Implement set routines for lua classes
 	*/
 	virtual void VSetType(eDataTypes eType);
-	virtual void VSetName(const char* sName);
+	virtual void VSetName(const char *sName);
 	virtual void VSetNameHash(unsigned long iHash);
 	virtual void VSetValueFloat(float fValue);
 	virtual void VSetValueInteger(unsigned long iValue);
 	virtual void VSetValueBool(bool bValue);
-	virtual void VSetValueString(const char* sValue);
-	virtual void VSetValueWString(const wchar_t* wsValue);
+	virtual void VSetValueString(const char *sValue);
+	virtual void VSetValueWString(const wchar_t *wsValue);
 
-	virtual CMemoryStore::COutStream* VGetNodeAsRainmanRgd();
-	virtual void SGetNodeFromRainmanRgd(IFileStore::IStream* pInput, bool bSetName = false);
+	virtual CMemoryStore::COutStream *VGetNodeAsRainmanRgd();
+	virtual void SGetNodeFromRainmanRgd(IFileStore::IStream *pInput, bool bSetName = false);
 };
 
 class RAINMAN_API CLuaStateStackNode : public IMetaNode
 {
-protected:
-	std::vector<CLuaStateNode*> m_vNodes;
-	lua_State* m_L;
+  protected:
+	std::vector<CLuaStateNode *> m_vNodes;
+	lua_State *m_L;
 
-public:
-	CLuaStateStackNode(lua_State* L);
+  public:
+	CLuaStateStackNode(lua_State *L);
 	virtual ~CLuaStateStackNode();
 	virtual eDataTypes VGetType();
-	virtual const char* VGetName();
+	virtual const char *VGetName();
 	virtual unsigned long VGetNameHash();
 
 	// Floats, Bools, Strings , WStrings
 	virtual float VGetValueFloat();
 	virtual unsigned long VGetValueInteger();
 	virtual bool VGetValueBool();
-	virtual const char* VGetValueString();
-	virtual const wchar_t* VGetValueWString();
-	virtual IMetaNode::IMetaTable* VGetValueMetatable();
+	virtual const char *VGetValueString();
+	virtual const wchar_t *VGetValueWString();
+	virtual IMetaNode::IMetaTable *VGetValueMetatable();
 
 	// Set
 	/*!
-		\todo Implement set routines for lua classes
+	    \todo Implement set routines for lua classes
 	*/
 	virtual void VSetType(eDataTypes eType);
-	virtual void VSetName(const char* sName);
+	virtual void VSetName(const char *sName);
 	virtual void VSetNameHash(unsigned long iHash);
 	virtual void VSetValueFloat(float fValue);
 	virtual void VSetValueInteger(unsigned long iValue);
 	virtual void VSetValueBool(bool bValue);
-	virtual void VSetValueString(const char* sValue);
-	virtual void VSetValueWString(const wchar_t* wsValue);
+	virtual void VSetValueString(const char *sValue);
+	virtual void VSetValueWString(const wchar_t *wsValue);
 
-	virtual CMemoryStore::COutStream* VGetNodeAsRainmanRgd();
-	virtual void SGetNodeFromRainmanRgd(IFileStore::IStream* pInput, bool bSetName = false);
+	virtual CMemoryStore::COutStream *VGetNodeAsRainmanRgd();
+	virtual void SGetNodeFromRainmanRgd(IFileStore::IStream *pInput, bool bSetName = false);
 };
 
 #endif

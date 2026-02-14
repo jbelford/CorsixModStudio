@@ -32,7 +32,8 @@ bool CDMSApplication::OnInit()
 {
 	wxSystemOptions::SetOption(wxT("msw.remap"), 0);
 
-	wxConfigBase::Set(new wxFileConfig(wxEmptyString, wxEmptyString, AppStr(configfile_name), wxEmptyString, wxCONFIG_USE_LOCAL_FILE));
+	wxConfigBase::Set(new wxFileConfig(wxEmptyString, wxEmptyString, AppStr(configfile_name), wxEmptyString,
+	                                   wxCONFIG_USE_LOCAL_FILE));
 	wxConfigBase::Get()->SetRecordDefaults(true);
 	wxConfigBase::Get()->SetExpandEnvVars(false);
 	wxConfigBase::Get()->SetPath(AppStr(config_initialpath));
@@ -41,27 +42,23 @@ bool CDMSApplication::OnInit()
 
 	//_CrtSetBreakAlloc(5143);
 
-    ConstructFrame *pConstruct = new ConstructFrame(AppStr(app_name), 
-         wxDefaultPosition, wxSize(500,500) );
-	pConstruct->SetIcon(wxIcon(wxT("APPICON"),wxBITMAP_TYPE_ICO_RESOURCE));
-    pConstruct->Show(true);
+	ConstructFrame *pConstruct = new ConstructFrame(AppStr(app_name), wxDefaultPosition, wxSize(500, 500));
+	pConstruct->SetIcon(wxIcon(wxT("APPICON"), wxBITMAP_TYPE_ICO_RESOURCE));
+	pConstruct->Show(true);
 	pConstruct->Maximize(true);
-    SetTopWindow(pConstruct);
-    return true;
-} 
+	SetTopWindow(pConstruct);
+	return true;
+}
 
 int CDMSApplication::OnExit()
 {
-	wxFileConfig* pConfig = (wxFileConfig*)wxConfigBase::Get();
+	wxFileConfig *pConfig = (wxFileConfig *)wxConfigBase::Get();
 	pConfig->Flush();
 	return wxApp::OnExit();
 }
 
 #ifndef _DEBUG
-bool CDMSApplication::OnExceptionInMainLoop()
-{
-	throw;
-}
+bool CDMSApplication::OnExceptionInMainLoop() { throw; }
 #endif
 
 int CDMSApplication::OnRun()
@@ -73,12 +70,12 @@ int CDMSApplication::OnRun()
 		return wxApp::OnRun();
 #ifndef _DEBUG
 	}
-	catch(CRainmanException *pE)
+	catch (CRainmanException *pE)
 	{
 		_ErrorBox(pE, __FILE__, __LINE__, true);
 		return -1;
 	}
-	catch(...)
+	catch (...)
 	{
 		_ErrorBox(wxT("Unhandled exception (not from Rainman)"), __FILE__, __LINE__);
 	}

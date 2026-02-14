@@ -23,13 +23,13 @@
 #include <wx/aui/auibook.h>
 
 #ifdef __BORLANDC__
-    #pragma hdrstop
+#pragma hdrstop
 #endif
 
 // for all others, include the necessary headers (this file is usually all you
 // need because it includes almost all "standard" wxWidgets headers)
 #ifndef WX_PRECOMP
-    #include "wx/wx.h"
+#include "wx/wx.h"
 #endif
 // ----------------------------
 #include <wx/confbase.h>
@@ -39,27 +39,27 @@
 wxColour ConfGetColour(wxString keyname, int def_r, int def_g, int def_b);
 
 /*!
-	may throw a CRainmanException
+    may throw a CRainmanException
 */
 wxString ConfGetDoWFolder();
 
 /*!
-	may throw a CRainmanException
+    may throw a CRainmanException
 */
 wxString ConfGetDCFolder();
 
 /*!
-	may throw a CRainmanException
+    may throw a CRainmanException
 */
 wxString ConfGetSSFolder();
 
 /*!
-	may throw a CRainmanException
+    may throw a CRainmanException
 */
 wxString ConfGetCoHFolder();
 
 /*!
-	may throw a CRainmanException
+    may throw a CRainmanException
 */
 wxString ConfGetModToolsFolder();
 

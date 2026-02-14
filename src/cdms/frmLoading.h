@@ -23,32 +23,32 @@
 #include <wx/aui/auibook.h>
 
 #ifdef __BORLANDC__
-    #pragma hdrstop
+#pragma hdrstop
 #endif
 
 // for all others, include the necessary headers (this file is usually all you
 // need because it includes almost all "standard" wxWidgets headers)
 #ifndef WX_PRECOMP
-    #include "wx/wx.h"
+#include "wx/wx.h"
 #endif
 // ----------------------------
 #include <wx/bitmap.h>
 
-class frmLoading: public wxFrame
+class frmLoading : public wxFrame
 {
-protected:
+  protected:
 	wxBitmap *m_pLoadingImage;
-	wxStaticText *m_pText; 
-public:
- 
-    frmLoading(const wxString& sTitle);
+	wxStaticText *m_pText;
 
-    void OnQuit(wxCloseEvent& event);
-	void OnPaint(wxPaintEvent& event);
+  public:
+	frmLoading(const wxString &sTitle);
 
-	void SetMessage(wxString& sMsg);
- 
-    DECLARE_EVENT_TABLE()
+	void OnQuit(wxCloseEvent &event);
+	void OnPaint(wxPaintEvent &event);
+
+	void SetMessage(wxString &sMsg);
+
+	DECLARE_EVENT_TABLE()
 };
 
 #endif

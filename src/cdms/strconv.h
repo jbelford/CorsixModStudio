@@ -23,33 +23,33 @@
 #include <wx/string.h>
 
 /*
-	\return Returns a string, or 0 on error
+    \return Returns a string, or 0 on error
 */
-wchar_t* AsciiToUnicode(const char* sAscii);
+wchar_t *AsciiToUnicode(const char *sAscii);
 
 /*
-	\return Returns a string, or 0 on error
+    \return Returns a string, or 0 on error
 */
-wchar_t* AsciiToUnicodeDel(char* sAscii);
+wchar_t *AsciiToUnicodeDel(char *sAscii);
 
 /*
-	\return Returns a string, or 0 on error
+    \return Returns a string, or 0 on error
 */
-wchar_t* AsciiToUnicodeFree(char* sAscii);
+wchar_t *AsciiToUnicodeFree(char *sAscii);
 
 /*
-	\return Returns a string, or 0 on error
+    \return Returns a string, or 0 on error
 */
-char* UnicodeToAscii(const wchar_t* pUnicode);
+char *UnicodeToAscii(const wchar_t *pUnicode);
 
 /*
-	\return Returns a string
+    \return Returns a string
 */
-wxString AsciiTowxString(const char* sAscii);
+wxString AsciiTowxString(const char *sAscii);
 
 /*
-	\return Returns a string, or 0 on error
+    \return Returns a string, or 0 on error
 */
-char* wxStringToAscii(const wxString& oStr);
+char *wxStringToAscii(const wxString &oStr);
 
 #endif

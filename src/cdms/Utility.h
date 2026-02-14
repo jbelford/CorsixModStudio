@@ -23,13 +23,13 @@
 #include <wx/aui/auibook.h>
 
 #ifdef __BORLANDC__
-    #pragma hdrstop
+#pragma hdrstop
 #endif
 
 // for all others, include the necessary headers (this file is usually all you
 // need because it includes almost all "standard" wxWidgets headers)
 #ifndef WX_PRECOMP
-    #include "wx/wx.h"
+#include "wx/wx.h"
 #endif
 // ----------------------------
 #include "strconv.h"
@@ -38,23 +38,26 @@
 
 class CModStudioException : public CRainmanException
 {
-public:
-	CModStudioException(const char* sFile, unsigned long iLine, const char* sMessage, CRainmanException* pPrecursor = 0);
-	CModStudioException(CRainmanException* pPrecursor, const char* sFile, unsigned long iLine, const char* sFormat, ...);
+  public:
+	CModStudioException(const char *sFile, unsigned long iLine, const char *sMessage,
+	                    CRainmanException *pPrecursor = 0);
+	CModStudioException(CRainmanException *pPrecursor, const char *sFile, unsigned long iLine, const char *sFormat,
+	                    ...);
 
 	virtual void destroy();
 };
 
-bool _ErrorBox(wxString sError, const char* sFile, long iLine, bool bUnhandled = false, bool bAllowCancel = false);
+bool _ErrorBox(wxString sError, const char *sFile, long iLine, bool bUnhandled = false, bool bAllowCancel = false);
 #define ErrorBox(sError) _ErrorBox(wxT(sError), __FILE__, __LINE__)
 #define ErrorBoxS(sError) _ErrorBox(sError, __FILE__, __LINE__)
 #define ErrorBoxAS(sError) _ErrorBox(AppStr(sError), __FILE__, __LINE__)
-bool _ErrorBox(CRainmanException* pE,const char* sFile, long iLine, bool bUnhandled = false, bool bAllowCancel = false);
+bool _ErrorBox(CRainmanException *pE, const char *sFile, long iLine, bool bUnhandled = false,
+               bool bAllowCancel = false);
 #define ErrorBoxE(pException) _ErrorBox(pException, __FILE__, __LINE__)
 
-void BackupFile(wxString& sFile);
-void BackupFile(IFileStore* pStore, wxString& sFile);
-void RestoreBackupFile(wxString& sFile);
-void RestoreBackupFile(IFileStore* pStore, wxString& sFile);
+void BackupFile(wxString &sFile);
+void BackupFile(IFileStore *pStore, wxString &sFile);
+void RestoreBackupFile(wxString &sFile);
+void RestoreBackupFile(IFileStore *pStore, wxString &sFile);
 
 #endif

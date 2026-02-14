@@ -27,22 +27,24 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 CRainmanException::CRainmanException() {}
 
-CRainmanException::CRainmanException(const char* sFile, unsigned long iLine, const char* sMessage, CRainmanException* pPrecursor)
-: m_sFile(sFile), m_iLine(iLine), m_pPrecursor(pPrecursor)
+CRainmanException::CRainmanException(const char *sFile, unsigned long iLine, const char *sMessage,
+                                     CRainmanException *pPrecursor)
+    : m_sFile(sFile), m_iLine(iLine), m_pPrecursor(pPrecursor)
 {
 	m_sMessage = strdup(sMessage);
 }
 
-CRainmanException::CRainmanException(CRainmanException* pPrecursor, const char* sFile, unsigned long iLine, const char* sFormat, ...)
-: m_sFile(sFile), m_iLine(iLine), m_pPrecursor(pPrecursor)
+CRainmanException::CRainmanException(CRainmanException *pPrecursor, const char *sFile, unsigned long iLine,
+                                     const char *sFormat, ...)
+    : m_sFile(sFile), m_iLine(iLine), m_pPrecursor(pPrecursor)
 {
 	size_t iL = 128;
 	va_list marker;
-	while(1)
+	while (1)
 	{
-		char* sBuf = (char*)malloc(iL);
+		char *sBuf = (char *)malloc(iL);
 		va_start(marker, sFormat);
-		if(_vsnprintf(sBuf, iL - 1, sFormat, marker) == -1)
+		if (_vsnprintf(sBuf, iL - 1, sFormat, marker) == -1)
 		{
 			va_end(marker);
 			free(sBuf);
@@ -62,6 +64,7 @@ CRainmanException::~CRainmanException() {}
 void CRainmanException::destroy()
 {
 	free(m_sMessage);
-	if(m_pPrecursor) m_pPrecursor->destroy();
+	if (m_pPrecursor)
+		m_pPrecursor->destroy();
 	delete this;
 }

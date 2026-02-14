@@ -20,18 +20,19 @@
 #include "Common.h"
 
 BEGIN_EVENT_TABLE(frmMessage, wxFrame)
-	EVT_CLOSE(frmMessage::OnQuit)
-	EVT_PAINT(frmMessage::OnPaint)
+EVT_CLOSE(frmMessage::OnQuit)
+EVT_PAINT(frmMessage::OnPaint)
 END_EVENT_TABLE()
 
-frmMessage::frmMessage(const wxString& sImage, const wxString& sTitle)
-	:wxFrame(wxTheApp->GetTopWindow(), -1, sTitle, wxPoint(0, 0) , wxSize(200, 132), wxFRAME_FLOAT_ON_PARENT | wxFRAME_TOOL_WINDOW)
+frmMessage::frmMessage(const wxString &sImage, const wxString &sTitle)
+    : wxFrame(wxTheApp->GetTopWindow(), -1, sTitle, wxPoint(0, 0), wxSize(200, 132),
+              wxFRAME_FLOAT_ON_PARENT | wxFRAME_TOOL_WINDOW)
 {
 	CentreOnParent();
 	m_pImage = 0;
 	m_pText = 0;
 
-	m_pImage = new wxBitmap(sImage ,wxBITMAP_TYPE_BMP_RESOURCE);
+	m_pImage = new wxBitmap(sImage, wxBITMAP_TYPE_BMP_RESOURCE);
 	m_pText = new wxStaticText(this, -1, sTitle, wxPoint(0, 50), wxSize(200, 82), wxST_NO_AUTORESIZE | wxALIGN_CENTER);
 	m_pText->Wrap(200);
 	m_pText->SetBackgroundStyle(wxBG_STYLE_COLOUR);
@@ -39,20 +40,19 @@ frmMessage::frmMessage(const wxString& sImage, const wxString& sTitle)
 	this->SetBackgroundColour(wxColour(255, 255, 255));
 }
 
-void frmMessage::OnQuit(wxCloseEvent& event)
-{ UNUSED(event);
+void frmMessage::OnQuit(wxCloseEvent &event)
+{
+	UNUSED(event);
 	delete m_pImage;
 }
 
-void frmMessage::OnPaint(wxPaintEvent& event)
-{ UNUSED(event);
+void frmMessage::OnPaint(wxPaintEvent &event)
+{
+	UNUSED(event);
 	wxPaintDC dc(this);
 	wxMemoryDC temp_dc;
 	temp_dc.SelectObject(*m_pImage);
 	dc.Blit(76, 0, 48, 48, &temp_dc, 0, 0);
 }
 
-void frmMessage::SetMessage(wxString& sMsg)
-{
-	m_pText->SetLabel(sMsg);
-}
+void frmMessage::SetMessage(wxString &sMsg) { m_pText->SetLabel(sMsg); }

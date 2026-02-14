@@ -26,21 +26,22 @@
 #include "Common.h"
 
 BEGIN_EVENT_TABLE(frmFileSelector, wxDialog)
-	EVT_SIZE(frmFileSelector::OnSize)
-	EVT_TREE_ITEM_EXPANDING(IDC_FilesTable, frmFileSelector::OnTreeExpanding)
-	EVT_TREE_SEL_CHANGED(IDC_FilesTable, frmFileSelector::OnTreeSelect)
-	EVT_BUTTON(wxID_OK, frmFileSelector::OnOkClick)
-	EVT_BUTTON(wxID_CANCEL, frmFileSelector::OnCloseClick)
+EVT_SIZE(frmFileSelector::OnSize)
+EVT_TREE_ITEM_EXPANDING(IDC_FilesTable, frmFileSelector::OnTreeExpanding)
+EVT_TREE_SEL_CHANGED(IDC_FilesTable, frmFileSelector::OnTreeSelect)
+EVT_BUTTON(wxID_OK, frmFileSelector::OnOkClick)
+EVT_BUTTON(wxID_CANCEL, frmFileSelector::OnCloseClick)
 END_EVENT_TABLE()
 
-std::list<IDirectoryTraverser::IIterator*> g_vIteratorsToFree;
+std::list<IDirectoryTraverser::IIterator *> g_vIteratorsToFree;
 
-CFileSelectorTreeItemData::CFileSelectorTreeItemData(IDirectoryTraverser::IIterator* pItr, bool bToFillWith)
+CFileSelectorTreeItemData::CFileSelectorTreeItemData(IDirectoryTraverser::IIterator *pItr, bool bToFillWith)
 {
-	if(bToFillWith)
+	if (bToFillWith)
 	{
 		pToFillWith = pItr;
-		if(pItr) g_vIteratorsToFree.push_back(pItr);
+		if (pItr)
+			g_vIteratorsToFree.push_back(pItr);
 		sMod = 0;
 		sSource = 0;
 	}
@@ -49,25 +50,32 @@ CFileSelectorTreeItemData::CFileSelectorTreeItemData(IDirectoryTraverser::IItera
 		pToFillWith = 0;
 		sMod = 0;
 		sSource = 0;
-		if(pItr->VGetType() == IDirectoryTraverser::IIterator::T_File)
+		if (pItr->VGetType() == IDirectoryTraverser::IIterator::T_File)
 		{
 			try
 			{
-				sMod = (const char*) pItr->VGetTag(0);
+				sMod = (const char *)pItr->VGetTag(0);
 			}
-			catch(CRainmanException *pE) {pE->destroy();}
+			catch (CRainmanException *pE)
+			{
+				pE->destroy();
+			}
 			try
 			{
-				sSource = (const char*) pItr->VGetTag(1);
+				sSource = (const char *)pItr->VGetTag(1);
 			}
-			catch(CRainmanException *pE) {pE->destroy();}
+			catch (CRainmanException *pE)
+			{
+				pE->destroy();
+			}
 		}
 	}
 }
 
 frmFileSelector::~frmFileSelector()
 {
-	for(std::list<IDirectoryTraverser::IIterator*>::iterator itr = g_vIteratorsToFree.begin(); itr != g_vIteratorsToFree.end(); ++itr)
+	for (std::list<IDirectoryTraverser::IIterator *>::iterator itr = g_vIteratorsToFree.begin();
+	     itr != g_vIteratorsToFree.end(); ++itr)
 	{
 		delete *itr;
 	}
@@ -75,51 +83,53 @@ frmFileSelector::~frmFileSelector()
 }
 
 frmFileSelector::frmFileSelector(wxString sBaseFolder, wxString sExistingSelection, bool bRgdMode)
-	:wxDialog(wxTheApp->GetTopWindow(), -1, wxT("File Selector"), wxPoint(0, 0) , wxSize(320, 480), wxFRAME_FLOAT_ON_PARENT | wxFRAME_TOOL_WINDOW | wxCAPTION),
-	m_sBaseFolder(sBaseFolder),
-	m_bRgdMode(bRgdMode)
+    : wxDialog(wxTheApp->GetTopWindow(), -1, wxT("File Selector"), wxPoint(0, 0), wxSize(320, 480),
+               wxFRAME_FLOAT_ON_PARENT | wxFRAME_TOOL_WINDOW | wxCAPTION),
+      m_sBaseFolder(sBaseFolder), m_bRgdMode(bRgdMode)
 {
 	m_cThisMod = ConfGetColour(AppStr(file_colourthismod), 128, 64, 64);
 	m_cOtherMod = ConfGetColour(AppStr(file_colourothermod), 64, 64, 128);
 	m_cEngine = ConfGetColour(AppStr(file_colourengine), 128, 128, 128);
 
-	wxWindow* pBgTemp;
+	wxWindow *pBgTemp;
 	CentreOnParent();
-	wxBoxSizer *pTopSizer = new wxBoxSizer( wxVERTICAL );
+	wxBoxSizer *pTopSizer = new wxBoxSizer(wxVERTICAL);
 
-	pTopSizer->Add(m_pTree = new wxTreeCtrl(this, IDC_FilesTable, wxDefaultPosition, wxSize(260, 320), wxTR_HAS_BUTTONS | wxTR_HIDE_ROOT | wxTR_SINGLE | wxTR_LINES_AT_ROOT), 1, wxALL | wxEXPAND, 3);
+	pTopSizer->Add(m_pTree = new wxTreeCtrl(this, IDC_FilesTable, wxDefaultPosition, wxSize(260, 320),
+	                                        wxTR_HAS_BUTTONS | wxTR_HIDE_ROOT | wxTR_SINGLE | wxTR_LINES_AT_ROOT),
+	               1, wxALL | wxEXPAND, 3);
 
-	wxImageList* pFileTypes = new wxImageList(16, 16);
-	pFileTypes->Add(wxBitmap(wxT("IDB_FILEAI"), wxBITMAP_TYPE_BMP_RESOURCE)); // ( 0) AI
-	pFileTypes->Add(wxBitmap(wxT("IDB_FILELUA"), wxBITMAP_TYPE_BMP_RESOURCE)); // ( 1) LUA
-	pFileTypes->Add(wxBitmap(wxT("IDB_FILENIL"), wxBITMAP_TYPE_BMP_RESOURCE)); // ( 2) NIL
-	pFileTypes->Add(wxBitmap(wxT("IDB_FILERGD"), wxBITMAP_TYPE_BMP_RESOURCE)); // ( 3) RGD
+	wxImageList *pFileTypes = new wxImageList(16, 16);
+	pFileTypes->Add(wxBitmap(wxT("IDB_FILEAI"), wxBITMAP_TYPE_BMP_RESOURCE));      // ( 0) AI
+	pFileTypes->Add(wxBitmap(wxT("IDB_FILELUA"), wxBITMAP_TYPE_BMP_RESOURCE));     // ( 1) LUA
+	pFileTypes->Add(wxBitmap(wxT("IDB_FILENIL"), wxBITMAP_TYPE_BMP_RESOURCE));     // ( 2) NIL
+	pFileTypes->Add(wxBitmap(wxT("IDB_FILERGD"), wxBITMAP_TYPE_BMP_RESOURCE));     // ( 3) RGD
 	pFileTypes->Add(wxBitmap(wxT("IDB_FOLDERCLOSE"), wxBITMAP_TYPE_BMP_RESOURCE)); // ( 4) Closed
-	pFileTypes->Add(wxBitmap(wxT("IDB_FOLDEROPEN"), wxBITMAP_TYPE_BMP_RESOURCE)); // ( 5) Open
-	pFileTypes->Add(wxBitmap(wxT("IDB_FILESCAR"), wxBITMAP_TYPE_BMP_RESOURCE)); // ( 6) SCAR
-	pFileTypes->Add(wxBitmap(wxT("IDB_TOC"), wxBITMAP_TYPE_BMP_RESOURCE)); // ( 7) ToC
-	pFileTypes->Add(wxBitmap(wxT("IDB_FILETGA"), wxBITMAP_TYPE_BMP_RESOURCE)); // ( 8) TGA
-	pFileTypes->Add(wxBitmap(wxT("IDB_FILERGT"), wxBITMAP_TYPE_BMP_RESOURCE)); // ( 9) RGT
-	pFileTypes->Add(wxBitmap(wxT("IDB_FILEDDS"), wxBITMAP_TYPE_BMP_RESOURCE)); // (10) DDS
-	pFileTypes->Add(wxBitmap(wxT("IDB_FILEBFX"), wxBITMAP_TYPE_BMP_RESOURCE)); // (11) BFX
-	pFileTypes->Add(wxBitmap(wxT("IDB_FILEABP"), wxBITMAP_TYPE_BMP_RESOURCE)); // (12) ABP
-	pFileTypes->Add(wxBitmap(wxT("IDB_FILERGM"), wxBITMAP_TYPE_BMP_RESOURCE)); // (13) RGM
+	pFileTypes->Add(wxBitmap(wxT("IDB_FOLDEROPEN"), wxBITMAP_TYPE_BMP_RESOURCE));  // ( 5) Open
+	pFileTypes->Add(wxBitmap(wxT("IDB_FILESCAR"), wxBITMAP_TYPE_BMP_RESOURCE));    // ( 6) SCAR
+	pFileTypes->Add(wxBitmap(wxT("IDB_TOC"), wxBITMAP_TYPE_BMP_RESOURCE));         // ( 7) ToC
+	pFileTypes->Add(wxBitmap(wxT("IDB_FILETGA"), wxBITMAP_TYPE_BMP_RESOURCE));     // ( 8) TGA
+	pFileTypes->Add(wxBitmap(wxT("IDB_FILERGT"), wxBITMAP_TYPE_BMP_RESOURCE));     // ( 9) RGT
+	pFileTypes->Add(wxBitmap(wxT("IDB_FILEDDS"), wxBITMAP_TYPE_BMP_RESOURCE));     // (10) DDS
+	pFileTypes->Add(wxBitmap(wxT("IDB_FILEBFX"), wxBITMAP_TYPE_BMP_RESOURCE));     // (11) BFX
+	pFileTypes->Add(wxBitmap(wxT("IDB_FILEABP"), wxBITMAP_TYPE_BMP_RESOURCE));     // (12) ABP
+	pFileTypes->Add(wxBitmap(wxT("IDB_FILERGM"), wxBITMAP_TYPE_BMP_RESOURCE));     // (13) RGM
 	m_pTree->AssignImageList(pFileTypes);
 
 	CModuleFile *pMod = TheConstruct->GetModule();
-	if(sBaseFolder.Len() == 0)
+	if (sBaseFolder.Len() == 0)
 	{
 		wxTreeItemId oRoot = m_pTree->AddRoot(wxT(""));
 
-		for(unsigned long iEntry = 0; iEntry < pMod->VGetEntryPointCount(); ++iEntry)
+		for (unsigned long iEntry = 0; iEntry < pMod->VGetEntryPointCount(); ++iEntry)
 		{
-			IDirectoryTraverser::IIterator* pItr = 0;
-			const char* sName = 0;
+			IDirectoryTraverser::IIterator *pItr = 0;
+			const char *sName = 0;
 			try
 			{
 				sName = pMod->VGetEntryPoint(iEntry);
 			}
-			catch(CRainmanException *pE)
+			catch (CRainmanException *pE)
 			{
 				pE->destroy();
 				continue;
@@ -127,35 +137,37 @@ frmFileSelector::frmFileSelector(wxString sBaseFolder, wxString sExistingSelecti
 			try
 			{
 				pItr = pMod->VIterate(sName);
-				if(pItr && pItr->VGetType() == IDirectoryTraverser::IIterator::T_Nothing)
+				if (pItr && pItr->VGetType() == IDirectoryTraverser::IIterator::T_Nothing)
 				{
 					delete pItr;
 					pItr = 0;
 				}
 			}
-			catch(CRainmanException *pE)
+			catch (CRainmanException *pE)
 			{
 				pE->destroy();
 				pItr = 0;
 			}
-			wxTreeItemId oChild = m_pTree->AppendItem(oRoot, AsciiTowxString(sName), 7, 7, new CFileSelectorTreeItemData(pItr, true));
-			if(pItr) m_pTree->SetItemHasChildren(oChild, true);
+			wxTreeItemId oChild =
+			    m_pTree->AppendItem(oRoot, AsciiTowxString(sName), 7, 7, new CFileSelectorTreeItemData(pItr, true));
+			if (pItr)
+				m_pTree->SetItemHasChildren(oChild, true);
 		}
 	}
 	else
 	{
-		IDirectoryTraverser::IIterator* pRootItr = 0;
-		const char* sBaseFolderAscii = wxStringToAscii(sBaseFolder);
+		IDirectoryTraverser::IIterator *pRootItr = 0;
+		const char *sBaseFolderAscii = wxStringToAscii(sBaseFolder);
 		try
 		{
 			pRootItr = pMod->VIterate(sBaseFolderAscii);
-			if(pRootItr && pRootItr->VGetType() == IDirectoryTraverser::IIterator::T_Nothing)
+			if (pRootItr && pRootItr->VGetType() == IDirectoryTraverser::IIterator::T_Nothing)
 			{
 				delete pRootItr;
 				pRootItr = 0;
 			}
 		}
-		catch(CRainmanException *pE)
+		catch (CRainmanException *pE)
 		{
 			pE->destroy();
 			pRootItr = 0;
@@ -165,14 +177,15 @@ frmFileSelector::frmFileSelector(wxString sBaseFolder, wxString sExistingSelecti
 		MakeChildren(oRoot);
 	}
 
-	wxBoxSizer *pNameSizer = new wxBoxSizer( wxHORIZONTAL );
-	if(sBaseFolder.Len()) pNameSizer->Add(new wxStaticText(this, -1, sBaseFolder), 0, wxEXPAND | wxALL | wxALIGN_CENTER_VERTICAL, 3);
+	wxBoxSizer *pNameSizer = new wxBoxSizer(wxHORIZONTAL);
+	if (sBaseFolder.Len())
+		pNameSizer->Add(new wxStaticText(this, -1, sBaseFolder), 0, wxEXPAND | wxALL | wxALIGN_CENTER_VERTICAL, 3);
 	pNameSizer->Add(m_pText = new wxTextCtrl(this, -1, wxT("")), 1, wxEXPAND | wxALL | wxALIGN_CENTER_VERTICAL, 3);
 	pTopSizer->Add(pNameSizer, 0, wxALIGN_LEFT | wxEXPAND);
 	m_pText->SetValue(sExistingSelection);
-	if(m_bRgdMode)
+	if (m_bRgdMode)
 	{
-		if(sExistingSelection.Find('.', true) != wxNOT_FOUND)
+		if (sExistingSelection.Find('.', true) != wxNOT_FOUND)
 		{
 			m_sRgdModeExt = wxString(wxT(".")) + sExistingSelection.AfterLast('.');
 			sExistingSelection = sExistingSelection.BeforeLast('.');
@@ -180,13 +193,13 @@ frmFileSelector::frmFileSelector(wxString sBaseFolder, wxString sExistingSelecti
 	}
 	FindAndSelect(sExistingSelection);
 
-	wxBoxSizer *pButtonSizer = new wxBoxSizer( wxHORIZONTAL );
-	pButtonSizer->Add(pBgTemp= new wxButton(this, wxID_OK, wxT("OK")), 0, wxEXPAND | wxALL, 3);
+	wxBoxSizer *pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
+	pButtonSizer->Add(pBgTemp = new wxButton(this, wxID_OK, wxT("OK")), 0, wxEXPAND | wxALL, 3);
 	pButtonSizer->Add(new wxButton(this, wxID_CANCEL, wxT("Cancel")), 0, wxEXPAND | wxALL, 3);
 	pTopSizer->Add(pButtonSizer, 0, wxALIGN_CENTER);
 
 	SetSizer(pTopSizer);
-	pTopSizer->SetSizeHints( this );
+	pTopSizer->SetSizeHints(this);
 	SetBackgroundColour(pBgTemp->GetBackgroundColour());
 }
 
@@ -199,99 +212,119 @@ void frmFileSelector::FindAndSelect(wxString sFile)
 
 	wxString sPart = sFile.BeforeFirst('\\');
 	bool bMoveNext = true;
-	while(oChild.IsOk())
+	while (oChild.IsOk())
 	{
-		if(m_pTree->GetItemText(oChild).IsSameAs(sPart, false))
+		if (m_pTree->GetItemText(oChild).IsSameAs(sPart, false))
 		{
 			sFile = sFile.AfterFirst('\\');
 			sPart = sFile.BeforeFirst('\\');
 
 			m_pTree->EnsureVisible(oChild);
 
-			if(!m_pTree->ItemHasChildren(oChild) || sPart.IsEmpty())
+			if (!m_pTree->ItemHasChildren(oChild) || sPart.IsEmpty())
 			{
-				if(sPart.IsEmpty()) m_pTree->SelectItem(oChild);
+				if (sPart.IsEmpty())
+					m_pTree->SelectItem(oChild);
 				return;
 			}
 			else
 			{
 				oParent = oChild;
-				if(!m_pTree->IsExpanded(oParent)) m_pTree->Expand(oParent);
+				if (!m_pTree->IsExpanded(oParent))
+					m_pTree->Expand(oParent);
 				oChild = m_pTree->GetFirstChild(oParent, oCookie);
 				bMoveNext = false;
 			}
 		}
-		if(bMoveNext) oChild = m_pTree->GetNextChild(oParent, oCookie);
-		else bMoveNext = true;
+		if (bMoveNext)
+			oChild = m_pTree->GetNextChild(oParent, oCookie);
+		else
+			bMoveNext = true;
 	}
 }
 
-void frmFileSelector::OnTreeExpanding(wxTreeEvent& event)
-{
-	MakeChildren(event.GetItem());
-}
+void frmFileSelector::OnTreeExpanding(wxTreeEvent &event) { MakeChildren(event.GetItem()); }
 
-void frmFileSelector::OnTreeSelect(wxTreeEvent& event)
+void frmFileSelector::OnTreeSelect(wxTreeEvent &event)
 {
-	wxTreeItemId& oItem = event.GetItem(), &oRoot = m_pTree->GetRootItem();
+	wxTreeItemId &oItem = event.GetItem(), &oRoot = m_pTree->GetRootItem();
 
-	CFileSelectorTreeItemData* pData = (CFileSelectorTreeItemData*)m_pTree->GetItemData(oItem);
+	CFileSelectorTreeItemData *pData = (CFileSelectorTreeItemData *)m_pTree->GetItemData(oItem);
 
 	wxString sPath;
-	while(oItem != oRoot)
+	while (oItem != oRoot)
 	{
 		wxString sPart = m_pTree->GetItemText(oItem);
-		if(!sPath.IsEmpty()) sPath.Prepend(wxT("\\"));
+		if (!sPath.IsEmpty())
+			sPath.Prepend(wxT("\\"));
 		sPath.Prepend(sPart);
 		oItem = m_pTree->GetItemParent(oItem);
 	}
-	if(pData && pData->sMod && pData->sSource) sPath.Append(m_sRgdModeExt);
+	if (pData && pData->sMod && pData->sSource)
+		sPath.Append(m_sRgdModeExt);
 	m_pText->SetValue(sPath);
 }
 
-void frmFileSelector::MakeChildren(const wxTreeItemId& parent)
+void frmFileSelector::MakeChildren(const wxTreeItemId &parent)
 {
-	CFileSelectorTreeItemData* pData = (CFileSelectorTreeItemData*)m_pTree->GetItemData(parent);
-	if(!pData || !pData->pToFillWith) return;
+	CFileSelectorTreeItemData *pData = (CFileSelectorTreeItemData *)m_pTree->GetItemData(parent);
+	if (!pData || !pData->pToFillWith)
+		return;
 
 	wxString sPreviousName;
-	while(pData->pToFillWith->VGetType() != IDirectoryTraverser::IIterator::T_Nothing)
+	while (pData->pToFillWith->VGetType() != IDirectoryTraverser::IIterator::T_Nothing)
 	{
-		if(pData->pToFillWith->VGetType() == IDirectoryTraverser::IIterator::T_File)
+		if (pData->pToFillWith->VGetType() == IDirectoryTraverser::IIterator::T_File)
 		{
 			wxString sName = AsciiTowxString(pData->pToFillWith->VGetName());
 			bool bSkip = false;
-			if(m_bRgdMode)
+			if (m_bRgdMode)
 			{
 				sName = sName.BeforeLast('.');
-				if(sName.IsSameAs(sPreviousName, false)) bSkip = true;
-				else sPreviousName = sName;
+				if (sName.IsSameAs(sPreviousName, false))
+					bSkip = true;
+				else
+					sPreviousName = sName;
 			}
-			if(!bSkip)
+			if (!bSkip)
 			{
 				int iExt = sName.Find('.', true), iImg = -2;
-				if(iExt != -1)
+				if (iExt != -1)
 				{
 					wxString sExtension = sName.Mid(iExt);
-					if(sExtension.IsSameAs(wxT(".ai"), false)) iImg = 0;
-					else if(sExtension.IsSameAs(wxT(".lua"), false)) iImg = 1;
-					else if(sExtension.IsSameAs(wxT(".nil"), false)) iImg = 2;
-					else if(sExtension.IsSameAs(wxT(".rgd"), false)) iImg = 3;
-					else if(sExtension.IsSameAs(wxT(".scar"), false)) iImg = 6;
-					else if(sExtension.IsSameAs(wxT(".tga"), false)) iImg = 8;
-					else if(sExtension.IsSameAs(wxT(".rgt"), false)) iImg = 9;
-					else if(sExtension.IsSameAs(wxT(".dds"), false)) iImg = 10;
-					else if(sExtension.IsSameAs(wxT(".bfx"), false)) iImg = 11;
-					else if(sExtension.IsSameAs(wxT(".abp"), false)) iImg = 12;
-					else if(sExtension.IsSameAs(wxT(".rgm"), false)) iImg = 13;
+					if (sExtension.IsSameAs(wxT(".ai"), false))
+						iImg = 0;
+					else if (sExtension.IsSameAs(wxT(".lua"), false))
+						iImg = 1;
+					else if (sExtension.IsSameAs(wxT(".nil"), false))
+						iImg = 2;
+					else if (sExtension.IsSameAs(wxT(".rgd"), false))
+						iImg = 3;
+					else if (sExtension.IsSameAs(wxT(".scar"), false))
+						iImg = 6;
+					else if (sExtension.IsSameAs(wxT(".tga"), false))
+						iImg = 8;
+					else if (sExtension.IsSameAs(wxT(".rgt"), false))
+						iImg = 9;
+					else if (sExtension.IsSameAs(wxT(".dds"), false))
+						iImg = 10;
+					else if (sExtension.IsSameAs(wxT(".bfx"), false))
+						iImg = 11;
+					else if (sExtension.IsSameAs(wxT(".abp"), false))
+						iImg = 12;
+					else if (sExtension.IsSameAs(wxT(".rgm"), false))
+						iImg = 13;
 				}
-				wxTreeItemId oChild = m_pTree->AppendItem(parent, sName, iImg, iImg, new CFileSelectorTreeItemData(pData->pToFillWith, false));
+				wxTreeItemId oChild = m_pTree->AppendItem(parent, sName, iImg, iImg,
+				                                          new CFileSelectorTreeItemData(pData->pToFillWith, false));
 
-				if(strcmp((const char*)pData->pToFillWith->VGetTag(0), TheConstruct->GetModule()->GetFileMapName()) == 0)
+				if (strcmp((const char *)pData->pToFillWith->VGetTag(0), TheConstruct->GetModule()->GetFileMapName()) ==
+				    0)
 				{
 					m_pTree->SetItemTextColour(oChild, m_cThisMod);
 				}
-				else if(frmFiles::_IsEngineFileMapName((const char*)pData->pToFillWith->VGetTag(0), TheConstruct->GetModule()))
+				else if (frmFiles::_IsEngineFileMapName((const char *)pData->pToFillWith->VGetTag(0),
+				                                        TheConstruct->GetModule()))
 				{
 					m_pTree->SetItemTextColour(oChild, m_cEngine);
 				}
@@ -303,31 +336,34 @@ void frmFileSelector::MakeChildren(const wxTreeItemId& parent)
 		}
 		else
 		{
-			IDirectoryTraverser::IIterator* pChildren = 0;
+			IDirectoryTraverser::IIterator *pChildren = 0;
 			try
 			{
 				pChildren = pData->pToFillWith->VOpenSubDir();
-				if(pChildren && pChildren->VGetType() == IDirectoryTraverser::IIterator::T_Nothing)
+				if (pChildren && pChildren->VGetType() == IDirectoryTraverser::IIterator::T_Nothing)
 				{
 					delete pChildren;
 					pChildren = 0;
 				}
 			}
-			catch(CRainmanException *pE)
+			catch (CRainmanException *pE)
 			{
 				pE->destroy();
 				pChildren = 0;
 			}
-			wxTreeItemId oChild = m_pTree->AppendItem(parent, AsciiTowxString(pData->pToFillWith->VGetName()), 4, 4, new CFileSelectorTreeItemData(pChildren, true));
+			wxTreeItemId oChild = m_pTree->AppendItem(parent, AsciiTowxString(pData->pToFillWith->VGetName()), 4, 4,
+			                                          new CFileSelectorTreeItemData(pChildren, true));
 			m_pTree->SetItemImage(oChild, 5, wxTreeItemIcon_Expanded);
-			if(pChildren) m_pTree->SetItemHasChildren(oChild, true);
+			if (pChildren)
+				m_pTree->SetItemHasChildren(oChild, true);
 		}
 
 		try
 		{
-			if(pData->pToFillWith->VNextItem() != IDirectoryTraverser::IIterator::E_OK) break;
+			if (pData->pToFillWith->VNextItem() != IDirectoryTraverser::IIterator::E_OK)
+				break;
 		}
-		catch(CRainmanException *pE)
+		catch (CRainmanException *pE)
 		{
 			pE->destroy();
 			break;
@@ -339,19 +375,22 @@ void frmFileSelector::MakeChildren(const wxTreeItemId& parent)
 	pData->pToFillWith = 0;
 }
 
-void frmFileSelector::OnSize(wxSizeEvent& event)
-{  UNUSED(event);
+void frmFileSelector::OnSize(wxSizeEvent &event)
+{
+	UNUSED(event);
 	Layout();
 }
 
-void frmFileSelector::OnOkClick(wxCommandEvent& event)
-{  UNUSED(event);
+void frmFileSelector::OnOkClick(wxCommandEvent &event)
+{
+	UNUSED(event);
 	m_sFile = m_pText->GetValue();
 	EndModal(wxID_OK);
 }
 
-void frmFileSelector::OnCloseClick(wxCommandEvent& event)
-{  UNUSED(event);
+void frmFileSelector::OnCloseClick(wxCommandEvent &event)
+{
+	UNUSED(event);
 	m_sFile = wxT("");
 	EndModal(wxID_CANCEL);
 }

@@ -21,18 +21,19 @@
 #include "Common.h"
 
 BEGIN_EVENT_TABLE(frmLoading, wxFrame)
-	EVT_CLOSE(frmLoading::OnQuit)
-	EVT_PAINT(frmLoading::OnPaint)
+EVT_CLOSE(frmLoading::OnQuit)
+EVT_PAINT(frmLoading::OnPaint)
 END_EVENT_TABLE()
 
-frmLoading::frmLoading(const wxString& sTitle)
-	:wxFrame(wxTheApp->GetTopWindow(), -1, sTitle, wxPoint(0, 0) , wxSize(384, 384), wxFRAME_FLOAT_ON_PARENT | wxFRAME_TOOL_WINDOW)
+frmLoading::frmLoading(const wxString &sTitle)
+    : wxFrame(wxTheApp->GetTopWindow(), -1, sTitle, wxPoint(0, 0), wxSize(384, 384),
+              wxFRAME_FLOAT_ON_PARENT | wxFRAME_TOOL_WINDOW)
 {
 	CentreOnParent();
 	m_pLoadingImage = 0;
 	m_pText = 0;
 
-	m_pLoadingImage = new wxBitmap(wxT("RIDB_LOADING") ,wxBITMAP_TYPE_BMP_RESOURCE);
+	m_pLoadingImage = new wxBitmap(wxT("RIDB_LOADING"), wxBITMAP_TYPE_BMP_RESOURCE);
 	m_pText = new wxStaticText(this, -1, sTitle, wxPoint(0, 317), wxSize(384, 33), wxST_NO_AUTORESIZE | wxALIGN_CENTER);
 	m_pText->Wrap(380);
 	m_pText->SetBackgroundStyle(wxBG_STYLE_COLOUR);
@@ -42,20 +43,19 @@ frmLoading::frmLoading(const wxString& sTitle)
 	m_pText->SetFont(f);
 }
 
-void frmLoading::OnQuit(wxCloseEvent& event)
-{  UNUSED(event);
+void frmLoading::OnQuit(wxCloseEvent &event)
+{
+	UNUSED(event);
 	delete m_pLoadingImage;
 }
 
-void frmLoading::OnPaint(wxPaintEvent& event)
-{  UNUSED(event);
+void frmLoading::OnPaint(wxPaintEvent &event)
+{
+	UNUSED(event);
 	wxPaintDC dc(this);
 	wxMemoryDC temp_dc;
 	temp_dc.SelectObject(*m_pLoadingImage);
 	dc.Blit(0, 0, 384, 384, &temp_dc, 0, 0);
 }
 
-void frmLoading::SetMessage(wxString& sMsg)
-{
-	m_pText->SetLabel(sMsg);
-}
+void frmLoading::SetMessage(wxString &sMsg) { m_pText->SetLabel(sMsg); }

@@ -22,13 +22,13 @@
 #include <wx/wxprec.h>
 
 #ifdef __BORLANDC__
-    #pragma hdrstop
+#pragma hdrstop
 #endif
 
 // for all others, include the necessary headers (this file is usually all you
 // need because it includes almost all "standard" wxWidgets headers)
 #ifndef WX_PRECOMP
-    #include "wx/wx.h"
+#include "wx/wx.h"
 #endif
 // ----------------------------
 #include <Rainman.h>
@@ -37,12 +37,12 @@
 
 class frmRgdMacro : public wxDialog
 {
-protected:
-	wxStyledTextCtrl* m_pSTC;
+  protected:
+	wxStyledTextCtrl *m_pSTC;
 	wxTextCtrl *m_pTextbox;
-	std::map<unsigned long, char*> m_mapToUpdate;
+	std::map<unsigned long, char *> m_mapToUpdate;
 
-	wxStaticText* m_pCaption;
+	wxStaticText *m_pCaption;
 	wxButton *m_pSaveBtn, *m_pLoadBtn, *m_pRunBtn, *m_pModeBtn;
 	wxBoxSizer *m_pFormMainSizer;
 
@@ -58,22 +58,23 @@ protected:
 	bool m_bAllowLoad;
 
 	wxString m_sPath;
-	wxTreeItemId& m_oFolder;
+	wxTreeItemId &m_oFolder;
 
-	static void _callback_print(void* pTag, const char* sMsg);
-	static bool _callback_save(void* pTag, const char* sFile);
-	static bool _callback_load(void* pTag, const char* sFile);
-	static bool _callback_security(void* pTag, CRgdFileMacro::eSecurityTypes);
-	void _populateFileList(std::vector<char*>* lstFiles);
+	static void _callback_print(void *pTag, const char *sMsg);
+	static bool _callback_save(void *pTag, const char *sFile);
+	static bool _callback_load(void *pTag, const char *sFile);
+	static bool _callback_security(void *pTag, CRgdFileMacro::eSecurityTypes);
+	void _populateFileList(std::vector<char *> *lstFiles);
 	bool _request_Permission(wxString sAction);
-public:
-	frmRgdMacro(wxString sFile, wxTreeItemId& oFolder);
 
-	void OnRunClick(wxCommandEvent& event);
-	void OnModeClick(wxCommandEvent& event);
-	void OnLoadClick(wxCommandEvent& event);
-	void OnSaveClick(wxCommandEvent& event);
-	void OnCancelClick(wxCommandEvent& event);
+  public:
+	frmRgdMacro(wxString sFile, wxTreeItemId &oFolder);
+
+	void OnRunClick(wxCommandEvent &event);
+	void OnModeClick(wxCommandEvent &event);
+	void OnLoadClick(wxCommandEvent &event);
+	void OnSaveClick(wxCommandEvent &event);
+	void OnCancelClick(wxCommandEvent &event);
 	void OnStyleNeeded(wxStyledTextEvent &event);
 	void OnCharAdded(wxStyledTextEvent &event);
 

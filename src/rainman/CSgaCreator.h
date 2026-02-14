@@ -28,56 +28,57 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 //! Creates DoW and CoH SGA archives
 /*
-	Currently has all static methods; may one day have non-static members,
-	however having it all in one class makes it easy to organise.
+    Currently has all static methods; may one day have non-static members,
+    however having it all in one class makes it easy to organise.
 */
 class RAINMAN_API CSgaCreator
 {
-public:
-
+  public:
 	//! Stores information about files that are to be packed
 	class CInputFile
 	{
-	private:
+	  private:
 		friend class CSgaCreator;
 		size_t iNameOffset; //!< Where in sFullPath the actual file name begins
 		tLastWriteTime oLastWriteTime;
-		char* sFullPath; //!< The full path of the file in pFileStore
-		IFileStore* pFileStore;
+		char *sFullPath; //!< The full path of the file in pFileStore
+		IFileStore *pFileStore;
 
-	public:
-		static bool OpLT(CInputFile* oA, CInputFile* oB); //!< Is oA less than oB?
+	  public:
+		static bool OpLT(CInputFile *oA, CInputFile *oB); //!< Is oA less than oB?
 		~CInputFile();
 	};
 
 	//! Stores information about directories that are to be packed
 	class CInputDirectory
 	{
-	private:
+	  private:
 		friend class CSgaCreator;
-		std::vector<CSgaCreator::CInputDirectory*> vDirsList; //!< Sub-directories
-		std::vector<CSgaCreator::CInputFile*> vFilesList;
-		char* sNameFull;
+		std::vector<CSgaCreator::CInputDirectory *> vDirsList; //!< Sub-directories
+		std::vector<CSgaCreator::CInputFile *> vFilesList;
+		char *sNameFull;
 
-	public:
-		static bool OpLT(CInputDirectory* oA, CInputDirectory* oB); //!< Is oA less than oB?
-		void FullCount(size_t& iDirCount, size_t& iFileCount); //!< Count the number of directories and files
+	  public:
+		static bool OpLT(CInputDirectory *oA, CInputDirectory *oB); //!< Is oA less than oB?
+		void FullCount(size_t &iDirCount, size_t &iFileCount);      //!< Count the number of directories and files
 		~CInputDirectory();
 	};
 
 	//! Create a new SGA archive
 	/*!
-		\param[in] pDirectory The input directory to turn into an SGA
-		\param[in] pStore The file store tied to pDirectory
-		\param[in] sOutputFile The full name and path of the file to create
-		\param[in] iVersion Set to 2 to create DoW compatible archives; set to 4 to create CoH compatible archives
-		\return Returns no value but throws an= CRainmanException on error
+	    \param[in] pDirectory The input directory to turn into an SGA
+	    \param[in] pStore The file store tied to pDirectory
+	    \param[in] sOutputFile The full name and path of the file to create
+	    \param[in] iVersion Set to 2 to create DoW compatible archives; set to 4 to create CoH compatible archives
+	    \return Returns no value but throws an= CRainmanException on error
 	*/
-	static void CreateSga(IDirectoryTraverser::IIterator* pDirectory, IFileStore* pStore, const char* sTocName, const char* sOutputFile, long iVersion = 4, const char* sArchiveTitle = 0, const char* sTocTitle = 0);
+	static void CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileStore *pStore, const char *sTocName,
+	                      const char *sOutputFile, long iVersion = 4, const char *sArchiveTitle = 0,
+	                      const char *sTocTitle = 0);
 
-private:
-	static CInputDirectory* _ScanDirectory(IDirectoryTraverser::IIterator* pDirectory, IFileStore* pStore, size_t iDirBaseL = 0);
+  private:
+	static CInputDirectory *_ScanDirectory(IDirectoryTraverser::IIterator *pDirectory, IFileStore *pStore,
+	                                       size_t iDirBaseL = 0);
 };
 
 #endif
-

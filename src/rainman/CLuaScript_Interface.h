@@ -33,4 +33,3 @@ void LuaBind_CucsFile(lua_State *L, CUcsFile* pObj, bool bOwn = true);
 void LuaBind_CdowModule(lua_State *L, CDoWModule* pObj, bool bOwn = true);
 */
 #endif
-

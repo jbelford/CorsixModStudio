@@ -23,62 +23,67 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "stdlib.h"
 #include "string.h"
 #include "Exception.h"
-extern "C" {
+extern "C"
+{
 #include <lauxlib.h>
 };
 
-CLuaFileCache::CLuaFileCache(void) : m_oEntires(0,0)
+CLuaFileCache::CLuaFileCache(void) : m_oEntires(0, 0)
 {
 	m_pMother = lua_open();
 	m_pEntriesEnd = &m_oEntires;
 }
 
-CLuaFileCache::_tEntry::_tEntry(char* s, lua_State* L, bool b) : sName(s), L(L), pNext(0), bUseful(b) {}
+CLuaFileCache::_tEntry::_tEntry(char *s, lua_State *L, bool b) : sName(s), L(L), pNext(0), bUseful(b) {}
 
-lua_State* CLuaFileCache::MakeState()
+lua_State *CLuaFileCache::MakeState()
 {
-	lua_State* L = lua_newthread(m_pMother); // {L -1}
-	lua_newtable(L); // {L -2} {T -1}
-	lua_replace(L, LUA_GLOBALSINDEX); // {L -1}
-	lua_pushlightuserdata(m_pMother, (void*)L); // {L -2} {U -1}
-	lua_insert(m_pMother, -2); // {U -2} {L -1}
-	lua_settable(m_pMother, LUA_REGISTRYINDEX); //
+	lua_State *L = lua_newthread(m_pMother);     // {L -1}
+	lua_newtable(L);                             // {L -2} {T -1}
+	lua_replace(L, LUA_GLOBALSINDEX);            // {L -1}
+	lua_pushlightuserdata(m_pMother, (void *)L); // {L -2} {U -1}
+	lua_insert(m_pMother, -2);                   // {U -2} {L -1}
+	lua_settable(m_pMother, LUA_REGISTRYINDEX);  //
 
 	m_pEntriesEnd = m_pEntriesEnd->pNext = new _tEntry(0, L);
 	return L;
 }
 
-void CLuaFileCache::FreeState(lua_State* L)
+void CLuaFileCache::FreeState(lua_State *L)
 {
-	_tEntry* pItr = m_oEntires.pNext, *pPrev = &m_oEntires;
-	while(pItr)
+	_tEntry *pItr = m_oEntires.pNext, *pPrev = &m_oEntires;
+	while (pItr)
 	{
-		if(pItr->L == L)
+		if (pItr->L == L)
 		{
-			if(pItr->bUseful) throw new CRainmanException(__FILE__, __LINE__, "Cannot delete state as it is useful");
-			if((pPrev->pNext = pItr->pNext) == 0) m_pEntriesEnd = pPrev;
+			if (pItr->bUseful)
+				throw new CRainmanException(__FILE__, __LINE__, "Cannot delete state as it is useful");
+			if ((pPrev->pNext = pItr->pNext) == 0)
+				m_pEntriesEnd = pPrev;
 			break;
 		}
 		pPrev = pItr;
 		pItr = pItr->pNext;
 	}
-	if(!pItr) throw new CRainmanException(__FILE__, __LINE__, "State not found");
-	lua_pushlightuserdata(m_pMother, (void*)L); // {U -1}
-	lua_pushnil(m_pMother); // {U -2} {N -1}
-	lua_settable(m_pMother, LUA_REGISTRYINDEX); //
-	#ifdef LUA_GCCOLLECT
+	if (!pItr)
+		throw new CRainmanException(__FILE__, __LINE__, "State not found");
+	lua_pushlightuserdata(m_pMother, (void *)L); // {U -1}
+	lua_pushnil(m_pMother);                      // {U -2} {N -1}
+	lua_settable(m_pMother, LUA_REGISTRYINDEX);  //
+#ifdef LUA_GCCOLLECT
 	lua_gc(m_pMother, LUA_GCCOLLECT, 0);
-	#else
+#else
 	lua_setgcthreshold(m_pMother, 0);
-	#endif
+#endif
 }
 
 void CLuaFileCache::Clear()
 {
-	_tEntry* pItr = m_oEntires.pNext, *pTmp;
-	while(pItr)
+	_tEntry *pItr = m_oEntires.pNext, *pTmp;
+	while (pItr)
 	{
-		if(pItr->sName) free(pItr->sName);
+		if (pItr->sName)
+			free(pItr->sName);
 		pTmp = pItr;
 		pItr = pItr->pNext;
 		delete pTmp;
@@ -95,14 +100,15 @@ CLuaFileCache::~CLuaFileCache(void)
 	lua_close(m_pMother);
 }
 
-void CLuaFileCache::AddToCache(const char* sName, lua_State* L)
+void CLuaFileCache::AddToCache(const char *sName, lua_State *L)
 {
-	_tEntry* pItr = m_oEntires.pNext;
-	while(pItr)
+	_tEntry *pItr = m_oEntires.pNext;
+	while (pItr)
 	{
-		if(pItr->L == L)
+		if (pItr->L == L)
 		{
-			if(pItr->sName) free(pItr->sName);
+			if (pItr->sName)
+				free(pItr->sName);
 			pItr->sName = strdup(sName);
 			return;
 		}
@@ -111,12 +117,12 @@ void CLuaFileCache::AddToCache(const char* sName, lua_State* L)
 	throw new CRainmanException(__FILE__, __LINE__, "State not found");
 }
 
-lua_State* CLuaFileCache::Fetch(const char* sName)
+lua_State *CLuaFileCache::Fetch(const char *sName)
 {
-	_tEntry* pItr = m_oEntires.pNext;
-	while(pItr)
+	_tEntry *pItr = m_oEntires.pNext;
+	while (pItr)
 	{
-		if(pItr->sName && stricmp(pItr->sName,sName) == 0)
+		if (pItr->sName && stricmp(pItr->sName, sName) == 0)
 		{
 			pItr->bUseful = true;
 			return pItr->L;
@@ -126,10 +132,11 @@ lua_State* CLuaFileCache::Fetch(const char* sName)
 	return 0;
 }
 
-void CLuaFileCache::GameDataToStack(const char* sRef, lua_State* L)
+void CLuaFileCache::GameDataToStack(const char *sRef, lua_State *L)
 {
 	lua_State *Ls = Fetch(sRef);
-	if(!Ls) throw new CRainmanException(0, __FILE__, __LINE__, "No state found with name \'%s\'", sRef);
+	if (!Ls)
+		throw new CRainmanException(0, __FILE__, __LINE__, "No state found with name \'%s\'", sRef);
 	lua_pushstring(Ls, "GameData");
 	lua_gettable(Ls, LUA_GLOBALSINDEX);
 	lua_pushvalue(Ls, -1);
@@ -138,13 +145,13 @@ void CLuaFileCache::GameDataToStack(const char* sRef, lua_State* L)
 	return;
 }
 
-void CLuaFileCache::MetaDataToStack(const char* sRef, lua_State* L)
+void CLuaFileCache::MetaDataToStack(const char *sRef, lua_State *L)
 {
 	lua_State *Ls = Fetch(sRef);
-	if(!Ls) throw new CRainmanException(0, __FILE__, __LINE__, "No state found with name \'%s\'", sRef);
+	if (!Ls)
+		throw new CRainmanException(0, __FILE__, __LINE__, "No state found with name \'%s\'", sRef);
 	lua_pushstring(Ls, "MetaData");
 	lua_gettable(Ls, LUA_GLOBALSINDEX);
 	lua_xmove(Ls, L, 1);
 	return;
 }
-

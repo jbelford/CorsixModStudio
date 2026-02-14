@@ -20,62 +20,63 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef _C_LUAFILE_CACHE_H_
 #define _C_LUAFILE_CACHE_H_
 #include "gnuc_defines.h"
-extern "C" {
+extern "C"
+{
 #include <lua.h>
 };
 #include "Api.h"
 
 //! Cache for lua_State objects
 /*!
-	
+
 */
 class RAINMAN_API CLuaFileCache
 {
-public:
+  public:
 	CLuaFileCache(void);
 	~CLuaFileCache(void);
 	void Clear();
 
 	//! Make a new lua state
 	/*!
-		Creates a new lua state that will be destroyed when
-		this object is destroyed.
+	    Creates a new lua state that will be destroyed when
+	    this object is destroyed.
 	*/
-	lua_State* MakeState();
+	lua_State *MakeState();
 
 	//! Free a lua state
-	void FreeState(lua_State* L);
+	void FreeState(lua_State *L);
 
 	//! Assign a name to a state
 	/*!
-		State must have been created with MakeState()
+	    State must have been created with MakeState()
 	*/
-	void AddToCache(const char* sName, lua_State* L);
+	void AddToCache(const char *sName, lua_State *L);
 
 	//! Find a state by name
-	lua_State* Fetch(const char* sName);
+	lua_State *Fetch(const char *sName);
 
 	//! Copy a GameData table from a chached file to a lua state stack
 	/*!
-		L must be a state created with MakeState()
+	    L must be a state created with MakeState()
 	*/
-	void GameDataToStack(const char* sRef, lua_State* L);
+	void GameDataToStack(const char *sRef, lua_State *L);
 
 	//! Copy a MetaData table from a chached file to a lua state stack
 	/*!
-		L must be a state created with MakeState()
+	    L must be a state created with MakeState()
 	*/
-	void MetaDataToStack(const char* sRef, lua_State* L);
+	void MetaDataToStack(const char *sRef, lua_State *L);
 
-protected:
-	lua_State* m_pMother;
+  protected:
+	lua_State *m_pMother;
 
 	struct _tEntry
 	{
-		_tEntry(char*, lua_State*, bool b = false);
-		lua_State* L;
-		char* sName;
-		_tEntry* pNext;
+		_tEntry(char *, lua_State *, bool b = false);
+		lua_State *L;
+		char *sName;
+		_tEntry *pNext;
 		bool bUseful;
 	};
 
@@ -83,4 +84,3 @@ protected:
 };
 
 #endif
-

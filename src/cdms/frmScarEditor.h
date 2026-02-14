@@ -22,13 +22,13 @@
 #include <wx/wxprec.h>
 
 #ifdef __BORLANDC__
-    #pragma hdrstop
+#pragma hdrstop
 #endif
 
 // for all others, include the necessary headers (this file is usually all you
 // need because it includes almost all "standard" wxWidgets headers)
 #ifndef WX_PRECOMP
-    #include "wx/wx.h"
+#include "wx/wx.h"
 #endif
 // ----------------------------
 #include <Rainman.h>
@@ -40,19 +40,19 @@
 
 class frmScarEditor : public wxWindow
 {
-protected:
-	wxStyledTextCtrl* m_pSTC;
+  protected:
+	wxStyledTextCtrl *m_pSTC;
 	wxString m_sFilename;
-	wxChoice* m_pFunctionDropdown;
+	wxChoice *m_pFunctionDropdown;
 	wxTreeItemId m_oFileParent;
 	bool m_bNeedsSaving;
 
 	struct _ScarFunction
 	{
-		char* sReturn;
-		char* sName;
-		std::list<char*> sArguments;
-		char* sDesc;
+		char *sReturn;
+		char *sName;
+		std::list<char *> sArguments;
+		char *sDesc;
 		int iType;
 	};
 
@@ -65,16 +65,18 @@ protected:
 	_CCalltipPop m_oThisCalltip;
 	std::stack<_CCalltipPop> m_stkCalltips;
 	std::list<_ScarFunction> m_lstScarFunctions;
-	static char* _ReadNiceString(FILE* f);
+	static char *_ReadNiceString(FILE *f);
 	void _RestorePreviousCalltip();
 	void _PushThisCalltip();
 	int _FillFunctionDrop(wxString sNameTarget);
 
-public:
-	frmScarEditor(wxTreeItemId& oFileParent, wxString sFilename, wxWindow* parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, const wchar_t* pLangRef = AppStr(app_scarreffile));
+  public:
+	frmScarEditor(wxTreeItemId &oFileParent, wxString sFilename, wxWindow *parent, wxWindowID id,
+	              const wxPoint &pos = wxDefaultPosition, const wxSize &size = wxDefaultSize,
+	              const wchar_t *pLangRef = AppStr(app_scarreffile));
 	~frmScarEditor();
 
-	void OnSize(wxSizeEvent& event);
+	void OnSize(wxSizeEvent &event);
 
 	void OnCharAdded(wxStyledTextEvent &event);
 	void OnStyleNeeded(wxStyledTextEvent &event);
@@ -87,9 +89,9 @@ public:
 	void OnAutoCompChoose(wxStyledTextEvent &event);
 	void OnFuncListChoose(wxCommandEvent &event);
 
-	void Load(IFileStore::IStream* pFile);
+	void Load(IFileStore::IStream *pFile);
 
-	void OnCloseWindow(wxCloseEvent& event);
+	void OnCloseWindow(wxCloseEvent &event);
 
 	enum
 	{

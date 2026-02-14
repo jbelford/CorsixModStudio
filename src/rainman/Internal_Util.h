@@ -24,28 +24,43 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include <stdio.h>
 #include "IDirectoryTraverser.h"
 
-char* Util_fgetline(FILE *f, unsigned int iInitSize = 32);
-void Util_TrimWhitespace(char** pStringPointer);
-char* Util_mystrdup(const char* sStr);
-void Util_strtolower(char* sStr);
+char *Util_fgetline(FILE *f, unsigned int iInitSize = 32);
+void Util_TrimWhitespace(char **pStringPointer);
+char *Util_mystrdup(const char *sStr);
+void Util_strtolower(char *sStr);
 
-typedef void (*Util_ForEachFunction)(IDirectoryTraverser::IIterator*, void* pTag);
-void Util_ForEach(IDirectoryTraverser::IIterator* pDirectory, Util_ForEachFunction pFn, void* pTag, bool bRecursive);
+typedef void (*Util_ForEachFunction)(IDirectoryTraverser::IIterator *, void *pTag);
+void Util_ForEach(IDirectoryTraverser::IIterator *pDirectory, Util_ForEachFunction pFn, void *pTag, bool bRecursive);
 
-void Util_EnsureEndsWith(char* sStr, char cChar);
-void Util_EnsureEndsWith(char* sStr, char cChar, char cChar2);
+void Util_EnsureEndsWith(char *sStr, char cChar);
+void Util_EnsureEndsWith(char *sStr, char cChar, char cChar2);
 
-template <class T>
-class AutoDelete
+template <class T> class AutoDelete
 {
-public:
-	T* p;
+  public:
+	T *p;
 	bool a;
-	AutoDelete(T* pp, bool bArray) : p(pp), a(bArray) {}
-	~AutoDelete() {if(a) delete[] p; else delete p;}
-	void reset(T* pp, bool bArray) {p = pp; a = bArray;}
-	void del() {if(a) delete[] p; else delete p; p = 0;}
+	AutoDelete(T *pp, bool bArray) : p(pp), a(bArray) {}
+	~AutoDelete()
+	{
+		if (a)
+			delete[] p;
+		else
+			delete p;
+	}
+	void reset(T *pp, bool bArray)
+	{
+		p = pp;
+		a = bArray;
+	}
+	void del()
+	{
+		if (a)
+			delete[] p;
+		else
+			delete p;
+		p = 0;
+	}
 };
 
 #endif
-

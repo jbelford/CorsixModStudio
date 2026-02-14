@@ -27,17 +27,17 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 class RAINMAN_API CChunkyFile
 {
-public:
+  public:
 	CChunkyFile();
 	~CChunkyFile();
 
-	void Load(IFileStore::IStream* pStream);
-	void Save(IFileStore::IOutputStream* pStream);
+	void Load(IFileStore::IStream *pStream);
+	void Save(IFileStore::IOutputStream *pStream);
 	void New(long iVersion);
 
 	class RAINMAN_API CChunk
 	{
-	public:
+	  public:
 		CChunk();
 		~CChunk();
 
@@ -49,77 +49,77 @@ public:
 
 		// Applicable to all
 		eTypes GetType() const;
-		const char* GetName() const;
+		const char *GetName() const;
 		long GetVersion() const;
-		const char* GetDescriptor() const;
+		const char *GetDescriptor() const;
 
 		void SetVersion(long iValue);
-		void SetDescriptor(const char* sValue);
+		void SetDescriptor(const char *sValue);
 		void SetUnknown1(long iValue);
 
 		// Only applicable to T_Data
-		CMemoryStore::CStream* GetData();
-		char* GetDataRaw();
+		CMemoryStore::CStream *GetData();
+		char *GetDataRaw();
 		unsigned long GetDataLength();
 
-		void SetData(CMemoryStore::COutStream* pStream);
+		void SetData(CMemoryStore::COutStream *pStream);
 
 		// Only applicable to T_Folder
 		size_t GetChildCount() const;
-		CChunk* GetChild(size_t iN) const;
-		CChunk* GetChildByName(const char* sName, eTypes eType) const;
-		CChunk* AppendNew(const char* sName, CChunk::eTypes eType);
-		CChunk* InsertBefore(size_t iBefore, const char* sName, CChunk::eTypes eType);
+		CChunk *GetChild(size_t iN) const;
+		CChunk *GetChildByName(const char *sName, eTypes eType) const;
+		CChunk *AppendNew(const char *sName, CChunk::eTypes eType);
+		CChunk *InsertBefore(size_t iBefore, const char *sName, CChunk::eTypes eType);
 		void RemoveChild(size_t iN);
 
-	protected:
+	  protected:
 		friend class CChunkyFile;
 
 		//! Read one chunk from file
 		/*!
-			Reads one FOLDxxxx or DATAxxxx chunk from the stream.
-			If it is a FOLDxxxx chunk then all the children will be read aswell,
-			if it is a DATAxxxx chunk then the chunk data will be read into memory.
+		    Reads one FOLDxxxx or DATAxxxx chunk from the stream.
+		    If it is a FOLDxxxx chunk then all the children will be read aswell,
+		    if it is a DATAxxxx chunk then the chunk data will be read into memory.
 
-			\param[in] pStream Input stream
-			\return Returns true if all went well, false if the very first read operation gave an error (eg. end of stream), throws an exception for all other errors.
+		    \param[in] pStream Input stream
+		    \return Returns true if all went well, false if the very first read operation gave an error (eg. end of
+		   stream), throws an exception for all other errors.
 		*/
-		bool _Load(IFileStore::IStream* pStream, long iChunkyVersion);
+		bool _Load(IFileStore::IStream *pStream, long iChunkyVersion);
 
-		void _Save(IFileStore::IOutputStream* pStream);
+		void _Save(IFileStore::IOutputStream *pStream);
 
 		unsigned long _FoldUpdateSize();
 
 		eTypes m_eType;
 		char m_sName[5];
-		char* m_sDescriptor;
+		char *m_sDescriptor;
 		long m_iVersion;
 
 		long m_iUnknown1, m_iUnknown2;
 
-		char* m_pData;
+		char *m_pData;
 		unsigned long m_iDataLength;
 
-		std::vector<CChunk*> m_vChildren;
+		std::vector<CChunk *> m_vChildren;
 	};
 
 	long GetVersion() const;
 
 	size_t GetChildCount() const;
-	CChunk* GetChild(size_t iN) const;
-	CChunk* GetChildByName(const char* sName, CChunk::eTypes eType) const;
+	CChunk *GetChild(size_t iN) const;
+	CChunk *GetChildByName(const char *sName, CChunk::eTypes eType) const;
 	void RemoveChild(size_t iN);
 
-	CChunk* AppendNew(const char* sName, CChunk::eTypes eType);
+	CChunk *AppendNew(const char *sName, CChunk::eTypes eType);
 
-protected:
+  protected:
 	char m_sHeader[17];
 	long m_iVersion;
 
 	long m_iUnknown1, m_iUnknown2, m_iUnknown3, m_iUnknown4;
 
-	std::vector<CChunk*> m_vChunks;
+	std::vector<CChunk *> m_vChunks;
 };
 
 #endif // #ifndef _CHUNKY_FILE_H_
-

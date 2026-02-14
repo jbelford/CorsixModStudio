@@ -21,31 +21,17 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "memdebug.h"
 #include "Exception.h"
 
-IMetaNode::IMetaNode()
-{
-}
+IMetaNode::IMetaNode() {}
 
-IMetaNode::~IMetaNode()
-{
-}
+IMetaNode::~IMetaNode() {}
 
-IMetaNode::IMetaTable::IMetaTable(void)
-{
-}
+IMetaNode::IMetaTable::IMetaTable(void) {}
 
-IMetaNode::IMetaTable::~IMetaTable(void)
-{
-}
+IMetaNode::IMetaTable::~IMetaTable(void) {}
 
-bool IMetaNode::IMetaTable::VSupportsRefresh()
-{
-	return false;
-}
+bool IMetaNode::IMetaTable::VSupportsRefresh() { return false; }
 
-void IMetaNode::IMetaTable::VDoRefresh()
-{
-	QUICK_THROW("Refresh not supported")
-}
+void IMetaNode::IMetaTable::VDoRefresh() { QUICK_THROW("Refresh not supported") }
 
 unsigned long IMetaNode::VGetNameHash()
 {
@@ -56,4 +42,3 @@ void IMetaNode::VSetNameHash(unsigned long iHash)
 {
 	throw new CRainmanException(__FILE__, __LINE__, "NameHash cannot be set");
 }
-

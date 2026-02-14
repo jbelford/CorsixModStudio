@@ -21,37 +21,21 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "memdebug.h"
 #include "Exception.h"
 
-IFileStore::IFileStore(void)
-{
-	m_bInited = false;
-}
+IFileStore::IFileStore(void) { m_bInited = false; }
 
-IFileStore::~IFileStore(void)
-{
-}
+IFileStore::~IFileStore(void) {}
 
-void IFileStore::VInit(void* pInitData)
-{
-}
+void IFileStore::VInit(void *pInitData) {}
 
-IFileStore::IOutputStream* IFileStore::VOpenOutputStream(const char* sIdentifier, bool bEraseIfPresent)
+IFileStore::IOutputStream *IFileStore::VOpenOutputStream(const char *sIdentifier, bool bEraseIfPresent)
 {
 	throw new CRainmanException(0, __FILE__, __LINE__, "Cannot open file \'%s\'", sIdentifier);
 }
 
-IFileStore::IStream::IStream(void)
-{
-}
+IFileStore::IStream::IStream(void) {}
 
-IFileStore::IStream::~IStream(void)
-{
-}
+IFileStore::IStream::~IStream(void) {}
 
-IFileStore::IOutputStream::IOutputStream(void)
-{
-}
+IFileStore::IOutputStream::IOutputStream(void) {}
 
-IFileStore::IOutputStream::~IOutputStream(void)
-{
-}
-
+IFileStore::IOutputStream::~IOutputStream(void) {}

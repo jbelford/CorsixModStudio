@@ -22,13 +22,13 @@
 #include <wx/wxprec.h>
 
 #ifdef __BORLANDC__
-    #pragma hdrstop
+#pragma hdrstop
 #endif
 
 // for all others, include the necessary headers (this file is usually all you
 // need because it includes almost all "standard" wxWidgets headers)
 #ifndef WX_PRECOMP
-    #include "wx/wx.h"
+#include "wx/wx.h"
 #endif
 // ----------------------------
 #include <Rainman.h>
@@ -36,18 +36,19 @@
 
 class frmLocaleSelector : public wxDialog
 {
-protected:
+  protected:
 	wxString m_sAnswer;
-	wxListBox* m_pList;
-	wxCheckBox* m_pCheckbox;
-public:
-	frmLocaleSelector(const wxString& sTitle, ConstructFrame::eLoadModGames eGame);
+	wxListBox *m_pList;
+	wxCheckBox *m_pCheckbox;
 
-	void OnSize(wxSizeEvent& event);
+  public:
+	frmLocaleSelector(const wxString &sTitle, ConstructFrame::eLoadModGames eGame);
 
-	void OnNewClick(wxCommandEvent& event);
+	void OnSize(wxSizeEvent &event);
 
-	wxString& GetAnswer();
+	void OnNewClick(wxCommandEvent &event);
+
+	wxString &GetAnswer();
 
 	enum
 	{

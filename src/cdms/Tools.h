@@ -23,7 +23,7 @@
 
 class CLocaleTool : public ConstructFrame::ITool
 {
-public:
+  public:
 	virtual wxString GetName();
 	virtual wxString GetHelpString();
 	virtual wxString GetBitmapName();
@@ -33,7 +33,7 @@ public:
 
 class CAESetupTool : public ConstructFrame::ITool
 {
-public:
+  public:
 	virtual wxString GetName();
 	virtual wxString GetHelpString();
 	virtual wxString GetBitmapName();
@@ -43,18 +43,19 @@ public:
 
 class CUcsTool : public ConstructFrame::ITool
 {
-public:
+  public:
 	virtual wxString GetName();
 	virtual wxString GetHelpString();
 	virtual wxString GetBitmapName();
 
 	virtual void DoAction();
-	static void HandleSelectorResponse(frmUCSSelector* pSelector, wxAuiNotebook* pTabsDestination, unsigned long* pResult = 0, bool bRegisterTabStrip = false);
+	static void HandleSelectorResponse(frmUCSSelector *pSelector, wxAuiNotebook *pTabsDestination,
+	                                   unsigned long *pResult = 0, bool bRegisterTabStrip = false);
 };
 
 class CAttribSnapshotTool : public ConstructFrame::ITool
 {
-public:
+  public:
 	virtual wxString GetName();
 	virtual wxString GetHelpString();
 	virtual wxString GetBitmapName();
@@ -64,7 +65,7 @@ public:
 
 class CSgaPackerTool : public ConstructFrame::ITool
 {
-public:
+  public:
 	virtual wxString GetName();
 	virtual wxString GetHelpString();
 	virtual wxString GetBitmapName();
@@ -74,7 +75,7 @@ public:
 
 class CExtractAllTool : public ConstructFrame::ITool
 {
-public:
+  public:
 	virtual wxString GetName();
 	virtual wxString GetHelpString();
 	virtual wxString GetBitmapName();
@@ -84,7 +85,7 @@ public:
 
 class CDpsCalculatorTool : public ConstructFrame::ITool
 {
-public:
+  public:
 	virtual wxString GetName();
 	virtual wxString GetHelpString();
 	virtual wxString GetBitmapName();
@@ -94,7 +95,7 @@ public:
 
 class CRedButtonTool : public ConstructFrame::ITool
 {
-public:
+  public:
 	virtual wxString GetName();
 	virtual wxString GetHelpString();
 	virtual wxString GetBitmapName();
@@ -104,25 +105,26 @@ public:
 
 class CMakeLuaInheritTree : public ConstructFrame::ITool
 {
-protected:
-	static void _ForEach(IDirectoryTraverser::IIterator* pItr, void* pTag);
-	void _DoLua(IDirectoryTraverser::IIterator* pItr);
-public:
+  protected:
+	static void _ForEach(IDirectoryTraverser::IIterator *pItr, void *pTag);
+	void _DoLua(IDirectoryTraverser::IIterator *pItr);
+
+  public:
 	CMakeLuaInheritTree();
 	virtual wxString GetName();
 	virtual wxString GetHelpString();
 	virtual wxString GetBitmapName();
 
-	static bool _DoesExist(const char* sFol);
-	void Do(const char* sAttrib);
+	static bool _DoesExist(const char *sFol);
+	void Do(const char *sAttrib);
 	virtual void DoAction();
-	CInheritTable* pTable;
+	CInheritTable *pTable;
 	size_t iAttribL;
 };
 
 class CRefreshFilesTool : public ConstructFrame::ITool
 {
-public:
+  public:
 	virtual wxString GetName();
 	virtual wxString GetHelpString();
 	virtual wxString GetBitmapName();

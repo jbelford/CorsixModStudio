@@ -22,13 +22,13 @@
 #include <wx/wxprec.h>
 
 #ifdef __BORLANDC__
-    #pragma hdrstop
+#pragma hdrstop
 #endif
 
 // for all others, include the necessary headers (this file is usually all you
 // need because it includes almost all "standard" wxWidgets headers)
 #ifndef WX_PRECOMP
-    #include "wx/wx.h"
+#include "wx/wx.h"
 #endif
 // ----------------------------
 #include <Rainman.h>
@@ -37,26 +37,27 @@
 
 class frmImageViewer : public wxWindow
 {
-protected:
-	CRgtFile* m_pRgtFile;
-	wxBitmap* m_pImageBitmap;
-	wxRadioBox* m_pSaveFileExt, *m_pSaveFileCompression, *m_pCurrentExt, *m_pCurrentCompression;
-	wxCheckBox* m_pSaveFileMips;
+  protected:
+	CRgtFile *m_pRgtFile;
+	wxBitmap *m_pImageBitmap;
+	wxRadioBox *m_pSaveFileExt, *m_pSaveFileCompression, *m_pCurrentExt, *m_pCurrentCompression;
+	wxCheckBox *m_pSaveFileMips;
 	wxString m_sFilename;
 	wxTreeItemId m_oFileParent;
 	bool m_bOwnRgt;
 
-public:
-	frmImageViewer(wxTreeItemId& oFileParent, wxString sFilename,wxWindow* parent, wxWindowID id, CRgtFile* pImage, bool bOwnImage, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize);
+  public:
+	frmImageViewer(wxTreeItemId &oFileParent, wxString sFilename, wxWindow *parent, wxWindowID id, CRgtFile *pImage,
+	               bool bOwnImage, const wxPoint &pos = wxDefaultPosition, const wxSize &size = wxDefaultSize);
 	virtual ~frmImageViewer();
 
 	void SetIsTga(bool bOnlyRGB);
 	void SetIsDds();
 
-	void OnSize(wxSizeEvent& event);
-	void OnSave(wxCommandEvent& event);
+	void OnSize(wxSizeEvent &event);
+	void OnSave(wxCommandEvent &event);
 
-	void OnRadioButtonSaveExt(wxCommandEvent& event);
+	void OnRadioButtonSaveExt(wxCommandEvent &event);
 
 	enum
 	{

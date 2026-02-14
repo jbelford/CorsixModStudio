@@ -22,30 +22,31 @@
 #include <wx/wxprec.h>
 
 #ifdef __BORLANDC__
-    #pragma hdrstop
+#pragma hdrstop
 #endif
 
 // for all others, include the necessary headers (this file is usually all you
 // need because it includes almost all "standard" wxWidgets headers)
 #ifndef WX_PRECOMP
-    #include "wx/wx.h"
+#include "wx/wx.h"
 #endif
 // ----------------------------
 #include <Rainman.h>
 
 class frmSgaMake : public wxDialog
 {
-protected:
+  protected:
 	wxTextCtrl *m_pInDir;
 	wxComboBox *m_pOutFile, *m_pTocName;
-public:
+
+  public:
 	frmSgaMake();
 
-	void OnBrowseInClick(wxCommandEvent& event);
-	void OnBrowseOutClick(wxCommandEvent& event);
-	void OnGoClick(wxCommandEvent& event);
-	void OnCancelClick(wxCommandEvent& event);
-	void OnFileOutUpdated(wxCommandEvent& event);
+	void OnBrowseInClick(wxCommandEvent &event);
+	void OnBrowseOutClick(wxCommandEvent &event);
+	void OnGoClick(wxCommandEvent &event);
+	void OnCancelClick(wxCommandEvent &event);
+	void OnFileOutUpdated(wxCommandEvent &event);
 
 	enum
 	{

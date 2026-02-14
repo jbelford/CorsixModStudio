@@ -22,28 +22,29 @@
 #include <wx/wxprec.h>
 
 #ifdef __BORLANDC__
-    #pragma hdrstop
+#pragma hdrstop
 #endif
 
 // for all others, include the necessary headers (this file is usually all you
 // need because it includes almost all "standard" wxWidgets headers)
 #ifndef WX_PRECOMP
-    #include "wx/wx.h"
+#include "wx/wx.h"
 #endif
 // ----------------------------
 #include <Rainman.h>
 
 class frmUCSOutOfRange : public wxDialog
 {
-protected:
-	wxCheckBox* m_pCheckbox;
-public:
-	frmUCSOutOfRange(const wxString& sTitle, unsigned long iID);
+  protected:
+	wxCheckBox *m_pCheckbox;
 
-	void OnSize(wxSizeEvent& event);
+  public:
+	frmUCSOutOfRange(const wxString &sTitle, unsigned long iID);
 
-	void OnYesClick(wxCommandEvent& event);
-	void OnNoClick(wxCommandEvent& event);
+	void OnSize(wxSizeEvent &event);
+
+	void OnYesClick(wxCommandEvent &event);
+	void OnNoClick(wxCommandEvent &event);
 
 	DECLARE_EVENT_TABLE()
 };

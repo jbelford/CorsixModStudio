@@ -25,7 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "Exception.h"
 
 // string.split(s [, delimiter [, plain]])
-int luax51_string_split(lua_State* L)
+int luax51_string_split(lua_State *L)
 {
 	const int kArgNone = 0;
 	const int kArgString = 1;
@@ -37,7 +37,7 @@ int luax51_string_split(lua_State* L)
 	const int kRetEnd = 7;
 
 	// Force to 3 arguments
-	switch(lua51_gettop(L))
+	switch (lua51_gettop(L))
 	{
 	case kArgNone:
 		lua51_pushstring(L, "string.split expected string as first parameter, got nil");
@@ -48,12 +48,12 @@ int luax51_string_split(lua_State* L)
 		lua51_pushboolean(L, 0);
 	default:
 		lua51_settop(L, 3);
-		if(lua51_tostring(L, kArgString) == 0)
+		if (lua51_tostring(L, kArgString) == 0)
 		{
 			lua51_pushstring(L, "string.split expected string as first parameter");
 			lua51_error(L);
 		}
-		if(lua51_tostring(L, kArgDelimiter) == 0)
+		if (lua51_tostring(L, kArgDelimiter) == 0)
 		{
 			lua51_pushstring(L, "string.split expected string as second parameter");
 			lua51_error(L);
@@ -82,13 +82,14 @@ int luax51_string_split(lua_State* L)
 	// Call string.find
 	lua51_call(L, 4, 2);
 
-	while(lua51_type(L, kRetStart) != LUA_TNIL)
+	while (lua51_type(L, kRetStart) != LUA_TNIL)
 	{
-		const char* sArgString = lua51_tostring(L, kArgString);
+		const char *sArgString = lua51_tostring(L, kArgString);
 		size_t iStart = (size_t)lua51_tonumber(L, kRetStart);
 		size_t iEnd = (size_t)lua51_tonumber(L, kRetStart);
 
-		lua51_pushlstring(L, lua51_tostring(L, kArgString) + iInitPos - 1, ((size_t)lua51_tonumber(L, kRetStart)) - iInitPos);
+		lua51_pushlstring(L, lua51_tostring(L, kArgString) + iInitPos - 1,
+		                  ((size_t)lua51_tonumber(L, kRetStart)) - iInitPos);
 		lua51_rawseti(L, kResultTable, ++iTableSize);
 		iInitPos = ((size_t)lua51_tonumber(L, kRetEnd)) + 1;
 
@@ -108,24 +109,24 @@ int luax51_string_split(lua_State* L)
 	return 1;
 }
 
-int luax51_math_clamp(lua_State* L)
+int luax51_math_clamp(lua_State *L)
 {
 	const int kArgNone = 0;
 	const int kArgN = 1;
 	const int kArgMin = 2;
 	const int kArgMax = 3;
 
-	switch(lua51_gettop(L))
+	switch (lua51_gettop(L))
 	{
 	default:
-		if(lua51_tonumber(L, kArgN) > lua51_tonumber(L, kArgMax))
+		if (lua51_tonumber(L, kArgN) > lua51_tonumber(L, kArgMax))
 		{
 			lua51_settop(L, kArgMax);
 			return 1;
 		}
 
 	case kArgMin:
-		if(lua51_tonumber(L, kArgN) < lua51_tonumber(L, kArgMin))
+		if (lua51_tonumber(L, kArgN) < lua51_tonumber(L, kArgMin))
 		{
 			lua51_settop(L, kArgMin);
 			return 1;
@@ -140,32 +141,32 @@ int luax51_math_clamp(lua_State* L)
 	}
 }
 
-int luax51_string_afterlast(lua_State* L)
+int luax51_string_afterlast(lua_State *L)
 {
 	const int kArgNone = 0;
 	const int kArgString = 1;
 	const int kArgDelimiter = 2;
 
 	size_t iArgStringLen;
-	const char* sArgString = lua51L_checklstring(L, kArgString, &iArgStringLen);
+	const char *sArgString = lua51L_checklstring(L, kArgString, &iArgStringLen);
 
 	lua51_settop(L, kArgDelimiter);
-	if(lua51_type(L, kArgDelimiter) == LUA_TNIL)
+	if (lua51_type(L, kArgDelimiter) == LUA_TNIL)
 	{
 		lua51_pushstring(L, "");
 		return 1;
 	}
 
 	size_t iArgDelimLen;
-	const char* sArgDelim = lua51L_checklstring(L, kArgDelimiter, &iArgDelimLen);
+	const char *sArgDelim = lua51L_checklstring(L, kArgDelimiter, &iArgDelimLen);
 
-	if(iArgDelimLen >= iArgStringLen)
+	if (iArgDelimLen >= iArgStringLen)
 	{
 		lua51_pushstring(L, "");
 		return 1;
 	}
 
-	for(size_t iOffset = iArgStringLen - iArgDelimLen + 1; iOffset;)
+	for (size_t iOffset = iArgStringLen - iArgDelimLen + 1; iOffset;)
 	{
 		--iOffset;
 		if (memcmp(sArgString + iOffset, sArgDelim, iArgDelimLen) == 0)
@@ -179,32 +180,32 @@ int luax51_string_afterlast(lua_State* L)
 	return 1;
 }
 
-int luax51_string_beforelast(lua_State* L)
+int luax51_string_beforelast(lua_State *L)
 {
 	const int kArgNone = 0;
 	const int kArgString = 1;
 	const int kArgDelimiter = 2;
 
 	size_t iArgStringLen;
-	const char* sArgString = lua51L_checklstring(L, kArgString, &iArgStringLen);
+	const char *sArgString = lua51L_checklstring(L, kArgString, &iArgStringLen);
 
 	lua51_settop(L, kArgDelimiter);
-	if(lua51_type(L, kArgDelimiter) == LUA_TNIL)
+	if (lua51_type(L, kArgDelimiter) == LUA_TNIL)
 	{
 		lua51_settop(L, kArgString);
 		return 1;
 	}
 
 	size_t iArgDelimLen;
-	const char* sArgDelim = lua51L_checklstring(L, kArgDelimiter, &iArgDelimLen);
+	const char *sArgDelim = lua51L_checklstring(L, kArgDelimiter, &iArgDelimLen);
 
-	if(iArgDelimLen >= iArgStringLen)
+	if (iArgDelimLen >= iArgStringLen)
 	{
 		lua51_pushstring(L, "");
 		return 1;
 	}
 
-	for(size_t iOffset = iArgStringLen - iArgDelimLen + 1; iOffset;)
+	for (size_t iOffset = iArgStringLen - iArgDelimLen + 1; iOffset;)
 	{
 		--iOffset;
 		if (memcmp(sArgString + iOffset, sArgDelim, iArgDelimLen) == 0)
@@ -215,10 +216,10 @@ int luax51_string_beforelast(lua_State* L)
 	}
 
 	lua51_pushstring(L, "");
-		return 1;
+	return 1;
 }
 
-int luax51_string_after(lua_State* L)
+int luax51_string_after(lua_State *L)
 {
 	const int kArgNone = 0;
 	const int kArgString = 1;
@@ -227,12 +228,13 @@ int luax51_string_after(lua_State* L)
 	const int kEndPos = 2;
 
 	size_t iArgStringLen;
-	const char* sArgString = lua51L_checklstring(L, kArgString, &iArgStringLen);
+	const char *sArgString = lua51L_checklstring(L, kArgString, &iArgStringLen);
 
-	if (lua51_gettop(L) == kArgString) return 1;
+	if (lua51_gettop(L) == kArgString)
+		return 1;
 
 	lua51_settop(L, kArgDelimiter);
-	if(lua51_type(L, kArgDelimiter) == LUA_TNIL)
+	if (lua51_type(L, kArgDelimiter) == LUA_TNIL)
 	{
 		lua51_settop(L, kArgString);
 		return 1;
@@ -248,7 +250,7 @@ int luax51_string_after(lua_State* L)
 	lua51_pushboolean(L, 1);
 	lua51_call(L, 4, 2);
 
-	if(lua51_type(L, kEndPos) != LUA_TNUMBER)
+	if (lua51_type(L, kEndPos) != LUA_TNUMBER)
 	{
 		lua51_pushstring(L, "");
 		return 1;
@@ -260,7 +262,7 @@ int luax51_string_after(lua_State* L)
 	return 1;
 }
 
-int luax51_string_before(lua_State* L)
+int luax51_string_before(lua_State *L)
 {
 	const int kArgNone = 0;
 	const int kArgString = 1;
@@ -269,7 +271,7 @@ int luax51_string_before(lua_State* L)
 	const int kStartPos = 1;
 
 	size_t iArgStringLen;
-	const char* sArgString = lua51L_checklstring(L, kArgString, &iArgStringLen);
+	const char *sArgString = lua51L_checklstring(L, kArgString, &iArgStringLen);
 
 	if (lua51_gettop(L) == kArgString)
 	{
@@ -278,7 +280,7 @@ int luax51_string_before(lua_State* L)
 	}
 
 	lua51_settop(L, kArgDelimiter);
-	if(lua51_type(L, kArgDelimiter) == LUA_TNIL)
+	if (lua51_type(L, kArgDelimiter) == LUA_TNIL)
 	{
 		lua51_pushstring(L, "");
 		return 1;
@@ -294,7 +296,7 @@ int luax51_string_before(lua_State* L)
 	lua51_pushboolean(L, 1);
 	lua51_call(L, 4, 2);
 
-	if(lua51_type(L, kStartPos) != LUA_TNUMBER)
+	if (lua51_type(L, kStartPos) != LUA_TNUMBER)
 	{
 		lua51_pushlstring(L, sArgString, iArgStringLen);
 		return 1;

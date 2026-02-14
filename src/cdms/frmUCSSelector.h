@@ -22,13 +22,13 @@
 #include <wx/wxprec.h>
 
 #ifdef __BORLANDC__
-    #pragma hdrstop
+#pragma hdrstop
 #endif
 
 // for all others, include the necessary headers (this file is usually all you
 // need because it includes almost all "standard" wxWidgets headers)
 #ifndef WX_PRECOMP
-    #include "wx/wx.h"
+#include "wx/wx.h"
 #endif
 // ----------------------------
 #include <Rainman.h>
@@ -36,31 +36,32 @@
 
 class frmUCSSelector : public wxDialog
 {
-protected:
+  protected:
 	bool m_bGotAnswer;
 	wxString m_sAnswer;
-	CUcsFile* m_pAnswer;
-	wxListBox* m_pList;
-	std::list<CUcsFile*> m_lstUcsFiles;
+	CUcsFile *m_pAnswer;
+	wxListBox *m_pList;
+	std::list<CUcsFile *> m_lstUcsFiles;
 	size_t m_iWritableUcsCount;
 	bool m_bAnswerIsReadOnly;
 
-	void _AddReadOnlyModToList(CModuleFile* pMod, wxArrayString& aList);
-public:
+	void _AddReadOnlyModToList(CModuleFile *pMod, wxArrayString &aList);
+
+  public:
 	/*!
-		may throw a CRainmanException
+	    may throw a CRainmanException
 	*/
-	frmUCSSelector(const wxString& sTitle);
+	frmUCSSelector(const wxString &sTitle);
 
-	void OnSize(wxSizeEvent& event);
+	void OnSize(wxSizeEvent &event);
 
-	void OnNewClick(wxCommandEvent& event);
-	void OnLoadClick(wxCommandEvent& event);
-	void OnCloseClick(wxCommandEvent& event);
+	void OnNewClick(wxCommandEvent &event);
+	void OnLoadClick(wxCommandEvent &event);
+	void OnCloseClick(wxCommandEvent &event);
 
 	bool GotAnswer();
-	wxString& GetAnswer();
-	CUcsFile* GetAnswerUcs();
+	wxString &GetAnswer();
+	CUcsFile *GetAnswerUcs();
 	bool IsAnswerUcsReadOnly();
 
 	bool SelectFromReference(unsigned long iVal);

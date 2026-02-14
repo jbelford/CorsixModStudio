@@ -22,36 +22,37 @@
 #include <wx/wxprec.h>
 
 #ifdef __BORLANDC__
-    #pragma hdrstop
+#pragma hdrstop
 #endif
 
 // for all others, include the necessary headers (this file is usually all you
 // need because it includes almost all "standard" wxWidgets headers)
 #ifndef WX_PRECOMP
-    #include "wx/wx.h"
+#include "wx/wx.h"
 #endif
 // ----------------------------
 #include <Rainman.h>
 
 class frmWelcome : public wxWindow
 {
-protected:
+  protected:
 	wxBitmap *m_pDonateBitmap;
 	bool bFirstMouseEvent;
 
-public:
-	frmWelcome(wxWindow* parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize);
+  public:
+	frmWelcome(wxWindow *parent, wxWindowID id, const wxPoint &pos = wxDefaultPosition,
+	           const wxSize &size = wxDefaultSize);
 	~frmWelcome();
 
-	void OnSize(wxSizeEvent& event);
-	void OnQuit(wxCommandEvent& event);
-	void OnLoadSga(wxCommandEvent& event);
-	void OnLoadMod(wxCommandEvent& event);
-	void OnLoadModDC(wxCommandEvent& event);
-	void OnLoadModSS(wxCommandEvent& event);
-	void OnLoadModCoH(wxCommandEvent& event);
-	void OnNewMod(wxCommandEvent& event);
-	void OnMouseEvent(wxMouseEvent& event);
+	void OnSize(wxSizeEvent &event);
+	void OnQuit(wxCommandEvent &event);
+	void OnLoadSga(wxCommandEvent &event);
+	void OnLoadMod(wxCommandEvent &event);
+	void OnLoadModDC(wxCommandEvent &event);
+	void OnLoadModSS(wxCommandEvent &event);
+	void OnLoadModCoH(wxCommandEvent &event);
+	void OnNewMod(wxCommandEvent &event);
+	void OnMouseEvent(wxMouseEvent &event);
 
 	DECLARE_EVENT_TABLE()
 };

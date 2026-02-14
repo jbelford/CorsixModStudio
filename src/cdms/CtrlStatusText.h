@@ -22,18 +22,18 @@
 #include <wx/wxprec.h>
 
 #ifdef __BORLANDC__
-    #pragma hdrstop
+#pragma hdrstop
 #endif
 
 // for all others, include the necessary headers (this file is usually all you
 // need because it includes almost all "standard" wxWidgets headers)
 #ifndef WX_PRECOMP
-    #include "wx/wx.h"
+#include "wx/wx.h"
 #endif
 // ----------------------------
-void AddStatusbarText(wxWindow* pWnd, wxString sMsg);
+void AddStatusbarText(wxWindow *pWnd, wxString sMsg);
 
-template<class T> T* SBT(T* pWnd, wxString sMsg)
+template <class T> T *SBT(T *pWnd, wxString sMsg)
 {
 	AddStatusbarText(pWnd, sMsg);
 	return pWnd;

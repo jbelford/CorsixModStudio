@@ -21,24 +21,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "memdebug.h"
 #include "Exception.h"
 
-IDirectoryTraverser::IDirectoryTraverser(void)
-{
-}
+IDirectoryTraverser::IDirectoryTraverser(void) {}
 
-IDirectoryTraverser::~IDirectoryTraverser(void)
-{
-}
+IDirectoryTraverser::~IDirectoryTraverser(void) {}
 
-IDirectoryTraverser::IIterator::IIterator(void)
-{
-}
+IDirectoryTraverser::IIterator::IIterator(void) {}
 
-IDirectoryTraverser::IIterator::~IIterator(void)
-{
-}
+IDirectoryTraverser::IIterator::~IIterator(void) {}
 
-void* IDirectoryTraverser::IIterator::VGetTag(long iTag)
+void *IDirectoryTraverser::IIterator::VGetTag(long iTag)
 {
 	throw new CRainmanException(0, __FILE__, __LINE__, "Unknown tag %li", iTag);
 }
-

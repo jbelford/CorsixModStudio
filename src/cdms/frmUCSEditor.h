@@ -22,13 +22,13 @@
 #include <wx/wxprec.h>
 
 #ifdef __BORLANDC__
-    #pragma hdrstop
+#pragma hdrstop
 #endif
 
 // for all others, include the necessary headers (this file is usually all you
 // need because it includes almost all "standard" wxWidgets headers)
 #ifndef WX_PRECOMP
-    #include "wx/wx.h"
+#include "wx/wx.h"
 #endif
 // ----------------------------
 #include <Rainman.h>
@@ -36,38 +36,39 @@
 
 class frmUCSEditor : public wxWindow
 {
-protected:
-	wxPropertyGrid* m_pPropertyGrid;
-	CUcsTransaction* m_pUCS;
+  protected:
+	wxPropertyGrid *m_pPropertyGrid;
+	CUcsTransaction *m_pUCS;
 	bool m_bReadOnly;
 	bool m_bNeedsSave;
-	unsigned long* m_pResultVal;
-	wxAuiNotebook* m_pTabStripForLoad;
-	wxButton* m_pLoadButton;
+	unsigned long *m_pResultVal;
+	wxAuiNotebook *m_pTabStripForLoad;
+	wxButton *m_pLoadButton;
 
-public:
-	frmUCSEditor(wxWindow* parent, wxWindowID id, bool bReadOnly, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, unsigned long* pResult = 0);
+  public:
+	frmUCSEditor(wxWindow *parent, wxWindowID id, bool bReadOnly, const wxPoint &pos = wxDefaultPosition,
+	             const wxSize &size = wxDefaultSize, unsigned long *pResult = 0);
 	~frmUCSEditor();
 
 	/*!
-		will throw a CRainmanException on error
+	    will throw a CRainmanException on error
 	*/
-	void FillFromCUcsFile(CUcsFile* pUcs, unsigned long iSelect = ULONG_MAX);
+	void FillFromCUcsFile(CUcsFile *pUcs, unsigned long iSelect = ULONG_MAX);
 
-	void SetTabStripForLoad(wxAuiNotebook* pTabStrib);
+	void SetTabStripForLoad(wxAuiNotebook *pTabStrib);
 
-	void OnSize(wxSizeEvent& event);
-	void OnPropertyChange(wxPropertyGridEvent& event);
-	void OnNewEntry(wxCommandEvent& event);
+	void OnSize(wxSizeEvent &event);
+	void OnPropertyChange(wxPropertyGridEvent &event);
+	void OnNewEntry(wxCommandEvent &event);
 
-	void OnLoad(wxCommandEvent& event);
-	void OnClose(wxCommandEvent& event);
-	void OnApply(wxCommandEvent& event);
+	void OnLoad(wxCommandEvent &event);
+	void OnClose(wxCommandEvent &event);
+	void OnApply(wxCommandEvent &event);
 
 	void DoSave();
-	void OnSaveFile(wxCommandEvent& event);
+	void OnSaveFile(wxCommandEvent &event);
 
-	void OnCloseWindow(wxCloseEvent& event);
+	void OnCloseWindow(wxCloseEvent &event);
 
 	enum
 	{

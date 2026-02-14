@@ -48,7 +48,7 @@ wxString ConfGetDoWFolder()
 	{
 		sDefault = Rainman_GetDoWPath();
 	}
-	catch(CRainmanException *pE)
+	catch (CRainmanException *pE)
 	{
 		throw new CModStudioException(__FILE__, __LINE__, "Unable to get DoW path", pE);
 	}
@@ -64,7 +64,7 @@ wxString ConfGetDCFolder()
 	{
 		sDefault = Rainman_GetDCPath();
 	}
-	catch(CRainmanException *pE)
+	catch (CRainmanException *pE)
 	{
 		throw new CModStudioException(__FILE__, __LINE__, "Unable to get DoW:DC path", pE);
 	}
@@ -80,7 +80,7 @@ wxString ConfGetSSFolder()
 	{
 		sDefault = Rainman_GetSSPath();
 	}
-	catch(CRainmanException *pE)
+	catch (CRainmanException *pE)
 	{
 		throw new CModStudioException(__FILE__, __LINE__, "Unable to get DoW:SS path", pE);
 	}
@@ -96,7 +96,7 @@ wxString ConfGetCoHFolder()
 	{
 		sDefault = Rainman_GetCoHPath();
 	}
-	catch(CRainmanException *pE)
+	catch (CRainmanException *pE)
 	{
 		throw new CModStudioException(__FILE__, __LINE__, "Unable to get CoH path", pE);
 	}
@@ -112,7 +112,7 @@ wxString ConfGetModToolsFolder()
 	{
 		sDoWFolder = ConfGetDoWFolder();
 	}
-	catch(CRainmanException *pE)
+	catch (CRainmanException *pE)
 	{
 		throw new CModStudioException(__FILE__, __LINE__, "Unable to get DoW folder", pE);
 	}

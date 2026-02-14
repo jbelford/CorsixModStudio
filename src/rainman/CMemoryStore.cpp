@@ -21,45 +21,39 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "memdebug.h"
 #include "Exception.h"
 
-CMemoryStore::CMemoryStore(void)
-{
-}
+CMemoryStore::CMemoryStore(void) {}
 
-CMemoryStore::~CMemoryStore(void)
-{
-}
+CMemoryStore::~CMemoryStore(void) {}
 
-CMemoryStore::CStream::CStream(void)
-{
-	m_bDeleteWhenDone = false;
-}
+CMemoryStore::CStream::CStream(void) { m_bDeleteWhenDone = false; }
 
 CMemoryStore::CStream::~CStream(void)
 {
-	if(m_bDeleteWhenDone) delete[] m_pBegin;
+	if (m_bDeleteWhenDone)
+		delete[] m_pBegin;
 }
 
-void CMemoryStore::VInit(void* pUnused)
-{
-	m_bInited = true;
-}
+void CMemoryStore::VInit(void *pUnused) { m_bInited = true; }
 
-char* CMemoryStore::MemoryRange(void* pBegin, unsigned long iLength)
+char *CMemoryStore::MemoryRange(void *pBegin, unsigned long iLength)
 {
-	_MemRange* Range = new _MemRange;
-	if(Range == 0) throw new CRainmanException(__FILE__, __LINE__, "Failed to allocate memory");
+	_MemRange *Range = new _MemRange;
+	if (Range == 0)
+		throw new CRainmanException(__FILE__, __LINE__, "Failed to allocate memory");
 	Range->i = iLength;
-	Range->p = (char*)pBegin;
+	Range->p = (char *)pBegin;
 
-	return (char*)Range;
+	return (char *)Range;
 }
 
-IFileStore::IStream* CMemoryStore::VOpenStream(const char* sFile)
+IFileStore::IStream *CMemoryStore::VOpenStream(const char *sFile)
 {
-	if(sFile == 0) throw new CRainmanException(__FILE__, __LINE__, "No stream descriptor");
-	_MemRange* Range = (_MemRange*)sFile;
-	CStream* pStream = new CStream();
-	if(pStream == 0) throw new CRainmanException(__FILE__, __LINE__, "Failed to allocate memory");
+	if (sFile == 0)
+		throw new CRainmanException(__FILE__, __LINE__, "No stream descriptor");
+	_MemRange *Range = (_MemRange *)sFile;
+	CStream *pStream = new CStream();
+	if (pStream == 0)
+		throw new CRainmanException(__FILE__, __LINE__, "Failed to allocate memory");
 	pStream->m_pBegin = Range->p;
 	pStream->m_pCurrent = Range->p;
 	pStream->m_iLength = Range->i;
@@ -69,11 +63,13 @@ IFileStore::IStream* CMemoryStore::VOpenStream(const char* sFile)
 	return pStream;
 }
 
-CMemoryStore::CStream* CMemoryStore::OpenStreamExt(char* pBegin, unsigned long iLength, bool bDeleteWhenDone)
+CMemoryStore::CStream *CMemoryStore::OpenStreamExt(char *pBegin, unsigned long iLength, bool bDeleteWhenDone)
 {
-	if(pBegin == 0) throw new CRainmanException(__FILE__, __LINE__, "No memory input");
-	CStream* pStream = new CStream();
-	if(pStream == 0) throw new CRainmanException(__FILE__, __LINE__, "Failed to allocate memory");
+	if (pBegin == 0)
+		throw new CRainmanException(__FILE__, __LINE__, "No memory input");
+	CStream *pStream = new CStream();
+	if (pStream == 0)
+		throw new CRainmanException(__FILE__, __LINE__, "Failed to allocate memory");
 	pStream->m_pBegin = pBegin;
 	pStream->m_pCurrent = pBegin;
 	pStream->m_iLength = iLength;
@@ -83,27 +79,25 @@ CMemoryStore::CStream* CMemoryStore::OpenStreamExt(char* pBegin, unsigned long i
 	return pStream;
 }
 
-IFileStore::IOutputStream* CMemoryStore::VOpenOutputStream(const char* sIdentifier, bool bEraseIfPresent)
+IFileStore::IOutputStream *CMemoryStore::VOpenOutputStream(const char *sIdentifier, bool bEraseIfPresent)
 {
 	return new COutStream;
 }
 
-CMemoryStore::COutStream* CMemoryStore::OpenOutputStreamExt()
-{
-	return new COutStream;
-}
+CMemoryStore::COutStream *CMemoryStore::OpenOutputStreamExt() { return new COutStream; }
 
-void CMemoryStore::CStream::VRead(unsigned long iItemCount, unsigned long iItemSize, void* _pDestination)
+void CMemoryStore::CStream::VRead(unsigned long iItemCount, unsigned long iItemSize, void *_pDestination)
 {
 	union
 	{
-		void* pDestination;
+		void *pDestination;
 		long lDestination;
 	};
 	pDestination = _pDestination;
 
-	if((iItemCount * iItemSize) > m_iLengthLeft) throw new CRainmanException(__FILE__, __LINE__, "Trying to read beyond EOF");
-	while(iItemCount)
+	if ((iItemCount * iItemSize) > m_iLengthLeft)
+		throw new CRainmanException(__FILE__, __LINE__, "Trying to read beyond EOF");
+	while (iItemCount)
 	{
 		memcpy(pDestination, m_pCurrent, iItemSize);
 		m_pCurrent += iItemSize;
@@ -116,41 +110,39 @@ void CMemoryStore::CStream::VRead(unsigned long iItemCount, unsigned long iItemS
 CMemoryStore::COutStream::COutStream()
 {
 	m_pBegin = m_pCurrent = new char[m_iBufferLength = 131072]; // 128kb
-	if(m_pBegin == 0) throw new CRainmanException(__FILE__, __LINE__, "Failed to allocate memory");
+	if (m_pBegin == 0)
+		throw new CRainmanException(__FILE__, __LINE__, "Failed to allocate memory");
 	m_iLength = m_iLengthLeft = 0;
 }
 
-CMemoryStore::COutStream::~COutStream(void)
-{
-	delete[] m_pBegin;
-}
+CMemoryStore::COutStream::~COutStream(void) { delete[] m_pBegin; }
 
-void CMemoryStore::COutStream::VWrite(unsigned long iItemCount, unsigned long iItemSize, const void* _pSource)
+void CMemoryStore::COutStream::VWrite(unsigned long iItemCount, unsigned long iItemSize, const void *_pSource)
 {
 	union
 	{
-		const void* pSource;
+		const void *pSource;
 		long lSource;
 	};
 	pSource = _pSource;
 
 	unsigned long iDataToWrite = iItemCount * iItemSize;
-	while((m_iLength + iDataToWrite) > m_iBufferLength)
+	while ((m_iLength + iDataToWrite) > m_iBufferLength)
 	{
 		// Expand buffer
-		char* pNewBuffer = new char[m_iBufferLength <<= 1];
+		char *pNewBuffer = new char[m_iBufferLength <<= 1];
 		memcpy(pNewBuffer, m_pBegin, m_iLength);
 		delete[] m_pBegin;
 		m_pCurrent = (m_pCurrent - m_pBegin) + pNewBuffer;
 		m_pBegin = pNewBuffer;
 	}
 	// Do write
-	while(iItemCount)
+	while (iItemCount)
 	{
 		memcpy(m_pCurrent, pSource, iItemSize);
 		m_pCurrent += iItemSize;
 		lSource += iItemSize;
-		if(m_iLengthLeft == 0)
+		if (m_iLengthLeft == 0)
 		{
 			m_iLength += iItemSize;
 		}
@@ -164,27 +156,22 @@ void CMemoryStore::COutStream::VWrite(unsigned long iItemCount, unsigned long iI
 	}
 }
 
-const char* CMemoryStore::COutStream::GetData()
-{
-	return m_pBegin;
-}
+const char *CMemoryStore::COutStream::GetData() { return m_pBegin; }
 
-unsigned long CMemoryStore::COutStream::GetDataLength()
-{
-	return m_iLength;
-}
+unsigned long CMemoryStore::COutStream::GetDataLength() { return m_iLength; }
 
-void CMemoryStore::COutStream::VRead(unsigned long iItemCount, unsigned long iItemSize, void* _pDestination)
+void CMemoryStore::COutStream::VRead(unsigned long iItemCount, unsigned long iItemSize, void *_pDestination)
 {
 	union
 	{
-		void* pDestination;
+		void *pDestination;
 		long lDestination;
 	};
 	pDestination = _pDestination;
 
-	if((iItemCount * iItemSize) > m_iLengthLeft) throw new CRainmanException(__FILE__, __LINE__, "Trying to read beyond EOF");
-	while(iItemCount)
+	if ((iItemCount * iItemSize) > m_iLengthLeft)
+		throw new CRainmanException(__FILE__, __LINE__, "Trying to read beyond EOF");
+	while (iItemCount)
 	{
 		memcpy(pDestination, m_pCurrent, iItemSize);
 		m_pCurrent += iItemSize;
@@ -196,24 +183,29 @@ void CMemoryStore::COutStream::VRead(unsigned long iItemCount, unsigned long iIt
 
 void CMemoryStore::COutStream::VSeek(long iPosition, IFileStore::IStream::SeekLocation SeekFrom)
 {
-	switch(SeekFrom)
+	switch (SeekFrom)
 	{
 	case IFileStore::IStream::SL_Current:
-		if(iPosition == 0) return;
-		if((m_pCurrent + iPosition) < m_pBegin) throw new CRainmanException(__FILE__, __LINE__, "Cannot seek to location");
-		if((m_iLengthLeft - iPosition) < 0) throw new CRainmanException(__FILE__, __LINE__, "Cannot seek to location");
+		if (iPosition == 0)
+			return;
+		if ((m_pCurrent + iPosition) < m_pBegin)
+			throw new CRainmanException(__FILE__, __LINE__, "Cannot seek to location");
+		if ((m_iLengthLeft - iPosition) < 0)
+			throw new CRainmanException(__FILE__, __LINE__, "Cannot seek to location");
 		m_iLengthLeft -= iPosition;
 		m_pCurrent += iPosition;
 		return;
 
 	case IFileStore::IStream::SL_Root:
-		if(iPosition < 0 || iPosition > ((long)m_iLength)) throw new CRainmanException(__FILE__, __LINE__, "Cannot seek to location");
+		if (iPosition < 0 || iPosition > ((long)m_iLength))
+			throw new CRainmanException(__FILE__, __LINE__, "Cannot seek to location");
 		m_pCurrent = m_pBegin + iPosition;
 		m_iLengthLeft = m_iLength - iPosition;
 		return;
 
 	case IFileStore::IStream::SL_End:
-		if(iPosition > 0 || (-iPosition) > ((long)m_iLength)) throw new CRainmanException(__FILE__, __LINE__, "Cannot seek to location");
+		if (iPosition > 0 || (-iPosition) > ((long)m_iLength))
+			throw new CRainmanException(__FILE__, __LINE__, "Cannot seek to location");
 		m_pCurrent = m_pBegin + m_iLength + iPosition;
 		m_iLengthLeft = (-iPosition);
 		return;
@@ -221,31 +213,33 @@ void CMemoryStore::COutStream::VSeek(long iPosition, IFileStore::IStream::SeekLo
 	throw new CRainmanException(__FILE__, __LINE__, "Unknown SeekFrom");
 }
 
-long CMemoryStore::COutStream::VTell()
-{
-	return m_iLength - m_iLengthLeft;
-}
+long CMemoryStore::COutStream::VTell() { return m_iLength - m_iLengthLeft; }
 
 void CMemoryStore::CStream::VSeek(long iPosition, IFileStore::IStream::SeekLocation SeekFrom)
 {
-	switch(SeekFrom)
+	switch (SeekFrom)
 	{
 	case IFileStore::IStream::SL_Current:
-		if(iPosition == 0) return;
-		if((m_pCurrent + iPosition) < m_pBegin) throw new CRainmanException(__FILE__, __LINE__, "Cannot seek to location");
-		if((m_iLengthLeft - iPosition) < 0) throw new CRainmanException(__FILE__, __LINE__, "Cannot seek to location");
+		if (iPosition == 0)
+			return;
+		if ((m_pCurrent + iPosition) < m_pBegin)
+			throw new CRainmanException(__FILE__, __LINE__, "Cannot seek to location");
+		if ((m_iLengthLeft - iPosition) < 0)
+			throw new CRainmanException(__FILE__, __LINE__, "Cannot seek to location");
 		m_iLengthLeft -= iPosition;
 		m_pCurrent += iPosition;
 		return;
 
 	case IFileStore::IStream::SL_Root:
-		if(iPosition < 0 || iPosition > ((long)m_iLength)) throw new CRainmanException(__FILE__, __LINE__, "Cannot seek to location");
+		if (iPosition < 0 || iPosition > ((long)m_iLength))
+			throw new CRainmanException(__FILE__, __LINE__, "Cannot seek to location");
 		m_pCurrent = m_pBegin + iPosition;
 		m_iLengthLeft = m_iLength - iPosition;
 		return;
 
 	case IFileStore::IStream::SL_End:
-		if(iPosition > 0 || (-iPosition) > ((long)m_iLength)) throw new CRainmanException(__FILE__, __LINE__, "Cannot seek to location");
+		if (iPosition > 0 || (-iPosition) > ((long)m_iLength))
+			throw new CRainmanException(__FILE__, __LINE__, "Cannot seek to location");
 		m_pCurrent = m_pBegin + m_iLength + iPosition;
 		m_iLengthLeft = (-iPosition);
 		return;
@@ -253,8 +247,4 @@ void CMemoryStore::CStream::VSeek(long iPosition, IFileStore::IStream::SeekLocat
 	throw new CRainmanException(__FILE__, __LINE__, "Unknown SeekFrom");
 }
 
-long CMemoryStore::CStream::VTell()
-{
-	return m_iLength - m_iLengthLeft;
-}
-
+long CMemoryStore::CStream::VTell() { return m_iLength - m_iLengthLeft; }

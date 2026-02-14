@@ -29,31 +29,30 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 class CCohUcsFile
 {
 public:
-	CCohUcsFile();
-	~CCohUcsFile();
+    CCohUcsFile();
+    ~CCohUcsFile();
 
-	bool New();
+    bool New();
 
-	bool Load(IFileStore::IStream *pStream);
+    bool Load(IFileStore::IStream *pStream);
 
 private:
-	struct _tRange
-	{
-		_tRange();
-		~_tRange();
+    struct _tRange
+    {
+        _tRange();
+        ~_tRange();
 
-		char* sComment;
-		unsigned long iBegin, iEnd;
-		std::map<unsigned long, wchar_t*> mapEntries;
-	};
+        char* sComment;
+        unsigned long iBegin, iEnd;
+        std::map<unsigned long, wchar_t*> mapEntries;
+    };
 
-	char* m_sFileComment;
-	unsigned long m_iBegin, m_iEnd;
-	std::vector<_tRange*> m_vRanges;
+    char* m_sFileComment;
+    unsigned long m_iBegin, m_iEnd;
+    std::vector<_tRange*> m_vRanges;
 
-	void _Clean();
+    void _Clean();
 };
 
 #endif
 */
-

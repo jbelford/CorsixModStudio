@@ -23,33 +23,33 @@
 #include <wx/aui/auibook.h>
 
 #ifdef __BORLANDC__
-    #pragma hdrstop
+#pragma hdrstop
 #endif
 
 // for all others, include the necessary headers (this file is usually all you
 // need because it includes almost all "standard" wxWidgets headers)
 #ifndef WX_PRECOMP
-    #include "wx/wx.h"
+#include "wx/wx.h"
 #endif
 // ----------------------------
 
 class frmTabDialog : public wxDialog
 {
-protected:
-	wxAuiNotebook* m_pTabs;
+  protected:
+	wxAuiNotebook *m_pTabs;
 
-public:
+  public:
 	/*!
-		may throw a CRainmanException
+	    may throw a CRainmanException
 	*/
-	frmTabDialog(const wxString& sTitle);
+	frmTabDialog(const wxString &sTitle);
 
-	void OnSize(wxSizeEvent& event);
-	void OnCloseWindow(wxCloseEvent& event);
+	void OnSize(wxSizeEvent &event);
+	void OnCloseWindow(wxCloseEvent &event);
 
-	void OnTabClose(wxAuiNotebookEvent& event);
+	void OnTabClose(wxAuiNotebookEvent &event);
 
-	wxAuiNotebook* GetTabs();
+	wxAuiNotebook *GetTabs();
 
 	DECLARE_EVENT_TABLE()
 };

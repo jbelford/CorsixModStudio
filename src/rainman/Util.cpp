@@ -27,187 +27,205 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "memdebug.h"
 #include "Exception.h"
 
-RAINMAN_API char* Rainman_GetDoWPath()
+RAINMAN_API char *Rainman_GetDoWPath()
 {
 	/*
-		Checks the Windows registry for the Dawn of War installation path. Looks at (in order):
-		HKEY_LOCAL_MACHINE\Software\THQ\Dawn of War\
-		HKEY_LOCAL_MACHINE\Software\THQ\Dawn of War DEMO\
-		If neither of these are found then the default DoW installation path is returned (incase the DoW install didn't do its registry bit correctly)
-		The Dawn of War BETA registry location is not checked becuase the DoW beta is very outdated.
+	    Checks the Windows registry for the Dawn of War installation path. Looks at (in order):
+	    HKEY_LOCAL_MACHINE\Software\THQ\Dawn of War\
+	    HKEY_LOCAL_MACHINE\Software\THQ\Dawn of War DEMO\
+	    If neither of these are found then the default DoW installation path is returned (incase the DoW install didn't
+	   do its registry bit correctly) The Dawn of War BETA registry location is not checked becuase the DoW beta is very
+	   outdated.
 	*/
-	char* sDoWPath = 0;
-	DWORD dataLen = MAX_PATH + 1, t; // dataLen is copied into t for each call to RegQueryValueEx, as that function modifies the value passed
+	char *sDoWPath = 0;
+	DWORD dataLen = MAX_PATH + 1,
+	      t; // dataLen is copied into t for each call to RegQueryValueEx, as that function modifies the value passed
 	sDoWPath = CHECK_MEM(new char[dataLen]);
 
-	#ifndef RAINMAN_GNUC
+#ifndef RAINMAN_GNUC
 
 	long iReturnVal;
 	HKEY hkey;
 
 	// Try to open the DoW registry key
-	iReturnVal = RegOpenKeyEx(HKEY_LOCAL_MACHINE,"Software\\THQ\\Dawn of War\\",NULL,KEY_QUERY_VALUE,&hkey);
-	if(iReturnVal == ERROR_SUCCESS)
-	{
-		t = dataLen;
-		iReturnVal = RegQueryValueEx(hkey,"InstallLocation",NULL,NULL,(LPBYTE)sDoWPath,&t);
-		RegCloseKey(hkey);
-		if (iReturnVal == ERROR_SUCCESS) return sDoWPath;
-	}
-	
-	// Try to open the DoW Demo registry key
-	iReturnVal = RegOpenKeyEx(HKEY_LOCAL_MACHINE,"Software\\THQ\\Dawn of War DEMO\\",NULL,KEY_QUERY_VALUE,&hkey);
+	iReturnVal = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "Software\\THQ\\Dawn of War\\", NULL, KEY_QUERY_VALUE, &hkey);
 	if (iReturnVal == ERROR_SUCCESS)
 	{
 		t = dataLen;
-		iReturnVal = RegQueryValueEx(hkey,"InstallLocation",NULL,NULL,(LPBYTE)sDoWPath,&t);
+		iReturnVal = RegQueryValueEx(hkey, "InstallLocation", NULL, NULL, (LPBYTE)sDoWPath, &t);
 		RegCloseKey(hkey);
-		if (iReturnVal == ERROR_SUCCESS) return sDoWPath;
+		if (iReturnVal == ERROR_SUCCESS)
+			return sDoWPath;
 	}
 
-	#endif
+	// Try to open the DoW Demo registry key
+	iReturnVal = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "Software\\THQ\\Dawn of War DEMO\\", NULL, KEY_QUERY_VALUE, &hkey);
+	if (iReturnVal == ERROR_SUCCESS)
+	{
+		t = dataLen;
+		iReturnVal = RegQueryValueEx(hkey, "InstallLocation", NULL, NULL, (LPBYTE)sDoWPath, &t);
+		RegCloseKey(hkey);
+		if (iReturnVal == ERROR_SUCCESS)
+			return sDoWPath;
+	}
+
+#endif
 
 	// Return the default path as the registry failed us :/
 	return strcpy(sDoWPath, "C:\\Program Files\\THQ\\Dawn of War");
 }
 
-RAINMAN_API char* Rainman_GetDCPath()
+RAINMAN_API char *Rainman_GetDCPath()
 {
 	/*
-		Checks the Windows registry for the Dawn of War: Dark Crusade installation path. Looks at (in order):
-		HKEY_LOCAL_MACHINE\Software\THQ\Dawn of War - Dark Crusade\
-		If neither of these are found then the default DoW:DC installation path is returned (incase the DoW:DC install didn't do its registry bit correctly)
+	    Checks the Windows registry for the Dawn of War: Dark Crusade installation path. Looks at (in order):
+	    HKEY_LOCAL_MACHINE\Software\THQ\Dawn of War - Dark Crusade\
+	    If neither of these are found then the default DoW:DC installation path is returned (incase the DoW:DC install
+	   didn't do its registry bit correctly)
 	*/
-	char* sDoWPath = 0;
-	DWORD dataLen = MAX_PATH + 1, t; // dataLen is copied into t for each call to RegQueryValueEx, as that function modifies the value passed
+	char *sDoWPath = 0;
+	DWORD dataLen = MAX_PATH + 1,
+	      t; // dataLen is copied into t for each call to RegQueryValueEx, as that function modifies the value passed
 	sDoWPath = CHECK_MEM(new char[dataLen]);
 
-	#ifndef RAINMAN_GNUC
+#ifndef RAINMAN_GNUC
 
 	long iReturnVal;
 	HKEY hkey;
 
 	// Try to open the DoW:DC registry key
-	iReturnVal = RegOpenKeyEx(HKEY_LOCAL_MACHINE,"Software\\THQ\\Dawn of War - Dark Crusade\\",NULL,KEY_QUERY_VALUE,&hkey);
-	if(iReturnVal == ERROR_SUCCESS)
+	iReturnVal =
+	    RegOpenKeyEx(HKEY_LOCAL_MACHINE, "Software\\THQ\\Dawn of War - Dark Crusade\\", NULL, KEY_QUERY_VALUE, &hkey);
+	if (iReturnVal == ERROR_SUCCESS)
 	{
 		t = dataLen;
-		iReturnVal = RegQueryValueEx(hkey,"InstallLocation",NULL,NULL,(LPBYTE)sDoWPath,&t);
+		iReturnVal = RegQueryValueEx(hkey, "InstallLocation", NULL, NULL, (LPBYTE)sDoWPath, &t);
 		RegCloseKey(hkey);
-		if (iReturnVal == ERROR_SUCCESS) return sDoWPath;
+		if (iReturnVal == ERROR_SUCCESS)
+			return sDoWPath;
 	}
 
-	#endif
+#endif
 
 	// Return the default path as the registry failed us :/
 	return strcpy(sDoWPath, "C:\\Program Files\\THQ\\Dawn of War - Dark Crusade");
 }
 
-RAINMAN_API char* Rainman_GetSSPath()
+RAINMAN_API char *Rainman_GetSSPath()
 {
 	/*
-		Checks the Windows registry for the Dawn of War: Soulstorm installation path. Looks at (in order):
-		HKEY_LOCAL_MACHINE\Software\THQ\Dawn of War - Soulstorm\
-		If neither of these are found then the default DoW:SS installation path is returned (incase the DoW:SS install didn't do its registry bit correctly)
+	    Checks the Windows registry for the Dawn of War: Soulstorm installation path. Looks at (in order):
+	    HKEY_LOCAL_MACHINE\Software\THQ\Dawn of War - Soulstorm\
+	    If neither of these are found then the default DoW:SS installation path is returned (incase the DoW:SS install
+	   didn't do its registry bit correctly)
 	*/
-	char* sDoWPath = 0;
-	DWORD dataLen = MAX_PATH + 1, t; // dataLen is copied into t for each call to RegQueryValueEx, as that function modifies the value passed
+	char *sDoWPath = 0;
+	DWORD dataLen = MAX_PATH + 1,
+	      t; // dataLen is copied into t for each call to RegQueryValueEx, as that function modifies the value passed
 	sDoWPath = CHECK_MEM(new char[dataLen]);
 
-	#ifndef RAINMAN_GNUC
+#ifndef RAINMAN_GNUC
 
 	long iReturnVal;
 	HKEY hkey;
 
 	// Try to open the DoW:DC registry key
-	iReturnVal = RegOpenKeyEx(HKEY_LOCAL_MACHINE,"Software\\THQ\\Dawn of War - Soulstorm\\",NULL,KEY_QUERY_VALUE,&hkey);
-	if(iReturnVal == ERROR_SUCCESS)
+	iReturnVal =
+	    RegOpenKeyEx(HKEY_LOCAL_MACHINE, "Software\\THQ\\Dawn of War - Soulstorm\\", NULL, KEY_QUERY_VALUE, &hkey);
+	if (iReturnVal == ERROR_SUCCESS)
 	{
 		t = dataLen;
-		iReturnVal = RegQueryValueEx(hkey,"InstallLocation",NULL,NULL,(LPBYTE)sDoWPath,&t);
+		iReturnVal = RegQueryValueEx(hkey, "InstallLocation", NULL, NULL, (LPBYTE)sDoWPath, &t);
 		RegCloseKey(hkey);
-		if (iReturnVal == ERROR_SUCCESS) return sDoWPath;
+		if (iReturnVal == ERROR_SUCCESS)
+			return sDoWPath;
 	}
 
-	#endif
+#endif
 
 	// Return the default path as the registry failed us :/
 	return strcpy(sDoWPath, "C:\\Program Files\\THQ\\Dawn of War - Soulstorm");
 }
 
-RAINMAN_API void Rainman_ForEach(IDirectoryTraverser::IIterator* pDirectory, Rainman_ForEachFunction pFn, void* pTag, bool bRecursive)
+RAINMAN_API void Rainman_ForEach(IDirectoryTraverser::IIterator *pDirectory, Rainman_ForEachFunction pFn, void *pTag,
+                                 bool bRecursive)
 {
-	Util_ForEach(pDirectory, (Util_ForEachFunction) pFn, pTag, bRecursive);
+	Util_ForEach(pDirectory, (Util_ForEachFunction)pFn, pTag, bRecursive);
 }
 
-RAINMAN_API void Rainman_DeleteCharArray(char* pString)
-{
-	delete[] pString;
-}
+RAINMAN_API void Rainman_DeleteCharArray(char *pString) { delete[] pString; }
 
-RAINMAN_API char* Rainman_GetCoHPath()
+RAINMAN_API char *Rainman_GetCoHPath()
 {
 	/*
-		Checks the Windows registry for the Company of Heroes installation path. Looks at (in order):
-		HKEY_LOCAL_MACHINE\Software\THQ\Company of Heroes\
-		HKEY_LOCAL_MACHINE\Software\THQ\Company of Heroes Single Player Demo\
-		HKEY_LOCAL_MACHINE\Software\THQ\Company of Heroes BETA\
-		If neither of these are found then the default CoH installation path is returned (incase the CoH install didn't do its registry bit correctly)
+	    Checks the Windows registry for the Company of Heroes installation path. Looks at (in order):
+	    HKEY_LOCAL_MACHINE\Software\THQ\Company of Heroes\
+	    HKEY_LOCAL_MACHINE\Software\THQ\Company of Heroes Single Player Demo\
+	    HKEY_LOCAL_MACHINE\Software\THQ\Company of Heroes BETA\
+	    If neither of these are found then the default CoH installation path is returned (incase the CoH install didn't
+	   do its registry bit correctly)
 	*/
-	char* sCoHPath = 0;
-	DWORD dataLen = 1024, t; // dataLen is copied into t for each call to RegQueryValueEx, as that function modifies the value passed
+	char *sCoHPath = 0;
+	DWORD dataLen = 1024,
+	      t; // dataLen is copied into t for each call to RegQueryValueEx, as that function modifies the value passed
 	sCoHPath = CHECK_MEM(new char[dataLen]);
 
-	#ifndef RAINMAN_GNUC
+#ifndef RAINMAN_GNUC
 
 	long iReturnVal;
 	HKEY hkey;
 
 	// Try to open the CoH registry key
-	iReturnVal = RegOpenKeyEx(HKEY_LOCAL_MACHINE,"Software\\THQ\\Company of Heroes\\",NULL,KEY_QUERY_VALUE,&hkey);
+	iReturnVal = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "Software\\THQ\\Company of Heroes\\", NULL, KEY_QUERY_VALUE, &hkey);
 	if (iReturnVal == ERROR_SUCCESS)
 	{
 		t = dataLen;
-		iReturnVal = RegQueryValueEx(hkey,"InstallDir",NULL,NULL,(LPBYTE)sCoHPath,&t);
+		iReturnVal = RegQueryValueEx(hkey, "InstallDir", NULL, NULL, (LPBYTE)sCoHPath, &t);
 		RegCloseKey(hkey);
-		if (iReturnVal == ERROR_SUCCESS) return sCoHPath;
+		if (iReturnVal == ERROR_SUCCESS)
+			return sCoHPath;
 	}
 
 	// Try to open the CoH Demo registry key if CoH registry key wasn't found
-	iReturnVal = RegOpenKeyEx(HKEY_LOCAL_MACHINE,"Software\\THQ\\Company of Heroes Single Player Demo\\",NULL,KEY_QUERY_VALUE,&hkey);
+	iReturnVal = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "Software\\THQ\\Company of Heroes Single Player Demo\\", NULL,
+	                          KEY_QUERY_VALUE, &hkey);
 	if (iReturnVal == ERROR_SUCCESS)
 	{
 		t = dataLen;
-		iReturnVal = RegQueryValueEx(hkey,"InstallDir",NULL,NULL,(LPBYTE)sCoHPath,&t);
+		iReturnVal = RegQueryValueEx(hkey, "InstallDir", NULL, NULL, (LPBYTE)sCoHPath, &t);
 		RegCloseKey(hkey);
-		if (iReturnVal == ERROR_SUCCESS) return sCoHPath;
+		if (iReturnVal == ERROR_SUCCESS)
+			return sCoHPath;
 	}
 
 	// Try to open the CoH Beta registry key if CoH registry key wasn't found
-	iReturnVal = RegOpenKeyEx(HKEY_LOCAL_MACHINE,"Software\\THQ\\Company of Heroes BETA\\",NULL,KEY_QUERY_VALUE,&hkey);
+	iReturnVal =
+	    RegOpenKeyEx(HKEY_LOCAL_MACHINE, "Software\\THQ\\Company of Heroes BETA\\", NULL, KEY_QUERY_VALUE, &hkey);
 	if (iReturnVal == ERROR_SUCCESS)
 	{
 		t = dataLen;
-		iReturnVal = RegQueryValueEx(hkey,"InstallLocation",NULL,NULL,(LPBYTE)sCoHPath,&t);
+		iReturnVal = RegQueryValueEx(hkey, "InstallLocation", NULL, NULL, (LPBYTE)sCoHPath, &t);
 		RegCloseKey(hkey);
-		if (iReturnVal == ERROR_SUCCESS) return sCoHPath;
+		if (iReturnVal == ERROR_SUCCESS)
+			return sCoHPath;
 	}
 
-	#endif
+#endif
 
 	// Return the default path if the registry failed us :/ (This value is guessed as CoH is not released yet)
 	return strcpy(sCoHPath, "C:\\Program Files\\THQ\\Company of Heroes");
 }
 
-RAINMAN_API CRgdHashTable* Rainman_LoadDictionaries(const char* sPath, char** sCustom, bool bIgnoreLoadErrors)
+RAINMAN_API CRgdHashTable *Rainman_LoadDictionaries(const char *sPath, char **sCustom, bool bIgnoreLoadErrors)
 {
 	/*
-		Uses a CFileSystemStore to iterate over the directory (so that the platform specific code isn't repeated here)
-		The file called custom.txt is marked as a custom file, every other file is not
+	    Uses a CFileSystemStore to iterate over the directory (so that the platform specific code isn't repeated here)
+	    The file called custom.txt is marked as a custom file, every other file is not
 	*/
-	
+
 	// Check our input is valid (non-null, etc.)
-	if(sPath == 0) QUICK_THROW("No path");
+	if (sPath == 0)
+		QUICK_THROW("No path");
 
 	CFileSystemStore oFSO;
 	CRgdHashTable *pRgdHashTable = CHECK_MEM(new CRgdHashTable());
@@ -217,26 +235,28 @@ RAINMAN_API CRgdHashTable* Rainman_LoadDictionaries(const char* sPath, char** sC
 	{
 		pItr = oFSO.VIterate(sPath);
 	}
-	catch(CRainmanException* pE)
+	catch (CRainmanException *pE)
 	{
 		throw new CRainmanException(pE, __FILE__, __LINE__, "Cannot iterate over \'%s\'", sPath);
 	}
 
 	try
 	{
-		// Check if directory has anything in it (blank directories can either be null pointers or T_Nothing so accodate for both)
-		if(pItr && pItr->VGetType() != IDirectoryTraverser::IIterator::T_Nothing)
+		// Check if directory has anything in it (blank directories can either be null pointers or T_Nothing so accodate
+		// for both)
+		if (pItr && pItr->VGetType() != IDirectoryTraverser::IIterator::T_Nothing)
 		{
 			do
 			{
-				if(pItr->VGetType() == IDirectoryTraverser::IIterator::T_File)
+				if (pItr->VGetType() == IDirectoryTraverser::IIterator::T_File)
 				{
 					bool bCustom = false;
-					if(stricmp(pItr->VGetName(), "custom.txt") == 0)
+					if (stricmp(pItr->VGetName(), "custom.txt") == 0)
 					{
 						bCustom = true;
 						// Set the sCustom parameter if it was passed
-						if(sCustom)	*sCustom = strdup(pItr->VGetFullPath());
+						if (sCustom)
+							*sCustom = strdup(pItr->VGetFullPath());
 					}
 
 					// Load the dictionary
@@ -244,17 +264,19 @@ RAINMAN_API CRgdHashTable* Rainman_LoadDictionaries(const char* sPath, char** sC
 					{
 						pRgdHashTable->ExtendWithDictionary(pItr->VGetFullPath(), bCustom);
 					}
-					catch(CRainmanException *pE)
+					catch (CRainmanException *pE)
 					{
-						if(bIgnoreLoadErrors) pE->destroy();
-						else throw new CRainmanException(pE, __FILE__, __LINE__, "Error loading \'%s\'", pItr->VGetFullPath());
+						if (bIgnoreLoadErrors)
+							pE->destroy();
+						else
+							throw new CRainmanException(pE, __FILE__, __LINE__, "Error loading \'%s\'",
+							                            pItr->VGetFullPath());
 					}
 				}
-			} while(pItr->VNextItem() == IDirectoryTraverser::IIterator::E_OK);
+			} while (pItr->VNextItem() == IDirectoryTraverser::IIterator::E_OK);
 		}
 	}
 	CATCH_THROW("Error") // Error could have been many causes, so only a generic message can be given
 
 	return pRgdHashTable;
 }
-

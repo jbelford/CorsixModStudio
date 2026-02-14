@@ -29,7 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "Api.h"
 
-RAINMAN_API bool Lua51_Load(const wchar_t* sDll)
+RAINMAN_API bool Lua51_Load(const wchar_t *sDll)
 {
 	(void)sDll;
 	return true;

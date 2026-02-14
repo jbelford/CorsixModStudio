@@ -22,68 +22,85 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include <cmath>
 #include <algorithm>
 
-wchar_t* _ltow(long iVal, wchar_t* sStr, int iRadix)
+wchar_t *_ltow(long iVal, wchar_t *sStr, int iRadix)
 {
-	if (iRadix < 2 || iRadix > 16) { *sStr = 0; return sStr; }
-	wchar_t* out = sStr;
+	if (iRadix < 2 || iRadix > 16)
+	{
+		*sStr = 0;
+		return sStr;
+	}
+	wchar_t *out = sStr;
 	long quotient = iVal;
 	long base = (long)iRadix;
-	do {
-		*out = "0123456789abcdef"[ std::abs( quotient % base ) ];
+	do
+	{
+		*out = "0123456789abcdef"[std::abs(quotient % base)];
 		++out;
 		quotient /= base;
-	
-	} while ( quotient );
-	if ( iVal < 0 && base == 10) *out++ = '-';
-	
-	std::reverse( sStr, out );
-	
+
+	} while (quotient);
+	if (iVal < 0 && base == 10)
+		*out++ = '-';
+
+	std::reverse(sStr, out);
+
 	*out = 0;
-	
+
 	return sStr;
 }
 
-wchar_t* _ultow(unsigned long iVal, wchar_t* sStr, int iRadix)
+wchar_t *_ultow(unsigned long iVal, wchar_t *sStr, int iRadix)
 {
-	if (iRadix < 2 || iRadix > 16) { *sStr = 0; return sStr; }
-	wchar_t* out = sStr;
+	if (iRadix < 2 || iRadix > 16)
+	{
+		*sStr = 0;
+		return sStr;
+	}
+	wchar_t *out = sStr;
 	unsigned long quotient = iVal;
 	unsigned long base = (unsigned long)iRadix;
-	do {
-		*out = "0123456789abcdef"[ std::abs( (long)(quotient % base) ) ];
+	do
+	{
+		*out = "0123456789abcdef"[std::abs((long)(quotient % base))];
 		++out;
 		quotient /= base;
-	
-	} while ( quotient );
-	if ( iVal < 0 && base == 10) *out++ = '-';
-	
-	std::reverse( sStr, out );
-	
+
+	} while (quotient);
+	if (iVal < 0 && base == 10)
+		*out++ = '-';
+
+	std::reverse(sStr, out);
+
 	*out = 0;
-	
+
 	return sStr;
 }
 
-char* _ultoa(unsigned long iVal, char* sStr, int iRadix)
+char *_ultoa(unsigned long iVal, char *sStr, int iRadix)
 {
-	if (iRadix < 2 || iRadix > 16) { *sStr = 0; return sStr; }
-	char* out = sStr;
+	if (iRadix < 2 || iRadix > 16)
+	{
+		*sStr = 0;
+		return sStr;
+	}
+	char *out = sStr;
 	unsigned long quotient = iVal;
 	unsigned long base = (unsigned long)iRadix;
-	do {
-		*out = "0123456789abcdef"[ std::abs( (long)(quotient % base) ) ];
+	do
+	{
+		*out = "0123456789abcdef"[std::abs((long)(quotient % base))];
 		++out;
 		quotient /= base;
-	
-	} while ( quotient );
-	if ( iVal < 0 && base == 10) *out++ = '-';
-	
-	std::reverse( sStr, out );
-	
+
+	} while (quotient);
+	if (iVal < 0 && base == 10)
+		*out++ = '-';
+
+	std::reverse(sStr, out);
+
 	*out = 0;
-	
+
 	return sStr;
 }
 
 #endif
-
