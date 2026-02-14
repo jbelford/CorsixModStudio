@@ -1,0 +1,94 @@
+// CorsixModStudio Windows resources
+#include "resource.h"
+#include <winres.h>
+
+/////////////////////////////////////////////////////////////////////////////
+// Neutral resources
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+RIDB_LOADING            BITMAP                  "res\\logo_smaller.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.K.) resources
+
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
+
+/////////////////////////////////////////////////////////////////////////////
+// Bitmaps
+
+IDB_FILEAI              BITMAP                  "res\\file_ai.bmp"
+IDB_FILELUA             BITMAP                  "res\\file_lua.bmp"
+IDB_FILENIL             BITMAP                  "res\\file_nil.bmp"
+IDB_FILERGD             BITMAP                  "res\\file_rgd.bmp"
+IDB_FOLDERCLOSE         BITMAP                  "res\\folder_close.bmp"
+IDB_FOLDEROPEN          BITMAP                  "res\\folder_open.bmp"
+IDB_TOOL_LOC            BITMAP                  "res\\tool_locilization.bmp"
+IDB_TOOL_UCS            BITMAP                  "res\\tool_ucsedit.bmp"
+IDB_TOOL_XML            BITMAP                  "res\\tool_xmlexport.bmp"
+IDB_SNAPSHOT            BITMAP                  "res\\tool_snapshot.bmp"
+IDB_FILESCAR            BITMAP                  "res\\file_scar.bmp"
+IDB_SGAPACK             BITMAP                  "res\\tool_sgapack.bmp"
+IDB_TOOL_EXTALL         BITMAP                  "res\\tool_extractall.bmp"
+IDB_DONATE              BITMAP                  "res\\donate.bmp"
+IDB_REDBUTTON           BITMAP                  "res\\red_button.bmp"
+IDB_TOC                 BITMAP                  "res\\folder_toc.bmp"
+IDB_FILETGA             BITMAP                  "res\\file_tga.bmp"
+IDB_FILERGT             BITMAP                  "res\\file_rgt.bmp"
+IDB_FILEDDS             BITMAP                  "res\\file_dds.bmp"
+IDB_FILEBFX             BITMAP                  "res\\file_bfx.bmp"
+IDB_TOOL_CALCULATOR     BITMAP                  "res\\tool_calculator.bmp"
+IDB_REFRESH             BITMAP                  "res\\tool_refresh.bmp"
+IDB_FILEABP             BITMAP                  "res\\file_abp.bmp"
+IDB_FILERGM             BITMAP                  "res\\file_rgm.bmp"
+IDB_32SAVE              BITMAP                  "res\\toolbar_save.bmp"
+IDB_32ADD               BITMAP                  "res\\toolbar_add.bmp"
+IDB_32CHECK             BITMAP                  "res\\tool_spellcheck.bmp"
+IDB_32APPLY             BITMAP                  "res\\toolbar_apply.bmp"
+IDB_32CANCEL            BITMAP                  "res\\toolbar_cancel.bmp"
+IDB_TOOL_AESETUP        BITMAP                  "res\\tool_ae_setup.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+// Icons
+
+IDI_PLUS                ICON                    "res\\icon1.ico"
+APPICON                 ICON                    "res\\icon.ico"
+IDI_MINUS               ICON                    "res\\icon2.ico"
+IDI_UP                  ICON                    "res\\ico00001.ico"
+IDI_DOWN                ICON                    "res\\ico00002.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+// Version
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 0,5,5,0
+ PRODUCTVERSION 0,5,5,0
+ FILEFLAGSMASK 0x17L
+#ifdef _DEBUG
+ FILEFLAGS 0x3L
+#else
+ FILEFLAGS 0x2L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "080904b0"
+        BEGIN
+            VALUE "CompanyName", "www.corsix.org"
+            VALUE "FileDescription", "Corsix's Mod Studio"
+            VALUE "FileVersion", "0, 5, 5, 0"
+            VALUE "InternalName", "CDMS"
+            VALUE "LegalCopyright", "Licensed under the GNU GPL"
+            VALUE "OriginalFilename", "CorsixModStudio.exe"
+            VALUE "ProductName", "Corsix's Mod Studio"
+            VALUE "ProductVersion", "0, 5, 5, 0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x809, 1200
+    END
+END

@@ -5,7 +5,8 @@
     "description": "Dawn of War / Company of Heroes Modding IDE",
     "dependencies": [
         "zlib",
-        "gtest"
+        "gtest",
+        "wxwidgets"
     ],
     "builtin-baseline": "e6ebaa9c3ca8fca90c63af62fc895c2486609580"
 }
