@@ -100,15 +100,17 @@ CorsixModStudio/
 # Set environment
 $env:VCPKG_ROOT = "C:\vcpkg"
 
-# Configure (VS generator handles compiler discovery)
-cmake -B build -S . -G "Visual Studio 18 2026" -A x64 `
-    -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake"
+# Configure + Build + Test (uses CMake presets)
+cmake --preset default
+cmake --build --preset debug
+ctest --preset debug
 
-# Build (--parallel enables multi-project concurrency)
-cmake --build build --config Debug --parallel
+# Release build
+cmake --build --preset release
 
-# Run tests (parallel)
-ctest --test-dir build -C Debug -j8 --output-on-failure
+# Build with clang-tidy analysis (in Visual Studio)
+cmake --preset tidy
+cmake --build --preset tidy-debug
 ```
 
 ### Dependencies (auto-installed by vcpkg)

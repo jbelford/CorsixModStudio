@@ -1,0 +1,53 @@
+# =============================================================================
+# CorsixModStudio — clang-tidy configuration
+# =============================================================================
+#
+# This is a legacy ~2006 C++ codebase being incrementally modernized to C++17.
+# Checks are curated to find real bugs and encourage gradual modernization
+# without drowning in noise from intentional legacy patterns (raw pointers,
+# Hungarian notation, C-style arrays, etc.).
+#
+# Run manually:
+#   clang-tidy -p build src/rainman/CSgaFile.cpp
+#
+# Run via Visual Studio (uses CMakePresets.json vendor settings):
+#   cmake --preset tidy && cmake --build --preset tidy-debug
+#
+# =============================================================================
+
+# ---- Bug-finding & static analysis (high value) ----------------------------
+# ---- Targeted modernization (incremental wins) -----------------------------
+# ---- Performance (low-hanging fruit) ----------------------------------------
+
+Checks: >
+  -*,
+  bugprone-*,
+    -bugprone-easily-swappable-parameters,
+    -bugprone-narrowing-conversions,
+  clang-analyzer-*,
+  misc-redundant-expression,
+  misc-unused-using-decls,
+  modernize-use-nullptr,
+  modernize-use-override,
+  modernize-deprecated-headers,
+  modernize-redundant-void-arg,
+  performance-for-range-declaration,
+  performance-implicit-conversion-in-loop,
+  performance-unnecessary-copy-initialization,
+  performance-unnecessary-value-param,
+  readability-container-size-empty,
+  readability-duplicate-include,
+  readability-misleading-indentation,
+  readability-redundant-smartptr-get,
+  readability-static-accessed-through-instance,
+
+# Treat clang-tidy warnings as warnings, not errors
+WarningsAsErrors: ''
+
+# Only show diagnostics from our own headers, not system/vendored headers
+HeaderFilterRegex: 'src/(rainman|cdms)/[^/]*\.h$'
+
+# modernize-use-override: use C++11 override keyword on virtual overrides
+CheckOptions:
+  - key:   modernize-use-override.AllowOverrideAndFinal
+    value: false

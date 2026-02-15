@@ -2,21 +2,31 @@
 
 ## Build & Test
 
+**Always use CMake presets** — never pass raw `-G`, `-A`, or `-DCMAKE_TOOLCHAIN_FILE` flags manually.
+
 ```powershell
 # Prerequisites: VCPKG_ROOT environment variable must point to vcpkg installation
 
-# Configure
-cmake -B build -S . -G "Visual Studio 18 2026" -A x64 `
-    -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake"
+# Configure (uses VS generator — works out of the box)
+cmake --preset default
 
 # Build
-cmake --build build --config Debug
+cmake --build --preset debug     # or: --preset release
 
 # Run all tests
-ctest --test-dir build -C Debug -j8 --output-on-failure
+ctest --preset debug
 
 # Run a single test by name (supports regex)
-ctest --test-dir build -C Debug -R "CRainmanException.BasicCreation" --output-on-failure
+ctest --preset debug -R "CRainmanException.BasicCreation"
+
+# --- clang-tidy analysis (via Visual Studio CMake preset vendor settings) ---
+cmake --preset tidy
+cmake --build --preset tidy-debug
+
+# Run clang-tidy manually (command-line)
+.\tools\run-clang-tidy.ps1                         # all Rainman sources
+.\tools\run-clang-tidy.ps1 src/rainman/CSgaFile.cpp # single file
+.\tools\run-clang-tidy.ps1 -Fix                    # auto-fix
 ```
 
 ## Read-Only Reference Code
