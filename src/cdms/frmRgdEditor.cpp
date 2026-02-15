@@ -543,13 +543,15 @@ frmRGDEditor::frmRGDEditor(wxTreeItemId &oFileParent, wxString sFilename, wxWind
 	                                              wxPG_DEFAULT_STYLE | wxPG_DESCRIPTION);
 	m_pPropertyGrid = m_pPropManager->GetGrid();
 
-	m_pSplitter->SplitVertically(m_pTables, m_pPropManager);
-	m_pSplitter->SetSashGravity(0.0);
+	m_pSplitter->SetSashGravity(0.5);
 	m_pSplitter->SetMinimumPaneSize(48);
+	m_pSplitter->SplitVertically(m_pTables, m_pPropManager);
 
 	SetBackgroundColour(pBgTemp->GetBackgroundColour());
 	SetSizer(pTopSizer);
 	pTopSizer->SetSizeHints(this);
+
+	CallAfter([this]() { m_pSplitter->SetSashPosition(0); });
 }
 
 frmRGDEditor::~frmRGDEditor()

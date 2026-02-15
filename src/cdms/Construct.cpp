@@ -530,7 +530,7 @@ ConstructFrame::ConstructFrame(const wxString &sTitle, const wxPoint &oPos, cons
 
 	// Make Splitter Window
 	m_pSplitter = new wxSplitterWindow(this, IDC_Splitter);
-	m_pSplitter->SetSashGravity(0.0);
+	m_pSplitter->SetSashGravity(0.5);
 	m_pSplitter->SetMinimumPaneSize(48);
 
 	// Make Tabs Window
@@ -1003,11 +1003,21 @@ void ConstructFrame::DoLoadMod(wxString sPath, eLoadModGames eGame)
 
 		bool bSkipLocale;
 		TheConfig->Read(AppStr(config_mod_localeremember), &bSkipLocale, false);
+		// DEBUG: show config state when reading locale preference
+		wxMessageBox(wxString::Format(wxT("Config path: %s\nremember_locale=%d\nMod hash: %s"), TheConfig->GetPath(),
+		                              (int)bSkipLocale, wxString(sModConfigKeyHex)),
+		             wxT("Locale Read Debug"), wxOK | wxICON_INFORMATION);
 		if (!bSkipLocale)
 		{
 			frmLocaleSelector *pLocaleSelect = new frmLocaleSelector(AppStr(localeselect_title), eGame);
 			pLocaleSelect->ShowModal();
 			delete pLocaleSelect;
+			// DEBUG: verify what was written
+			bool bVerify;
+			TheConfig->Read(AppStr(config_mod_localeremember), &bVerify, false);
+			wxMessageBox(wxString::Format(wxT("After dialog:\nConfig path: %s\nremember_locale=%d"),
+			                              TheConfig->GetPath(), (int)bVerify),
+			             wxT("Locale Write Debug"), wxOK | wxICON_INFORMATION);
 		}
 
 		char *sLocale = wxStringToAscii(TheConfig->Read(AppStr(config_mod_locale), AppStr(localeselect_default)));

@@ -22,6 +22,7 @@
 #include "strings.h"
 #include "Utility.h"
 #include <wx/fileconf.h>
+#include <wx/filename.h>
 #include <wx/sysopt.h>
 #include <wx/image.h>
 #include "Common.h"
@@ -35,8 +36,11 @@ bool CDMSApplication::OnInit()
 	CDMS_LOG_INFO("CorsixModStudio application starting");
 	wxSystemOptions::SetOption(wxT("msw.remap"), 0);
 
-	wxConfigBase::Set(new wxFileConfig(wxEmptyString, wxEmptyString, AppStr(configfile_name), wxEmptyString,
-	                                   wxCONFIG_USE_LOCAL_FILE));
+	// wxFileConfig prepends APPDATA to relative paths, so resolve to absolute
+	wxString sAbsConfigPath = wxFileName(AppStr(configfile_name)).GetAbsolutePath();
+	wxConfigBase::Set(
+	    new wxFileConfig(wxEmptyString, wxEmptyString, sAbsConfigPath, wxEmptyString, wxCONFIG_USE_LOCAL_FILE));
+
 	wxConfigBase::Get()->SetRecordDefaults(true);
 	wxConfigBase::Get()->SetExpandEnvVars(false);
 	wxConfigBase::Get()->SetPath(AppStr(config_initialpath));

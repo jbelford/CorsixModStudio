@@ -38,3 +38,11 @@ if(MSVC)
         /wd4244
     )
 endif()
+
+# Copy Mod_Studio_Files (config, dictionaries, docs, etc.) next to the exe
+add_custom_command(TARGET CorsixModStudio POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_SOURCE_DIR}/Mod_Studio_Files"
+        "$<TARGET_FILE_DIR:CorsixModStudio>/Mod_Studio_Files"
+    COMMENT "Copying Mod_Studio_Files to output directory"
+)
