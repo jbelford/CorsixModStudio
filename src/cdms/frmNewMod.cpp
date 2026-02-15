@@ -135,7 +135,7 @@ frmNewMod::frmNewMod()
 	    1, wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL | wxALL, 3);
 	pDestSizer->Add(SBT(new wxButton(this, IDC_Browse, AppStr(sgapack_browse)), AppStr(sgapack_dirselect_label_help)),
 	                0, wxALIGN_CENTER_VERTICAL | wxALIGN_LEFT | wxFIXED_MINSIZE | wxALL, 3);
-	pTopSizer->Add(pDestSizer, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL);
+	pTopSizer->Add(pDestSizer, 1, wxEXPAND);
 
 	m_pList->SetSelection(g_kDawnOfWar);
 

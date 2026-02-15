@@ -166,11 +166,10 @@ frmRgdMacro::frmRgdMacro(wxString sFile, wxTreeItemId &oFolder)
 
 	pTopSizer->Add(m_pTextbox = new wxTextCtrl(this, -1, wxT(""), wxDefaultPosition, wxDefaultSize,
 	                                           wxTE_PROCESS_TAB | wxTE_MULTILINE | wxHSCROLL),
-	               1, wxEXPAND | wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL | wxALL, 3);
+	               1, wxEXPAND | wxALL, 3);
 	pTopSizer->Hide(m_pTextbox);
 
-	pTopSizer->Add(m_pSTC = new wxStyledTextCtrl(this, -1), 1,
-	               wxEXPAND | wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL | wxALL, 3);
+	pTopSizer->Add(m_pSTC = new wxStyledTextCtrl(this, -1), 1, wxEXPAND | wxALL, 3);
 
 	wxBoxSizer *pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
 	pButtonSizer->Add(new wxButton(this, IDC_Cancel, AppStr(rgdmacro_cancel)), 0, wxFIXED_MINSIZE | wxALL, 3);

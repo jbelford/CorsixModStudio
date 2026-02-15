@@ -179,9 +179,9 @@ frmFileSelector::frmFileSelector(wxString sBaseFolder, wxString sExistingSelecti
 
 	wxBoxSizer *pNameSizer = new wxBoxSizer(wxHORIZONTAL);
 	if (sBaseFolder.Len())
-		pNameSizer->Add(new wxStaticText(this, -1, sBaseFolder), 0, wxEXPAND | wxALL | wxALIGN_CENTER_VERTICAL, 3);
-	pNameSizer->Add(m_pText = new wxTextCtrl(this, -1, wxT("")), 1, wxEXPAND | wxALL | wxALIGN_CENTER_VERTICAL, 3);
-	pTopSizer->Add(pNameSizer, 0, wxALIGN_LEFT | wxEXPAND);
+		pNameSizer->Add(new wxStaticText(this, -1, sBaseFolder), 0, wxEXPAND | wxALL, 3);
+	pNameSizer->Add(m_pText = new wxTextCtrl(this, -1, wxT("")), 1, wxEXPAND | wxALL, 3);
+	pTopSizer->Add(pNameSizer, 0, wxEXPAND);
 	m_pText->SetValue(sExistingSelection);
 	if (m_bRgdMode)
 	{
