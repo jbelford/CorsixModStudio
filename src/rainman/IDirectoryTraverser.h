@@ -200,6 +200,16 @@ class RAINMAN_API IDirectoryTraverser
 	    \return Returns a valid value or throws a CRainmanException
 	*/
 	virtual tLastWriteTime VGetLastWriteTime(const char *sPath) = 0;
+
+	//! Check whether a directory exists in the directory structure
+	/*!
+	    See IDirectoryTraverser for information on path names and directory names.
+	    The default implementation calls VIterate() and returns true if it succeeds.
+	    Subclasses may override to avoid using exceptions for flow control.
+	    \param[in] sPath The path of a directory in the directory structure
+	    \return Returns true if the directory exists, false otherwise
+	*/
+	virtual bool VDirectoryExists(const char *sPath);
 };
 
 #endif

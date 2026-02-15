@@ -18,6 +18,7 @@ add_executable(rainman_tests
     md5_test.cpp
     callbacks_test.cpp
     writetime_test.cpp
+    directorytraverser_test.cpp
 )
 
 target_link_libraries(rainman_tests

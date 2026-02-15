@@ -46,6 +46,7 @@ class RAINMAN_API CModuleFile : public IFileStore, public IDirectoryTraverser
 	virtual const char *VGetEntryPoint(unsigned long iID);
 	virtual void VCreateFolderIn(const char *sPath, const char *sNewFolderName);
 	virtual tLastWriteTime VGetLastWriteTime(const char *sPath);
+	virtual bool VDirectoryExists(const char *sPath);
 
 	enum eModuleType
 	{

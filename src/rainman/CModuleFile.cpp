@@ -224,6 +224,30 @@ const char *CModuleFile::VGetEntryPoint(unsigned long iID)
 
 #undef QUICK_TRYCAT
 
+bool CModuleFile::VDirectoryExists(const char *sPath)
+{
+	if (m_pNewFileMap == 0)
+		m_pNewFileMap = new CFileMap;
+
+	// Extract the TOC name (everything before the first separator)
+	const char *sSlash = strchr(sPath, '\\');
+	if (sSlash == 0)
+		sSlash = strchr(sPath, '/');
+
+	size_t iTocLen = sSlash ? (size_t)(sSlash - sPath) : strlen(sPath);
+	if (iTocLen == 0)
+		return false;
+
+	unsigned long iCount = m_pNewFileMap->VGetEntryPointCount();
+	for (unsigned long i = 0; i < iCount; ++i)
+	{
+		const char *sEntry = m_pNewFileMap->VGetEntryPoint(i);
+		if (strlen(sEntry) == iTocLen && strnicmp(sEntry, sPath, iTocLen) == 0)
+			return true;
+	}
+	return false;
+}
+
 long CModuleFile::GetSgaOutputVersion()
 {
 	if (m_eModuleType == MT_DawnOfWar)

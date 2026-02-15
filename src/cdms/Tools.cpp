@@ -310,23 +310,7 @@ void CDpsCalculatorTool::DoAction()
 wxString CMakeLuaInheritTree::GetName() { return wxT("Make Lua Inheritance Tree"); }
 wxString CMakeLuaInheritTree::GetHelpString() { return wxT(""); }
 wxString CMakeLuaInheritTree::GetBitmapName() { return wxT("IDB_REDBUTTON"); }
-bool CMakeLuaInheritTree::_DoesExist(const char *sFol)
-{
-	IDirectoryTraverser::IIterator *pItr = 0;
-
-	try
-	{
-		pItr = TheConstruct->GetModule()->VIterate(sFol);
-	}
-	catch (CRainmanException *pE)
-	{
-		pE->destroy();
-		return false;
-	}
-
-	delete pItr;
-	return true;
-}
+bool CMakeLuaInheritTree::_DoesExist(const char *sFol) { return TheConstruct->GetModule()->VDirectoryExists(sFol); }
 
 void CMakeLuaInheritTree::_ForEach(IDirectoryTraverser::IIterator *pItr, void *pTag)
 {

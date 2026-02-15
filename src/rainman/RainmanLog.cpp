@@ -42,7 +42,7 @@ void RainmanLog::init(const char *sLogDir)
 	std::string sLogPath = std::string(sLogDir) + "/corsixmodstudio.log";
 	constexpr std::size_t iMaxSize = 5 * 1024 * 1024; // 5 MB
 	constexpr std::size_t iMaxFiles = 3;
-	auto pFileSink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(sLogPath, iMaxSize, iMaxFiles);
+	auto pFileSink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(sLogPath, iMaxSize, iMaxFiles, true);
 	pFileSink->set_level(spdlog::level::trace);
 
 	std::vector<spdlog::sink_ptr> vSinks{pConsoleSink, pFileSink};
