@@ -19,6 +19,10 @@ add_executable(rainman_tests
     callbacks_test.cpp
     writetime_test.cpp
     directorytraverser_test.cpp
+    rgmfile_test.cpp
+    cbfxfile_test.cpp
+    sgacreator_test.cpp
+    luafile2_test.cpp
 )
 
 target_link_libraries(rainman_tests
