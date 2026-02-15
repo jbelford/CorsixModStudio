@@ -33,7 +33,8 @@
 #endif
 // ----------------------------
 #include "strconv.h"
-#include <Rainman.h>
+#include <Exception.h>
+#include <IFileStore.h>
 #include "strings.h"
 
 class CModStudioException : public CRainmanException

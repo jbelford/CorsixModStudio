@@ -26,8 +26,11 @@
 #include "frmLocaleSelector.h"
 #include "frmRgdEditor.h"
 #include "strconv.h"
-#include <Rainman.h>
 #include <memory>
+#include <CFileSystemStore.h>
+#include <CFileMap.h>
+#include <CSgaCreator.h>
+#include <CLuaFromRgd.h>
 #include "Tools.h"
 extern "C"
 {

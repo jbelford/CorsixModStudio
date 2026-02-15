@@ -31,7 +31,8 @@
 #include "wx/wx.h"
 #endif
 // ----------------------------
-#include <Rainman.h>
+#include <CUcsFile.h>
+#include <CModuleFile.h>
 #include <list>
 
 class frmUCSSelector : public wxDialog

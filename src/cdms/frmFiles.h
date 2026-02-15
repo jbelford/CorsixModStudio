@@ -31,7 +31,12 @@
 #include "wx/wx.h"
 #endif
 // ----------------------------
-#include <Rainman.h>
+#include <IDirectoryTraverser.h>
+#include <IFileStore.h>
+#include <CModuleFile.h>
+#include <CLuaFile.h>
+#include <CLuaFile2.h>
+#include <CLuaFileCache.h>
 #include <wx/treectrl.h>
 #include <wx/aui/auibook.h>
 #include <wx/listctrl.h>

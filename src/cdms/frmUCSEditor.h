@@ -31,7 +31,8 @@
 #include "wx/wx.h"
 #endif
 // ----------------------------
-#include <Rainman.h>
+#include <CUcsTransaction.h>
+#include <CUcsFile.h>
 #include <wx/propgrid/propgrid.h>
 
 class frmUCSEditor : public wxWindow

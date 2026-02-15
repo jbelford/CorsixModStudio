@@ -39,6 +39,10 @@ extern "C"
 
 #include <wx/progdlg.h>
 #include <wx/clipbrd.h>
+#include <CLuaFromRgd.h>
+#include <CBfxFile.h>
+#include <Util.h>
+#include <CChunkyFile.h>
 #include "Common.h"
 #include <RainmanLog.h>
 

@@ -22,6 +22,7 @@
 #include "strconv.h"
 #include "Utility.h"
 #include <wx/file.h>
+#include <Util.h>
 #include "Common.h"
 
 extern "C"

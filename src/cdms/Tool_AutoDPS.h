@@ -18,7 +18,9 @@
 #ifndef _TOOL_AUTO_DPS_H_
 #define _TOOL_AUTO_DPS_H_
 
-#include <Rainman.h>
+#include <IDirectoryTraverser.h>
+#include <IMetaTable.h>
+#include <CRgdFile.h>
 #include <map>
 #include <vector>
 

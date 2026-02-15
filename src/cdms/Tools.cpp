@@ -31,6 +31,8 @@
 #include "frmMassExtract.h"
 #include <memory>
 // Rainman_RGDDump.h removed; RgdDump usage is commented-out dead code
+#include <Util.h>
+#include <CFileSystemStore.h>
 #include "Common.h"
 #include "RainmanLog.h"
 

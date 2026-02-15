@@ -18,6 +18,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 #include "CModuleFile.h"
+#include "CSgaFile.h"
+#include "CUcsFile.h"
+#include "CDoWFileView.h"
+#include "CFileMap.h"
+#include "CFileSystemStore.h"
 #include "Internal_Util.h"
 #include "Exception.h"
 #include <new>

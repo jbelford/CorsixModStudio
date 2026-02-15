@@ -18,7 +18,7 @@
 #ifndef _TOOL_AE_SETUP_H_
 #define _TOOL_AE_SETUP_H_
 
-#include <Rainman.h>
+#include <CModuleFile.h>
 // For compilers that support precompilation, includes "wx/wx.h".
 #include <wx/wxprec.h>
 
@@ -32,7 +32,6 @@
 #include "wx/wx.h"
 #endif
 // ----------------------------
-#include <Rainman.h>
 
 class frmUCSToDAT : public wxDialog
 {

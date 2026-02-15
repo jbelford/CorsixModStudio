@@ -23,8 +23,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "gnuc_defines.h"
 #include "IDirectoryTraverser.h"
 #include "Api.h"
-#include "CSgaFile.h"
 #include "IFileStore.h"
+
+class CSgaFile;
 
 #include <vector>
 #include <map>

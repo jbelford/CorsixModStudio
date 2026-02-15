@@ -21,13 +21,17 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #define _C_MODULE_FILE_H_
 
 #include "gnuc_defines.h"
-#include "CSgaFile.h"
-#include "CUcsFile.h"
-#include "CDoWFileView.h"
-#include "CFileMap.h"
-#include "CFileSystemStore.h"
+#include "IFileStore.h"
+#include "IDirectoryTraverser.h"
 #include "Api.h"
 #include "Callbacks.h"
+#include <vector>
+
+class CSgaFile;
+class CUcsFile;
+class CDoWFileView;
+class CFileMap;
+class CFileSystemStore;
 
 class RAINMAN_API CModuleFile : public IFileStore, public IDirectoryTraverser
 {

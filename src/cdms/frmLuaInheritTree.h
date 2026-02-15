@@ -13,7 +13,7 @@
 #include "wx/wx.h"
 #endif
 // ----------------------------
-#include <Rainman.h>
+#include <CInheritTable.h>
 #include <wx/treectrl.h>
 
 class frmLuaInheritTree : public wxWindow

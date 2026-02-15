@@ -23,6 +23,7 @@
 #include "frmMessage.h"
 #include "Tool_AESetup.h"
 #include <vector>
+#include <CUcsFile.h>
 #include "Common.h"
 #include "RainmanLog.h"
 

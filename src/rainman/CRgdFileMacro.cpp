@@ -1,4 +1,5 @@
 #include "CRgdFileMacro.h"
+#include "CModuleFile.h"
 #include "luax.h"
 #include "Exception.h"
 #include "Internal_Util.h"

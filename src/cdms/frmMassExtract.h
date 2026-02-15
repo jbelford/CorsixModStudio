@@ -31,7 +31,7 @@
 #include "wx/wx.h"
 #endif
 // ----------------------------
-#include <Rainman.h>
+#include <CModuleFile.h>
 #include <wx/treectrl.h>
 
 class frmMassExtract : public wxDialog

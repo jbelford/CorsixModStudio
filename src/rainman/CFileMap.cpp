@@ -18,6 +18,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 #include "CFileMap.h"
+#include "CSgaFile.h"
 #include "Exception.h"
 #include <algorithm>
 #include <string>

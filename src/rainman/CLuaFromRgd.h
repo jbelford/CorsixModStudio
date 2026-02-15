@@ -24,10 +24,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "IFileStore.h"
 #include "IMetaTable.h"
 #include "CRgdHashTable.h"
-#include "CLuaFile.h"
-#include "CRgdFile.h"
-#include "CModuleFile.h"
 #include "Api.h"
+
+class CLuaFile;
+class CRgdFile;
+class CModuleFile;
 
 RAINMAN_API void MakeLuaFromRgdQuickly(CRgdFile *pRgd, IFileStore::IOutputStream *pOut);
 

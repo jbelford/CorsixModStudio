@@ -31,7 +31,7 @@
 #include "wx/wx.h"
 #endif
 // ----------------------------
-#include <Rainman.h>
+#include <IDirectoryTraverser.h>
 #include <list>
 #include <wx/treectrl.h>
 

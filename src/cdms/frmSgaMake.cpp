@@ -25,6 +25,8 @@
 #include <errno.h>
 #include <wx/textdlg.h>
 #include <wx/filename.h>
+#include <CFileSystemStore.h>
+#include <CSgaCreator.h>
 #include "Common.h"
 #include "RainmanLog.h"
 

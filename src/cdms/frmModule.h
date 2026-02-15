@@ -31,7 +31,6 @@
 #include "wx/wx.h"
 #endif
 // ----------------------------
-#include <Rainman.h>
 #include "strings.h"
 
 class frmModule : public wxWindow

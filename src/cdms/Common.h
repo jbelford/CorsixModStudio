@@ -4,7 +4,6 @@
 #include "Construct.h"
 #include "Utility.h"
 #include "strconv.h"
-#include <Rainman.h>
 #include "strings.h"
 #include <wx/wxprec.h>
 

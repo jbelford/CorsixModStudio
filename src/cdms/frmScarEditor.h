@@ -31,7 +31,7 @@
 #include "wx/wx.h"
 #endif
 // ----------------------------
-#include <Rainman.h>
+#include <IFileStore.h>
 #include <wx/stc/stc.h>
 #include <list>
 #include <stack>

@@ -31,7 +31,7 @@
 #include "wx/wx.h"
 #endif
 // ----------------------------
-#include <Rainman.h>
+#include <CRgmFile.h>
 #include <wx/propgrid/propgrid.h>
 #include <wx/propgrid/manager.h>
 #include <wx/splitter.h>

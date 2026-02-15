@@ -22,7 +22,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "Lua51.h"
 #include "CRgdFile.h"
-#include "CModuleFile.h"
+
+class CModuleFile;
 
 class RAINMAN_API CRgdFileMacro
 {

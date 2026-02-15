@@ -31,7 +31,9 @@
 #include "wx/wx.h"
 #endif
 // ----------------------------
-#include <Rainman.h>
+#include <CRgdFile.h>
+#include <IMetaTable.h>
+#include <CLuaFile2.h>
 #include <wx/propgrid/propgrid.h>
 #include <wx/splitter.h>
 #include <wx/treectrl.h>

@@ -33,6 +33,7 @@ extern "C"
 #include <stdlib.h>
 #include <algorithm>
 #include "CModuleFile.h"
+#include "CFileMap.h"
 #include "Exception.h"
 #include "memdebug.h"
 
