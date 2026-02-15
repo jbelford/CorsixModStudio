@@ -26,7 +26,6 @@ extern "C"
 #include <lua.h>
 #include <lauxlib.h>
 #include <Lua51.h>
-#include <Lua51Aux.h>
 }
 #include <wx/toolbar.h>
 #include <wx/tbarbase.h>

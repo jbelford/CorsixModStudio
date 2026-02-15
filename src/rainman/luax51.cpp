@@ -18,7 +18,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 #include "Lua51.h"
-#include "Lua51Aux.h"
 #include <lua.h>
 #include <string.h>
 #include "memdebug.h"

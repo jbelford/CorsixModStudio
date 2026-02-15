@@ -1,5 +1,4 @@
 #include "CRgdFileMacro.h"
-#include "Lua51Aux.h"
 #include "luax.h"
 #include "Exception.h"
 #include "Internal_Util.h"
