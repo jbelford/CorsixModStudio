@@ -787,7 +787,7 @@ bool CLuaFile2::_SaveKey::_Sort(_SaveKey *p1, _SaveKey *p2)
 		return (stricmp(p1->s, p2->s) < 0);
 	int iCmp = strnicmp(p1->s, p2->s, iLen1);
 	if (iCmp != 0)
-		return iCmp;
+		return iCmp < 0;
 	return atol(sNumBegin1) < atol(sNumBegin2);
 }
 
@@ -814,7 +814,7 @@ bool CLuaFile2::CTable::_SortNodes(CLuaFile2::CNode *p1, CLuaFile2::CNode *p2)
 		return (stricmp(p1->m_sName, p2->m_sName) < 0);
 	int iCmp = strnicmp(p1->m_sName, p2->m_sName, iLen1);
 	if (iCmp != 0)
-		return iCmp;
+		return iCmp < 0;
 	return atol(sNumBegin1) < atol(sNumBegin2);
 }
 

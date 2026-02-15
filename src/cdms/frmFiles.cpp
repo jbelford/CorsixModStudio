@@ -40,6 +40,7 @@ extern "C"
 #include <wx/progdlg.h>
 #include <wx/clipbrd.h>
 #include "Common.h"
+#include <RainmanLog.h>
 
 BEGIN_EVENT_TABLE(frmFiles, wxWindow)
 EVT_SIZE(frmFiles::OnSize)

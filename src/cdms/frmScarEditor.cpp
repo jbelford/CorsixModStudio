@@ -32,6 +32,8 @@ extern "C"
 #include <wx/tbarbase.h>
 #include <algorithm>
 #include "Common.h"
+#include <cstdint>
+#include <RainmanLog.h>
 
 BEGIN_EVENT_TABLE(frmScarEditor, wxWindow)
 EVT_SIZE(frmScarEditor::OnSize)
@@ -524,8 +526,8 @@ void frmScarEditor::OnCheckLua(wxCommandEvent &event)
 
 char *frmScarEditor::_ReadNiceString(FILE *f)
 {
-	size_t iLen;
-	fread(&iLen, sizeof(size_t), 1, f);
+	uint32_t iLen;
+	fread(&iLen, sizeof(uint32_t), 1, f);
 	char *s = new char[iLen + 1];
 	fread(s, iLen, 1, f);
 	s[iLen] = 0;
@@ -618,35 +620,43 @@ frmScarEditor::frmScarEditor(wxTreeItemId &oFileParent, wxString sFilename, wxWi
 		else
 			f = _wfopen(AppStr(app_cohscarreffile), L"rb");
 
-		size_t iFnCount;
-		fread(&iFnCount, sizeof(size_t), 1, f);
-		for (size_t i = 0; i < iFnCount; ++i)
+		if (!f)
 		{
-			_ScarFunction oFunction;
-			oFunction.sReturn = _ReadNiceString(f);
-			oFunction.sName = _ReadNiceString(f);
-			oFunction.iType = 0;
-			if (*oFunction.sName == 0)
-			{
-				oFunction.iType = 1;
-				delete[] oFunction.sName;
-				oFunction.sName = oFunction.sReturn;
-				oFunction.sReturn = 0;
-				oFunction.sDesc = 0;
-			}
-			else
-			{
-				size_t iArgCount;
-				fread(&iArgCount, sizeof(size_t), 1, f);
-				for (size_t j = 0; j < iArgCount; ++j)
-				{
-					oFunction.sArguments.push_back(_ReadNiceString(f));
-				}
-				oFunction.sDesc = _ReadNiceString(f);
-			}
-			m_lstScarFunctions.push_back(oFunction);
+			CDMS_LOG_WARN("Could not open SCAR reference file");
+			pLangRef = false;
 		}
-		fclose(f);
+		else
+		{
+			uint32_t iFnCount;
+			fread(&iFnCount, sizeof(uint32_t), 1, f);
+			for (uint32_t i = 0; i < iFnCount; ++i)
+			{
+				_ScarFunction oFunction;
+				oFunction.sReturn = _ReadNiceString(f);
+				oFunction.sName = _ReadNiceString(f);
+				oFunction.iType = 0;
+				if (*oFunction.sName == 0)
+				{
+					oFunction.iType = 1;
+					delete[] oFunction.sName;
+					oFunction.sName = oFunction.sReturn;
+					oFunction.sReturn = 0;
+					oFunction.sDesc = 0;
+				}
+				else
+				{
+					uint32_t iArgCount;
+					fread(&iArgCount, sizeof(uint32_t), 1, f);
+					for (uint32_t j = 0; j < iArgCount; ++j)
+					{
+						oFunction.sArguments.push_back(_ReadNiceString(f));
+					}
+					oFunction.sDesc = _ReadNiceString(f);
+				}
+				m_lstScarFunctions.push_back(oFunction);
+			}
+			fclose(f);
+		}
 	}
 
 	// Gui

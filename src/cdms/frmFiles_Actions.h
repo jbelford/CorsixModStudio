@@ -791,6 +791,11 @@ class CBFXRGTDeBurnAction : public frmFiles::IHandler
 		luaopen_base(L);
 
 		FILE *f = _wfopen(AppStr(app_bfxmapfile), wxT("rb"));
+		if (!f)
+		{
+			CDMS_LOG_WARN("Could not open BFX map file");
+			return;
+		}
 		unsigned long iSizeComp, iSizeDecomp;
 		fread(&iSizeDecomp, sizeof(unsigned long), 1, f);
 		fread(&iSizeComp, sizeof(unsigned long), 1, f);

@@ -31,6 +31,8 @@
 #include <wx/toolbar.h>
 #include <wx/tbarbase.h>
 #include "Common.h"
+#include <cstdint>
+#include <RainmanLog.h>
 
 extern "C"
 {
@@ -308,8 +310,8 @@ wxValidator *myUcsRefPropertyClass::DoGetValidator() const
 
 char *frmRGDEditor::_ReadNiceString(FILE *f)
 {
-	size_t iLen;
-	fread(&iLen, sizeof(size_t), 1, f);
+	uint32_t iLen;
+	fread(&iLen, sizeof(uint32_t), 1, f);
 	char *s = new char[iLen + 1];
 	s[iLen] = 0;
 	fread(s, iLen, 1, f);
@@ -322,9 +324,14 @@ void frmRGDEditor::_MakeSureNodeHelpLoaded()
 	{
 		m_pNodeHelp = new std::map<unsigned long, _NodeHelp>;
 		FILE *f = _wfopen(AppStr(app_luareffile), L"rb");
-		size_t iHelpCount;
-		fread(&iHelpCount, sizeof(size_t), 1, f);
-		for (size_t i = 0; i < iHelpCount; ++i)
+		if (!f)
+		{
+			CDMS_LOG_WARN("Could not open Lua reference file: {}", AppStr(app_luareffile).mb_str().data());
+			return;
+		}
+		uint32_t iHelpCount;
+		fread(&iHelpCount, sizeof(uint32_t), 1, f);
+		for (uint32_t i = 0; i < iHelpCount; ++i)
 		{
 			unsigned long iHash;
 			_NodeHelp oHelp;
@@ -335,9 +342,9 @@ void frmRGDEditor::_MakeSureNodeHelpLoaded()
 			if (oHelp.iLuaType == 100)
 			{
 				oHelp.lstRefs = new std::list<char *>;
-				size_t iRefCount;
-				fread(&iRefCount, sizeof(size_t), 1, f);
-				for (size_t j = 0; j < iRefCount; ++j)
+				uint32_t iRefCount;
+				fread(&iRefCount, sizeof(uint32_t), 1, f);
+				for (uint32_t j = 0; j < iRefCount; ++j)
 				{
 					oHelp.lstRefs->push_back(_ReadNiceString(f));
 				}

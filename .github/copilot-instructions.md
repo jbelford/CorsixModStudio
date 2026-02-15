@@ -19,6 +19,10 @@ ctest --test-dir build -C Debug -j8 --output-on-failure
 ctest --test-dir build -C Debug -R "CRainmanException.BasicCreation" --output-on-failure
 ```
 
+## Read-Only Reference Code
+
+**`CDMSSrc_055/`** contains the original unmodified Corsix source code and is kept as a **read-only reference**. Never modify any files under this directory. All development happens in `src/`.
+
 ## Architecture
 
 This is a modernization of a ~2006 C++ modding IDE for Dawn of War / Company of Heroes. The codebase has two layers:
