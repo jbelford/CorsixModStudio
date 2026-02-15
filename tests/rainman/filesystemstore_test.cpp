@@ -3,6 +3,7 @@
 #include "Exception.h"
 #include <cstring>
 #include <filesystem>
+#include <process.h>
 #include <string>
 
 class FileSystemStoreTest : public ::testing::Test {
@@ -14,7 +15,7 @@ protected:
         tempDir = std::filesystem::temp_directory_path() / "cfs_test_XXXXXX";
         // Create a unique directory name using the test address as seed
         tempDir = std::filesystem::temp_directory_path() /
-            ("cfs_test_" + std::to_string(reinterpret_cast<uintptr_t>(this)));
+            ("cfs_test_" + std::to_string(_getpid()) + "_" + std::to_string(reinterpret_cast<uintptr_t>(this)));
         std::filesystem::create_directories(tempDir);
         store.VInit();
     }

@@ -4,6 +4,7 @@
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <process.h>
 
 class ModuleFileTest : public ::testing::Test {
 protected:
@@ -11,7 +12,7 @@ protected:
 
     void SetUp() override {
         tempDir = std::filesystem::temp_directory_path() /
-            ("mod_test_" + std::to_string(reinterpret_cast<uintptr_t>(this)));
+            ("mod_test_" + std::to_string(_getpid()) + "_" + std::to_string(reinterpret_cast<uintptr_t>(this)));
         std::filesystem::create_directories(tempDir);
     }
 

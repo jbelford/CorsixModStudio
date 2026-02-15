@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include <filesystem>
 #include <vector>
+#include <process.h>
 
 bool RainmanLog::s_bInitialised = false;
 
@@ -39,13 +40,26 @@ void RainmanLog::init(const char *sLogDir)
 	auto pConsoleSink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
 	pConsoleSink->set_level(spdlog::level::debug);
 
-	std::string sLogPath = std::string(sLogDir) + "/corsixmodstudio.log";
+	// Include PID in log filename so parallel test processes don't collide
+	std::string sLogPath = std::string(sLogDir) + "/corsixmodstudio_" + std::to_string(_getpid()) + ".log";
 	constexpr std::size_t iMaxSize = 5 * 1024 * 1024; // 5 MB
 	constexpr std::size_t iMaxFiles = 3;
-	auto pFileSink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(sLogPath, iMaxSize, iMaxFiles, true);
-	pFileSink->set_level(spdlog::level::trace);
 
-	std::vector<spdlog::sink_ptr> vSinks{pConsoleSink, pFileSink};
+	std::shared_ptr<spdlog::sinks::rotating_file_sink_mt> pFileSink;
+	try
+	{
+		pFileSink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(sLogPath, iMaxSize, iMaxFiles, true);
+		pFileSink->set_level(spdlog::level::trace);
+	}
+	catch (const spdlog::spdlog_ex &)
+	{
+		// If the file sink fails (e.g. file locked), fall back to console only
+		pFileSink = nullptr;
+	}
+
+	std::vector<spdlog::sink_ptr> vSinks{pConsoleSink};
+	if (pFileSink)
+		vSinks.push_back(pFileSink);
 
 	// "rainman" logger — library layer
 	auto pRainman = std::make_shared<spdlog::logger>("rainman", vSinks.begin(), vSinks.end());
