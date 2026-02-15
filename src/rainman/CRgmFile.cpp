@@ -208,11 +208,11 @@ void CRgmFile::Save(IFileStore::IOutputStream *pStream)
 				pDATA->SetUnknown1(1);
 				CMemoryStore::COutStream *pData = CMemoryStore::OpenOutputStreamExt();
 				unsigned long iL = 8 + (unsigned long)strlen(itr->second);
-				pData->VWrite(1, sizeof(long), &iL);
+				pData->VWrite(1, sizeof(uint32_t), &iL);
 				pData->VWrite(8, 1, "GENERIC:");
 				pData->VWrite(iL - 8, 1, itr->second);
 				iL = 0;
-				pData->VWrite(1, sizeof(long), &iL);
+				pData->VWrite(1, sizeof(uint32_t), &iL);
 				pDATA->SetData(pData);
 				delete pData;
 			}
@@ -247,7 +247,7 @@ void CRgmFile::CMaterial::_WriteChunk()
 			{
 				CMemoryStore::COutStream *pData = CMemoryStore::OpenOutputStreamExt();
 				unsigned long iL = (unsigned long)strlen(m_sDxName);
-				pData->VWrite(1, sizeof(long), &iL);
+				pData->VWrite(1, sizeof(uint32_t), &iL);
 				pData->VWrite(iL, 1, m_sDxName);
 				pChild->SetData(pData);
 				delete pData;
@@ -381,7 +381,7 @@ void CRgmFile::CMaterial::_ParseInfo(CChunkyFile::CChunk *pChunk)
 	CMemoryStore::CStream *pData = pChunk->GetData();
 
 	unsigned long iStrLen;
-	pData->VRead(1, sizeof(unsigned long), &iStrLen);
+	pData->VRead(1, sizeof(uint32_t), &iStrLen);
 
 	m_sDxName = new char[iStrLen + 1];
 	m_sDxName[iStrLen] = 0;
@@ -453,24 +453,24 @@ void CRgmFile::CMaterial::CVariable::_WriteChunk()
 
 	unsigned long iL;
 	iL = (unsigned long)strlen(m_sName);
-	pData->VWrite(1, sizeof(long), &iL);
+	pData->VWrite(1, sizeof(uint32_t), &iL);
 	pData->VWrite(iL, 1, m_sName);
 
 	switch (m_eValType)
 	{
 	case VT_Number:
 		iL = 1;
-		pData->VWrite(1, sizeof(long), &iL);
+		pData->VWrite(1, sizeof(uint32_t), &iL);
 		iL = (unsigned long)sizeof(float);
-		pData->VWrite(1, sizeof(long), &iL);
+		pData->VWrite(1, sizeof(uint32_t), &iL);
 		pData->VWrite(1, sizeof(float), &m_fValue);
 		break;
 
 	case VT_Text:
 		iL = 9;
-		pData->VWrite(1, sizeof(long), &iL);
+		pData->VWrite(1, sizeof(uint32_t), &iL);
 		iL = 1 + (unsigned long)strlen(m_sValue);
-		pData->VWrite(1, sizeof(long), &iL);
+		pData->VWrite(1, sizeof(uint32_t), &iL);
 		pData->VWrite(iL, 1, m_sValue);
 		break;
 
@@ -506,15 +506,15 @@ CRgmFile::CMaterial::CVariable::CVariable(CChunkyFile::CChunk *pChunk)
 	CMemoryStore::CStream *pData = pChunk->GetData();
 
 	unsigned long iStrLen, iDataType, iDataLen;
-	pData->VRead(1, sizeof(unsigned long), &iStrLen);
+	pData->VRead(1, sizeof(uint32_t), &iStrLen);
 
 	m_sName = new char[iStrLen + 1];
 	m_sName[iStrLen] = 0;
 
 	pData->VRead(iStrLen, 1, m_sName);
 
-	pData->VRead(1, sizeof(unsigned long), &iDataType);
-	pData->VRead(1, sizeof(unsigned long), &iDataLen);
+	pData->VRead(1, sizeof(uint32_t), &iDataType);
+	pData->VRead(1, sizeof(uint32_t), &iDataLen);
 
 	if (iDataType == 9)
 	{

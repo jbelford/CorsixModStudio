@@ -67,7 +67,8 @@ IFileStore::IStream *CFileSystemStore::VOpenStream(const char *sFile)
 	FILE *fFile = fopen(sFile, "rb");
 	if (fFile == 0)
 	{
-		throw new CRainmanException(0, __FILE__, __LINE__, "Could not open \'%s\'", sFile);
+		throw new CRainmanException(0, __FILE__, __LINE__, "Could not open \'%s\': %s (errno %d)", sFile,
+		                            strerror(errno), errno);
 	}
 
 	CStream *pStream = new CStream();
@@ -329,7 +330,9 @@ void CFileSystemStore::CStream::VRead(unsigned long iItemCount, unsigned long iI
 	{
 		fseek(m_fFile, iOldPos, SEEK_SET);
 		delete[] pTempDest;
-		throw new CRainmanException(__FILE__, __LINE__, "Failed to read items");
+		throw new CRainmanException(0, __FILE__, __LINE__,
+		                            "Failed to read items: got %zu of %lu items (%lu bytes each) at file offset %ld",
+		                            iItemsRead, iItemCount, iItemSize, iOldPos);
 	}
 }
 
@@ -517,9 +520,10 @@ CFileSystemStore::CIterator::CIterator(const char *sFolder, const CFileSystemSto
 	delete[] sTmp;
 	if (m_HandFD == INVALID_HANDLE_VALUE)
 	{
+		DWORD dwErr = GetLastError();
 		m_HandFD = 0;
-		delete[] m_sParentPath;
-		throw new CRainmanException(0, __FILE__, __LINE__, "FindFirstFile failed (%s)", sFolder);
+		RAINMAN_LOG_WARN("FindFirstFile: directory not accessible '{}' (Windows error {})", sFolder, dwErr);
+		return; // missing/inaccessible directory treated as empty
 	}
 	while (strcmp(m_W32FD.cFileName, ".") == 0 || strcmp(m_W32FD.cFileName, "..") == 0)
 	{

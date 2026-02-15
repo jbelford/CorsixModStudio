@@ -9,6 +9,7 @@
 #define _PCH_RAINMAN_H_
 
 // Standard library
+#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <vector>

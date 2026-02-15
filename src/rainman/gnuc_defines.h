@@ -23,7 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define RAINMAN_GNUC
 
-#define DWORD unsigned long
+#define DWORD uint32_t
 #define MAX_PATH 260
 #define stricmp strcasecmp
 #define strnicmp strncasecmp

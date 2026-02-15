@@ -74,12 +74,12 @@ void CRgtFile::_MakeFileBurnInfo(CChunkyFile *pChunkyFile)
 	CMemoryStore::COutStream *pOutStream = CMemoryStore::OpenOutputStreamExt();
 	unsigned long iN;
 	iN = 25;
-	pOutStream->VWrite(1, sizeof(long), &iN);
+	pOutStream->VWrite(1, sizeof(uint32_t), &iN);
 	pOutStream->VWrite(25, 1, "generic-image to data-rgt");
 	iN = 1;
-	pOutStream->VWrite(1, sizeof(long), &iN);
+	pOutStream->VWrite(1, sizeof(uint32_t), &iN);
 	iN = 32;
-	pOutStream->VWrite(1, sizeof(long), &iN);
+	pOutStream->VWrite(1, sizeof(uint32_t), &iN);
 	pOutStream->VWrite(32, 1, "Rainman Library (www.corsix.org)");
 
 	struct tm *pTm;
@@ -94,10 +94,10 @@ void CRgtFile::_MakeFileBurnInfo(CChunkyFile *pChunkyFile)
 	        (int)(pTm->tm_year + 1900), pTm->tm_hour, pTm->tm_min, pTm->tm_sec);
 
 	iN = (unsigned long)strlen(sDataBuffer);
-	pOutStream->VWrite(1, sizeof(long), &iN);
+	pOutStream->VWrite(1, sizeof(uint32_t), &iN);
 	pOutStream->VWrite(iN, 1, sDataBuffer);
 	iN = 0;
-	pOutStream->VWrite(1, sizeof(long), &iN);
+	pOutStream->VWrite(1, sizeof(uint32_t), &iN);
 
 	pChunk->SetData(pOutStream);
 	delete pOutStream;
@@ -110,9 +110,9 @@ void CRgtFile::_MakeDataAttr(CChunkyFile::CChunk *pParentChunk, long iWidth, lon
 	pChunk->SetVersion(1);
 
 	CMemoryStore::COutStream *pOutStream = CMemoryStore::OpenOutputStreamExt();
-	pOutStream->VWrite(1, sizeof(long), &iUnknown);
-	pOutStream->VWrite(1, sizeof(long), &iWidth);
-	pOutStream->VWrite(1, sizeof(long), &iHeight);
+	pOutStream->VWrite(1, sizeof(uint32_t), &iUnknown);
+	pOutStream->VWrite(1, sizeof(uint32_t), &iWidth);
+	pOutStream->VWrite(1, sizeof(uint32_t), &iHeight);
 
 	pChunk->SetData(pOutStream);
 	delete pOutStream;
@@ -126,9 +126,9 @@ void CRgtFile::_MakeDataData(CChunkyFile::CChunk *pParentChunk, long iVal1, long
 	pChunk->SetUnknown1(1);
 
 	CMemoryStore::COutStream *pOutStream = CMemoryStore::OpenOutputStreamExt();
-	pOutStream->VWrite(1, sizeof(long), &iVal1);
+	pOutStream->VWrite(1, sizeof(uint32_t), &iVal1);
 	if (iType == 3)
-		pOutStream->VWrite(1, sizeof(long), &iVal2);
+		pOutStream->VWrite(1, sizeof(uint32_t), &iVal2);
 
 	pChunk->SetData(pOutStream);
 	delete pOutStream;
@@ -142,17 +142,17 @@ void CRgtFile::_MakeDataInfo(CChunkyFile::CChunk *pParentChunk, long iWidth, lon
 
 	CMemoryStore::COutStream *pOutStream = CMemoryStore::OpenOutputStreamExt();
 
-	pOutStream->VWrite(1, sizeof(long), &iWidth);
-	pOutStream->VWrite(1, sizeof(long), &iHeight);
+	pOutStream->VWrite(1, sizeof(uint32_t), &iWidth);
+	pOutStream->VWrite(1, sizeof(uint32_t), &iHeight);
 	long N;
 	N = 1;
-	pOutStream->VWrite(1, sizeof(long), &N);
+	pOutStream->VWrite(1, sizeof(uint32_t), &N);
 	N = 2;
-	pOutStream->VWrite(1, sizeof(long), &N);
+	pOutStream->VWrite(1, sizeof(uint32_t), &N);
 	N = 2;
-	pOutStream->VWrite(1, sizeof(long), &N);
+	pOutStream->VWrite(1, sizeof(uint32_t), &N);
 	N = 0;
-	pOutStream->VWrite(1, sizeof(long), &N);
+	pOutStream->VWrite(1, sizeof(uint32_t), &N);
 	pOutStream->VWrite(1, 1, &iFinalByte);
 
 	pChunk->SetData(pOutStream);
@@ -168,12 +168,12 @@ void CRgtFile::_MakeDxtcDataTexFormat(CChunkyFile::CChunk *pParentChunk, unsigne
 	CMemoryStore::COutStream *pOutStream = CMemoryStore::OpenOutputStreamExt();
 
 	long N;
-	pOutStream->VWrite(1, sizeof(long), &iWidth);
-	pOutStream->VWrite(1, sizeof(long), &iHeight);
+	pOutStream->VWrite(1, sizeof(uint32_t), &iWidth);
+	pOutStream->VWrite(1, sizeof(uint32_t), &iHeight);
 	N = 1;
-	pOutStream->VWrite(1, sizeof(long), &N);
+	pOutStream->VWrite(1, sizeof(uint32_t), &N);
 	N = 2;
-	pOutStream->VWrite(1, sizeof(long), &N);
+	pOutStream->VWrite(1, sizeof(uint32_t), &N);
 
 	switch (iDxtN)
 	{
@@ -190,9 +190,9 @@ void CRgtFile::_MakeDxtcDataTexFormat(CChunkyFile::CChunk *pParentChunk, unsigne
 		N = 0; // unknown
 		break;
 	};
-	pOutStream->VWrite(1, sizeof(long), &N);
+	pOutStream->VWrite(1, sizeof(uint32_t), &N);
 	N = 0;
-	pOutStream->VWrite(1, sizeof(long), &N);
+	pOutStream->VWrite(1, sizeof(uint32_t), &N);
 	char c = 1;
 	pOutStream->VWrite(1, 1, &c);
 
@@ -273,19 +273,19 @@ void CRgtFile::_MakeDxtcData(CMemoryStore::COutStream *pTMAN, CMemoryStore::COut
 	if (pTMAN->GetDataLength() == 0)
 	{
 		N = iThisMipLevel + 1; // mip-level count
-		pTMAN->VWrite(1, sizeof(long), &N);
+		pTMAN->VWrite(1, sizeof(uint32_t), &N);
 	}
 
 	N = (unsigned long)iDataSizeUncompressed;
-	pTMAN->VWrite(1, sizeof(long), &N);
-	pTMAN->VWrite(1, sizeof(long), &iCompressedSize);
+	pTMAN->VWrite(1, sizeof(uint32_t), &N);
+	pTMAN->VWrite(1, sizeof(uint32_t), &iCompressedSize);
 
 	// Write TDAT
 	// N = iThisMipLevel;
-	// pTDAT->VWrite(1, sizeof(long), &N);
-	// pTDAT->VWrite(1, sizeof(long), &iWidth);
-	// pTDAT->VWrite(1, sizeof(long), &iHeight);
-	// pTDAT->VWrite(1, sizeof(long), &iCompressedSize);
+	// pTDAT->VWrite(1, sizeof(uint32_t), &N);
+	// pTDAT->VWrite(1, sizeof(uint32_t), &iWidth);
+	// pTDAT->VWrite(1, sizeof(uint32_t), &iHeight);
+	// pTDAT->VWrite(1, sizeof(uint32_t), &iCompressedSize);
 	pTDAT->VWrite(iCompressedSize, 1, pData);
 
 	// Cleanup
@@ -502,13 +502,13 @@ void CRgtFile::LoadDDS(IFileStore::IStream *pFile)
 		_Clean();
 		throw new CRainmanException(0, __FILE__, __LINE__, "Not a valid DDS file (\"%.4s\")", sDDS_Magic);
 	}
-	pFile->VRead(1, sizeof(long), &iDDS_HeaderLen);
+	pFile->VRead(1, sizeof(uint32_t), &iDDS_HeaderLen);
 	if (iDDS_HeaderLen != 124)
 	{
 		_Clean();
 		throw new CRainmanException(0, __FILE__, __LINE__, "Not a valid DDS file (L %lu)", iDDS_HeaderLen);
 	}
-	pFile->VRead(1, sizeof(long), &iDDS_Flags);
+	pFile->VRead(1, sizeof(uint32_t), &iDDS_Flags);
 	if (((iDDS_Flags & 1) == 0) || ((iDDS_Flags & 2) == 0) || ((iDDS_Flags & 4) == 0))
 	{
 		_Clean();
@@ -519,25 +519,25 @@ void CRgtFile::LoadDDS(IFileStore::IStream *pFile)
 	}
 	// N = 1 | 2 | 4 | 0x1000 | (bMipLevels ? 0x20000 : 0) | 0x80000; // DDSD_CAPS, DDSD_WIDTH, DDSD_HEIGHT,
 	// DDSD_PIXELFORMAT, DDSD_MIPMAPCOUNT, DDSD_LINEARSIZE
-	pFile->VRead(1, sizeof(long), &iDDS_Height);
-	pFile->VRead(1, sizeof(long), &iDDS_Width);
-	pFile->VRead(1, sizeof(long), &iDDS_PitchOrLinearSize);
-	pFile->VRead(1, sizeof(long), &iDDS_Depth);
-	pFile->VRead(1, sizeof(long), &iDDS_MipCount);
-	pFile->VSeek(11 * sizeof(long));
+	pFile->VRead(1, sizeof(uint32_t), &iDDS_Height);
+	pFile->VRead(1, sizeof(uint32_t), &iDDS_Width);
+	pFile->VRead(1, sizeof(uint32_t), &iDDS_PitchOrLinearSize);
+	pFile->VRead(1, sizeof(uint32_t), &iDDS_Depth);
+	pFile->VRead(1, sizeof(uint32_t), &iDDS_MipCount);
+	pFile->VSeek(11 * sizeof(uint32_t));
 
 	unsigned long iDDSPF_Size, iDDSPF_Flags;
 	char sDDSPF_FourCC[5];
 	sDDSPF_FourCC[4] = 0;
 
-	pFile->VRead(1, sizeof(unsigned long), &iDDSPF_Size);
+	pFile->VRead(1, sizeof(uint32_t), &iDDSPF_Size);
 	if (iDDSPF_Size != 32)
 	{
 		_Clean();
 		throw new CRainmanException(0, __FILE__, __LINE__, "Pixel format invalid; length is %lu", iDDSPF_Size);
 	}
 
-	pFile->VRead(1, sizeof(unsigned long), &iDDSPF_Flags);
+	pFile->VRead(1, sizeof(uint32_t), &iDDSPF_Flags);
 	if (((iDDSPF_Flags & 4) == 0))
 	{
 		_Clean();
@@ -558,19 +558,20 @@ void CRgtFile::LoadDDS(IFileStore::IStream *pFile)
 		                            "Only DXT1,3,5 images are supported. Use TGA for raw RGBA data.");
 	}
 	pFile->VSeek(
-	    5 * sizeof(long)); // Skip Pixel format: dwRGBBitCount, dwRBitMask, dwGBitMask, dwBBitMask, dwRGBAlphaBitMask
+	    5 *
+	    sizeof(uint32_t)); // Skip Pixel format: dwRGBBitCount, dwRBitMask, dwGBitMask, dwBBitMask, dwRGBAlphaBitMask
 
 	unsigned long iDDSC_Caps1, iDDSC_Caps2;
-	pFile->VRead(1, sizeof(unsigned long), &iDDSC_Caps1);
+	pFile->VRead(1, sizeof(uint32_t), &iDDSC_Caps1);
 	if ((iDDSC_Caps1 & 0x1000) == 0)
 	{
 		_Clean();
 		throw new CRainmanException(0, __FILE__, __LINE__,
 		                            "DDS Caps invalid; Cap1 (%lu) must contain at least DDSCAPS_TEXTURE", iDDSC_Caps1);
 	}
-	pFile->VRead(1, sizeof(unsigned long), &iDDSC_Caps2);
+	pFile->VRead(1, sizeof(uint32_t), &iDDSC_Caps2);
 
-	pFile->VSeek(3 * sizeof(long)); // Skip DDSCaps Reserved[0-1], DDS dwReserved2
+	pFile->VSeek(3 * sizeof(uint32_t)); // Skip DDSCaps Reserved[0-1], DDS dwReserved2
 
 	/*
 	Caps1:
@@ -823,56 +824,56 @@ void CRgtFile::_Save_Dxtc_Header(IFileStore::IOutputStream *pFile, unsigned shor
 
 	unsigned long N;
 	N = 124;
-	pFile->VWrite(1, sizeof(unsigned long), &N); // dwSize
+	pFile->VWrite(1, sizeof(uint32_t), &N); // dwSize
 
 	bool bMipLevels = (iMipCount > 1);
 
 	N = 1 | 2 | 4 | 0x1000 | (bMipLevels ? 0x20000 : 0) |
 	    0x80000; // DDSD_CAPS, DDSD_WIDTH, DDSD_HEIGHT, DDSD_PIXELFORMAT, DDSD_MIPMAPCOUNT, DDSD_LINEARSIZE
-	pFile->VWrite(1, sizeof(unsigned long), &N); // dwFlags
+	pFile->VWrite(1, sizeof(uint32_t), &N); // dwFlags
 
 	N = iHeight;
-	pFile->VWrite(1, sizeof(unsigned long), &N); // dwHeight
+	pFile->VWrite(1, sizeof(uint32_t), &N); // dwHeight
 	N = iWidth;
-	pFile->VWrite(1, sizeof(unsigned long), &N); // dwWidth
+	pFile->VWrite(1, sizeof(uint32_t), &N); // dwWidth
 	N = iPrimaryLen;
-	pFile->VWrite(1, sizeof(unsigned long), &N); // dwPitchOrLinearSize
+	pFile->VWrite(1, sizeof(uint32_t), &N); // dwPitchOrLinearSize
 	N = 0;
-	pFile->VWrite(1, sizeof(unsigned long), &N); // dwDepth
+	pFile->VWrite(1, sizeof(uint32_t), &N); // dwDepth
 	N = iMipCount;
-	pFile->VWrite(1, sizeof(unsigned long), &N); // dwMipMapCount
+	pFile->VWrite(1, sizeof(uint32_t), &N); // dwMipMapCount
 	for (int i = 11; i != 0; --i)
 	{
 		N = 0;
-		pFile->VWrite(1, sizeof(unsigned long), &N);
+		pFile->VWrite(1, sizeof(uint32_t), &N);
 	} // dwReserved[0] .. dwReserved[10]
 	N = 32;
-	pFile->VWrite(1, sizeof(unsigned long), &N); // ddpfPixelFormat -> dwSize
+	pFile->VWrite(1, sizeof(uint32_t), &N); // ddpfPixelFormat -> dwSize
 	N = 4;
-	pFile->VWrite(1, sizeof(unsigned long), &N); // ddpfPixelFormat -> dwFlags (DDPF_FOURCC)
+	pFile->VWrite(1, sizeof(uint32_t), &N); // ddpfPixelFormat -> dwFlags (DDPF_FOURCC)
 	char sFourCC[] = {'D', 'X', 'T', '?', '\0'};
 	sFourCC[3] = '0' + iCompression;
 	pFile->VWrite(4, 1, sFourCC); // ddpfPixelFormat -> dwFourCC
 	N = 0;
-	pFile->VWrite(1, sizeof(unsigned long), &N); // ddpfPixelFormat -> dwRGBBitCount
+	pFile->VWrite(1, sizeof(uint32_t), &N); // ddpfPixelFormat -> dwRGBBitCount
 	N = 0;
-	pFile->VWrite(1, sizeof(unsigned long), &N); // ddpfPixelFormat -> dwRBitMask
+	pFile->VWrite(1, sizeof(uint32_t), &N); // ddpfPixelFormat -> dwRBitMask
 	N = 0;
-	pFile->VWrite(1, sizeof(unsigned long), &N); // ddpfPixelFormat -> dwGBitMask
+	pFile->VWrite(1, sizeof(uint32_t), &N); // ddpfPixelFormat -> dwGBitMask
 	N = 0;
-	pFile->VWrite(1, sizeof(unsigned long), &N); // ddpfPixelFormat -> dwBBitMask
+	pFile->VWrite(1, sizeof(uint32_t), &N); // ddpfPixelFormat -> dwBBitMask
 	N = 0;
-	pFile->VWrite(1, sizeof(unsigned long), &N);                     // ddpfPixelFormat -> dwRGBAlphaBitMask
+	pFile->VWrite(1, sizeof(uint32_t), &N);                          // ddpfPixelFormat -> dwRGBAlphaBitMask
 	N = (bMipLevels ? 8 : 0) | 0x1000 | (bMipLevels ? 0x400000 : 0); // DDSCAPS_COMPLEX, DDSCAPS_TEXTURE, DDSCAPS_MIPMAP
-	pFile->VWrite(1, sizeof(unsigned long), &N);                     // ddsCaps -> dwCaps1
+	pFile->VWrite(1, sizeof(uint32_t), &N);                          // ddsCaps -> dwCaps1
 	N = 0;
-	pFile->VWrite(1, sizeof(unsigned long), &N); // ddsCaps -> dwCaps2
+	pFile->VWrite(1, sizeof(uint32_t), &N); // ddsCaps -> dwCaps2
 	N = 0;
-	pFile->VWrite(1, sizeof(unsigned long), &N); // ddsCaps -> Reserved[0]
+	pFile->VWrite(1, sizeof(uint32_t), &N); // ddsCaps -> Reserved[0]
 	N = 0;
-	pFile->VWrite(1, sizeof(unsigned long), &N); // ddsCaps -> Reserved[1]
+	pFile->VWrite(1, sizeof(uint32_t), &N); // ddsCaps -> Reserved[1]
 	N = 0;
-	pFile->VWrite(1, sizeof(unsigned long), &N); // dwReserved2
+	pFile->VWrite(1, sizeof(uint32_t), &N); // dwReserved2
 }
 
 void CRgtFile::_Save_Dxtc(IFileStore::IOutputStream *pFile)
@@ -1040,10 +1041,10 @@ void CRgtFile::_Load_Dxtc()
 
 	CMemoryStore::CStream *pStr = pDataChunk->GetData();
 
-	pStr->VRead(1, sizeof(long), &m_iWidth);
-	pStr->VRead(1, sizeof(long), &m_iHeight);
+	pStr->VRead(1, sizeof(uint32_t), &m_iWidth);
+	pStr->VRead(1, sizeof(uint32_t), &m_iHeight);
 	pStr->VSeek(8, IFileStore::IStream::SL_Current);
-	pStr->VRead(1, sizeof(long), &m_iDxtCompression);
+	pStr->VRead(1, sizeof(uint32_t), &m_iDxtCompression);
 
 	switch (m_iDxtCompression)
 	{
@@ -1076,14 +1077,14 @@ void CRgtFile::_Load_Dxtc()
 
 	CMemoryStore::CStream *pDataStr = pDataChunk->GetData();
 
-	pStr->VRead(1, sizeof(long), &m_iMipCount);
+	pStr->VRead(1, sizeof(uint32_t), &m_iMipCount);
 	for (long iMipLevel = 0; iMipLevel < m_iMipCount; ++iMipLevel)
 	{
 		_MipLevel *pCurrentLevel = new _MipLevel;
 		long iDataLengthCompressed;
 
-		pStr->VRead(1, sizeof(long), &pCurrentLevel->m_iDataLength);
-		pStr->VRead(1, sizeof(long), &iDataLengthCompressed);
+		pStr->VRead(1, sizeof(uint32_t), &pCurrentLevel->m_iDataLength);
+		pStr->VRead(1, sizeof(uint32_t), &iDataLengthCompressed);
 
 		pCurrentLevel->m_pData = new unsigned char[iDataLengthCompressed];
 
@@ -1137,8 +1138,8 @@ void CRgtFile::_Load_Tga()
 
 	CMemoryStore::CStream *pStr = pDataChunk->GetData();
 
-	pStr->VRead(1, sizeof(long), &m_iWidth);
-	pStr->VRead(1, sizeof(long), &m_iHeight);
+	pStr->VRead(1, sizeof(uint32_t), &m_iWidth);
+	pStr->VRead(1, sizeof(uint32_t), &m_iHeight);
 
 	delete pStr;
 
@@ -1159,8 +1160,8 @@ void CRgtFile::_Load_Tga()
 
 				pStr = pDataChunk->GetData();
 				pStr->VSeek(4, IFileStore::IStream::SL_Current);
-				pStr->VRead(1, sizeof(long), &pCurrentLevel->m_iWidth);
-				pStr->VRead(1, sizeof(long), &pCurrentLevel->m_iHeight);
+				pStr->VRead(1, sizeof(uint32_t), &pCurrentLevel->m_iWidth);
+				pStr->VRead(1, sizeof(uint32_t), &pCurrentLevel->m_iHeight);
 				delete pStr;
 
 				pDataChunk = pChild->GetChildByName("DATA", CChunkyFile::CChunk::T_Data);

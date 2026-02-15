@@ -102,7 +102,10 @@ void CMemoryStore::CStream::VRead(unsigned long iItemCount, unsigned long iItemS
 	pDestination = _pDestination;
 
 	if ((iItemCount * iItemSize) > m_iLengthLeft)
-		throw new CRainmanException(__FILE__, __LINE__, "Trying to read beyond EOF");
+		throw new CRainmanException(
+		    0, __FILE__, __LINE__,
+		    "Trying to read beyond EOF: requested %lu bytes (%lu items x %lu), only %lu available",
+		    iItemCount * iItemSize, iItemCount, iItemSize, m_iLengthLeft);
 	while (iItemCount)
 	{
 		memcpy(pDestination, m_pCurrent, iItemSize);
@@ -176,7 +179,10 @@ void CMemoryStore::COutStream::VRead(unsigned long iItemCount, unsigned long iIt
 	pDestination = _pDestination;
 
 	if ((iItemCount * iItemSize) > m_iLengthLeft)
-		throw new CRainmanException(__FILE__, __LINE__, "Trying to read beyond EOF");
+		throw new CRainmanException(
+		    0, __FILE__, __LINE__,
+		    "Trying to read beyond EOF: requested %lu bytes (%lu items x %lu), only %lu available",
+		    iItemCount * iItemSize, iItemCount, iItemSize, m_iLengthLeft);
 	while (iItemCount)
 	{
 		memcpy(pDestination, m_pCurrent, iItemSize);

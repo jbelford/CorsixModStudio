@@ -611,8 +611,8 @@ void CDoWFileView::AddFileSource(IDirectoryTraverser *pTrav, IDirectoryTraverser
 	if (pIOStore == 0)
 		throw new CRainmanException(__FILE__, __LINE__, "Null pIOStore");
 
-	unsigned long iModID = (unsigned long)m_vModNames.size();
-	unsigned long iSourceID = (unsigned long)m_vSourceNames.size();
+	unsigned long iModID = static_cast<unsigned long>(m_vModNames.size());
+	unsigned long iSourceID = static_cast<unsigned long>(m_vSourceNames.size());
 
 	m_vModNames.push_back(strdup(sMod));
 	m_vSourceNames.push_back(strdup(sSourceType));

@@ -216,7 +216,7 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
 		if (fwrite("_ARCHIVE", 1, 8, fOut) != 8)
 			throw new CRainmanException(__FILE__, __LINE__, "Write operation failed");
 		// Version
-		if (fwrite(&iVersion, sizeof(long), 1, fOut) != 1)
+		if (fwrite(&iVersion, sizeof(uint32_t), 1, fOut) != 1)
 			throw new CRainmanException(__FILE__, __LINE__, "Write operation failed");
 		// MD5
 		if (fwrite("-BUFFER FOR MD5-", 1, 16, fOut) != 16)
@@ -237,19 +237,19 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
 		{
 			wcscpy(sUiName, L"Made with Corsix\'s Rainman");
 		}
-		if (fwrite(sUiName, sizeof(wchar_t), 64, fOut) != 64)
+		if (fwrite(sUiName, sizeof(uint16_t), 64, fOut) != 64)
 			throw new CRainmanException(__FILE__, __LINE__, "Write operation failed");
 		// MD5
 		if (fwrite("-BUFFER FOR MD5-", 1, 16, fOut) != 16)
 			throw new CRainmanException(__FILE__, __LINE__, "Write operation failed");
 		// DataHeaderSize / DataOffset
-		if (fwrite(&iTmp, sizeof(long), 1, fOut) != 1 || fwrite(&iTmp, sizeof(long), 1, fOut) != 1)
+		if (fwrite(&iTmp, sizeof(uint32_t), 1, fOut) != 1 || fwrite(&iTmp, sizeof(uint32_t), 1, fOut) != 1)
 			throw new CRainmanException(__FILE__, __LINE__, "Write operation failed");
 		// Platform [V4 only]
 		if (iVersion == 4)
 		{
 			iTmp = 1;
-			if (fwrite(&iTmp, sizeof(long), 1, fOut) != 1)
+			if (fwrite(&iTmp, sizeof(uint32_t), 1, fOut) != 1)
 				throw new CRainmanException(__FILE__, __LINE__, "Write operation failed");
 		}
 
@@ -269,27 +269,27 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
 
 			// TOC offset & count
 			iTmp = 24;
-			pDataHeader->VWrite(1, (unsigned long)sizeof(unsigned long), &iTmp);
+			pDataHeader->VWrite(1, sizeof(uint32_t), &iTmp);
 			iSTmp = 1;
 			pDataHeader->VWrite(1, (unsigned long)sizeof(unsigned short), &iSTmp);
 
 			// Directory offset & count
 			pInput->FullCount(iDirCount, iFileCount);
 			iTmp = 24 + iTocOutLength;
-			pDataHeader->VWrite(1, (unsigned long)sizeof(unsigned long), &iTmp);
+			pDataHeader->VWrite(1, sizeof(uint32_t), &iTmp);
 			iSTmp = (unsigned short)iDirCount;
 			pDataHeader->VWrite(1, (unsigned long)sizeof(unsigned short), &iSTmp);
 
 			// File offset & count
 			iTmp = 24 + iTocOutLength + (iDirOutLength * iDirCount);
-			pDataHeader->VWrite(1, (unsigned long)sizeof(unsigned long), &iTmp);
+			pDataHeader->VWrite(1, sizeof(uint32_t), &iTmp);
 			iSTmp = (unsigned short)iFileCount;
 			pDataHeader->VWrite(1, (unsigned long)sizeof(unsigned short), &iSTmp);
 			iFileOutLength = (iVersion == 4 ? 22 : 20);
 
 			// Names offset & count
 			iTmp = 24 + iTocOutLength + (iDirOutLength * iDirCount) + (iFileOutLength * iFileCount);
-			pDataHeader->VWrite(1, (unsigned long)sizeof(unsigned long), &iTmp);
+			pDataHeader->VWrite(1, sizeof(uint32_t), &iTmp);
 			iSTmp = (unsigned short)(iFileCount + iDirCount);
 			pDataHeader->VWrite(1, (unsigned long)sizeof(unsigned short), &iSTmp);
 
@@ -351,7 +351,7 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
 				qDirsTodo.pop();
 
 				// Name offset
-				pDataHeader->VWrite(1, (unsigned long)sizeof(unsigned long), &iNamesLength);
+				pDataHeader->VWrite(1, sizeof(uint32_t), &iNamesLength);
 
 				// Name
 				long iRestorePos = pDataHeader->VTell();
@@ -396,7 +396,7 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
 				pDataHeader->VSeek(iFilesLoc, IFileStore::IStream::SL_Root);
 
 				// Name offset
-				pDataHeader->VWrite(1, (unsigned long)sizeof(unsigned long), &iNamesLength);
+				pDataHeader->VWrite(1, sizeof(uint32_t), &iNamesLength);
 
 				// Name
 				pDataHeader->VSeek(iNamesStartLocation + iNamesLength, IFileStore::IStream::SL_Root);
@@ -491,15 +491,15 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
 				if (iVersion == 4)
 				{
 					// Data offset
-					pDataHeader->VWrite(1, (unsigned long)sizeof(unsigned long), &iDataLengthTotal);
+					pDataHeader->VWrite(1, sizeof(uint32_t), &iDataLengthTotal);
 
 					// Size compressed / decompressed
-					pDataHeader->VWrite(1, (unsigned long)sizeof(unsigned long), &iCompBuffSize);
-					pDataHeader->VWrite(1, (unsigned long)sizeof(unsigned long), &iInputFileLength);
+					pDataHeader->VWrite(1, sizeof(uint32_t), &iCompBuffSize);
+					pDataHeader->VWrite(1, sizeof(uint32_t), &iInputFileLength);
 
 					// Time
 					iTmp = (unsigned long)(**itr).oLastWriteTime;
-					pDataHeader->VWrite(1, (unsigned long)sizeof(unsigned long), &iTmp);
+					pDataHeader->VWrite(1, sizeof(uint32_t), &iTmp);
 
 					// Flags
 					iSTmp = (unsigned short)iFlags;
@@ -511,11 +511,11 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
 					pDataHeader->VWrite(1, (unsigned long)sizeof(unsigned short), &iFlags);
 
 					// Data offset
-					pDataHeader->VWrite(1, (unsigned long)sizeof(unsigned long), &iDataLengthTotal);
+					pDataHeader->VWrite(1, sizeof(uint32_t), &iDataLengthTotal);
 
 					// Size compressed / decompressed
-					pDataHeader->VWrite(1, (unsigned long)sizeof(unsigned long), &iCompBuffSize);
-					pDataHeader->VWrite(1, (unsigned long)sizeof(unsigned long), &iInputFileLength);
+					pDataHeader->VWrite(1, sizeof(uint32_t), &iCompBuffSize);
+					pDataHeader->VWrite(1, sizeof(uint32_t), &iInputFileLength);
 				}
 			}
 			catch (CRainmanException *pE)
@@ -532,7 +532,7 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
 
 				if (fwrite(sPreDataName, 1, 256, fOut) != 256)
 					throw new CRainmanException(__FILE__, __LINE__, "Write operation failed");
-				if (fwrite(&iUncompressedCRC, sizeof(long), 1, fOut) != 1)
+				if (fwrite(&iUncompressedCRC, sizeof(uint32_t), 1, fOut) != 1)
 					throw new CRainmanException(__FILE__, __LINE__, "Write operation failed");
 			}
 			if (fwrite(pCompressedBuffer, 1, iCompBuffSize, fOut) != iCompBuffSize)
@@ -555,10 +555,10 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
 
 		// Data header size / offset
 		iTmp = pDataHeader->GetDataLength();
-		if (fwrite(&iTmp, sizeof(long), 1, fOut) != 1)
+		if (fwrite(&iTmp, sizeof(uint32_t), 1, fOut) != 1)
 			throw new CRainmanException(__FILE__, __LINE__, "Write operation failed");
 		iTmp += (iVersion == 4 ? 0xB8 : 0xB4);
-		if (fwrite(&iTmp, sizeof(long), 1, fOut) != 1)
+		if (fwrite(&iTmp, sizeof(uint32_t), 1, fOut) != 1)
 			throw new CRainmanException(__FILE__, __LINE__, "Write operation failed");
 
 		// Write data header properly

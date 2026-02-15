@@ -198,7 +198,14 @@ IDirectoryTraverser::IIterator *CModuleFile::VIterate(const char *sPath)
 {
 	if (m_pNewFileMap == 0)
 		m_pNewFileMap = new CFileMap;
-	QUICK_TRYCAT(return m_pNewFileMap->VIterate(sPath);)
+	try
+	{
+		return m_pNewFileMap->VIterate(sPath);
+	}
+	catch (CRainmanException *pE)
+	{
+		throw new CRainmanException(__FILE__, __LINE__, "File view error iterating path", pE);
+	}
 }
 
 unsigned long CModuleFile::VGetEntryPointCount()

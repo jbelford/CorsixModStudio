@@ -137,7 +137,7 @@ static wchar_t *readwideline(IFileStore::IStream *pStream, unsigned long iInitSi
 
 	try
 	{
-		pStream->VRead(1, sizeof(wchar_t), sBuffer + iWordsRead);
+		pStream->VRead(1, sizeof(uint16_t), sBuffer + iWordsRead);
 	}
 	catch (CRainmanException *pE)
 	{
@@ -165,7 +165,7 @@ static wchar_t *readwideline(IFileStore::IStream *pStream, unsigned long iInitSi
 			}
 			if ((char)sBuffer[iWordsRead - 1] == '\x0A')
 				break;
-			pStream->VRead(1, sizeof(wchar_t), sBuffer + iWordsRead);
+			pStream->VRead(1, sizeof(uint16_t), sBuffer + iWordsRead);
 		} while (1);
 	}
 	IGNORE_EXCEPTIONS

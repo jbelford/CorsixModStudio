@@ -561,7 +561,7 @@ CLuaStateTable::~CLuaStateTable()
 
 void CLuaStateTable::add(CLuaStateNode *p) { m_vNodes.push_back(p); }
 
-unsigned long CLuaStateTable::VGetChildCount() { return (unsigned long)m_vNodes.size(); }
+unsigned long CLuaStateTable::VGetChildCount() { return static_cast<unsigned long>(m_vNodes.size()); }
 
 IMetaNode::IMetaTable *CLuaFile2::asMetaTable()
 {

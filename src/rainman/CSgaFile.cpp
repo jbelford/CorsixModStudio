@@ -155,7 +155,7 @@ void CSgaFile::Load(IFileStore::IStream *pStream, tLastWriteTime oWriteTime)
 
 	try
 	{
-		pStream->VRead(1, sizeof(unsigned long), &m_SgaHeader.iVersion);
+		pStream->VRead(1, sizeof(uint32_t), &m_SgaHeader.iVersion);
 	}
 	QCCT("Failed to read from stream")
 
@@ -205,13 +205,13 @@ void CSgaFile::Load(IFileStore::IStream *pStream, tLastWriteTime oWriteTime)
 	}
 	try
 	{
-		pStream->VRead(4, sizeof(long), m_SgaHeader.iMD5);
-		pStream->VRead(1, sizeof(long), &m_SgaHeader.iDataHeaderSize);
-		pStream->VRead(1, sizeof(long), &m_SgaHeader.iDataOffset);
+		pStream->VRead(4, sizeof(uint32_t), m_SgaHeader.iMD5);
+		pStream->VRead(1, sizeof(uint32_t), &m_SgaHeader.iDataHeaderSize);
+		pStream->VRead(1, sizeof(uint32_t), &m_SgaHeader.iDataOffset);
 
 		if (m_SgaHeader.iVersion == 4) // v4 SGAs have an extra 4 byte value here
 		{
-			pStream->VRead(1, sizeof(long), &m_SgaHeader.iPlatform);
+			pStream->VRead(1, sizeof(uint32_t), &m_SgaHeader.iPlatform);
 		}
 	}
 	QCCT("Failed to read from stream")
@@ -743,7 +743,12 @@ void CSgaFile::CStream::VRead(unsigned long iItemCount, unsigned long iItemSize,
 	{
 		m_pRawStream->VRead(iItemCount, iItemSize, pDestination);
 	}
-	CATCH_THROW("Error reading from raw stream")
+	catch (CRainmanException *pE)
+	{
+		throw new CRainmanException(pE, __FILE__, __LINE__,
+		                            "Error reading %lu items (%lu bytes each) from SGA raw stream", iItemCount,
+		                            iItemSize);
+	}
 }
 
 void CSgaFile::CStream::VSeek(long iPosition, IFileStore::IStream::SeekLocation SeekFrom)

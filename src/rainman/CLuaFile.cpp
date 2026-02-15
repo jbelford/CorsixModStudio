@@ -1122,7 +1122,7 @@ void CLuaFile::_CacheLua(const char *sName)
 }
 
 // MetaTable
-unsigned long CLuaFile::VGetChildCount() { return (unsigned long)m_lstGlobals.size(); }
+unsigned long CLuaFile::VGetChildCount() { return static_cast<unsigned long>(m_lstGlobals.size()); }
 
 IMetaNode *CLuaFile::VGetChild(unsigned long iIndex)
 {
@@ -1705,7 +1705,7 @@ CLuaFile::CMetaTable::~CMetaTable()
 		free(m_sRef);
 }
 
-unsigned long CLuaFile::CMetaTable::VGetChildCount() { return (unsigned long)m_vecChildren.size(); }
+unsigned long CLuaFile::CMetaTable::VGetChildCount() { return static_cast<unsigned long>(m_vecChildren.size()); }
 
 IMetaNode *CLuaFile::CMetaTable::VGetChild(unsigned long iIndex)
 {

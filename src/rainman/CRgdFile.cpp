@@ -125,7 +125,7 @@ void CRgdFile::New(long iVersion)
 	m_pDataChunk->RootEntry.pParentFile = (CRgdFile *)this;
 	m_pDataChunk->sChunkyType = 0;
 	m_pDataChunk->iVersion = 1;
-	m_pDataChunk->iChunkLength = sizeof(unsigned long) + sizeof(long);
+	m_pDataChunk->iChunkLength = sizeof(uint32_t) + sizeof(uint32_t);
 	m_pDataChunk->iStringLength = 0;
 	m_pDataChunk->sString = 0;
 	m_pDataChunk->iUnknown1 = 0xffffffff;
@@ -240,7 +240,7 @@ void CRgdFile::Save(IFileStore::IOutputStream *pStream)
 				throw new CRainmanException(__FILE__, __LINE__, "Cannot copy data", pE);
 			}
 			delete pDataStr;
-			(**itr).iChunkLength = (**itr).iStringLength + sizeof(unsigned long) + sizeof(long) + (**itr).iDataLength;
+			(**itr).iChunkLength = (**itr).iStringLength + sizeof(uint32_t) + sizeof(uint32_t) + (**itr).iDataLength;
 			(**itr).iCRC = crc32(crc32(0L, Z_NULL, 0), (const Bytef *)(**itr).pData, (**itr).iDataLength);
 		}
 		try
@@ -800,7 +800,7 @@ void CRgdFile::SetDescriptorString(const char *sString)
 	strcpy(m_pDataChunk->sString, sString);
 	m_pDataChunk->iStringLength = (long)strlen(sString);
 	m_pDataChunk->iChunkLength =
-	    m_pDataChunk->iStringLength + sizeof(unsigned long) + sizeof(long) + m_pDataChunk->iDataLength;
+	    m_pDataChunk->iStringLength + sizeof(uint32_t) + sizeof(uint32_t) + m_pDataChunk->iDataLength;
 }
 
 long CRgdFile::GetChunkVersion()
@@ -853,7 +853,7 @@ void CRgdFile::_Clean()
 		}
 
 		(**itr).iVersion = 0;
-		(**itr).iChunkLength = sizeof(unsigned long) + sizeof(long);
+		(**itr).iChunkLength = sizeof(uint32_t) + sizeof(uint32_t);
 		(**itr).iStringLength = 0;
 		(**itr).iCRC = crc32(0L, Z_NULL, 0);
 		(**itr).iDataLength = 0;
@@ -917,7 +917,7 @@ void CRgdFile::_WriteRawRgdData(IFileStore::IOutputStream *pStream, _RgdEntry *p
 	size_t iKeyCount = vEntries.size();
 	try
 	{
-		pStream->VWrite(1, sizeof(long), &iKeyCount);
+		pStream->VWrite(1, sizeof(uint32_t), &iKeyCount);
 	}
 	CATCH_THROW("Output error")
 
@@ -930,15 +930,15 @@ void CRgdFile::_WriteRawRgdData(IFileStore::IOutputStream *pStream, _RgdEntry *p
 	CATCH_THROW("VTell error")
 
 	long iDataLen = 0;
-	long iDataOffset = (iKeyCount * (3 * sizeof(long))) + iOurBegin;
+	long iDataOffset = (iKeyCount * (3 * sizeof(uint32_t))) + iOurBegin;
 	for (long i = 0; i < iKeyCount; ++i)
 	{
 		long iTmp = 0;
 		try
 		{
-			pStream->VWrite(1, sizeof(long), &iTmp);
-			pStream->VWrite(1, sizeof(long), &iTmp);
-			pStream->VWrite(1, sizeof(long), &iTmp);
+			pStream->VWrite(1, sizeof(uint32_t), &iTmp);
+			pStream->VWrite(1, sizeof(uint32_t), &iTmp);
+			pStream->VWrite(1, sizeof(uint32_t), &iTmp);
 		}
 		CATCH_THROW("Output error")
 	}
@@ -960,14 +960,14 @@ void CRgdFile::_WriteRawRgdData(IFileStore::IOutputStream *pStream, _RgdEntry *p
 			iPad = sizeof(float);
 			break;
 		case DT_Integer:
-			iPad = sizeof(unsigned long);
+			iPad = sizeof(uint32_t);
 			break;
 		case DT_WString:
-			iPad = sizeof(wchar_t);
+			iPad = sizeof(uint16_t);
 			break;
 		case DT_Table:
 		case sk_TableInt:
-			iPad = sizeof(unsigned long); // Tables are a collection of unsigned longs
+			iPad = sizeof(uint32_t); // Tables are a collection of unsigned longs
 			break;
 		};
 		if (iDataLen % iPad)
@@ -1003,9 +1003,9 @@ void CRgdFile::_WriteRawRgdData(IFileStore::IOutputStream *pStream, _RgdEntry *p
 				bNumericTable = true;
 			not_all_numeric:;
 			}
-			pStream->VWrite(1, sizeof(long), &(**itr).iHash);
-			pStream->VWrite(1, sizeof(long), &iType);
-			pStream->VWrite(1, sizeof(long), &iDataLen);
+			pStream->VWrite(1, sizeof(uint32_t), &(**itr).iHash);
+			pStream->VWrite(1, sizeof(uint32_t), &iType);
+			pStream->VWrite(1, sizeof(uint32_t), &iDataLen);
 		}
 		CATCH_THROW("Output error")
 
@@ -1046,10 +1046,10 @@ void CRgdFile::_WriteRawRgdData(IFileStore::IOutputStream *pStream, _RgdEntry *p
 		case DT_Integer:
 			try
 			{
-				pStream->VWrite(1, sizeof(unsigned long), &(**itr).Data.i);
+				pStream->VWrite(1, sizeof(uint32_t), &(**itr).Data.i);
 			}
 			CATCH_THROW("Output error")
-			iDataLen += sizeof(unsigned long);
+			iDataLen += sizeof(uint32_t);
 			break;
 		case DT_Bool:
 			try
@@ -1110,8 +1110,8 @@ void CRgdFile::_ProcessRawRgdData(IFileStore::IStream *pStream, _RgdEntry *pDest
 	long iKeyCount, iDataOffset;
 	try
 	{
-		pStream->VRead(1, sizeof(long), &iKeyCount);
-		iDataOffset = (iKeyCount * (3 * sizeof(long))) + pStream->VTell();
+		pStream->VRead(1, sizeof(uint32_t), &iKeyCount);
+		iDataOffset = (iKeyCount * (3 * sizeof(uint32_t))) + pStream->VTell();
 	}
 	CATCH_THROW("Stream problem")
 
@@ -1128,13 +1128,13 @@ void CRgdFile::_ProcessRawRgdData(IFileStore::IStream *pStream, _RgdEntry *pDest
 
 		try
 		{
-			pStream->VRead(1, sizeof(long), &pEntry->iHash);
+			pStream->VRead(1, sizeof(uint32_t), &pEntry->iHash);
 		}
 		CATCH_THROW("Input error")
 
 		try
 		{
-			pStream->VRead(1, sizeof(long), &pEntry->Type);
+			pStream->VRead(1, sizeof(uint32_t), &pEntry->Type);
 		}
 		CATCH_THROW("Input error")
 
@@ -1172,7 +1172,7 @@ void CRgdFile::_ProcessRawRgdData(IFileStore::IStream *pStream, _RgdEntry *pDest
 
 		try
 		{
-			pStream->VRead(1, sizeof(long), &iOffset);
+			pStream->VRead(1, sizeof(uint32_t), &iOffset);
 		}
 		CATCH_THROW("Input error")
 
@@ -1196,7 +1196,7 @@ void CRgdFile::_ProcessRawRgdData(IFileStore::IStream *pStream, _RgdEntry *pDest
 		case DT_Integer:
 			try
 			{
-				pStream->VRead(1, sizeof(unsigned long), &pEntry->Data.i);
+				pStream->VRead(1, sizeof(uint32_t), &pEntry->Data.i);
 			}
 			CATCH_THROW("Input error")
 			break;
@@ -1255,7 +1255,7 @@ void CRgdFile::_ProcessRawRgdData(IFileStore::IStream *pStream, _RgdEntry *pDest
 			{
 				try
 				{
-					pStream->VRead(1, sizeof(wchar_t), sTmp + iLen);
+					pStream->VRead(1, sizeof(uint16_t), sTmp + iLen);
 				}
 				catch (CRainmanException *pE)
 				{
@@ -1759,7 +1759,7 @@ CRgdFile::CMetaTable::CMetaTable(_RgdEntry *pData)
 
 CRgdFile::CMetaTable::~CMetaTable() {}
 
-unsigned long CRgdFile::CMetaTable::VGetChildCount() { return (unsigned long)m_vecChildren.size(); }
+unsigned long CRgdFile::CMetaTable::VGetChildCount() { return static_cast<unsigned long>(m_vecChildren.size()); }
 
 IMetaNode *CRgdFile::CMetaTable::VGetChild(unsigned long iIndex)
 {
@@ -1932,8 +1932,8 @@ void CRgdFile::_ReadRainmanRgdData(IFileStore::IStream *pInput, CRgdFile::_RgdEn
 {
 	// Name
 	unsigned long iHash, iNameLen;
-	pInput->VRead(1, sizeof(long), &iHash);
-	pInput->VRead(1, sizeof(long), &iNameLen);
+	pInput->VRead(1, sizeof(uint32_t), &iHash);
+	pInput->VRead(1, sizeof(uint32_t), &iNameLen);
 	if (bSetName)
 	{
 		if (iNameLen == 0)
@@ -1996,7 +1996,7 @@ void CRgdFile::_ReadRainmanRgdData(IFileStore::IStream *pInput, CRgdFile::_RgdEn
 	pInput->VRead(1, 1, &cDataType);
 	pDestination->Type = (eDataTypes)cDataType;
 	unsigned long iDataLen;
-	pInput->VRead(1, sizeof(long), &iDataLen);
+	pInput->VRead(1, sizeof(uint32_t), &iDataLen);
 
 	switch (pDestination->Type)
 	{
@@ -2021,9 +2021,9 @@ void CRgdFile::_ReadRainmanRgdData(IFileStore::IStream *pInput, CRgdFile::_RgdEn
 	}
 	case DT_Integer:
 	{
-		if (iDataLen == sizeof(long))
+		if (iDataLen == sizeof(uint32_t))
 		{
-			pInput->VRead(1, sizeof(long), &pDestination->Data.i);
+			pInput->VRead(1, sizeof(uint32_t), &pDestination->Data.i);
 		}
 		else if (iDataLen == sizeof(short))
 		{
@@ -2093,9 +2093,9 @@ void CRgdFile::_ReadRainmanRgdData(IFileStore::IStream *pInput, CRgdFile::_RgdEn
 
 void CRgdFile::_WriteRainmanRgdData(CMemoryStore::COutStream *pOutput, CRgdFile::_RgdEntry *pSource)
 {
-	pOutput->VWrite(1, sizeof(long), &pSource->iHash);
+	pOutput->VWrite(1, sizeof(uint32_t), &pSource->iHash);
 	unsigned long iL = pSource->sName ? strlen(pSource->sName) : 0;
-	pOutput->VWrite(1, sizeof(long), &iL);
+	pOutput->VWrite(1, sizeof(uint32_t), &iL);
 	if (iL)
 		pOutput->VWrite(iL, 1, pSource->sName);
 	unsigned char cType = pSource->Type;
@@ -2104,32 +2104,32 @@ void CRgdFile::_WriteRainmanRgdData(CMemoryStore::COutStream *pOutput, CRgdFile:
 	{
 	case DT_Float:
 		iL = sizeof(float);
-		pOutput->VWrite(1, sizeof(long), &iL);
+		pOutput->VWrite(1, sizeof(uint32_t), &iL);
 		pOutput->VWrite(1, sizeof(float), &pSource->Data.f);
 		break;
 
 	case DT_Integer:
-		iL = sizeof(long);
-		pOutput->VWrite(1, sizeof(long), &iL);
-		pOutput->VWrite(1, sizeof(long), &pSource->Data.i);
+		iL = sizeof(uint32_t);
+		pOutput->VWrite(1, sizeof(uint32_t), &iL);
+		pOutput->VWrite(1, sizeof(uint32_t), &pSource->Data.i);
 		break;
 
 	case DT_Bool:
 		iL = sizeof(bool);
-		pOutput->VWrite(1, sizeof(long), &iL);
+		pOutput->VWrite(1, sizeof(uint32_t), &iL);
 		pOutput->VWrite(1, sizeof(bool), &pSource->Data.b);
 		break;
 
 	case DT_String:
 		iL = pSource->Data.s ? strlen(pSource->Data.s) : 0;
-		pOutput->VWrite(1, sizeof(long), &iL);
+		pOutput->VWrite(1, sizeof(uint32_t), &iL);
 		if (iL)
 			pOutput->VWrite(iL, 1, pSource->Data.s);
 		break;
 
 	case DT_WString:
 		iL = pSource->Data.ws ? wcslen(pSource->Data.ws) : 0;
-		pOutput->VWrite(1, sizeof(long), &iL);
+		pOutput->VWrite(1, sizeof(uint32_t), &iL);
 		if (iL)
 			pOutput->VWrite(iL, 2, pSource->Data.ws);
 		break;
@@ -2139,7 +2139,7 @@ void CRgdFile::_WriteRainmanRgdData(CMemoryStore::COutStream *pOutput, CRgdFile:
 	{
 		std::vector<_RgdEntry *> *pT = pSource->Data.t;
 		iL = pT->size();
-		pOutput->VWrite(1, sizeof(long), &iL);
+		pOutput->VWrite(1, sizeof(uint32_t), &iL);
 		for (std::vector<_RgdEntry *>::iterator itr = pT->begin(); itr != pT->end(); ++itr)
 		{
 			_WriteRainmanRgdData(pOutput, *itr);
@@ -2149,7 +2149,7 @@ void CRgdFile::_WriteRainmanRgdData(CMemoryStore::COutStream *pOutput, CRgdFile:
 
 	default:
 		iL = 0;
-		pOutput->VWrite(1, sizeof(long), &iL);
+		pOutput->VWrite(1, sizeof(uint32_t), &iL);
 		break;
 	};
 }

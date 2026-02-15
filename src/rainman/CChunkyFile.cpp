@@ -124,12 +124,12 @@ void CChunkyFile::Load(IFileStore::IStream *pStream)
 		}
 
 		pStream->Read(m_iVersion);
-		pStream->VRead(1, sizeof(long), &m_iUnknown1);
+		pStream->VRead(1, sizeof(uint32_t), &m_iUnknown1);
 		if (m_iVersion >= 3)
 		{
-			pStream->VRead(1, sizeof(long), &m_iUnknown2);
-			pStream->VRead(1, sizeof(long), &m_iUnknown3);
-			pStream->VRead(1, sizeof(long), &m_iUnknown4);
+			pStream->VRead(1, sizeof(uint32_t), &m_iUnknown2);
+			pStream->VRead(1, sizeof(uint32_t), &m_iUnknown3);
+			pStream->VRead(1, sizeof(uint32_t), &m_iUnknown4);
 		}
 	}
 	catch (CRainmanException *pE)
@@ -151,7 +151,7 @@ void CChunkyFile::Load(IFileStore::IStream *pStream)
 	catch (CRainmanException *pE)
 	{
 		throw new CRainmanException(pE, __FILE__, __LINE__, "Error loading root chunk (#%lu)",
-		                            (unsigned long)m_vChunks.size());
+		                            static_cast<unsigned long>(m_vChunks.size()));
 	}
 
 	delete pChunk;
@@ -163,11 +163,11 @@ void CChunkyFile::Save(IFileStore::IOutputStream *pStream)
 	try
 	{
 		pStream->VWrite(16, 1, (void *)m_sHeader);
-		pStream->VWrite(1, sizeof(long), &m_iVersion);
-		pStream->VWrite(1, sizeof(long), &m_iUnknown1);
-		pStream->VWrite(1, sizeof(long), &m_iUnknown2);
-		pStream->VWrite(1, sizeof(long), &m_iUnknown3);
-		pStream->VWrite(1, sizeof(long), &m_iUnknown4);
+		pStream->VWrite(1, sizeof(uint32_t), &m_iVersion);
+		pStream->VWrite(1, sizeof(uint32_t), &m_iUnknown1);
+		pStream->VWrite(1, sizeof(uint32_t), &m_iUnknown2);
+		pStream->VWrite(1, sizeof(uint32_t), &m_iUnknown3);
+		pStream->VWrite(1, sizeof(uint32_t), &m_iUnknown4);
 	}
 	catch (CRainmanException *pE)
 	{
@@ -206,13 +206,13 @@ bool CChunkyFile::CChunk::_Load(IFileStore::IStream *pStream, long iChunkyVersio
 	try
 	{
 		pStream->VRead(4, 1, (void *)m_sName);
-		pStream->VRead(1, sizeof(long), &m_iVersion);
-		pStream->VRead(1, sizeof(unsigned long), &m_iDataLength);
-		pStream->VRead(1, sizeof(unsigned long), &iDescriptorLength);
+		pStream->VRead(1, sizeof(uint32_t), &m_iVersion);
+		pStream->VRead(1, sizeof(uint32_t), &m_iDataLength);
+		pStream->VRead(1, sizeof(uint32_t), &iDescriptorLength);
 		if (iChunkyVersion >= 3)
 		{
-			pStream->VRead(1, sizeof(unsigned long), &m_iUnknown1);
-			pStream->VRead(1, sizeof(unsigned long), &m_iUnknown2);
+			pStream->VRead(1, sizeof(uint32_t), &m_iUnknown1);
+			pStream->VRead(1, sizeof(uint32_t), &m_iUnknown2);
 		}
 	}
 	catch (CRainmanException *pE)
@@ -314,7 +314,7 @@ unsigned long CChunkyFile::CChunk::_FoldUpdateSize()
 	}
 	m_iDataLength = iDataLength;
 
-	iDataLength += 8 + (5 * sizeof(long));
+	iDataLength += 8 + (5 * sizeof(uint32_t));
 	if (m_sDescriptor != 0 && strlen(m_sDescriptor))
 		iDataLength += strlen(m_sDescriptor) + 1;
 	return iDataLength;
@@ -344,11 +344,11 @@ void CChunkyFile::CChunk::_Save(IFileStore::IOutputStream *pStream)
 	try
 	{
 		pStream->VWrite(4, 1, (void *)m_sName);
-		pStream->VWrite(1, sizeof(long), &m_iVersion);
-		pStream->VWrite(1, sizeof(unsigned long), &m_iDataLength);
-		pStream->VWrite(1, sizeof(unsigned long), &iDescriptorLength);
-		pStream->VWrite(1, sizeof(unsigned long), &m_iUnknown1);
-		pStream->VWrite(1, sizeof(unsigned long), &m_iUnknown2);
+		pStream->VWrite(1, sizeof(uint32_t), &m_iVersion);
+		pStream->VWrite(1, sizeof(uint32_t), &m_iDataLength);
+		pStream->VWrite(1, sizeof(uint32_t), &iDescriptorLength);
+		pStream->VWrite(1, sizeof(uint32_t), &m_iUnknown1);
+		pStream->VWrite(1, sizeof(uint32_t), &m_iUnknown2);
 		pStream->VWrite(iDescriptorLength, 1, (void *)m_sDescriptor);
 	}
 	catch (CRainmanException *pE)

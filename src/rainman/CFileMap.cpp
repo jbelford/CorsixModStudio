@@ -20,6 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "CFileMap.h"
 #include "Exception.h"
 #include <algorithm>
+#include <string>
 #include "memdebug.h"
 
 CFileMap::CFileMap()
@@ -319,7 +320,7 @@ IFileStore::IStream *CFileMap::VOpenStream(const char *sFile)
 	}
 }
 
-unsigned long CFileMap::VGetEntryPointCount() { return (unsigned long)m_vTOCs.size(); }
+unsigned long CFileMap::VGetEntryPointCount() { return static_cast<unsigned long>(m_vTOCs.size()); }
 
 const char *CFileMap::VGetEntryPoint(unsigned long iID)
 {
@@ -434,10 +435,10 @@ IDirectoryTraverser::IIterator *CFileMap::VIterate(const char *sPath)
 	}
 	catch (CRainmanException *pE)
 	{
-		throw new CRainmanException(pE, __FILE__, __LINE__, "Problem finding \'%s\'", sPath);
+		throw new CRainmanException(pE, __FILE__, __LINE__, "Could not find folder \'%s\'", sPath);
 	}
 	if (pFold == 0)
-		throw new CRainmanException(0, __FILE__, __LINE__, "Problem finding \'%s\'", sPath);
+		throw new CRainmanException(0, __FILE__, __LINE__, "Folder \'%s\' not found (resolved to null)", sPath);
 
 	return new CIterator(pFold, (CFileMap *)this);
 }
@@ -516,9 +517,9 @@ void *CFileMap::CIterator::VGetTag(long iTag)
 		if (iTag == 1)
 			return (void *)pSrc->sSourceName;
 		if (iTag == 2)
-			return (void *)(unsigned long)pSrc->GetMod();
+			return (void *)(uintptr_t)pSrc->GetMod();
 		if (iTag == 3)
-			return (void *)(unsigned long)(pSrc->GetSourceType() ? 1 : 0);
+			return (void *)(uintptr_t)(pSrc->GetSourceType() ? 1 : 0);
 	}
 
 	return 0;
@@ -605,7 +606,16 @@ CFileMap::_File *CFileMap::_FindFile(const char *sName, CFileMap::_Folder **ppFo
 
 	if (pToc == 0)
 	{
-		throw new CRainmanException(0, __FILE__, __LINE__, "Unknown TOC in path \'%s\'", sName);
+		// Build list of available TOC names for diagnostic output
+		std::string sAvailable;
+		for (std::vector<_TOC *>::iterator itr = m_vTOCs.begin(); itr != m_vTOCs.end(); ++itr)
+		{
+			if (!sAvailable.empty())
+				sAvailable += ", ";
+			sAvailable += (**itr).sName;
+		}
+		throw new CRainmanException(0, __FILE__, __LINE__, "Unknown TOC \'%.*s\' in path \'%s\' (available TOCs: %s)",
+		                            (int)iPartLen, sName, sName, sAvailable.empty() ? "(none)" : sAvailable.c_str());
 	}
 
 	_Folder *pFolder = pToc->pRootFolder;

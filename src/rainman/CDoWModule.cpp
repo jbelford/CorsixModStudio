@@ -1647,7 +1647,7 @@ void CDoWModule::SetVersionMinor(long iValue) { m_iModVersionMinor = iValue; }
 
 void CDoWModule::SetVersionRevision(long iValue) { m_iModVersionRevision = iValue; }
 
-long CDoWModule::GetDataFolderCount() const { return (long)m_mapDataFolders.size(); }
+long CDoWModule::GetDataFolderCount() const { return static_cast<long>(m_mapDataFolders.size()); }
 
 const char *CDoWModule::GetDataFolder(long iIndex)
 {
@@ -1730,7 +1730,7 @@ void CDoWModule::RemoveDataFolder(long iIndex)
 	m_mapDataFolders.erase(iActualErase);
 }
 
-long CDoWModule::GetArchiveCount() const { return (long)m_mapArchiveFiles.size(); }
+long CDoWModule::GetArchiveCount() const { return static_cast<long>(m_mapArchiveFiles.size()); }
 
 const char *CDoWModule::GetArchive(long iIndex)
 {
@@ -1829,7 +1829,7 @@ void CDoWModule::RemoveArchive(long iIndex)
 	m_vSgas.erase(m_vSgas.begin() + iIndex);
 }
 
-long CDoWModule::GetRequiredCount() const { return (long)m_mapRequiredMods.size(); }
+long CDoWModule::GetRequiredCount() const { return static_cast<long>(m_mapRequiredMods.size()); }
 
 const char *CDoWModule::GetRequired(long iIndex)
 {
@@ -1928,7 +1928,7 @@ void CDoWModule::RemoveRequired(long iIndex)
 	m_vInheritedMods.erase(m_vInheritedMods.begin() + iIndex);
 }
 
-long CDoWModule::GetCompatableCount() const { return (long)m_mapCompatableMods.size(); }
+long CDoWModule::GetCompatableCount() const { return static_cast<long>(m_mapCompatableMods.size()); }
 
 const char *CDoWModule::GetCompatable(long iIndex)
 {
@@ -2090,7 +2090,7 @@ const wchar_t *CDoWModule::ResolveUCS(unsigned long iStringID)
 	throw new CRainmanException(0, __FILE__, __LINE__, "$%lu no key!", iStringID);
 }
 
-long CDoWModule::GetUcsFileCount() const { return (long)m_vUcsFiles.size(); }
+long CDoWModule::GetUcsFileCount() const { return static_cast<long>(m_vUcsFiles.size()); }
 
 const char *CDoWModule::GetUcsFileName(long iIndex) const
 {
