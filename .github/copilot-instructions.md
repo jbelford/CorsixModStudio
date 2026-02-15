@@ -88,6 +88,17 @@ IFileStore::IStream* pStream = store.VOpenStream(pRange);
 // ... read from pStream, then delete pStream
 ```
 
+## Tool Usage
+
+### Documentation lookups
+Use **Context7** (`context7-resolve-library-id` → `context7-query-docs`) to look up documentation for libraries, frameworks, and general programming technologies (e.g., CMake, Google Test, wxWidgets, Lua, vcpkg).
+
+### Windows & Microsoft technologies
+Use **Microsoft Learn** (`microsoft-learn-microsoft_docs_search`, `microsoft-learn-microsoft_code_sample_search`, `microsoft-learn-microsoft_docs_fetch`) for Windows-specific APIs, MSVC compiler behavior, Win32, COM, DirectX, and any other Microsoft/Azure documentation.
+
+### Crash debugging
+Use **WinDbg** tools (`windbg-open_windbg_dump`, `windbg-run_windbg_cmd`, `windbg-open_windbg_remote`) to analyze crash dumps (`.dmp` files) and connect to remote debugging sessions. Use `windbg-list_windbg_dumps` to discover available dump files.
+
 ### Legacy code considerations
 This is a 2006 codebase being ported to C++17/x64. Expect and preserve:
 - `unsigned long` instead of `size_t` or `uint32_t` in existing APIs (changing would cascade)

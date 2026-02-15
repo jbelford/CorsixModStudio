@@ -64,7 +64,7 @@
         "type": "cppvsdbg",
         "request": "launch",
         "program": "${workspaceFolder}/build/bin/Debug/CorsixModStudio.exe",
-        "cwd": "${workspaceFolder}",
+        "cwd": "${workspaceFolder}/build/bin/Debug",
         "stopAtEntry": false,
         "console": "integratedTerminal",
       },

@@ -1,6 +1,11 @@
-# Relic Format Algorithms
+# Documentation
 
-Documentation for the file format handling algorithms in the Rainman library.
+## Architecture
+
+| Document | Description |
+|----------|-------------|
+| [Architecture (As-Is)](architecture.md) | Current codebase structure, class hierarchy, dependency graph, technical debt inventory |
+| [Target Architecture](target-architecture.md) | Proposed end-state, refactoring roadmap, safe entry points, testing strategy |
 
 ## Format Documentation
 
