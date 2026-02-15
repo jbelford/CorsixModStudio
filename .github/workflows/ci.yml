@@ -3,18 +3,18 @@ name: CI
 on:
   push:
     paths:
-      - 'src/**'
-      - 'tests/**'
-      - 'CMakeLists.txt'
-      - 'vcpkg.json'
-      - '.github/workflows/ci.yml'
+      - "src/**"
+      - "tests/**"
+      - "CMakeLists.txt"
+      - "vcpkg.json"
+      - ".github/workflows/ci.yml"
   pull_request:
     paths:
-      - 'src/**'
-      - 'tests/**'
-      - 'CMakeLists.txt'
-      - 'vcpkg.json'
-      - '.github/workflows/ci.yml'
+      - "src/**"
+      - "tests/**"
+      - "CMakeLists.txt"
+      - "vcpkg.json"
+      - ".github/workflows/ci.yml"
 
 jobs:
   build-and-test:
@@ -35,13 +35,10 @@ jobs:
           vcpkgGitCommitId: e6ebaa9c3ca8fca90c63af62fc895c2486609580
 
       - name: Configure CMake
-        run: >
-          cmake -B build -S .
-          -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
-          -DBUILD_TESTING=ON
+        run: cmake --preset default
 
       - name: Build
-        run: cmake --build build --config Debug
+        run: cmake --build --preset debug
 
       - name: Test
-        run: ctest --test-dir build -C Debug --output-on-failure
+        run: ctest --preset debug
