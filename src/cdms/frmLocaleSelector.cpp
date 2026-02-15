@@ -20,6 +20,7 @@
 #include "strings.h"
 #include "config.h"
 #include "Common.h"
+#include <wx/fileconf.h>
 
 BEGIN_EVENT_TABLE(frmLocaleSelector, wxDialog)
 EVT_SIZE(frmLocaleSelector::OnSize)
@@ -112,6 +113,13 @@ void frmLocaleSelector::OnNewClick(wxCommandEvent &event)
 	{
 		TheConfig->Write(AppStr(config_mod_locale), sSel);
 		TheConfig->Write(AppStr(config_mod_localeremember), m_pCheckbox->GetValue());
+
+		// Flush immediately so locale preference persists even if the
+		// application exits before OnExit's Flush() is reached.
+		wxFileConfig *pCfg = dynamic_cast<wxFileConfig *>(wxConfigBase::Get());
+		if (pCfg)
+			pCfg->Flush();
+
 		EndModal(wxID_OK);
 	}
 }

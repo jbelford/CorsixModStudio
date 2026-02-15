@@ -1003,21 +1003,11 @@ void ConstructFrame::DoLoadMod(wxString sPath, eLoadModGames eGame)
 
 		bool bSkipLocale;
 		TheConfig->Read(AppStr(config_mod_localeremember), &bSkipLocale, false);
-		// DEBUG: show config state when reading locale preference
-		wxMessageBox(wxString::Format(wxT("Config path: %s\nremember_locale=%d\nMod hash: %s"), TheConfig->GetPath(),
-		                              (int)bSkipLocale, wxString(sModConfigKeyHex)),
-		             wxT("Locale Read Debug"), wxOK | wxICON_INFORMATION);
 		if (!bSkipLocale)
 		{
 			frmLocaleSelector *pLocaleSelect = new frmLocaleSelector(AppStr(localeselect_title), eGame);
 			pLocaleSelect->ShowModal();
 			delete pLocaleSelect;
-			// DEBUG: verify what was written
-			bool bVerify;
-			TheConfig->Read(AppStr(config_mod_localeremember), &bVerify, false);
-			wxMessageBox(wxString::Format(wxT("After dialog:\nConfig path: %s\nremember_locale=%d"),
-			                              TheConfig->GetPath(), (int)bVerify),
-			             wxT("Locale Write Debug"), wxOK | wxICON_INFORMATION);
 		}
 
 		char *sLocale = wxStringToAscii(TheConfig->Read(AppStr(config_mod_locale), AppStr(localeselect_default)));

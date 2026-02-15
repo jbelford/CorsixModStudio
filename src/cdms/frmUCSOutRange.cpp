@@ -19,6 +19,7 @@
 #include "strings.h"
 #include "config.h"
 #include "Common.h"
+#include <wx/fileconf.h>
 
 BEGIN_EVENT_TABLE(frmUCSOutOfRange, wxDialog)
 EVT_SIZE(frmUCSOutOfRange::OnSize)
@@ -66,6 +67,11 @@ void frmUCSOutOfRange::OnYesClick(wxCommandEvent &event)
 {
 	UNUSED(event);
 	TheConfig->Write(AppStr(config_mod_ucsrangeremember), m_pCheckbox->GetValue());
+	// Flush immediately so preference persists even if the
+	// application exits before OnExit's Flush() is reached.
+	wxFileConfig *pCfg = dynamic_cast<wxFileConfig *>(wxConfigBase::Get());
+	if (pCfg)
+		pCfg->Flush();
 	EndModal(wxID_YES);
 }
 
@@ -73,5 +79,8 @@ void frmUCSOutOfRange::OnNoClick(wxCommandEvent &event)
 {
 	UNUSED(event);
 	TheConfig->Write(AppStr(config_mod_ucsrangeremember), m_pCheckbox->GetValue());
+	wxFileConfig *pCfg = dynamic_cast<wxFileConfig *>(wxConfigBase::Get());
+	if (pCfg)
+		pCfg->Flush();
 	EndModal(wxID_NO);
 }
