@@ -18,6 +18,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 #include "rainman/module/CModuleFile.h"
+#include "rainman/module/CModuleParser.h"
 #include "rainman/archive/CSgaFile.h"
 #include "rainman/localization/CUcsFile.h"
 #include "rainman/module/CDoWFileView.h"
@@ -557,280 +558,67 @@ void CModuleFile::LoadModuleFile(const char *sFileName, CALLBACK_ARG)
     if (sDotLocation)
         *sDotLocation = 0;
 
-    // Open module file and start processing directives
-    FILE *fModule = fopen(sFileName, "rb");
-    if (fModule == 0)
-        throw new CRainmanException(0, __FILE__, __LINE__, "Unable to open \'%s\' for reading", sFileName);
-    CallCallback(THE_CALLBACK, "Parsing file \'%s\'", sFileName);
+    // Parse the module file
+    auto result = CModuleParser::Parse(sFileName);
+    m_metadata = std::move(result.metadata);
+    m_eModuleType = static_cast<eModuleType>(result.iModuleType);
 
-    CCohDataSource *pCurrentDataSource = 0; // If we're in a CoH data source section, this is the pointer to it
-    bool bInGlobal;                         // Are we in the "global" section
-    while (!feof(fModule))
+    // Populate folder handlers from parse result
+    for (auto &entry : result.folders)
     {
-        char *sLine = Util_fgetline(fModule);
-        if (sLine == 0)
-        {
-            fclose(fModule);
-            throw new CRainmanException(__FILE__, __LINE__, "Error reading from file");
-        }
-        char *sCommentBegin = strchr(sLine, ';');
-        if (sCommentBegin)
-            *sCommentBegin = 0;
-        char *sEqualsChar = strchr(sLine, '=');
-        if (sEqualsChar)
-        {
-            // Key = Value
-            char *sKey = sLine;
-            char *sValue = sEqualsChar + 1;
-            *sEqualsChar = 0;
-            Util_TrimWhitespace(&sKey);
-            Util_TrimWhitespace(&sValue);
-            if (bInGlobal)
-            {
-                try
-                {
-                    if (stricmp(sKey, "UIName") == 0)
-                    {
-                        if (m_metadata.m_sUiName)
-                            free(m_metadata.m_sUiName);
-                        m_metadata.m_sUiName = CHECK_MEM(strdup(sValue));
-                    }
-                    else if (stricmp(sKey, "Name") == 0)
-                    {
-                        if (m_metadata.m_sName)
-                            free(m_metadata.m_sName);
-                        m_metadata.m_sName = CHECK_MEM(strdup(sValue));
-                    }
-                    else if (stricmp(sKey, "Description") == 0)
-                    {
-                        if (m_metadata.m_sDescription)
-                            free(m_metadata.m_sDescription);
-                        m_metadata.m_sDescription = CHECK_MEM(strdup(sValue));
-                    }
-                    else if (stricmp(sKey, "DllName") == 0)
-                    {
-                        if (m_metadata.m_sDllName)
-                            free(m_metadata.m_sDllName);
-                        m_metadata.m_sDllName = CHECK_MEM(strdup(sValue));
-                    }
-                    else if (stricmp(sKey, "ModFolder") == 0)
-                    {
-                        if (m_metadata.m_sModFolder)
-                            free(m_metadata.m_sModFolder);
-                        m_metadata.m_sModFolder = CHECK_MEM(strdup(sValue));
-                    }
-                    else if (stricmp(sKey, "TextureFE") == 0)
-                    {
-                        if (m_metadata.m_sTextureFe)
-                            free(m_metadata.m_sTextureFe);
-                        m_metadata.m_sTextureFe = CHECK_MEM(strdup(sValue));
-                    }
-                    else if (stricmp(sKey, "TextureIcon") == 0)
-                    {
-                        if (m_metadata.m_sTextureIcon)
-                            free(m_metadata.m_sTextureIcon);
-                        m_metadata.m_sTextureIcon = CHECK_MEM(strdup(sValue));
-                    }
-                    else if (stricmp(sKey, "PatcherUrl") == 0)
-                    {
-                        if (m_metadata.m_sPatcherUrl)
-                            free(m_metadata.m_sPatcherUrl);
-                        m_metadata.m_sPatcherUrl = CHECK_MEM(strdup(sValue));
-                    }
-                    else if (stricmp(sKey, "LocFolder") == 0)
-                    {
-                        if (m_metadata.m_sLocFolder)
-                            free(m_metadata.m_sLocFolder);
-                        m_metadata.m_sLocFolder = CHECK_MEM(strdup(sValue));
-                    }
-                    else if (stricmp(sKey, "ScenarioPackFolder") == 0)
-                    {
-                        if (m_metadata.m_sScenarioPackFolder)
-                            free(m_metadata.m_sScenarioPackFolder);
-                        m_metadata.m_sScenarioPackFolder = CHECK_MEM(strdup(sValue));
-                    }
-                    else if (stricmp(sKey, "ModVersion") == 0)
-                    {
-                        char *sDotChar = strchr(sValue, '.');
-                        if (sDotChar)
-                            *sDotChar = 0;
-                        m_metadata.m_iModVersionMajor = atol(sValue);
-                        if (sDotChar)
-                        {
-                            sValue = sDotChar + 1;
-                            sDotChar = strchr(sValue, '.');
-                            if (sDotChar)
-                                *sDotChar = 0;
-                            m_metadata.m_iModVersionMinor = atol(sValue);
-                            if (sDotChar)
-                            {
-                                sValue = sDotChar + 1;
-                                m_metadata.m_iModVersionRevision = atol(sValue);
-                            }
-                        }
-                    }
-                    else if (strnicmp(sKey, "DataFolder.", 11) == 0)
-                    {
-                        CFolderHandler *pObject = CHECK_MEM(new CFolderHandler);
-                        m_vFolders.push_back(pObject);
-                        pObject->m_sName = CHECK_MEM(strdup(sValue));
-                        pObject->m_iNumber = atol(sKey + 11);
-                    }
-                    else if (strnicmp(sKey, "ArchiveFile.", 12) == 0)
-                    {
-                        CArchiveHandler *pObject = CHECK_MEM(new CArchiveHandler);
-                        m_vArchives.push_back(pObject);
-                        pObject->m_sName = CHECK_MEM((char *)malloc(strlen(sValue) + 5));
-                        sprintf(pObject->m_sName, "%s.sga", sValue);
-                        pObject->m_iNumber = atol(sKey + 12);
-                    }
-                    else if (strnicmp(sKey, "RequiredMod.", 12) == 0)
-                    {
-                        CRequiredHandler *pObject = CHECK_MEM(new CRequiredHandler);
-                        m_vRequireds.push_back(pObject);
-                        pObject->m_sName = CHECK_MEM(strdup(sValue));
-                        pObject->m_iNumber = atol(sKey + 12);
-                    }
-                    else if (strnicmp(sKey, "CompatableMod.", 14) == 0)
-                    {
-                        CCompatibleHandler *pObject = CHECK_MEM(new CCompatibleHandler);
-                        m_vCompatibles.push_back(pObject);
-                        pObject->m_sName = CHECK_MEM(strdup(sValue));
-                        pObject->m_iNumber = atol(sKey + 12);
-                    }
-                }
-                catch (CRainmanException *pE)
-                {
-                    delete[] sLine;
-                    fclose(fModule);
-                    throw pE;
-                }
-            }
-            else if (pCurrentDataSource)
-            {
-                try
-                {
-                    if (stricmp(sKey, "folder") == 0)
-                    {
-                        if (pCurrentDataSource->m_sFolder)
-                            free(pCurrentDataSource->m_sFolder);
-                        pCurrentDataSource->m_sFolder = CHECK_MEM(strdup(sValue));
-                    }
-                    if (strnicmp(sKey, "archive.", 8) == 0)
-                    {
-                        CArchiveHandler *pObject = CHECK_MEM(new CArchiveHandler);
-                        pCurrentDataSource->m_vArchives.push_back(pObject);
-                        pObject->m_sName = CHECK_MEM((char *)malloc(strlen(sValue) + 5));
-                        sprintf(pObject->m_sName, "%s.sga", sValue);
-                        pObject->m_iNumber = atol(sKey + 8);
-                    }
-                }
-                catch (CRainmanException *pE)
-                {
-                    delete[] sLine;
-                    fclose(fModule);
-                    throw pE;
-                }
-            }
-        }
-        else
-        {
-            char *sLeftBraceChar = strchr(sLine, '[');
-            char *sRightBraceChar = sLeftBraceChar ? strchr(sLeftBraceChar, ']') : 0;
-            if (sLeftBraceChar && sRightBraceChar)
-            {
-                // [Section]
-                *sRightBraceChar = 0;
-                ++sLeftBraceChar;
-                bInGlobal = false;
-                pCurrentDataSource = 0;
-                if (stricmp(sLeftBraceChar, "global") == 0)
-                {
-                    bInGlobal = true;
-                }
-                else
-                {
-                    char *sColonChar = strchr(sLeftBraceChar, ':');
-                    if (sColonChar)
-                    {
-                        try
-                        {
-                            pCurrentDataSource = CHECK_MEM(new CCohDataSource);
-                            m_vDataSources.push_back(pCurrentDataSource);
-                            *sColonChar = 0;
-                            pCurrentDataSource->m_sToc = CHECK_MEM(strdup(sLeftBraceChar));
-                            sLeftBraceChar = sColonChar + 1;
-                            sColonChar = strchr(sLeftBraceChar, ':');
-                            if (sColonChar)
-                                *sColonChar = 0;
-                            pCurrentDataSource->m_sOption = CHECK_MEM(strdup(sLeftBraceChar));
-                            if (sColonChar)
-                                pCurrentDataSource->m_iNumber = atol(sColonChar + 1);
-                        }
-                        catch (CRainmanException *pE)
-                        {
-                            delete[] sLine;
-                            fclose(fModule);
-                            throw pE;
-                        }
-                    }
-                }
-            }
-        }
-        delete[] sLine;
-    }
-    fclose(fModule);
-
-    // Decide what kind of module file it is
-    size_t iHeuristicDow = 0, iHeuristicCoh = 0, iHeuristicCohEarly = 0;
-    if (m_metadata.m_sUiName && *m_metadata.m_sUiName)
-        iHeuristicDow += 3;
-    if (m_metadata.m_sName && *m_metadata.m_sName)
-        iHeuristicCoh += 1, iHeuristicCohEarly += 1;
-    if (m_metadata.m_sDescription && *m_metadata.m_sDescription)
-        iHeuristicCoh += 1, iHeuristicCohEarly += 1, iHeuristicDow += 1;
-    if (m_metadata.m_sDllName && *m_metadata.m_sDllName)
-        iHeuristicCoh += 1, iHeuristicCohEarly += 1, iHeuristicDow += 1;
-    if (m_metadata.m_sModFolder && *m_metadata.m_sModFolder)
-        iHeuristicCoh += 1, iHeuristicCohEarly += 1, iHeuristicDow += 1;
-    if (m_metadata.m_sTextureFe && *m_metadata.m_sTextureFe)
-        iHeuristicDow += 3;
-    if (m_metadata.m_sTextureIcon && *m_metadata.m_sTextureIcon)
-        iHeuristicDow += 3;
-    if (m_metadata.m_sPatcherUrl && *m_metadata.m_sPatcherUrl)
-        iHeuristicCohEarly += 3;
-    if (m_metadata.m_sLocFolder && *m_metadata.m_sLocFolder)
-        iHeuristicCoh += 3;
-    if (m_metadata.m_sScenarioPackFolder && *m_metadata.m_sScenarioPackFolder)
-        iHeuristicCoh += 3;
-    iHeuristicDow += (m_vFolders.size() * 3);
-    iHeuristicDow += (m_vArchives.size() * 3);
-    iHeuristicDow += (m_vRequireds.size() * 3);
-    iHeuristicDow += (m_vCompatibles.size() * 3);
-    iHeuristicCoh += (m_vDataSources.size() * 3);
-    if (m_vDataSources.size() == 0)
-        iHeuristicDow += 5, iHeuristicCohEarly += 5;
-    if (m_vFolders.size() == 0 && m_vArchives.size() == 0 && m_vRequireds.size() == 0)
-        iHeuristicCoh += 5, iHeuristicCohEarly += 5;
-
-    if (iHeuristicDow == 0 && iHeuristicCoh == 0 && iHeuristicCohEarly == 0)
-    {
-        _Clean();
-        throw new CRainmanException(__FILE__, __LINE__, "File is not a valid .module file");
+        CFolderHandler *pHandler = CHECK_MEM(new CFolderHandler);
+        pHandler->m_iNumber = entry.iNumber;
+        pHandler->m_sName = CHECK_MEM(strdup(entry.sName.c_str()));
+        m_vFolders.push_back(pHandler);
     }
 
-    if (iHeuristicDow > iHeuristicCoh && iHeuristicDow > iHeuristicCohEarly)
-        m_eModuleType = MT_DawnOfWar;
-    else if (iHeuristicCoh > iHeuristicDow && iHeuristicCoh > iHeuristicCohEarly)
-        m_eModuleType = MT_CompanyOfHeroes;
-    else if (iHeuristicCohEarly > iHeuristicDow && iHeuristicCohEarly > iHeuristicCoh)
-        m_eModuleType = MT_CompanyOfHeroesEarly;
-    else
+    // Populate archive handlers
+    for (auto &entry : result.archives)
     {
-        _Clean();
-        throw new CRainmanException(__FILE__, __LINE__, "Unable to determine what kind of .module file this is");
+        CArchiveHandler *pHandler = CHECK_MEM(new CArchiveHandler);
+        pHandler->m_iNumber = entry.iNumber;
+        pHandler->m_sName = CHECK_MEM(strdup(entry.sName.c_str()));
+        m_vArchives.push_back(pHandler);
     }
 
+    // Populate required handlers
+    for (auto &entry : result.requireds)
+    {
+        CRequiredHandler *pHandler = CHECK_MEM(new CRequiredHandler);
+        pHandler->m_iNumber = entry.iNumber;
+        pHandler->m_sName = CHECK_MEM(strdup(entry.sName.c_str()));
+        m_vRequireds.push_back(pHandler);
+    }
+
+    // Populate compatible handlers
+    for (auto &entry : result.compatibles)
+    {
+        CCompatibleHandler *pHandler = CHECK_MEM(new CCompatibleHandler);
+        pHandler->m_iNumber = entry.iNumber;
+        pHandler->m_sName = CHECK_MEM(strdup(entry.sName.c_str()));
+        m_vCompatibles.push_back(pHandler);
+    }
+
+    // Populate data source handlers
+    for (auto &ds : result.dataSources)
+    {
+        CCohDataSource *pDS = CHECK_MEM(new CCohDataSource);
+        pDS->m_sToc = CHECK_MEM(strdup(ds.sToc.c_str()));
+        pDS->m_sOption = CHECK_MEM(strdup(ds.sOption.c_str()));
+        pDS->m_iNumber = ds.iNumber;
+        if (!ds.sFolder.empty())
+            pDS->m_sFolder = CHECK_MEM(strdup(ds.sFolder.c_str()));
+        for (auto &arch : ds.archives)
+        {
+            CArchiveHandler *pHandler = CHECK_MEM(new CArchiveHandler);
+            pHandler->m_iNumber = arch.iNumber;
+            pHandler->m_sName = CHECK_MEM(strdup(arch.sName.c_str()));
+            pDS->m_vArchives.push_back(pHandler);
+        }
+        m_vDataSources.push_back(pDS);
+    }
+
+    // CoH post-processing
     if (m_eModuleType == MT_CompanyOfHeroes)
     {
         m_sCohThisModFolder = new char[strlen(m_sApplicationPath) + strlen(m_metadata.m_sModFolder) + 1];
