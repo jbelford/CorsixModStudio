@@ -556,13 +556,6 @@ void ConstructFrame::SetModule(CModuleFile *pMod, const wxString &sModuleFile)
     }
 }
 
-void __cdecl ConstructFrame::LoadModCallback(const char *sMsg, void *pTag)
-{
-    UNUSED(pTag);
-    TheConstruct->GetLoadingForm()->SetMessage(AsciiTowxString(sMsg));
-    wxSafeYield(TheConstruct->GetLoadingForm());
-}
-
 void ConstructFrame::SetLoadingForm(frmLoading *pLoading) { m_pLoadingForm = pLoading; }
 
 frmLoading *ConstructFrame::GetLoadingForm() { return m_pLoadingForm; }

@@ -760,17 +760,19 @@ Move module loading off the UI thread using the `TaskRunner`. This is the highes
 7. Replace `frmLoading` text-only UI with `wxProgressDialog` (or enhanced `frmLoading` with gauge)
 8. Test: verify module loads correctly with responsive UI
 
-### Phase I: Background Operations for Tools & Dialogs
+### Phase I: Background Operations for Tools & Dialogs ✅
 
 Move remaining blocking operations to background threads.
 
-1. `frmMassExtract` — background extraction with progress gauge updates via `WxTaskRunner`
-2. `frmSgaMake` — background SGA creation with progress
-3. `frmRgdMacro` — background macro execution with cancellation
-4. `frmLuaInheritTree` — background tree building
-5. `Tools.cpp` DPS calculator — background scan + analysis
-6. `Tool_AESetup` UCS→DAT — background conversion
-7. File tree population (`FillFromIDirectoryTraverser`) — background with progressive loading
+1. ✅ `frmSgaMake` — background SGA creation with progress (`CSgaMakePresenter`)
+2. ✅ `Tool_AESetup` UCS→DAT — background conversion (`CUcsToDatPresenter`)
+3. ✅ `Tools.cpp` DPS calculator — background scan + analysis (`CDpsCalculatorPresenter`)
+4. ✅ `frmLuaInheritTree` — background tree building (`CLuaInheritTreePresenter`)
+5. ✅ `frmRgdMacro` — background macro execution with cancellation (`CRgdMacroPresenter`)
+6. ✅ `frmMassExtract` — background extraction with progress gauge updates (`CMassExtractPresenter`)
+7. ✅ File tree refresh (`CRefreshFilesTool`) — background `ReloadResources` with `CRefreshFilesPresenter`
+
+All `wxSafeYield` calls eliminated. `LoadModCallback` removed. 385 tests passing.
 
 ### Phase J: Rainman Internal Parallelism
 

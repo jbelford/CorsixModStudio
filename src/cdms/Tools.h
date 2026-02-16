@@ -20,7 +20,9 @@
 #include "Construct.h"
 #include "frmUCSSelector.h"
 #include "presenters/CDpsCalculatorPresenter.h"
+#include "presenters/CRefreshFilesPresenter.h"
 #include "views/IDpsCalculatorView.h"
+#include "views/IRefreshFilesView.h"
 #include <memory>
 
 class CLocaleTool : public ConstructFrame::ITool
@@ -135,7 +137,7 @@ class CMakeLuaInheritTree : public ConstructFrame::ITool
     size_t iAttribL;
 };
 
-class CRefreshFilesTool : public ConstructFrame::ITool
+class CRefreshFilesTool : public ConstructFrame::ITool, private IRefreshFilesView
 {
   public:
     virtual wxString GetName();
@@ -143,4 +145,15 @@ class CRefreshFilesTool : public ConstructFrame::ITool
     virtual wxString GetBitmapName();
 
     virtual void DoAction();
+
+  private:
+    // IRefreshFilesView implementation
+    void ShowLoading(const wxString &sMessage) override;
+    void HideLoading() override;
+    void UpdateProgress(const wxString &sMessage) override;
+    void RefreshFileTree() override;
+    void ShowError(const wxString &sMessage) override;
+
+    std::unique_ptr<CRefreshFilesPresenter> m_pPresenter;
+    frmLoading *m_pLoadingForm = nullptr;
 };

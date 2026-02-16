@@ -25,6 +25,8 @@ add_executable(cdms_tests
     dpscalculatorpresenter_test.cpp
     luainherittreepresenter_test.cpp
     rgdmacropresenter_test.cpp
+    massextractpresenter_test.cpp
+    refreshfilespresenter_test.cpp
     ${CDMS_SRC_DIR}/strconv.cpp
     ${CDMS_SRC_DIR}/strings.cpp
     ${CDMS_SRC_DIR}/Utility.cpp
@@ -41,6 +43,8 @@ add_executable(cdms_tests
     ${CDMS_SRC_DIR}/presenters/CUcsToDatPresenter.cpp
     ${CDMS_SRC_DIR}/presenters/CDpsCalculatorPresenter.cpp
     ${CDMS_SRC_DIR}/presenters/CRgdMacroPresenter.cpp
+    ${CDMS_SRC_DIR}/presenters/CMassExtractPresenter.cpp
+    ${CDMS_SRC_DIR}/presenters/CRefreshFilesPresenter.cpp
     ${CDMS_SRC_DIR}/Tool_AutoDPS.cpp
     ${CDMS_SRC_DIR}/Tool_AESetup.cpp
     ${CDMS_SRC_DIR}/CtrlStatusText.cpp

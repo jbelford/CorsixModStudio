@@ -33,7 +33,11 @@
 #include <rainman/module/CModuleFile.h>
 #include <wx/treectrl.h>
 
-class frmMassExtract : public wxDialog
+#include "presenters/CMassExtractPresenter.h"
+#include "views/IMassExtractView.h"
+#include <memory>
+
+class frmMassExtract : public wxDialog, public IMassExtractView
 {
   protected:
     struct _tSrc
@@ -48,15 +52,21 @@ class frmMassExtract : public wxDialog
     wxGauge *m_pGauge;
     wxStaticText *m_pCaption;
     wxButton *m_pSelectAllBtn, *m_pAdvancedBtn;
+    wxButton *m_pGoBtn = nullptr;
     wxString m_sPath;
     wxTreeItemId m_oFolder;
 
-    char *m_p4mbBuffer;
+    char *m_p4mbBuffer = nullptr;
     bool m_bForceUpdate;
     bool m_bAdvancedVisible;
+    void *m_pFauxSource = nullptr;
+    std::unique_ptr<CMassExtractPresenter> m_pPresenter;
 
     size_t _DoExtract(wxTreeCtrl *pTree, wxTreeItemId &oFolder, const wxString &sPath, CModuleFile *pModule,
                       bool bCountOnly, size_t iCountBase, size_t iCountDiv);
+
+    void _CollectFiles(wxTreeCtrl *pTree, wxTreeItemId &oFolder, const wxString &sPath,
+                       std::vector<std::string> &vFiles);
 
     void _FillCheckList(CModuleFile *pMod, bool bIsRoot, wxArrayString &sList, std::vector<_tSrc> &vList);
 
@@ -67,6 +77,14 @@ class frmMassExtract : public wxDialog
     void OnSelectClick(wxCommandEvent &event);
     void OnCancelClick(wxCommandEvent &event);
     void OnAdvancedClick(wxCommandEvent &event);
+
+    // IMassExtractView implementation
+    void SetGaugeRange(int iRange) override;
+    void UpdateGauge(int iValue) override;
+    void ShowError(const wxString &sMessage) override;
+    void OnExtractionComplete() override;
+    void DisableControls() override;
+    void EnableControls() override;
 
     enum
     {

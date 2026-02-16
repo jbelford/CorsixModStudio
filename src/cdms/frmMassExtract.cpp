@@ -213,7 +213,7 @@ frmMassExtract::frmMassExtract(wxString sFile, const wxTreeItemId &oFolder, bool
     pButtonSizer->Add(m_pAdvancedBtn = new wxButton(this, IDC_Advanced, AppStr(massext_advanced_show)), 0,
                       wxFIXED_MINSIZE | wxALL, 3);
     pButtonSizer->Add(new wxButton(this, IDC_Cancel, AppStr(massext_cancel)), 0, wxFIXED_MINSIZE | wxALL, 3);
-    pButtonSizer->Add(new wxButton(this, IDC_Go, AppStr(massext_go)), 0, wxFIXED_MINSIZE | wxALL, 3);
+    pButtonSizer->Add(m_pGoBtn = new wxButton(this, IDC_Go, AppStr(massext_go)), 0, wxFIXED_MINSIZE | wxALL, 3);
 
     pTopSizer->Add(pButtonSizer, 0, wxALIGN_RIGHT);
 
@@ -233,12 +233,14 @@ frmMassExtract::frmMassExtract(wxString sFile, const wxTreeItemId &oFolder, bool
     m_pSelectAllBtn->Show(m_bAdvancedVisible);
 
     m_bForceUpdate = bForceUpdate;
+
+    m_pPresenter = std::make_unique<CMassExtractPresenter>(*this, this);
 }
 
 void frmMassExtract::OnGoClick(wxCommandEvent &event)
 {
     UNUSED(event);
-    void *pSource = nullptr;
+    m_pFauxSource = nullptr;
     if (TheConstruct->GetModuleService().IsFauxModule())
     {
         wxString sSaveDirectory = wxDirSelector(wxT("Choose where to extract folder"));
@@ -246,14 +248,14 @@ void frmMassExtract::OnGoClick(wxCommandEvent &event)
             return;
 
         auto &modSvc = TheConstruct->GetModuleService();
-        pSource = modSvc.GetFileMap()->RegisterSource(0, false, 0, "", "", modSvc.GetFileSystem(),
-                                                      modSvc.GetFileSystem(), true, true, true);
+        m_pFauxSource = modSvc.GetFileMap()->RegisterSource(0, false, 0, "", "", modSvc.GetFileSystem(),
+                                                            modSvc.GetFileSystem(), true, true, true);
 
         auto saPath = wxStringToAscii(sSaveDirectory);
         std::unique_ptr<IDirectoryTraverser::IIterator> pItr(modSvc.GetFileSystem()->VIterate(saPath.get()));
 
         auto saPathVirtual = wxStringToAscii(m_sPath);
-        modSvc.GetFileMap()->MapIteratorDeep(pSource, saPathVirtual.get(), &*pItr);
+        modSvc.GetFileMap()->MapIteratorDeep(m_pFauxSource, saPathVirtual.get(), &*pItr);
     }
 
     for (size_t i = 0; i < m_vSrcs.size(); ++i)
@@ -271,18 +273,14 @@ void frmMassExtract::OnGoClick(wxCommandEvent &event)
     {
         ++iDiv;
     }
-    m_pGauge->SetRange((int)(iFileCount / iDiv)); // Won't overflow (see above code)
-    m_p4mbBuffer = new char[4194304];
-    _DoExtract(TheConstruct->GetFilesList()->GetTree(), m_oFolder, m_sPath, TheConstruct->GetModule(), false, 0, iDiv);
-    delete[] m_p4mbBuffer;
+    m_pGauge->SetRange((int)(iFileCount / iDiv));
 
-    if (TheConstruct->GetModuleService().IsFauxModule())
-    {
-        TheConstruct->GetModuleService().GetFileMap()->EraseSource(pSource);
-    }
+    // Collect file paths from tree on main thread (fast)
+    std::vector<std::string> vFiles;
+    _CollectFiles(TheConstruct->GetFilesList()->GetTree(), m_oFolder, m_sPath, vFiles);
 
-    wxMessageBox(AppStr(massext_done), AppStr(massext_title), wxICON_INFORMATION, this);
-    EndModal(wxID_CLOSE);
+    // Start async extraction on background thread
+    m_pPresenter->Extract(std::move(vFiles), iDiv);
 }
 
 void frmMassExtract::OnCancelClick(wxCommandEvent &event)
@@ -327,4 +325,88 @@ void frmMassExtract::OnSelectClick(wxCommandEvent &event)
             m_pCheckList->Check((unsigned int)i, bSetTo);
         }
     }
+}
+
+void frmMassExtract::_CollectFiles(wxTreeCtrl *pTree, wxTreeItemId &oFolder, const wxString &sPath,
+                                   std::vector<std::string> &vFiles)
+{
+    wxTreeItemIdValue oCookie;
+    wxTreeItemId oChild = pTree->GetFirstChild(oFolder, oCookie);
+    while (oChild.IsOk())
+    {
+        auto *pData = (CFilesTreeItemData *)pTree->GetItemData(oChild);
+        if (pData && pData->sMod)
+        {
+            bool bExtract = false;
+            for (auto itr = m_vActiveSrcs.begin(); itr != m_vActiveSrcs.end(); ++itr)
+            {
+                if ((itr->sMod == nullptr || (stricmp(pData->sMod, itr->sMod) == 0)) &&
+                    stricmp(pData->sSource, itr->sSrc) == 0)
+                {
+                    bExtract = true;
+                    break;
+                }
+            }
+
+            if (bExtract)
+            {
+                wxString sFile = sPath;
+                if (sPath.Len())
+                    sFile.Append('\\');
+                sFile.Append(pTree->GetItemText(oChild));
+                auto saFile = wxStringToAscii(sFile);
+                if (saFile)
+                    vFiles.emplace_back(saFile.get());
+            }
+        }
+        else
+        {
+            wxString sNewPath = sPath;
+            if (sPath.Len())
+                sNewPath.Append('\\');
+            sNewPath.Append(pTree->GetItemText(oChild));
+            _CollectFiles(pTree, oChild, sNewPath, vFiles);
+        }
+
+        oChild = pTree->GetNextChild(oChild, oCookie);
+    }
+}
+
+// IMassExtractView implementation
+
+void frmMassExtract::SetGaugeRange(int iRange) { m_pGauge->SetRange(iRange); }
+
+void frmMassExtract::UpdateGauge(int iValue)
+{
+    m_pGauge->SetValue(iValue);
+    m_pGauge->Refresh();
+}
+
+void frmMassExtract::ShowError(const wxString &sMessage)
+{
+    wxMessageBox(sMessage, AppStr(massext_title), wxICON_ERROR, this);
+}
+
+void frmMassExtract::OnExtractionComplete()
+{
+    if (m_pFauxSource != nullptr && TheConstruct->GetModuleService().IsFauxModule())
+    {
+        TheConstruct->GetModuleService().GetFileMap()->EraseSource(m_pFauxSource);
+        m_pFauxSource = nullptr;
+    }
+
+    wxMessageBox(AppStr(massext_done), AppStr(massext_title), wxICON_INFORMATION, this);
+    EndModal(wxID_CLOSE);
+}
+
+void frmMassExtract::DisableControls()
+{
+    if (m_pGoBtn)
+        m_pGoBtn->Disable();
+}
+
+void frmMassExtract::EnableControls()
+{
+    if (m_pGoBtn)
+        m_pGoBtn->Enable();
 }

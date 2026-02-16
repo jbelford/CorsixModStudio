@@ -133,7 +133,6 @@ class ConstructFrame : public wxFrame, public IMainFrameView
 
     void SetLoadingForm(frmLoading *pLoading);
 
-    static void __cdecl LoadModCallback(const char *sMsg, void *pTag);
     static IFileStore::IOutputStream *SaveFileCallback(const char *sFile, bool bEraseIfPresent, void *pTag);
 
     // --- IMainFrameView overrides ---

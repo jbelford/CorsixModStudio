@@ -27,6 +27,7 @@
 #include "Tool_AESetup.h"
 #include "Tool_AutoDPS.h"
 #include "presenters/CDpsCalculatorPresenter.h"
+#include "presenters/CRefreshFilesPresenter.h"
 #include "Utility.h"
 #include "frmMassExtract.h"
 #include <memory>
@@ -475,21 +476,48 @@ void CRefreshFilesTool::DoAction()
 {
     CModuleFile *pMod = TheConstruct->GetModuleService().GetModule();
 
-    frmLoading *m_pLoadingForm = new frmLoading(AppStr(mod_loading));
-    TheConstruct->SetLoadingForm(m_pLoadingForm);
+    if (!m_pPresenter)
+        m_pPresenter = std::make_unique<CRefreshFilesPresenter>(static_cast<IRefreshFilesView &>(*this), TheConstruct);
 
+    if (!m_pPresenter->Refresh(pMod))
+    {
+        wxMessageBox(wxT("A refresh operation is already running."), AppStr(refreshfiles_name), wxICON_WARNING,
+                     TheConstruct);
+    }
+}
+
+// IRefreshFilesView implementation
+
+void CRefreshFilesTool::ShowLoading(const wxString &sMessage)
+{
+    m_pLoadingForm = new frmLoading(AppStr(mod_loading));
+    m_pLoadingForm->SetMessage(sMessage);
     m_pLoadingForm->Show(true);
-    m_pLoadingForm->SetMessage(wxString(wxT("Initializing")));
-    wxSafeYield(m_pLoadingForm);
+}
 
-    pMod->ReloadResources(CModuleFile::RR_All, CModuleFile::RR_All, CModuleFile::RR_All,
-                          ConstructFrame::LoadModCallback);
+void CRefreshFilesTool::HideLoading()
+{
+    if (m_pLoadingForm)
+    {
+        m_pLoadingForm->Close(true);
+        delete m_pLoadingForm;
+        m_pLoadingForm = nullptr;
+    }
+}
 
-    m_pLoadingForm->SetMessage(wxString(wxT("Refreshing GUI")));
+void CRefreshFilesTool::UpdateProgress(const wxString &sMessage)
+{
+    if (m_pLoadingForm)
+        m_pLoadingForm->SetMessage(sMessage);
+}
 
+void CRefreshFilesTool::RefreshFileTree()
+{
+    CModuleFile *pMod = TheConstruct->GetModuleService().GetModule();
     TheConstruct->GetFilesList()->FillFromIDirectoryTraverser(pMod);
+}
 
-    m_pLoadingForm->Close(true);
-    delete m_pLoadingForm;
-    TheConstruct->SetLoadingForm(0);
+void CRefreshFilesTool::ShowError(const wxString &sMessage)
+{
+    wxMessageBox(sMessage, AppStr(refreshfiles_name), wxICON_ERROR, TheConstruct);
 }
