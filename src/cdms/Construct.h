@@ -20,7 +20,6 @@
 #define _CONSTRUCT_H_
 // For compilers that support precompilation, includes "wx/wx.h".
 #include <wx/wxprec.h>
-#include <wx/aui/auibook.h>
 
 #ifdef __BORLANDC__
 #pragma hdrstop
@@ -32,8 +31,8 @@
 #include "wx/wx.h"
 #endif
 // ----------------------------
-#include "wx/splitter.h"
 #include "frmLoading.h"
+#include "TabManager.h"
 #include "frmFiles.h"
 #include <rainman/module/CModuleFile.h>
 #include <rainman/formats/CRgdHashTable.h>
@@ -47,8 +46,7 @@
 class ConstructFrame : public wxFrame
 {
   protected:
-    wxSplitterWindow *m_pSplitter;
-    wxAuiNotebook *m_pTabs;
+    TabManager m_tabManager;
     CModuleFile *m_pModule;
     wxString m_sModuleFile;
     frmLoading *m_pLoadingForm;

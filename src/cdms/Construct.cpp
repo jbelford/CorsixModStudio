@@ -87,17 +87,9 @@ EVT_SPLITTER_SASH_POS_CHANGED(IDC_Splitter, ConstructFrame::OnSashMove)
 EVT_CLOSE(ConstructFrame::OnCloseWindow)
 END_EVENT_TABLE()
 
-frmFiles *ConstructFrame::GetFilesList()
-{
-    if (!m_pSplitter->IsSplit())
-        return 0;
-    return (frmFiles *)m_pSplitter->GetWindow1();
-}
+frmFiles *ConstructFrame::GetFilesList() { return m_tabManager.GetFilesList(); }
 
-void ConstructFrame::OnSashMove(wxSplitterEvent &event)
-{
-    TheConfig->Write(AppStr(config_sashposition), event.GetSashPosition());
-}
+void ConstructFrame::OnSashMove(wxSplitterEvent &event) { m_tabManager.OnSashMoved(event.GetSashPosition()); }
 
 void ConstructFrame::OnOpenSga(wxCommandEvent &event)
 {
@@ -244,7 +236,7 @@ void ConstructFrame::LaunchRelicObjectEditor(wxCommandEvent &event)
     LaunchTool(wxT("ObjectEditor.exe"));
 }
 
-wxAuiNotebook *ConstructFrame::GetTabs() { return m_pTabs; }
+wxAuiNotebook *ConstructFrame::GetTabs() { return m_tabManager.GetTabs(); }
 
 void ConstructFrame::LaunchW40k(wxCommandEvent &event)
 {
@@ -445,8 +437,6 @@ void ConstructFrame::LaunchWarnings(wxCommandEvent &event)
 ConstructFrame::ConstructFrame(const wxString &sTitle, const wxPoint &oPos, const wxSize &oSize)
     : wxFrame((wxFrame *)NULL, -1, sTitle, oPos, oSize, wxDEFAULT_FRAME_STYLE | wxMAXIMIZE)
 {
-    m_pSplitter = 0;
-    m_pTabs = 0;
     m_pModule = 0;
     m_sModuleFile = wxT("");
     m_pRgdHashTable = 0;
@@ -464,17 +454,9 @@ ConstructFrame::ConstructFrame(const wxString &sTitle, const wxPoint &oPos, cons
     m_toolRegistry.Register(new CAESetupTool);
     m_toolRegistry.Register(new CRedButtonTool);
 
-    // Make Splitter Window
-    m_pSplitter = new wxSplitterWindow(this, IDC_Splitter);
-    m_pSplitter->SetSashGravity(0.5);
-    m_pSplitter->SetMinimumPaneSize(48);
-
-    // Make Tabs Window
-    m_pTabs = new wxAuiNotebook(m_pSplitter, -1, wxPoint(0, 0), wxDefaultSize,
-                                wxAUI_NB_DEFAULT_STYLE | wxAUI_NB_TAB_EXTERNAL_MOVE | wxAUI_NB_WINDOWLIST_BUTTON |
-                                    wxNO_BORDER | wxAUI_NB_CLOSE_BUTTON);
-    m_pSplitter->Initialize(m_pTabs);
-    m_pTabs->AddPage(new frmWelcome(m_pTabs, -1), AppStr(welcome_tabname));
+    // Make Splitter + Tabs
+    m_tabManager.Init(this, IDC_Splitter);
+    m_tabManager.AddPage(new frmWelcome(m_tabManager.GetTabs(), -1), AppStr(welcome_tabname), false);
 
     // Build menus
     m_menuController.Build(this, m_toolRegistry);
@@ -542,7 +524,7 @@ void ConstructFrame::SetModule(CModuleFile *pMod)
     }
     if (pMod != 0)
     {
-        if (!m_pSplitter->IsSplit())
+        if (!m_tabManager.IsSplit())
         {
             GetMenuBar()->GetMenu(0)->Enable(wxID_CLOSE, true);
             GetMenuBar()->GetMenu(0)->Enable(IDM_LoadModDoWWA, false);
@@ -552,16 +534,15 @@ void ConstructFrame::SetModule(CModuleFile *pMod)
             GetMenuBar()->GetMenu(0)->Enable(IDM_LoadSga, false);
             GetMenuBar()->GetMenu(0)->Enable(wxID_NEW, false);
             GetMenuBar()->EnableTop(1, true);
-            frmFiles *pFiles = new frmFiles(m_pSplitter, -1);
-            m_pSplitter->SplitVertically(pFiles, m_pTabs);
-            m_pSplitter->SetSashPosition(TheConfig->Read(AppStr(config_sashposition), 189));
+            frmFiles *pFiles = new frmFiles(m_tabManager.GetSplitter(), -1);
+            m_tabManager.SplitWithFileTree(pFiles, TheConfig->Read(AppStr(config_sashposition), 189));
             pFiles->FillFromIDirectoryTraverser(pMod);
-            m_pTabs->AddPage(
-                new frmModule(m_pTabs, -1),
+            m_tabManager.AddPage(
+                new frmModule(m_tabManager.GetTabs(), -1),
                 AppStr(mod_tabname).Append(wxString(wxT(" ["))).Append(m_sModuleFile.AfterLast('\\')).Append(wxT("]")),
                 true);
-            while (m_pTabs->GetPageCount() > 1)
-                m_pTabs->DeletePage(0);
+            while (m_tabManager.GetTabs()->GetPageCount() > 1)
+                m_tabManager.GetTabs()->DeletePage(0);
 
             GetMenuBar()->GetMenu(3)->Enable(IDM_PlayCOH, false);
             GetMenuBar()->GetMenu(3)->Enable(IDM_PlayW40k, false);
@@ -594,7 +575,7 @@ void ConstructFrame::SetModule(CModuleFile *pMod)
         GetMenuBar()->GetMenu(3)->Enable(IDM_PlaySS, false);
 
         m_sModuleFile = wxT("");
-        if (m_pSplitter->IsSplit())
+        if (m_tabManager.IsSplit())
         {
             GetMenuBar()->GetMenu(0)->Enable(wxID_CLOSE, false);
             GetMenuBar()->GetMenu(0)->Enable(IDM_LoadModDoWWA, true);
@@ -605,13 +586,8 @@ void ConstructFrame::SetModule(CModuleFile *pMod)
             GetMenuBar()->GetMenu(0)->Enable(wxID_NEW, true);
             GetMenuBar()->EnableTop(1, false);
 
-            m_pTabs->AddPage(new frmWelcome(m_pTabs, -1), AppStr(welcome_tabname), true);
-            while (m_pTabs->GetPageCount() > 1)
-                m_pTabs->DeletePage(0);
-
-            frmFiles *pFiles = GetFilesList();
-            m_pSplitter->Unsplit(pFiles);
-            delete pFiles;
+            m_tabManager.ShowWelcomePage();
+            m_tabManager.UnsplitFileTree();
         }
     }
 }
@@ -874,16 +850,10 @@ void ConstructFrame::OnQuit(wxCommandEvent &event)
 
 void ConstructFrame::OnCloseWindow(wxCloseEvent &event)
 {
-    for (size_t i = 0; i < m_pTabs->GetPageCount(); ++i)
+    if (!m_tabManager.CanCloseAll(event.CanVeto()))
     {
-        wxCloseEvent e2(wxEVT_CLOSE_WINDOW);
-        e2.SetCanVeto(event.CanVeto());
-        m_pTabs->GetPage(i)->GetEventHandler()->ProcessEvent(e2);
-        if (e2.GetVeto())
-        {
-            event.Veto();
-            return;
-        }
+        event.Veto();
+        return;
     }
     this->Destroy();
 }
