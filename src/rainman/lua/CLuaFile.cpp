@@ -326,7 +326,7 @@ int CLuaFile::_Inherit(lua_State *L)
     }
     catch (CRainmanException *pE)
     {
-        pE->destroy();
+        auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
 
         strcpy(sFullPathFile, "data\\attrib\\");
         strcat(sFullPathFile, sFile);
@@ -476,7 +476,7 @@ int CLuaFile::_InheritMeta(lua_State *L)
     }
     catch (CRainmanException *pE)
     {
-        pE->destroy();
+        auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
 
         strcpy(sFullPathFile, "data\\attrib\\");
         strcat(sFullPathFile, sFile);
@@ -636,7 +636,7 @@ int CLuaFile::_Reference(lua_State *L)
     }
     catch (CRainmanException *pE)
     {
-        pE->destroy();
+        auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
 
         strcpy(sFullPathFile, "data\\attrib\\");
         strcat(sFullPathFile, sFile);

@@ -624,7 +624,7 @@ void CRgdFile::Load(IFileStore::IStream *pStream)
         }
         catch (CRainmanException *pE)
         {
-            pE->destroy();
+            auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
             break;
         }
         _RgdChunk *pChunk = new _RgdChunk;

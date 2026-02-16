@@ -515,6 +515,7 @@ int CRgdFileMacro::luaf_pcall(lua_State *L)
     if (status != 0 && lua51_type(L, 2) == LUA_TLIGHTUSERDATA)
     {
         CRainmanException *pE = (CRainmanException *)lua51_touserdata(L, 2);
+        auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
         lua51_pushstring(L, "");
         for (const CRainmanException *e = pE; e; e = e->getPrecursor())
         {
@@ -527,7 +528,6 @@ int CRgdFileMacro::luaf_pcall(lua_State *L)
             lua51_pushstring(L, "\r\n");
             lua51_concat(L, 7);
         }
-        pE->destroy();
         lua51_replace(L, 2);
     }
     return lua51_gettop(L); /* return status + all results */
@@ -1321,6 +1321,7 @@ int CRgdFileMacro::luaf_xpcalle(lua_State *L)
         if (lua51_type(L, i) == LUA_TLIGHTUSERDATA)
         {
             CRainmanException *pE = (CRainmanException *)lua51_touserdata(L, i);
+            auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
             lua51_pushstring(L, "");
             for (const CRainmanException *e = pE; e; e = e->getPrecursor())
             {
@@ -1333,7 +1334,6 @@ int CRgdFileMacro::luaf_xpcalle(lua_State *L)
                 lua51_pushstring(L, "\r\n");
                 lua51_concat(L, 7);
             }
-            pE->destroy();
             lua51_replace(L, i);
         }
     }

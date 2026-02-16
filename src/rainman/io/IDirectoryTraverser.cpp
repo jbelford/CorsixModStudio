@@ -31,21 +31,21 @@ IDirectoryTraverser::IIterator::~IIterator(void) {}
 
 void *IDirectoryTraverser::IIterator::VGetTag(long iTag)
 {
-	throw new CRainmanException(0, __FILE__, __LINE__, "Unknown tag %li", iTag);
+    throw new CRainmanException(0, __FILE__, __LINE__, "Unknown tag %li", iTag);
 }
 
 bool IDirectoryTraverser::VDirectoryExists(const char *sPath)
 {
-	IIterator *pItr = 0;
-	try
-	{
-		pItr = VIterate(sPath);
-	}
-	catch (CRainmanException *pE)
-	{
-		pE->destroy();
-		return false;
-	}
-	delete pItr;
-	return true;
+    IIterator *pItr = 0;
+    try
+    {
+        pItr = VIterate(sPath);
+    }
+    catch (CRainmanException *pE)
+    {
+        auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
+        return false;
+    }
+    delete pItr;
+    return true;
 }

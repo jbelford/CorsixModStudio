@@ -1139,7 +1139,7 @@ void CModuleFile::_DoLoadArchive(const char *sFullPath, CSgaFile **ppSga, unsign
     }
     catch (CRainmanException *pE)
     {
-        pE->destroy();
+        auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
         delete pSga;
         pSga = 0;
         return;
@@ -1238,8 +1238,8 @@ void CModuleFile_ArchiveForEachNoErrors(IDirectoryTraverser::IIterator *pItr, vo
     }
     catch (CRainmanException *pE)
     {
+        auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
         free(s);
-        pE->destroy();
         return;
     }
 
@@ -1472,7 +1472,7 @@ void CModuleFile::ReloadResources(unsigned long iReloadWhat, unsigned long iRelo
             }
             catch (CRainmanException *pE)
             {
-                pE->destroy();
+                auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
                 pItr = 0;
             }
             if (pItr)

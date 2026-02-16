@@ -215,6 +215,7 @@ IFileStore::IOutputStream *CFileMap::VOpenOutputStream(const char *sFile, bool b
     }
     catch (CRainmanException *pE)
     {
+        auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
         if (bFileWasCreated)
         {
             free(pFile->sName);
@@ -227,7 +228,6 @@ IFileStore::IOutputStream *CFileMap::VOpenOutputStream(const char *sFile, bool b
                 IFileStore::IOutputStream *pOutStr = m_fAuxOutputSupply(sFile, bEraseIfPresent, m_pAuxOutputContext);
                 if (pOutStr)
                 {
-                    pE->destroy();
                     return pOutStr;
                 }
             }
@@ -235,12 +235,12 @@ IFileStore::IOutputStream *CFileMap::VOpenOutputStream(const char *sFile, bool b
         }
         if (strnicmp(sFile, "data", 4) == 0)
             throw new CRainmanException(
-                pE, __FILE__, __LINE__,
+                guard.release(), __FILE__, __LINE__,
                 "Could not find suitable output location for \'%s\' (could be because the Data folder is missing)",
                 sFile);
         else
             throw new CRainmanException(
-                pE, __FILE__, __LINE__,
+                guard.release(), __FILE__, __LINE__,
                 "Could not find suitable output location for \'%s\' (could be because you\'re trying to mod RelicCOH)",
                 sFile);
     }
