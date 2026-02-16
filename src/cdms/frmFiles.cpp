@@ -88,9 +88,130 @@ CFilesTreeItemData::CFilesTreeItemData(IDirectoryTraverser::IIterator *pItr)
     }
 }
 
-// Handlers
+// Handlers — CLuaAction method implementations (declared in frmFiles.h)
 
-#include "frmFiles_Actions.h"
+#include "actions/ActionUtil.h"
+
+wxString CLuaAction::VGetExt() const { return wxT("lua"); }
+
+wxString CLuaAction::VGetAction() const { return wxT("View as LUA file"); }
+
+CLuaFile *CLuaAction::DoLoad(IFileStore::IStream *pStream, const char *sFile, CLuaFileCache *pCache)
+{
+    CLuaFile *pLua = new CLuaFile;
+    if (!pLua)
+    {
+        ErrorBoxAS(err_memory);
+        return 0;
+    }
+
+    pLua->AssignCache(pCache);
+    try
+    {
+        pLua->Load(pStream, TheConstruct->GetModuleService().GetModule(), sFile);
+    }
+    catch (CRainmanException *pE)
+    {
+        ErrorBoxE(new CModStudioException(pE, __FILE__, __LINE__, "Cannot load Lua file \'%s\'", sFile));
+        delete pLua;
+        return 0;
+    }
+
+    return pLua;
+}
+
+CLuaFile2 *CLuaAction::DoLoad2(IFileStore::IStream *pStream, const char *sFile, CLuaFileCache *pCache)
+{
+    CLuaFile2 *pLua = new CLuaFile2;
+    if (!pLua)
+    {
+        ErrorBoxAS(err_memory);
+        return 0;
+    }
+
+    pLua->setCache(pCache, false);
+    if (sFile[0] == 'G' || sFile[0] == 'g')
+        pLua->setRootFolder("generic\\attrib\\");
+    else if (sFile[0] == 'A' || sFile[0] == 'a')
+        pLua->setRootFolder("attrib\\attrib\\");
+    else
+        pLua->setRootFolder("data\\attrib\\");
+
+    try
+    {
+        pLua->loadFile(pStream, TheConstruct->GetModuleService().GetModule(), sFile);
+    }
+    catch (CRainmanException *pE)
+    {
+        ErrorBoxE(pE);
+        delete pLua;
+        return 0;
+    }
+
+    return pLua;
+}
+
+void CLuaAction::VHandle(wxString sFile, wxTreeItemId &oParent, wxTreeItemId &oFile)
+{
+    UNUSED(oFile);
+    auto streamResult = TheConstruct->GetFileService().OpenStream(sFile);
+    if (!streamResult)
+    {
+        ErrorBox("Cannot open file");
+        return;
+    }
+    IFileStore::IStream *pStream = streamResult.value().release();
+    char *saFile = wxStringToAscii(sFile);
+    CLuaFile2 *pLua = DoLoad2(pStream, saFile);
+    delete[] saFile;
+    delete pStream;
+    if (pLua)
+    {
+        frmRGDEditor *pForm;
+        TheConstruct->GetTabs()->AddPage(
+            pForm = new frmRGDEditor(oParent, sFile, TheConstruct->GetTabs(), -1),
+            wxString().Append(wxT("LUA")).Append(wxT(" [")).Append(OnlyFilename(sFile)).Append(wxT("]")), true);
+        if (!pForm->FillFromLua2(pLua))
+        {
+            ErrorBox("Cannot load file");
+            delete pLua;
+            return;
+        }
+    }
+}
+
+// Action class includes
+#include "actions/CTextViewAction.h"
+#include "actions/CFilePathCopyAction.h"
+#include "actions/CExtractAction.h"
+#include "actions/CMakeCopyAction.h"
+#include "actions/CSmfWavAction.h"
+#include "actions/CRGODeBurnAction.h"
+#include "actions/CRgdToLuaDumpAction.h"
+#include "actions/CBfxToLuaDumpAction.h"
+#include "actions/CBFXRGTDeBurnAction.h"
+#include "actions/CRgtViewAction.h"
+#include "actions/CDdsViewAction.h"
+#include "actions/CTgaViewAction.h"
+#include "actions/CRgtToGenericAction.h"
+#include "actions/CDdsToRgtAction.h"
+#include "actions/CExtractFolderAction.h"
+#include "actions/CRgdMacroAction.h"
+#include "actions/CRGDAction.h"
+#include "actions/CRGMMaterialAction.h"
+#include "actions/CMuaxAction.h"
+#include "actions/CBfxAction.h"
+#include "actions/CAbpAction.h"
+#include "actions/CMuaAction.h"
+#include "actions/CSuaAction.h"
+#include "actions/CLuaBurnAction.h"
+#include "actions/CLuaBurnFolderAction.h"
+#include "actions/CLuaBurnFolderIncReqAction.h"
+#include "actions/CLuaDumpFolder.h"
+#include "actions/CScanHashesAction.h"
+#include "actions/CNilAction.h"
+#include "actions/CScarAction.h"
+#include "actions/CAiAction.h"
 
 // Proper stuff
 

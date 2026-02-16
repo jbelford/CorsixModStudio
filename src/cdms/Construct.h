@@ -40,6 +40,9 @@
 #include "services/ModuleService.h"
 #include "services/FileService.h"
 #include "services/HashService.h"
+#include "ITool.h"
+#include "ToolRegistry.h"
+#include "MenuController.h"
 
 class ConstructFrame : public wxFrame
 {
@@ -58,18 +61,12 @@ class ConstructFrame : public wxFrame
     HashService m_hashService;
 
   public:
-    class ITool
-    {
-      public:
-        virtual wxString GetName() = 0;
-        virtual wxString GetHelpString() = 0;
-        virtual wxString GetBitmapName() = 0;
-
-        virtual void DoAction() = 0;
-    };
+    // Backward compatibility: ConstructFrame::ITool resolves to the standalone ITool
+    using ITool = ::ITool;
 
   protected:
-    std::vector<ITool *> m_vTools;
+    ToolRegistry m_toolRegistry;
+    MenuController m_menuController;
 
   public:
     ConstructFrame(const wxString &sTitle, const wxPoint &oPos, const wxSize &oSize);
@@ -96,26 +93,7 @@ class ConstructFrame : public wxFrame
 
     void DoLoadSga();
     void DoLoadMod(wxString sPath = wxT(""), eLoadModGames eGame = LM_Any);
-    void LaunchModTool1(wxCommandEvent &event);
-    void LaunchModTool2(wxCommandEvent &event);
-    void LaunchModTool3(wxCommandEvent &event);
-    void LaunchModTool4(wxCommandEvent &event);
-    void LaunchModTool5(wxCommandEvent &event);
-    void LaunchModTool6(wxCommandEvent &event);
-    void LaunchModTool7(wxCommandEvent &event);
-    void LaunchModTool8(wxCommandEvent &event);
-    void LaunchModTool9(wxCommandEvent &event);
-    void LaunchModTool10(wxCommandEvent &event);
-    void LaunchModTool11(wxCommandEvent &event);
-    void LaunchModTool12(wxCommandEvent &event);
-    void LaunchModTool13(wxCommandEvent &event);
-    void LaunchModTool14(wxCommandEvent &event);
-    void LaunchModTool15(wxCommandEvent &event);
-    void LaunchModTool16(wxCommandEvent &event);
-    void LaunchModTool17(wxCommandEvent &event);
-    void LaunchModTool18(wxCommandEvent &event);
-    void LaunchModTool19(wxCommandEvent &event);
-    void LaunchModTool20(wxCommandEvent &event);
+    void OnToolMenuCommand(wxCommandEvent &event);
     void LaunchRelicAttributeEditor(wxCommandEvent &event);
     void LaunchRelicAudioEditor(wxCommandEvent &event);
     void LaunchRelicChunkyViewer(wxCommandEvent &event);
@@ -162,6 +140,7 @@ class ConstructFrame : public wxFrame
     size_t GetToolCount();
     ITool *GetTool(size_t i);
     void DoTool(wxString sName);
+    ToolRegistry &GetToolRegistry() { return m_toolRegistry; }
 
     void SetLoadingForm(frmLoading *pLoading);
 
@@ -193,27 +172,9 @@ enum
     IDM_Settings,
     IDM_Tools,
     // Mod.Tools Menu
-    IDM_ModTool1,
-    IDM_ModTool2,
-    IDM_ModTool3,
-    IDM_ModTool4,
-    IDM_ModTool5,
-    IDM_ModTool6,
-    IDM_ModTool7,
-    IDM_ModTool8,
-    IDM_ModTool9,
-    IDM_ModTool10,
-    IDM_ModTool11,
-    IDM_ModTool12,
-    IDM_ModTool13,
-    IDM_ModTool14,
-    IDM_ModTool15,
-    IDM_ModTool16,
-    IDM_ModTool17,
-    IDM_ModTool18,
-    IDM_ModTool19,
-    IDM_ModTool20,
-    // Relic's Tools Menu
+    IDM_ModToolBase,
+    IDM_ModToolLast = IDM_ModToolBase + 99, // Reserve 100 dynamic tool slots
+                                            // Relic's Tools Menu
     IDM_AttributeEditor,
     IDM_AudioEditor,
     IDM_ChunkyViewer,

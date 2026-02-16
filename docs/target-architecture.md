@@ -1,6 +1,6 @@
 # CorsixModStudio — Target Architecture & Refactoring Roadmap
 
-> **Status**: Proposed — pending review. Based on the as-is analysis in [architecture.md](architecture.md).
+> **Status**: Active — Phases A–D complete. Phase E (CDMS Structural Cleanup) in progress. Based on the as-is analysis in [architecture.md](architecture.md).
 
 ---
 
@@ -74,10 +74,10 @@
 | Aspect | Current | Target |
 |--------|---------|--------|
 | Rainman layout | ✅ Grouped into 8 subdirectories (`core/`, `io/`, `archive/`, `formats/`, `lua/`, `localization/`, `module/`, `util/`) | Grouped into 8 subdirectories |
-| CDMS→Rainman coupling | ✅ Targeted per-class includes; forward declarations | Via service/adapter layer |
+| CDMS→Rainman coupling | ✅ Service/adapter layer (`ModuleService`, `FileService`, `FormatService`, `HashService`) | Via service/adapter layer |
 | Header coupling | ✅ `Rainman.h` removed; directory-qualified includes | Targeted per-class includes; forward declarations |
 | Stream ownership | ✅ RAII wrappers (`StreamGuard`) alongside existing API | RAII wrappers alongside existing API |
-| Test coverage | ~65% class-level | 80%+ class-level |
+| Test coverage | ~75% class-level (34 test files: 24 Rainman + 10 CDMS) | 80%+ class-level |
 | God classes | `CModuleFile`, `ConstructFrame`, `frmFiles_Actions.h` | Decomposed into focused classes |
 
 ---
@@ -291,19 +291,19 @@ public:
 
 ### 4.2 ConstructFrame Decomposition
 
-Break `ConstructFrame` into composed helper classes:
+Break `ConstructFrame` into composed helper classes (Phase E handles MenuController + ToolRegistry; Phase F handles ModuleManager + TabManager):
 
 ```
 ConstructFrame
-├── owns: MenuController        # Menu bar setup and event routing
-├── owns: ToolRegistry           # ITool registration and dispatch (replaces 20 LaunchModToolN)
-├── owns: ModuleManager          # CModuleFile* lifecycle (load, save, close)
-└── owns: TabManager             # wxAuiNotebook tab management
+├── owns: MenuController        # Menu bar setup and event routing (Phase E)
+├── owns: ToolRegistry           # ITool registration and dispatch (Phase E)
+├── owns: ModuleManager          # CModuleFile* lifecycle (Phase F)
+└── owns: TabManager             # wxAuiNotebook tab management (Phase F)
 ```
 
 ### 4.3 frmFiles_Actions.h Extraction
 
-Split the 30+ inline action handler classes into individual files:
+Split the 31 inline action handler classes into individual files under `cdms/actions/`:
 
 ```
 cdms/actions/
@@ -312,7 +312,7 @@ cdms/actions/
 ├── RgdAction.h/cpp
 ├── ScarAction.h/cpp
 ├── LuaBurnAction.h/cpp
-└── ...
+└── ... (31 total)
 ```
 
 Each action class moves from being inline in the header to a proper .h/.cpp pair.
@@ -333,10 +333,10 @@ Based on risk assessment and testability analysis:
 
 | Priority | Class | Testability | Approach |
 |----------|-------|-------------|----------|
-| 🥇 **Critical** | `CSgaCreator` | Easy (9/10) | Round-trip: create SGA → read with CSgaFile → verify |
-| 🥈 **High** | `CBfxFile` | Easy (7/10) | Extends CRgdFile; test Lua export |
-| 🥉 **High** | `CRgmFile` | Medium (6/10) | Load from CMemoryStore, verify material properties |
-| 4 **High** | `CLuaFile2` | Medium (5/10) | Load Lua script from CMemoryStore, verify metadata |
+| ✅ ~~**Critical**~~ | `CSgaCreator` | Easy (9/10) | ~~Round-trip: create SGA → read with CSgaFile → verify~~ Done (`sgacreator_test.cpp`) |
+| ✅ ~~**High**~~ | `CBfxFile` | Easy (7/10) | ~~Extends CRgdFile; test Lua export~~ Done (`cbfxfile_test.cpp`) |
+| ✅ ~~**High**~~ | `CRgmFile` | Medium (6/10) | ~~Load from CMemoryStore, verify material properties~~ Done (`rgmfile_test.cpp`) |
+| ✅ ~~**High**~~ | `CLuaFile2` | Medium (5/10) | ~~Load Lua script from CMemoryStore, verify metadata~~ Done (`luafile2_test.cpp`) |
 | 5 **Medium** | `CLuaFromRgd` | Medium (6/10) | Create CRgdFile in memory → convert → verify Lua output |
 | 6 **Medium** | `CRgtFile` | Medium (5/10) | Load minimal TGA/DDS from memory |
 | 7 **Medium** | `CLuaFile` | Hard (4/10) | Complex Lua state management; defer if CLuaFile2 covers enough |
@@ -424,22 +424,22 @@ These are **purely additive changes** that cannot break existing behavior. They 
 
 Each phase is a standalone unit of work. Complete one before starting the next. Every phase ends with all tests passing.
 
-### Phase A: Foundation (Tests + RAII Wrappers)
+### Phase A: Foundation (Tests + RAII Wrappers) ✅
 
-1. Add `StreamGuard.h` RAII wrapper (new file, no existing code changes)
-2. Write `CSgaCreator` round-trip tests
-3. Write `CBfxFile` tests
-4. Write `CRgmFile` tests
-5. Write `CLuaFile2` basic tests
-6. Use `StreamGuard` in new test code as a proving ground
+1. ~~Add `StreamGuard.h` RAII wrapper (new file, no existing code changes)~~
+2. ~~Write `CSgaCreator` round-trip tests~~
+3. ~~Write `CBfxFile` tests~~
+4. ~~Write `CRgmFile` tests~~
+5. ~~Write `CLuaFile2` basic tests~~
+6. ~~Use `StreamGuard` in new test code as a proving ground~~
 
-### Phase B: Header Decoupling
+### Phase B: Header Decoupling ✅
 
-1. Add forward declarations to `CModuleFile.h` (move 5 includes to .cpp)
-2. Add forward declarations to `CLuaFromRgd.h`, `CFileMap.h`, `CRgdFileMacro.h`
-3. Verify build times improved
-4. Replace per-file `#include <Rainman.h>` in CDMS `.cpp` files with targeted includes
-5. Remove `<Rainman.h>` from `Common.h`
+1. ~~Add forward declarations to `CModuleFile.h` (move 5 includes to .cpp)~~
+2. ~~Add forward declarations to `CLuaFromRgd.h`, `CFileMap.h`, `CRgdFileMacro.h`~~
+3. ~~Verify build times improved~~
+4. ~~Replace per-file `#include <Rainman.h>` in CDMS `.cpp` files with targeted includes~~
+5. ~~Remove `<Rainman.h>` from `Common.h`~~
 
 ### Phase C: Rainman Subdirectory Reorganization ✅
 
@@ -450,7 +450,7 @@ Each phase is a standalone unit of work. Complete one before starting the next. 
 5. ~~Delete unused vendored `zLib/` directory~~
 6. ~~Adopt directory-qualified includes (`#include "core/Exception.h"`, etc.)~~
 
-### Phase D: CDMS Service Layer
+### Phase D: CDMS Service Layer ✅
 
 1. ~~Create `Result<T>` error type in `services/Result.h`~~
 2. ~~Create `services/` directory and update `CMakeLists.txt`~~
@@ -470,17 +470,68 @@ Each phase is a standalone unit of work. Complete one before starting the next. 
 
 ### Phase E: CDMS Structural Cleanup
 
-1. Extract `frmFiles_Actions.h` into individual action class files
-2. Replace 20 `LaunchModToolN()` with array-driven dispatch
-3. Extract `ToolRegistry` from `ConstructFrame`
-4. Extract `MenuController` from `ConstructFrame`
+#### E1 — Extract `frmFiles_Actions.h` into Individual Action Files
+
+1. Create `src/cdms/actions/` directory
+2. Update `CMakeLists.txt` glob to include `actions/*.cpp`
+3. Move `OnlyFilename()` helper to a shared location (e.g., `Utility.h`)
+4. Extract each of the 31 inline action classes into individual `actions/FooAction.h` + `actions/FooAction.cpp` files
+5. Update `frmFiles.cpp` to include individual action headers instead of `frmFiles_Actions.h`
+6. Delete `frmFiles_Actions.h`
+7. Build + test verification
+
+#### E2 — Extract `ITool` Interface to Own Header
+
+1. Create `src/cdms/ITool.h` with the ITool interface (currently nested inside `ConstructFrame`)
+2. Update `Construct.h` to include `ITool.h` and remove the nested class definition
+3. Update all ITool implementations (`Tool_AESetup`, `Tools.cpp`, etc.) to include `ITool.h`
+4. Build + test
+
+#### E3 — Extract `ToolRegistry` from `ConstructFrame`
+
+1. Create `src/cdms/ToolRegistry.h/.cpp`
+2. Move `m_vTools`, `GetToolCount()`, `GetTool()`, `DoTool()` into `ToolRegistry`
+3. Add `LaunchTool(size_t index)` method
+4. `ConstructFrame` holds a `ToolRegistry` member instead of raw vector
+5. Update all callers to go through the registry
+6. Build + test
+
+#### E4 — Replace `LaunchModToolN()` with Array-Driven Dispatch
+
+1. Replace 20 `EVT_MENU(IDM_ModToolN, ...)` entries with `Bind()` calls during tool registration
+2. Create a single `OnToolMenuCommand(wxCommandEvent&)` handler that extracts tool index from event ID
+3. Remove the `FN_MOD_TOOL` macro and all 20 expansions
+4. Remove the 20 `LaunchModToolN` declarations from `Construct.h`
+5. Remove the hardcoded 20-tool limit (use dynamic menu IDs)
+6. Replace `IDM_ModTool1`–`IDM_ModTool20` enum entries with a single `IDM_ModToolBase`
+7. Build + test
+
+#### E5 — Extract `MenuController` from `ConstructFrame`
+
+1. Create `src/cdms/MenuController.h/.cpp`
+2. Move menu bar construction from `ConstructFrame` constructor into `MenuController::Build()`
+3. Move menu enable/disable logic
+4. `MenuController` receives references to `ToolRegistry` (for dynamic tool menus)
+5. `ConstructFrame` holds a `MenuController` member
+6. Build + test
+
+**Dependency order**: E1 is independent. E2 → E3 → E4. E3 → E5. Recommended: E1 → E2 → E3 → E4 → E5.
+
+### Phase E½: Remaining Rainman Test Coverage
+
+1. Write `CLuaFromRgd` tests (RGD→Lua conversion round-trip)
+2. Write `CRgtFile` tests (load minimal TGA/DDS from `CMemoryStore`)
+3. Write `CLuaFile` tests (Lua state management; defer if CLuaFile2 covers enough)
+4. Write `CLuaScript` tests (simple wrapper; low risk)
 
 ### Phase F: Modernization (Long-Term)
 
 1. Migrate stream callers to `StreamGuard` (opt-in)
 2. Add exception RAII wrapper alongside `destroy()` pattern
 3. Modernize string handling at Rainman↔CDMS boundary
-4. Consider `CModuleFile` decomposition (only with full test coverage)
+4. Extract `ModuleManager` from `ConstructFrame` (module lifecycle management)
+5. Extract `TabManager` from `ConstructFrame` (wxAuiNotebook tab management)
+6. Consider `CModuleFile` decomposition (only with full test coverage)
 
 ---
 

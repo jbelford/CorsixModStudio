@@ -57,26 +57,6 @@ EVT_MENU(IDM_LoadModCoH, ConstructFrame::OnOpenModCoH)
 EVT_MENU(IDM_LoadSga, ConstructFrame::OnOpenSga)
 EVT_MENU(wxID_EXIT, ConstructFrame::OnQuit)
 EVT_MENU(wxID_CLOSE, ConstructFrame::OnCloseMod)
-EVT_MENU(IDM_ModTool1, ConstructFrame::LaunchModTool1)
-EVT_MENU(IDM_ModTool2, ConstructFrame::LaunchModTool2)
-EVT_MENU(IDM_ModTool3, ConstructFrame::LaunchModTool3)
-EVT_MENU(IDM_ModTool4, ConstructFrame::LaunchModTool4)
-EVT_MENU(IDM_ModTool5, ConstructFrame::LaunchModTool5)
-EVT_MENU(IDM_ModTool6, ConstructFrame::LaunchModTool6)
-EVT_MENU(IDM_ModTool7, ConstructFrame::LaunchModTool7)
-EVT_MENU(IDM_ModTool8, ConstructFrame::LaunchModTool8)
-EVT_MENU(IDM_ModTool9, ConstructFrame::LaunchModTool9)
-EVT_MENU(IDM_ModTool10, ConstructFrame::LaunchModTool10)
-EVT_MENU(IDM_ModTool11, ConstructFrame::LaunchModTool11)
-EVT_MENU(IDM_ModTool12, ConstructFrame::LaunchModTool12)
-EVT_MENU(IDM_ModTool13, ConstructFrame::LaunchModTool13)
-EVT_MENU(IDM_ModTool14, ConstructFrame::LaunchModTool14)
-EVT_MENU(IDM_ModTool15, ConstructFrame::LaunchModTool15)
-EVT_MENU(IDM_ModTool16, ConstructFrame::LaunchModTool16)
-EVT_MENU(IDM_ModTool17, ConstructFrame::LaunchModTool17)
-EVT_MENU(IDM_ModTool18, ConstructFrame::LaunchModTool18)
-EVT_MENU(IDM_ModTool19, ConstructFrame::LaunchModTool19)
-EVT_MENU(IDM_ModTool20, ConstructFrame::LaunchModTool20)
 
 EVT_MENU(IDM_AttributeEditor, ConstructFrame::LaunchRelicAttributeEditor)
 EVT_MENU(IDM_AudioEditor, ConstructFrame::LaunchRelicAudioEditor)
@@ -473,16 +453,16 @@ ConstructFrame::ConstructFrame(const wxString &sTitle, const wxPoint &oPos, cons
     m_sRgdHashCustomOut = 0;
 
     // Initiate tools
-    m_vTools.push_back(new CLocaleTool);
-    m_vTools.push_back(new CUcsTool);
-    m_vTools.push_back(new CAttribSnapshotTool);
-    m_vTools.push_back(new CSgaPackerTool);
-    m_vTools.push_back(new CExtractAllTool);
-    m_vTools.push_back(new CDpsCalculatorTool);
-    m_vTools.push_back(new CRefreshFilesTool);
-    m_vTools.push_back(new CMakeLuaInheritTree);
-    m_vTools.push_back(new CAESetupTool);
-    m_vTools.push_back(new CRedButtonTool);
+    m_toolRegistry.Register(new CLocaleTool);
+    m_toolRegistry.Register(new CUcsTool);
+    m_toolRegistry.Register(new CAttribSnapshotTool);
+    m_toolRegistry.Register(new CSgaPackerTool);
+    m_toolRegistry.Register(new CExtractAllTool);
+    m_toolRegistry.Register(new CDpsCalculatorTool);
+    m_toolRegistry.Register(new CRefreshFilesTool);
+    m_toolRegistry.Register(new CMakeLuaInheritTree);
+    m_toolRegistry.Register(new CAESetupTool);
+    m_toolRegistry.Register(new CRedButtonTool);
 
     // Make Splitter Window
     m_pSplitter = new wxSplitterWindow(this, IDC_Splitter);
@@ -496,92 +476,8 @@ ConstructFrame::ConstructFrame(const wxString &sTitle, const wxPoint &oPos, cons
     m_pSplitter->Initialize(m_pTabs);
     m_pTabs->AddPage(new frmWelcome(m_pTabs, -1), AppStr(welcome_tabname));
 
-    // Make Menus
-    // Make file menu
-    wxMenu *pMenu_File = new wxMenu;
-    pMenu_File->Append(wxID_NEW, AppStr(new_mod_menu), AppStr(new_mod));
-    pMenu_File->Append(IDM_LoadModDoWWA, AppStr(open_mod_menu), AppStr(open_mod_help));
-    pMenu_File->Append(IDM_LoadModDC, AppStr(open_moddc_menu), AppStr(open_moddc_help));
-    pMenu_File->Append(IDM_LoadModSS, AppStr(open_modss_menu), AppStr(open_modss_help));
-    pMenu_File->Append(IDM_LoadModCoH, AppStr(open_modcoh_menu), AppStr(open_modcoh_help));
-    pMenu_File->Append(IDM_LoadSga, AppStr(open_sga_menu), AppStr(open_sga_help));
-    pMenu_File->Append(wxID_CLOSE, AppStr(close_mod_menu), AppStr(close_mod_help));
-    pMenu_File->AppendSeparator();
-    pMenu_File->Append(wxID_EXIT, AppStr(exit_menu), AppStr(exit_help));
-    pMenu_File->Enable(wxID_CLOSE, false);
-
-    // Make mod menu
-    wxMenu *pMenu_Mod = new wxMenu;
-    pMenu_Mod->Append(wxID_PROPERTIES, AppStr(mod_properties_menu), AppStr(mod_properties_help));
-    pMenu_Mod->AppendSeparator();
-    int aModToolIDs[] = {IDM_ModTool1,  IDM_ModTool2,  IDM_ModTool3,  IDM_ModTool4,  IDM_ModTool5,
-                         IDM_ModTool6,  IDM_ModTool7,  IDM_ModTool8,  IDM_ModTool9,  IDM_ModTool10,
-                         IDM_ModTool11, IDM_ModTool12, IDM_ModTool13, IDM_ModTool14, IDM_ModTool15,
-                         IDM_ModTool16, IDM_ModTool17, IDM_ModTool18, IDM_ModTool19, IDM_ModTool20};
-    int i = -1;
-    for (std::vector<ITool *>::iterator itr = m_vTools.begin(); itr != m_vTools.end(); ++itr)
-    {
-        pMenu_Mod->Append(aModToolIDs[++i], (**itr).GetName(), (**itr).GetHelpString());
-    }
-    /*
-    pMenu_Mod->Append( IDM_Locale, AppStr(locale_menu), AppStr(locale_help) );
-    pMenu_Mod->Append( IDM_UCSEdit, AppStr(ucs_editor_menu), AppStr(ucs_editor_help) );
-    pMenu_Mod->Append( IDM_XMLExport, AppStr(xml_export_menu) , AppStr(xml_export_help) );
-    */
-
-    // Make relic tools menu
-    wxMenu *pMenu_RelicTools = new wxMenu;
-    pMenu_RelicTools->Append(IDM_AttributeEditor, AppStr(attr_editor_menu), AppStr(attr_editor_help));
-    pMenu_RelicTools->Append(IDM_AudioEditor, AppStr(audio_editor_menu), AppStr(audio_editor_help));
-    pMenu_RelicTools->Append(IDM_ChunkyViewer, AppStr(chunky_view_menu), AppStr(chunky_view_help));
-    pMenu_RelicTools->Append(IDM_FXTool, AppStr(fx_tools_menu), AppStr(fx_tools_help));
-    pMenu_RelicTools->Append(IDM_MissionEditor, AppStr(mission_edit_menu), AppStr(mission_edit_help));
-    pMenu_RelicTools->Append(IDM_ModPackager, AppStr(mod_packager_menu), AppStr(mod_packager_help));
-    pMenu_RelicTools->Append(IDM_ObjectEditor, AppStr(object_editor_menu), AppStr(object_editor_help));
-
-    // Make play menu
-    wxMenu *pMenu_Play = new wxMenu;
-    pMenu_Play->Append(IDM_PlayCOH, AppStr(play_coh), AppStr(play_coh_help));
-    pMenu_Play->Append(IDM_PlayW40k, AppStr(play_w40k), AppStr(play_w40k_help));
-    pMenu_Play->Append(IDM_PlayWXP, AppStr(play_wxp), AppStr(play_wxp_help));
-    pMenu_Play->Append(IDM_PlayDC, AppStr(play_dc), AppStr(play_dc_help));
-    pMenu_Play->Append(IDM_PlaySS, AppStr(play_ss), AppStr(play_ss_help));
-    pMenu_Play->Append(IDM_PlayWarn, AppStr(play_warn), AppStr(play_warn_help));
-    pMenu_Play->AppendSeparator();
-    pMenu_Play->AppendCheckItem(IDM_PlayDev, AppStr(play_dev), AppStr(play_dev_help));
-    pMenu_Play->AppendCheckItem(IDM_PlayNoMovies, AppStr(play_nomov), AppStr(play_nomov_help));
-    pMenu_Play->Check(IDM_PlayNoMovies, true);
-    pMenu_Play->Enable(IDM_PlayCOH, false);
-    pMenu_Play->Enable(IDM_PlayW40k, false);
-    pMenu_Play->Enable(IDM_PlayWXP, false);
-    pMenu_Play->Enable(IDM_PlayDC, false);
-    pMenu_Play->Enable(IDM_PlaySS, false);
-
-    // Make help menu
-    wxMenu *pMenu_Help = new wxMenu;
-    pMenu_Help->Append(wxID_HELP_CONTENTS, AppStr(help_index_menu), AppStr(help_index_help));
-
-    pMenu_Help->Append(IDM_RDNWikiNew, AppStr(rdn_new_wiki_menu), AppStr(rdn_new_wiki_help));
-    pMenu_Help->Append(IDM_ForumDoW, AppStr(forum_dow_menu), AppStr(forum_dow_help));
-    pMenu_Help->Append(IDM_ForumCoH, AppStr(forum_coh_menu), AppStr(forum_coh_help));
-
-    pMenu_Help->Append(IDM_RDNWiki, AppStr(rdn_wiki_menu), AppStr(rdn_wiki_help));
-    pMenu_Help->Append(IDM_LuaRef, AppStr(lua_ref_menu), AppStr(lua_ref_help));
-    pMenu_Help->Append(IDM_KresjahWiki, AppStr(kresjah_wiki_menu), AppStr(kresjah_wiki_help));
-    pMenu_Help->AppendSeparator();
-    pMenu_Help->Append(wxID_ABOUT, AppStr(about_menu), AppStr(about_help));
-    pMenu_Help->Append(IDM_Credits, AppStr(credits_menu), AppStr(credits_help));
-    pMenu_Help->Append(IDM_HideDonate, AppStr(hidedonate_menu), AppStr(hidedonate_help));
-
-    // Menu menu bar
-    wxMenuBar *pMenuBar = new wxMenuBar;
-    pMenuBar->Append(pMenu_File, AppStr(file_menu));
-    pMenuBar->Append(pMenu_Mod, AppStr(mod_menu));
-    pMenuBar->Append(pMenu_RelicTools, AppStr(relic_tools_menu));
-    pMenuBar->Append(pMenu_Play, AppStr(play_menu));
-    pMenuBar->Append(pMenu_Help, AppStr(help_menu));
-    SetMenuBar(pMenuBar);
-    pMenuBar->EnableTop(1, false);
+    // Build menus
+    m_menuController.Build(this, m_toolRegistry);
 
     // Make Statusbar
     CreateStatusBar();
@@ -596,50 +492,17 @@ void ConstructFrame::DoNewMod()
         DoLoadMod(oNewMod.GetPath());
     }
 }
-#define FN_MOD_TOOL(N)                                                                                                 \
-    void ConstructFrame::LaunchModTool##N(wxCommandEvent &event)                                                       \
-    {                                                                                                                  \
-        UNUSED(event);                                                                                                 \
-        m_vTools[N - 1]->DoAction();                                                                                   \
-    }
-FN_MOD_TOOL(1)
-FN_MOD_TOOL(2)
-FN_MOD_TOOL(3)
-FN_MOD_TOOL(4)
-FN_MOD_TOOL(5)
-FN_MOD_TOOL(6)
-FN_MOD_TOOL(7)
-FN_MOD_TOOL(8)
-FN_MOD_TOOL(9)
-FN_MOD_TOOL(10)
-FN_MOD_TOOL(11)
-FN_MOD_TOOL(12)
-FN_MOD_TOOL(13)
-FN_MOD_TOOL(14)
-FN_MOD_TOOL(15)
-FN_MOD_TOOL(16)
-FN_MOD_TOOL(17)
-FN_MOD_TOOL(18)
-FN_MOD_TOOL(19)
-FN_MOD_TOOL(20)
-#undef FN_MOD_TOOL
-
-size_t ConstructFrame::GetToolCount() { return m_vTools.size(); }
-
-ConstructFrame::ITool *ConstructFrame::GetTool(size_t i) { return m_vTools[i]; }
-
-void ConstructFrame::DoTool(wxString sName)
+void ConstructFrame::OnToolMenuCommand(wxCommandEvent &event)
 {
-    for (std::vector<ITool *>::iterator itr = m_vTools.begin(); itr != m_vTools.end(); ++itr)
-    {
-        if ((**itr).GetName() == sName)
-        {
-            (**itr).DoAction();
-            return;
-        }
-    }
-    ErrorBox("Tool description mismatch");
+    size_t index = static_cast<size_t>(event.GetId() - IDM_ModToolBase);
+    m_toolRegistry.LaunchTool(index);
 }
+
+size_t ConstructFrame::GetToolCount() { return m_toolRegistry.GetCount(); }
+
+ConstructFrame::ITool *ConstructFrame::GetTool(size_t i) { return m_toolRegistry.Get(i); }
+
+void ConstructFrame::DoTool(wxString sName) { m_toolRegistry.DoTool(sName); }
 
 ConstructFrame::~ConstructFrame()
 {
@@ -651,10 +514,7 @@ ConstructFrame::~ConstructFrame()
     m_pRgdHashTable = nullptr;
     if (m_sRgdHashCustomOut)
         free(m_sRgdHashCustomOut);
-    for (std::vector<ITool *>::iterator itr = m_vTools.begin(); itr != m_vTools.end(); ++itr)
-    {
-        delete *itr;
-    }
+    // ToolRegistry destructor handles tool cleanup
 }
 
 CModuleFile *ConstructFrame::GetModule() const { return m_pModule; }
