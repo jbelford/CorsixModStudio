@@ -24,6 +24,7 @@ add_executable(cdms_tests
     ucstodatpresenter_test.cpp
     dpscalculatorpresenter_test.cpp
     luainherittreepresenter_test.cpp
+    rgdmacropresenter_test.cpp
     ${CDMS_SRC_DIR}/strconv.cpp
     ${CDMS_SRC_DIR}/strings.cpp
     ${CDMS_SRC_DIR}/Utility.cpp
@@ -39,6 +40,7 @@ add_executable(cdms_tests
     ${CDMS_SRC_DIR}/presenters/CSgaMakePresenter.cpp
     ${CDMS_SRC_DIR}/presenters/CUcsToDatPresenter.cpp
     ${CDMS_SRC_DIR}/presenters/CDpsCalculatorPresenter.cpp
+    ${CDMS_SRC_DIR}/presenters/CRgdMacroPresenter.cpp
     ${CDMS_SRC_DIR}/Tool_AutoDPS.cpp
     ${CDMS_SRC_DIR}/Tool_AESetup.cpp
     ${CDMS_SRC_DIR}/CtrlStatusText.cpp

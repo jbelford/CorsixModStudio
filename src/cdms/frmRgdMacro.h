@@ -30,16 +30,18 @@
 #include "wx/wx.h"
 #endif
 // ----------------------------
+#include "presenters/CRgdMacroPresenter.h"
+#include "views/IRgdMacroView.h"
+#include <memory>
 #include <rainman/formats/CRgdFileMacro.h>
 #include <wx/stc/stc.h>
 #include <wx/treectrl.h>
 
-class frmRgdMacro : public wxDialog
+class frmRgdMacro : public wxDialog, public IRgdMacroView
 {
   protected:
     wxStyledTextCtrl *m_pSTC;
     wxTextCtrl *m_pTextbox;
-    std::map<unsigned long, char *> m_mapToUpdate;
 
     wxStaticText *m_pCaption;
     wxButton *m_pSaveBtn, *m_pLoadBtn, *m_pRunBtn, *m_pModeBtn;
@@ -50,21 +52,12 @@ class frmRgdMacro : public wxDialog
     unsigned long m_iPathHash;
     unsigned long m_iPathLen;
 
-    bool m_bAllowDebug;
-    bool m_bAllowIO;
-    bool m_bAllowOS;
-    bool m_bAllowSave;
-    bool m_bAllowLoad;
-
     wxString m_sPath;
     wxTreeItemId &m_oFolder;
 
-    static void _callback_print(void *pTag, const char *sMsg);
-    static bool _callback_save(void *pTag, const char *sFile);
-    static bool _callback_load(void *pTag, const char *sFile);
-    static bool _callback_security(void *pTag, CRgdFileMacro::eSecurityTypes);
+    std::unique_ptr<CRgdMacroPresenter> m_pPresenter;
+
     void _populateFileList(std::vector<char *> *lstFiles);
-    bool _request_Permission(const wxString &sAction);
 
   public:
     frmRgdMacro(wxString sFile, wxTreeItemId &oFolder);
@@ -76,6 +69,16 @@ class frmRgdMacro : public wxDialog
     void OnCancelClick(wxCommandEvent &event);
     void OnStyleNeeded(wxStyledTextEvent &event);
     void OnCharAdded(wxStyledTextEvent &event);
+
+    // IRgdMacroView implementation
+    void ShowProgress(const wxString &sMessage) override;
+    void HideProgress() override;
+    void ShowError(const wxString &sMessage) override;
+    void AppendOutput(const wxString &sText) override;
+    bool RequestPermission(const wxString &sQuestion) override;
+    void OnMacroComplete(const std::vector<wxString> &vFoldersToUpdate) override;
+    void DisableControls() override;
+    void EnableControls() override;
 
     enum
     {

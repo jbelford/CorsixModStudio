@@ -159,7 +159,8 @@ frmRgdMacro::frmRgdMacro(wxString sFile, wxTreeItemId &oFolder)
     : m_oFolder(oFolder), m_sPath(sFile),
       wxDialog(wxTheApp->GetTopWindow(), -1, AppStr(rgdmacro_title), wxPoint(0, 0),
                wxWindow::FromDIP(wxSize(400, 600), wxTheApp->GetTopWindow()),
-               wxFRAME_FLOAT_ON_PARENT | wxSYSTEM_MENU | wxCAPTION | wxRESIZE_BORDER | wxCLOSE_BOX)
+               wxFRAME_FLOAT_ON_PARENT | wxSYSTEM_MENU | wxCAPTION | wxRESIZE_BORDER | wxCLOSE_BOX),
+      m_pPresenter(std::make_unique<CRgdMacroPresenter>(*this, this))
 {
     m_bShowingOutput = false;
     wxBoxSizer *pTopSizer = m_pFormMainSizer = new wxBoxSizer(wxVERTICAL);
@@ -299,215 +300,42 @@ void frmRgdMacro::OnCharAdded(wxStyledTextEvent &event)
     }
 }
 
-void frmRgdMacro::_callback_print(void *pTag, const char *sMsg)
-{
-    frmRgdMacro *pThis = (frmRgdMacro *)pTag;
+// --- IRgdMacroView implementation ---
 
-    pThis->m_pTextbox->AppendText(AsciiTowxString(sMsg));
+void frmRgdMacro::ShowProgress(const wxString &sMessage) { m_pCaption->SetLabel(sMessage); }
+
+void frmRgdMacro::HideProgress() {}
+
+void frmRgdMacro::ShowError(const wxString &sMessage) { _ErrorBox(sMessage, __FILE__, __LINE__); }
+
+void frmRgdMacro::AppendOutput(const wxString &sText) { m_pTextbox->AppendText(sText); }
+
+bool frmRgdMacro::RequestPermission(const wxString &sQuestion)
+{
+    wxString sFullQuestion = wxT("The macro is requesting permission for the ability ");
+    sFullQuestion.Append(sQuestion);
+    sFullQuestion.Append(wxT(".\nDo you want to grant it permission?"));
+
+    return ::wxMessageBox(sFullQuestion, wxT("Macro Permissions"), wxYES_NO) == wxYES;
 }
 
-bool frmRgdMacro::_request_Permission(const wxString &sAction)
+void frmRgdMacro::OnMacroComplete(const std::vector<wxString> &vFoldersToUpdate)
 {
-    wxString sQuestion = wxT("The macro is requesting permission for the ability ");
-    sQuestion.Append(sAction);
-    sQuestion.Append(wxT(".\nDo you want to grant it permission?"));
-
-    return ::wxMessageBox(sQuestion, wxT("Macro Permissions"), wxYES_NO) == wxYES;
-}
-
-bool frmRgdMacro::_callback_load(void *pTag, const char *sFile)
-{
-    frmRgdMacro *pThis = (frmRgdMacro *)pTag;
-    if (!pThis->m_bAllowLoad)
+    for (const auto &sFolder : vFoldersToUpdate)
     {
-        char *sFile2 = strdup(sFile);
-        {
-            for (char *s = sFile2; *s; ++s)
-            {
-                if (*s == '/')
-                    *s = '\\';
-            }
-            unsigned long iHashRoot = crc32_case_idt(0, (const unsigned char *)sFile2,
-                                                     std::min(pThis->m_iPathLen, (unsigned long)strlen(sFile2)));
-            if (iHashRoot != pThis->m_iPathHash)
-            {
-                if (!(pThis->m_bAllowLoad = pThis->_request_Permission(wxT(
-                          "to load RGD files from locations outside of the folder that the macro is being run over"))))
-                {
-                    free(sFile2);
-                    return false;
-                }
-            }
-        }
-        free(sFile2);
-    }
-    return true;
-}
-
-bool frmRgdMacro::_callback_security(void *pTag, CRgdFileMacro::eSecurityTypes eType)
-{
-    frmRgdMacro *pThis = (frmRgdMacro *)pTag;
-    switch (eType)
-    {
-    case CRgdFileMacro::ST_DebugLib:
-        if (!pThis->m_bAllowDebug)
-        {
-            if (!(pThis->m_bAllowDebug = pThis->_request_Permission(wxT("to use the LUA reflexive debug library"))))
-                return false;
-        }
-        break;
-    case CRgdFileMacro::ST_IOLib:
-        if (!pThis->m_bAllowIO)
-        {
-            if (!(pThis->m_bAllowIO =
-                      pThis->_request_Permission(wxT("to use the LUA I/O library.\nWarning: This can be used to read "
-                                                     "and write any file on your computer"))))
-                return false;
-        }
-        break;
-    case CRgdFileMacro::ST_OSLib:
-        if (!pThis->m_bAllowOS)
-        {
-            if (!(pThis->m_bAllowOS = pThis->_request_Permission(
-                      wxT("to use the LUA OS library.\nWarning: This can be used to run programs on your computer, "
-                          "change computer settings and delete files from disk"))))
-                return false;
-        }
-        break;
-    };
-    return true;
-}
-
-bool frmRgdMacro::_callback_save(void *pTag, const char *sFile)
-{
-    frmRgdMacro *pThis = (frmRgdMacro *)pTag;
-    char *sFile2 = strdup(sFile);
-    {
-        for (char *s = sFile2; *s; ++s)
-        {
-            if (*s == '/')
-                *s = '\\';
-        }
-
-        if (!pThis->m_bAllowSave)
-        {
-            unsigned long iHashRoot = crc32_case_idt(0, (const unsigned char *)sFile2,
-                                                     std::min(pThis->m_iPathLen, (unsigned long)strlen(sFile2)));
-            if (iHashRoot != pThis->m_iPathHash)
-            {
-                if (!(pThis->m_bAllowSave = pThis->_request_Permission(wxT(
-                          "to save RGD files to locations outside of the folder that the macro is being run over"))))
-                {
-                    free(sFile2);
-                    return false;
-                }
-            }
-        }
-
-        char *sSlashLoc = strrchr(sFile2, '\\');
-        if (sSlashLoc)
-            *sSlashLoc = 0;
-    }
-    unsigned long iHash = crc32_case_idt(0, (const unsigned char *)sFile2, (unsigned int)strlen(sFile2));
-    if (pThis->m_mapToUpdate[iHash])
-    {
-        free(sFile2);
-    }
-    else
-    {
-        pThis->m_mapToUpdate[iHash] = sFile2;
-    }
-
-    return true;
-}
-
-void frmRgdMacro::OnRunClick(wxCommandEvent &event)
-{
-    UNUSED(event);
-    m_bAllowDebug = false;
-    m_bAllowIO = false;
-    m_bAllowOS = false;
-    m_bAllowSave = false;
-    m_bAllowLoad = false;
-
-    CRgdFileMacro oMacro;
-    oMacro.setHashTable(TheConstruct->GetHashService().GetHashTable());
-    oMacro.setCallbackTag((void *)this);
-    oMacro.setCallbackPrint(_callback_print);
-    oMacro.setCallbackSave(_callback_save);
-    oMacro.setCallbackLoad(_callback_load);
-    oMacro.setCallbackSecurity(_callback_security);
-    oMacro.setUcsResolver(TheConstruct->GetModuleService().GetModule());
-    oMacro.setIsDowMod(TheConstruct->GetModuleService().GetModuleType() == CModuleFile::MT_DawnOfWar);
-
-    wxString sContent = m_pSTC->GetText();
-    auto saContent = wxStringToAscii(sContent);
-
-    m_pTextbox->Clear();
-
-    try
-    {
-        oMacro.loadMacro(saContent.get());
-    }
-    catch (CRainmanException *pE)
-    {
-        ErrorBoxE(pE);
-        return;
-    }
-
-    if (!m_bShowingOutput)
-    {
-        wxCommandEvent e;
-        OnModeClick(e);
-    }
-    m_pModeBtn->Enable(false);
-    m_pSaveBtn->Enable(false);
-    ::wxSafeYield();
-
-    std::vector<char *> vFiles;
-    _populateFileList(&vFiles);
-    IFileStore *pFileStore = TheConstruct->GetModuleService().GetModule();
-
-    bool bContinue = true;
-    for (std::vector<char *>::iterator itr = vFiles.begin(); itr != vFiles.end(); ++itr)
-    {
-        try
-        {
-            if (bContinue)
-                oMacro.runMacro(*itr, pFileStore);
-        }
-        catch (CRainmanException *pE)
-        {
-            bContinue = _ErrorBox(pE, __FILE__, __LINE__, false, true);
-        }
-        free(*itr);
-    }
-
-    try
-    {
-        oMacro.runAtEnd();
-    }
-    catch (CRainmanException *pE)
-    {
-        ErrorBoxE(pE);
-    }
-
-    for (std::map<unsigned long, char *>::iterator itr = m_mapToUpdate.begin(); itr != m_mapToUpdate.end(); ++itr)
-    {
-        wxString sFolder = AsciiTowxString(itr->second);
-
+        wxString sFolderCopy = sFolder;
         wxTreeCtrl *pTree = GetConstruct()->GetFilesList()->GetTree();
         wxTreeItemId oParent = pTree->GetRootItem();
         wxTreeItemIdValue oCookie;
         wxTreeItemId oChild = pTree->GetFirstChild(oParent, oCookie);
-        wxString sPart = sFolder.BeforeFirst('\\');
+        wxString sPart = sFolderCopy.BeforeFirst('\\');
         bool bMoveNext = true;
         while (oChild.IsOk())
         {
             if (pTree->GetItemText(oChild).IsSameAs(sPart, false))
             {
-                sFolder = sFolder.AfterFirst('\\');
-                sPart = sFolder.BeforeFirst('\\');
+                sFolderCopy = sFolderCopy.AfterFirst('\\');
+                sPart = sFolderCopy.BeforeFirst('\\');
 
                 if (!pTree->ItemHasChildren(oChild) || sPart.IsEmpty())
                 {
@@ -527,19 +355,80 @@ void frmRgdMacro::OnRunClick(wxCommandEvent &event)
         }
         if (sPart.IsEmpty())
         {
-            auto dirResult = TheConstruct->GetFileService().Iterate(AsciiTowxString(itr->second));
+            auto saFolder = wxStringToAscii(sFolder);
+            auto dirResult = TheConstruct->GetFileService().Iterate(sFolder);
             if (dirResult)
             {
                 TheConstruct->GetFilesList()->UpdateDirectoryChildren(oChild, dirResult.value().get());
             }
         }
-        free(itr->second);
     }
-    m_mapToUpdate.clear();
-    oMacro.unloadMacro();
+}
 
+void frmRgdMacro::DisableControls()
+{
+    m_pModeBtn->Enable(false);
+    m_pSaveBtn->Enable(false);
+    m_pRunBtn->Enable(false);
+    m_pLoadBtn->Enable(false);
+}
+
+void frmRgdMacro::EnableControls()
+{
     m_pModeBtn->Enable(true);
     m_pSaveBtn->Enable(true);
+    m_pRunBtn->Enable(true);
+    m_pLoadBtn->Enable(true);
+}
+
+void frmRgdMacro::OnRunClick(wxCommandEvent &event)
+{
+    UNUSED(event);
+
+    wxString sContent = m_pSTC->GetText();
+    auto saContent = wxStringToAscii(sContent);
+
+    // Validate macro by loading it synchronously (fast, needs UI for error reporting)
+    CRgdFileMacro oTestMacro;
+    oTestMacro.setHashTable(TheConstruct->GetHashService().GetHashTable());
+    try
+    {
+        oTestMacro.loadMacro(saContent.get());
+    }
+    catch (CRainmanException *pE)
+    {
+        ErrorBoxE(pE);
+        return;
+    }
+    oTestMacro.unloadMacro();
+
+    m_pTextbox->Clear();
+
+    if (!m_bShowingOutput)
+    {
+        wxCommandEvent e;
+        OnModeClick(e);
+    }
+
+    // Populate file list (needs UI / TheConstruct access on main thread)
+    std::vector<char *> vRawFiles;
+    _populateFileList(&vRawFiles);
+
+    // Convert to std::string so the presenter can own the data
+    std::vector<std::string> vFiles;
+    vFiles.reserve(vRawFiles.size());
+    for (char *s : vRawFiles)
+    {
+        vFiles.emplace_back(s);
+        free(s);
+    }
+
+    IFileStore *pFileStore = TheConstruct->GetModuleService().GetModule();
+
+    m_pPresenter->RunMacro(sContent, std::move(vFiles), pFileStore, TheConstruct->GetHashService().GetHashTable(),
+                           TheConstruct->GetModuleService().GetModule(),
+                           TheConstruct->GetModuleService().GetModuleType() == CModuleFile::MT_DawnOfWar, m_iPathLen,
+                           m_iPathHash);
 }
 
 void ForEach_FindRgds(IDirectoryTraverser::IIterator *pItr, void *pTag)
