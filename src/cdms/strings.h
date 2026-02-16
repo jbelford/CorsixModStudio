@@ -16,7 +16,11 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#pragma once
+// NOTE: Do NOT use #pragma once here. This header is intentionally included
+// twice: once for extern declarations (default) and once for definitions
+// (when S_CPP_ is defined, in strings.cpp). See strings.cpp for details.
+#ifndef STRINGS_H_
+#define STRINGS_H_
 // For compilers that support precompilation, includes "wx/wx.h".
 #include "wx/wxprec.h"
 
@@ -435,3 +439,4 @@ S(redbutton_toolname, "Developer\'s Red Button")
 
 // End
 #undef S
+#endif // STRINGS_H_
