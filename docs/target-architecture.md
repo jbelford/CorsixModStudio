@@ -76,9 +76,9 @@
 | Rainman layout | ✅ Grouped into 8 subdirectories (`core/`, `io/`, `archive/`, `formats/`, `lua/`, `localization/`, `module/`, `util/`) | Grouped into 8 subdirectories |
 | CDMS→Rainman coupling | ✅ Service/adapter layer (`ModuleService`, `FileService`, `FormatService`, `HashService`) | Via service/adapter layer |
 | Header coupling | ✅ `Rainman.h` removed; directory-qualified includes | Targeted per-class includes; forward declarations |
-| Stream ownership | ✅ RAII wrappers (`StreamGuard`) alongside existing API | RAII wrappers alongside existing API |
-| Test coverage | ✅ ~85% class-level (38 test files: 28 Rainman + 10 CDMS) | 80%+ class-level |
-| God classes | `CModuleFile`, `ConstructFrame`, `frmFiles_Actions.h` | Decomposed into focused classes |
+| Stream ownership | ✅ `std::unique_ptr<IStream>` / `std::unique_ptr<IOutputStream>` | RAII wrappers alongside existing API |
+| Test coverage | ✅ ~85% class-level (36 test files: 26 Rainman + 10 CDMS) | 80%+ class-level |
+| God classes | ✅ `CModuleFile` decomposed (3 sub-classes), `ConstructFrame` decomposed (5 helpers), `frmFiles_Actions.h` extracted (32 action files) | Decomposed into focused classes |
 
 ---
 
@@ -183,79 +183,24 @@ src/rainman/
 - Replace `Common.h`'s `#include <Rainman.h>` with nothing — each `.cpp` includes what it needs
 - Keep `Rainman.h` as a convenience header but discourage its use
 
-### 3.3 RAII Stream Wrapper (New, Additive)
+### 3.3 RAII Stream Ownership (Completed)
 
-A new `StreamGuard.h` alongside existing code — callers can opt in gradually:
+Stream ownership uses `std::unique_ptr` — the original `StreamGuard` wrapper was replaced and deleted during Phase F.1:
 
 ```cpp
-// io/StreamGuard.h — RAII wrapper for IFileStore streams
-#pragma once
-#include "IFileStore.h"
-
-namespace rainman {
-
-// Owns an IStream* and deletes it on destruction.
-class StreamGuard {
-public:
-    explicit StreamGuard(IFileStore::IStream* p = nullptr) noexcept : m_p(p) {}
-    ~StreamGuard() { delete m_p; }
-
-    StreamGuard(StreamGuard&& other) noexcept : m_p(other.m_p) { other.m_p = nullptr; }
-    StreamGuard& operator=(StreamGuard&& other) noexcept {
-        if (this != &other) { delete m_p; m_p = other.m_p; other.m_p = nullptr; }
-        return *this;
-    }
-
-    StreamGuard(const StreamGuard&) = delete;
-    StreamGuard& operator=(const StreamGuard&) = delete;
-
-    IFileStore::IStream* get() const noexcept { return m_p; }
-    IFileStore::IStream* operator->() const noexcept { return m_p; }
-    IFileStore::IStream* release() noexcept { auto* p = m_p; m_p = nullptr; return p; }
-    explicit operator bool() const noexcept { return m_p != nullptr; }
-
-private:
-    IFileStore::IStream* m_p;
-};
-
-// Same for IOutputStream
-class OutputStreamGuard {
-public:
-    explicit OutputStreamGuard(IFileStore::IOutputStream* p = nullptr) noexcept : m_p(p) {}
-    ~OutputStreamGuard() { delete m_p; }
-
-    OutputStreamGuard(OutputStreamGuard&& other) noexcept : m_p(other.m_p) { other.m_p = nullptr; }
-    OutputStreamGuard& operator=(OutputStreamGuard&& other) noexcept {
-        if (this != &other) { delete m_p; m_p = other.m_p; other.m_p = nullptr; }
-        return *this;
-    }
-
-    OutputStreamGuard(const OutputStreamGuard&) = delete;
-    OutputStreamGuard& operator=(const OutputStreamGuard&) = delete;
-
-    IFileStore::IOutputStream* get() const noexcept { return m_p; }
-    IFileStore::IOutputStream* operator->() const noexcept { return m_p; }
-    IFileStore::IOutputStream* release() noexcept { auto* p = m_p; m_p = nullptr; return p; }
-    explicit operator bool() const noexcept { return m_p != nullptr; }
-
-private:
-    IFileStore::IOutputStream* m_p;
-};
-
-} // namespace rainman
-```
-
-Usage (opt-in, alongside existing manual code):
-```cpp
-// Before:
+// Before (legacy):
 IFileStore::IStream* pStream = store.VOpenStream("file.rgd");
 rgd.Load(pStream);
 delete pStream;
 
-// After:
-rainman::StreamGuard stream(store.VOpenStream("file.rgd"));
-rgd.Load(stream.get());
-// auto-deleted
+// After (current):
+std::unique_ptr<IFileStore::IStream> pStream(store.VOpenStream("file.rgd"));
+rgd.Load(pStream.get());
+// auto-deleted on scope exit
+
+// Output streams:
+std::unique_ptr<IFileStore::IOutputStream> pOut(store.VOpenOutputStream("file.rgd", true));
+rgd.Save(pOut.get());
 ```
 
 ---
@@ -281,8 +226,8 @@ class FileService {
 public:
     explicit FileService(CModuleFile* pModule);
 
-    // Returns a stream guard (RAII). Throws wxString on error.
-    rainman::StreamGuard OpenStream(const wxString& sPath);
+    // Returns a unique_ptr-wrapped stream (RAII). Throws wxString on error.
+    std::unique_ptr<IFileStore::IStream> OpenStream(const wxString& sPath);
 
     // Iterates a directory, calling fn for each entry. Manages iterator lifetime.
     void IterateDirectory(const wxString& sPath,
@@ -548,8 +493,7 @@ Each phase is a standalone unit of work. Complete one before starting the next. 
 ### Non-Goals (Explicitly Out of Scope)
 
 - Cross-platform support (Windows-only is acceptable)
-- Smart pointer migration of existing code (too risky without full test coverage)
-- Rewriting the exception system (heap-allocated pattern is stable, just needs RAII wrapper)
+- ~~Smart pointer migration of existing code~~ — **Done** (Phase F.1: `std::unique_ptr<IStream>` replaces manual `delete`; Phase F.3: `wxStringToAscii` returns `std::unique_ptr<char[]>`)
+- ~~Rewriting the exception system~~ — **RAII wrapper added** (Phase F.2: `ExceptionDeleter` for `std::unique_ptr<CRainmanException, ExceptionDeleter>`; heap-allocated pattern preserved)
 - Upgrading wxWidgets beyond 3.x
-- Adding new features until stability is achieved
 - Performance optimization (correctness and maintainability first)

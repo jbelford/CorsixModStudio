@@ -1,6 +1,6 @@
 # CorsixModStudio — Architecture Document
 
-> **Status**: Living document — captures the as-is architecture as of Phase 5 completion.
+> **Status**: Living document — captures the as-is architecture after all migration phases (A–F) are complete.
 > **Audience**: Contributors, AI assistants, and future maintainers.
 
 ---
@@ -27,9 +27,13 @@ CorsixModStudio is a modding IDE for Relic Entertainment's Dawn of War and Compa
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                   CDMS GUI Application                  │
-│            (wxWidgets, 14.7k lines, GPL v2)             │
+│            (wxWidgets, 16.5k lines, GPL v2)             │
 │                                                         │
-│  ConstructFrame ─┬─ frmFiles (file browser)             │
+│  ConstructFrame ─┬─ ModuleManager (mod lifecycle)       │
+│                  ├─ TabManager (wxAuiNotebook tabs)     │
+│                  ├─ MenuController (menu bar setup)     │
+│                  ├─ ToolRegistry (ITool dispatch)       │
+│                  ├─ frmFiles (file browser)             │
 │                  ├─ frmRgdEditor (RGD editor)           │
 │                  ├─ frmScarEditor (script editor)       │
 │                  ├─ frmUCSEditor (localization editor)   │
@@ -37,31 +41,33 @@ CorsixModStudio is a modding IDE for Relic Entertainment's Dawn of War and Compa
 │                  ├─ frmSgaMake (archive builder)         │
 │                  └─ 10 ITool plugins                    │
 │                                                         │
-│  ┌────────────── NO ABSTRACTION LAYER ──────────────┐   │
-│  │  GUI classes directly call Rainman types          │   │
-│  └──────────────────────────────────────────────────┘   │
+│  ┌──────────── Service / Adapter Layer ───────────────┐ │
+│  │  ModuleService, FileService, FormatService,        │ │
+│  │  HashService — wraps Rainman types → wx types      │ │
+│  └────────────────────────────────────────────────────┘ │
 ├─────────────────────────────────────────────────────────┤
 │                    Rainman Library                       │
-│           (static lib, 26.5k lines, LGPL v2.1)          │
+│           (static lib, 26.8k lines, LGPL v2.1)          │
 │                                                         │
 │  ┌──────────┐  ┌──────────────┐  ┌──────────────────┐  │
-│  │  File I/O │  │Format Parsers│  │ Lua Integration  │  │
-│  │           │  │              │  │                  │  │
-│  │ IFileStore│  │ CRgdFile     │  │ CLuaFile (5.0.2) │  │
-│  │ IStream   │  │ CChunkyFile  │  │ CLuaFile2(5.0.2) │  │
-│  │ CFileSys  │  │ CRgtFile     │  │ CLuaScript       │  │
-│  │ CMemory   │  │ CRgmFile     │  │ CLuaFromRgd      │  │
-│  │ CSgaFile  │  │ CBfxFile     │  │ CInheritTable    │  │
-│  └──────────┘  │ CUcsFile     │  │ Lua51 (5.1.2)    │  │
-│                │ CCohUcsFile  │  └──────────────────┘  │
-│  ┌──────────┐  └──────────────┘                        │
-│  │  Module   │  ┌──────────────┐                        │
-│  │           │  │  Utilities   │                        │
-│  │CModuleFile│  │              │                        │
-│  │CDoWModule │  │ CRgdHashTbl  │                        │
-│  │CDoWFileVw │  │ CSgaCreator  │                        │
-│  │ CFileMap  │  │ Callbacks    │                        │
-│  └──────────┘  │ RainmanLog   │                        │
+│  │ core/    │  │ formats/     │  │ lua/             │  │
+│  │Exception │  │ CRgdFile     │  │ CLuaFile (5.0.2) │  │
+│  │Logging   │  │ CChunkyFile  │  │ CLuaFile2(5.0.2) │  │
+│  │Callbacks │  │ CRgtFile     │  │ CLuaScript       │  │
+│  └──────────┘  │ CRgmFile     │  │ CLuaFromRgd      │  │
+│  ┌──────────┐  │ CBfxFile     │  │ CInheritTable    │  │
+│  │ io/      │  └──────────────┘  │ Lua51 (5.1.2)    │  │
+│  │IFileStore│  ┌──────────────┐  └──────────────────┘  │
+│  │CFileSys  │  │localization/ │                        │
+│  │CMemory   │  │ CUcsFile     │  ┌──────────────────┐  │
+│  └──────────┘  │ CCohUcsFile  │  │ util/            │  │
+│  ┌──────────┐  └──────────────┘  │ CRgdHashTbl      │  │
+│  │ archive/ │  ┌──────────────┐  │ CSgaCreator      │  │
+│  │CSgaFile  │  │ module/      │  │ Callbacks        │  │
+│  │CSgaCrtr  │  │CModuleFile   │  │ RainmanLog       │  │
+│  └──────────┘  │CDoWModule    │  └──────────────────┘  │
+│                │CDoWFileView  │                        │
+│                │ CFileMap     │                        │
 │                └──────────────┘                        │
 ├─────────────────────────────────────────────────────────┤
 │              Vendored Lua Runtimes                      │
@@ -76,32 +82,31 @@ CorsixModStudio is a modding IDE for Relic Entertainment's Dawn of War and Compa
 
 | Component | Lines of Code | Files | Language |
 |-----------|--------------|-------|----------|
-| Rainman library (`src/rainman/*.cpp,*.h,*.c`) | 26,579 | ~80 | C++/C |
-| CDMS application (`src/cdms/*.cpp,*.h`) | 14,680 | ~60 | C++ |
-| Tests (`tests/**/*.cpp`) | 1,949 | 23 | C++ |
-| Vendored Lua 5.0.2 (`lua502/`) | 11,384 | ~40 | C |
-| Vendored Lua 5.1.2 (`lua512src/`) | 13,601 | ~40 | C |
-| **Total (our code)** | **43,208** | **~163** | |
-| **Total (including vendored)** | **68,193** | **~243** | |
+| Rainman library (`src/rainman/` excl vendor) | 26,801 | 88 | C++/C |
+| CDMS application (`src/cdms/`) | 16,503 | 115 | C++ |
+| Tests (`tests/**/*.cpp`) | 4,420 | 37 | C++ |
+| Vendored Lua 5.0.2 (`vendor/lua502/`) | 11,384 | ~40 | C |
+| Vendored Lua 5.1.2 (`vendor/lua512/`) | 13,601 | ~40 | C |
+| **Total (our code)** | **47,724** | **~240** | |
+| **Total (including vendored)** | **72,709** | **~320** | |
 
 ### Largest Files (>500 LOC)
 
 | File | Lines | Layer | Purpose |
 |------|-------|-------|---------|
-| `frmFiles_Actions.h` | 2,201 | CDMS | 30+ file action handler classes (inline) |
 | `CRgdFile.cpp` | 1,982 | Rainman | Binary game data format parser |
 | `CDoWModule.cpp` | 1,969 | Rainman | Dawn of War module enumeration & loading |
 | `CRgdFileMacro.cpp` | 1,616 | Rainman | RGD macro application via Lua 5.1.2 |
-| `CModuleFile.cpp` | 1,608 | Rainman | .module file parser and mod manager |
 | `CLuaFile.cpp` | 1,582 | Rainman | Lua 5.0.2 game data file parser |
 | `frmRgdEditor.cpp` | 1,539 | CDMS | RGD property grid editor |
 | `CLuaFile2.cpp` | 1,306 | Rainman | Alternative Lua file parser |
 | `CLuaFromRgd.cpp` | 1,264 | Rainman | RGD → Lua conversion |
 | `CRgtFile.cpp` | 1,072 | Rainman | Texture format (DXT/DDS/TGA) |
-| `Construct.cpp` | 983 | CDMS | Main frame (menu, tools, mod loading) |
+| `Construct.cpp` | 718 | CDMS | Main frame (delegates to ModuleManager, TabManager, etc.) |
 | `CFileMap.cpp` | 980 | Rainman | File index/map across archives |
 | `CSgaFile.cpp` | 966 | Rainman | SGA archive reader |
-| `CLuaScript_Interface.cpp` | 890 | Rainman | Lua scripting interface |
+| `CLuaScript_Interface.cpp` | 890 | Rainman | Lua scripting interface (dead code — `#if 0`) |
+| `CModuleFile.cpp` | 775 | Rainman | .module file façade (delegates to CModuleParser, CResourceLoader) |
 | `CFileSystemStore.cpp` | 759 | Rainman | OS filesystem I/O |
 | `frmScarEditor.cpp` | 716 | CDMS | SCAR script editor |
 
@@ -204,52 +209,61 @@ IMetaNode
 
 ### 3.2 Subsystem Map
 
-#### File I/O Subsystem
-**Files**: `IFileStore.h/cpp`, `CFileSystemStore.h/cpp`, `CMemoryStore.h/cpp`, `IDirectoryTraverser.h/cpp`
+Rainman source files are organized into 8 subdirectories under `src/rainman/`. All includes use the `rainman/` prefix (e.g., `#include "rainman/core/Exception.h"`).
 
-Foundation layer. Provides the polymorphic stream abstraction that all format parsers and higher-level stores use. `CMemoryStore` is also the primary test helper for in-memory I/O.
+#### File I/O Subsystem
+**Files**: `io/IFileStore.h/cpp`, `io/CFileSystemStore.h/cpp`, `io/CMemoryStore.h/cpp`, `io/IDirectoryTraverser.h/cpp`
+
+Foundation layer. Provides the polymorphic stream abstraction that all format parsers and higher-level stores use. `CMemoryStore` is also the primary test helper for in-memory I/O. Stream ownership uses `std::unique_ptr<IFileStore::IStream>` for RAII.
 
 #### Archive Subsystem
-**Files**: `CSgaFile.h/cpp`, `CSgaCreator.h/cpp`
+**Files**: `archive/CSgaFile.h/cpp`, `archive/CSgaCreator.h/cpp`
 
 Reads and creates Relic's SGA archives. `CSgaFile` supports both v2 (DoW) and v4 (CoH) formats with zlib decompression, MD5 validation, and CRC32 directory hashing. `CSgaCreator` builds archives from `IDirectoryTraverser` sources.
 
 #### Format Parser Subsystem
-**Files**: `CRgdFile.h/cpp`, `CRgdFileMacro.h/cpp`, `CChunkyFile.h/cpp`, `CRgtFile.h/cpp`, `CRgmFile.h/cpp`, `CBfxFile.h/cpp`
+**Files**: `formats/CRgdFile.h/cpp`, `formats/CRgdFileMacro.h/cpp`, `formats/CChunkyFile.h/cpp`, `formats/CRgtFile.h/cpp`, `formats/CRgmFile.h/cpp`, `formats/CBfxFile.h/cpp`, `formats/IMetaTable.h/cpp`, `formats/CRgdHashTable.h/cpp`
 
 Parsers for Relic's proprietary binary formats. Most follow a `Load(IStream*)` / `Save(IOutputStream*)` pattern. `CRgdFile` is the most complex — it includes nested `CMetaNode`/`CMetaTable` inner classes and bidirectional conversion with `CLuaFile`.
 
 #### Localization Subsystem
-**Files**: `CUcsFile.h/cpp`, `CCohUcsFile.h/cpp`, `CUcsTransaction.h`
+**Files**: `localization/CUcsFile.h/cpp`, `localization/CCohUcsFile.h/cpp`, `localization/CUcsTransaction.h`
 
-UCS (Unicode Character Set) files store localized strings keyed by numeric ID. `CUcsFile` handles DoW format (UTF-16LE), `CCohUcsFile` handles CoH's variant. Dollar-string resolution (`$12345`) maps IDs to display text.
+UCS (Unicode Character Set) files store localized strings keyed by numeric ID. `CUcsFile` handles DoW format (UTF-16LE), `CCohUcsFile` handles CoH's variant (dead code — `#if 0`). Dollar-string resolution (`$12345`) maps IDs to display text.
 
 #### Lua Integration Subsystem
-**Files**: `CLuaFile.h/cpp`, `CLuaFile2.h/cpp`, `CLuaScript.h/cpp`, `CLuaScript_Interface.h/cpp`, `CLuaFromRgd.h/cpp`, `CLuaFileCache.h/cpp`, `CInheritTable.h/cpp`, `luax.h/cpp`, `luax51.cpp`, `Lua51.h`
+**Files**: `lua/CLuaFile.h/cpp`, `lua/CLuaFile2.h/cpp`, `lua/CLuaScript.h/cpp`, `lua/CLuaScript_Interface.h/cpp`, `lua/CLuaFromRgd.h/cpp`, `lua/CLuaFileCache.h/cpp`, `lua/CInheritTable.h/cpp`, `lua/luax.h/cpp`, `lua/luax51.cpp`, `lua/Lua51.h`
 
 The most complex subsystem. Two vendored Lua runtimes coexist:
-- **Lua 5.0.2** (`lua502/`): Native symbol names. Used by `CLuaFile`, `CLuaFile2`, `CLuaScript`, `CRgdFile::CreateLuaState()`.
-- **Lua 5.1.2** (`lua512src/`): All symbols renamed via `lua512_rename.h` (`lua_` → `lua51_`). Exposed through `Lua51.h`. Used by `CRgdFileMacro`.
+- **Lua 5.0.2** (`vendor/lua502/`): Native symbol names. Used by `CLuaFile`, `CLuaFile2`, `CLuaScript`, `CRgdFile::CreateLuaState()`.
+- **Lua 5.1.2** (`vendor/lua512/`): All symbols renamed via `lua512_rename.h` (`lua_` → `lua51_`). Exposed through `lua/Lua51.h`. Used by `CRgdFileMacro`.
 
 `CLuaFile` is the primary Lua data file parser implementing `IMetaTable`. `CInheritTable` resolves Relic's three-way inheritance system (`Inherit()`, `Reference()`, `GameData()`). `CLuaFromRgd` converts RGD binary data back to Lua source.
 
 #### Module Subsystem
-**Files**: `CModuleFile.h/cpp`, `CDoWModule.h/cpp`, `CDoWFileView.h/cpp`, `CFileMap.h/cpp`
+**Files**: `module/CModuleFile.h/cpp`, `module/CModuleMetadata.h`, `module/CModuleParser.h/cpp`, `module/CResourceLoader.h/cpp`, `module/CDoWModule.h/cpp`, `module/CDoWFileView.h/cpp`, `module/CFileMap.h/cpp`
 
-The highest-level subsystem. `CModuleFile` is the god class — it parses `.module` files and aggregates all data sources (filesystem folders, SGA archives, UCS files, required mods) into a single `IFileStore` + `IDirectoryTraverser` facade. `CDoWModule` scans game installations to discover available mods.
+The highest-level subsystem. `CModuleFile` is the façade — it parses `.module` files and aggregates all data sources (filesystem folders, SGA archives, UCS files, required mods) into a single `IFileStore` + `IDirectoryTraverser` interface. Its responsibilities are decomposed into:
+- **`CModuleMetadata`** — RAII struct holding parsed directive fields
+- **`CModuleParser`** — INI parsing and module type heuristics
+- **`CResourceLoader`** — Resource loading orchestration (archives, UCS files, required mods)
 
-**CModuleFile is the central coupling point**: it directly depends on `CSgaFile`, `CUcsFile`, `CDoWFileView`, `CFileMap`, `CFileSystemStore`, and `Callbacks`.
+`CDoWModule` scans game installations to discover available mods.
+
+`CModuleFile.h` uses forward declarations for `CSgaFile`, `CUcsFile`, `CDoWFileView`, `CFileMap`, and `CFileSystemStore` to minimize header coupling.
 
 #### Utilities
-**Files**: `Exception.h/cpp`, `RainmanLog.h/cpp`, `Callbacks.h/cpp`, `CRgdHashTable.h/cpp`, `Util.h/cpp`, `Internal_Util.h/cpp`, `WriteTime.h/cpp`, `crc32_case_idt.h/c`, `hash.c`, `md5.h/c`, `Api.h`, `gnuc_defines.h/cpp`, `memdebug.h`
+**Files**: `core/Exception.h/cpp`, `core/RainmanLog.h/cpp`, `core/Callbacks.h/cpp`, `core/Api.h`, `core/gnuc_defines.h/cpp`, `core/memdebug.h`, `core/Internal_Util.h/cpp`, `core/WriteTime.h/cpp`, `core/pch_rainman.h`, `util/Util.h/cpp`, `util/crc32_case_idt.h/c`, `util/hash.c`, `util/md5.h/c`
 
-Cross-cutting concerns. `CRainmanException` provides precursor-chained exceptions. `RainmanLog` wraps spdlog. `CRgdHashTable` maps human-readable property names to Jenkins hashes. `Api.h` defines the `RAINMAN_API` export macro.
+Cross-cutting concerns. `CRainmanException` provides precursor-chained exceptions with `ExceptionDeleter` for RAII cleanup. `RainmanLog` wraps spdlog. `CRgdHashTable` maps human-readable property names to Jenkins hashes. `Api.h` defines the `RAINMAN_API` export macro.
 
 ### 3.3 Class Inheritance Hierarchy
 
 ```
 CRainmanException                    (base exception, heap-allocated)
 └── CModStudioException              (CDMS-specific, in src/cdms/)
+
+ExceptionDeleter                     (RAII: std::unique_ptr<CRainmanException, ExceptionDeleter>)
 
 IFileStore                           (stream I/O interface)
 ├── CFileSystemStore                 (also: IDirectoryTraverser)
@@ -262,6 +276,9 @@ IFileStore                           (stream I/O interface)
 │   ├── CStream : IFileStore::IStream
 │   └── CIterator : IDirectoryTraverser::IIterator
 ├── CModuleFile                      (also: IDirectoryTraverser)
+│   ├── CModuleMetadata              (parsed directive fields, RAII struct)
+│   ├── CModuleParser                (INI parsing + module type heuristics)
+│   └── CResourceLoader             (resource loading orchestration)
 ├── CDoWModule                       (also: IDirectoryTraverser)
 ├── CDoWFileView                     (also: IDirectoryTraverser)
 │   └── CIterator : IDirectoryTraverser::IIterator
@@ -280,19 +297,24 @@ wxApp
 └── CDMSApplication                  (CDMS entry point)
 
 wxFrame
-├── ConstructFrame                   (main window)
-│   └── ITool                        (tool plugin interface)
-│       ├── CLocaleTool, CAESetupTool, CUcsTool, CAttribSnapshotTool
-│       ├── CSgaPackerTool, CExtractAllTool, CDpsCalculatorTool
-│       ├── CRedButtonTool, CMakeLuaInheritTree, CRefreshFilesTool
+├── ConstructFrame                   (main window — delegates to helper classes)
+│   ├── owns: ModuleManager          (CModuleFile* lifecycle, services, hash table)
+│   ├── owns: TabManager             (wxAuiNotebook tab management)
+│   ├── owns: MenuController         (menu bar construction)
+│   └── owns: ToolRegistry           (ITool registration + dispatch)
 ├── frmLoading                       (progress/splash)
 └── frmMessage                       (message display)
+
+ITool                                (standalone tool plugin interface, was nested in ConstructFrame)
+├── CLocaleTool, CAESetupTool, CUcsTool, CAttribSnapshotTool
+├── CSgaPackerTool, CExtractAllTool, CDpsCalculatorTool
+├── CRedButtonTool, CMakeLuaInheritTree, CRefreshFilesTool
 
 wxWindow
 ├── frmFiles                         (file tree browser)
 │   ├── IHandler                     (file action interface)
 │   │   ├── CLuaAction, CTextViewAction, CExtractAction, ...
-│   │   └── (30+ action handler subclasses in frmFiles_Actions.h)
+│   │   └── (32 action handler files in src/cdms/actions/)
 │   └── CFilesTreeItemData : wxTreeItemData
 ├── frmWelcome, frmLuaInheritTree, frmImageViewer
 ├── frmRGDEditor, frmRgmMaterialEditor
@@ -325,13 +347,17 @@ throw new CRainmanException(pPrecursor, __FILE__, __LINE__, "format %s", arg);
 QUICK_THROW("message")              // throws new CRainmanException
 CATCH_THROW("context")              // catch(...) { throw new ... with precursor }
 CHECK_MEM(ptr)                       // if (!ptr) throw new ... "out of memory"
-IGNORE_EXCEPTIONS                    // catch CRainmanException* and destroy()
+IGNORE_EXCEPTIONS                    // catch CRainmanException* and destroy() via ExceptionDeleter
 
-// Cleanup (NEVER use delete):
+// RAII cleanup (preferred):
+std::unique_ptr<CRainmanException, ExceptionDeleter> guard(pException);
+// auto-calls pException->destroy() on scope exit
+
+// Manual cleanup (legacy):
 pException->destroy();               // walks precursor chain, frees all
 ```
 
-Exceptions form a linked list via `m_pPrecursor`, enabling stack-trace-like error chains. The `destroy()` method recursively frees the entire chain.
+Exceptions form a linked list via `m_pPrecursor`, enabling stack-trace-like error chains. The `destroy()` method recursively frees the entire chain. `ExceptionDeleter` (defined in `core/Exception.h`) wraps this for `std::unique_ptr` usage.
 
 ### 3.5 Callback System
 
@@ -391,27 +417,30 @@ CDMSApplication::OnExit()
 
 ### 4.2 Main Frame (ConstructFrame)
 
-The main frame is the **god class** of the GUI layer. It:
-- Owns the `CModuleFile*` (the loaded mod — central data object)
-- Owns the `CRgdHashTable*` (property name ↔ hash mapping)
-- Owns the `wxAuiNotebook` tab container
-- Owns the `frmFiles` file browser panel
-- Owns the `frmLoading` splash/progress frame
-- Contains all menu event handlers (File→Open, Mod→Save, etc.)
-- Registers and dispatches 10+ ITool plugins
-- Has 20 duplicate `LaunchModToolN()` handlers
+The main frame delegates responsibilities to focused helper classes:
+
+- **`ModuleManager`** — owns the `CModuleFile*` lifecycle, service layer instances (`ModuleService`, `FileService`, `HashService`), and `CRgdHashTable*`
+- **`TabManager`** — owns the `wxAuiNotebook` tab container
+- **`MenuController`** — builds the menu bar (receives `wxFrame*` and `ToolRegistry&`)
+- **`ToolRegistry`** — registers and dispatches `ITool` plugins; owns tool lifetime
+- `frmFiles` — file browser panel (left splitter pane)
+- `frmLoading` — splash/progress frame
 
 Key members exposed globally via `TheConstruct` macro:
 ```cpp
 CModuleFile* GetModule();
-CRgdHashTable* GetRGDHashTable();
+CRgdHashTable* GetRgdHashTable();
 wxAuiNotebook* GetTabs();
-frmFiles* GetFileTree();
+frmFiles* GetFilesList();
+// Service accessors (via ModuleManager):
+ModuleService& GetModuleService();
+FileService& GetFileService();
+HashService& GetHashService();
 ```
 
-### 4.3 File Browser (frmFiles + frmFiles_Actions.h)
+### 4.3 File Browser (frmFiles + actions/)
 
-`frmFiles` renders the mod's directory tree using `wxTreeCtrl`, traversing `IDirectoryTraverser::IIterator`. On file selection, it dispatches to one of 30+ action handlers via the `IHandler` interface:
+`frmFiles` renders the mod's directory tree using `wxTreeCtrl`, traversing `IDirectoryTraverser::IIterator`. On file selection, it dispatches to one of 32 action handlers via the `IHandler` interface:
 
 ```cpp
 class IHandler {
@@ -421,25 +450,22 @@ class IHandler {
 };
 ```
 
-All handler implementations live in `frmFiles_Actions.h` (2,201 lines). Each handler directly calls Rainman APIs — e.g., `TheConstruct->GetModule()->VOpenStream(saFile)` to open files.
+Each handler implementation lives in its own header file under `src/cdms/actions/` (e.g., `CRGDAction.h`, `CTextViewAction.h`, `CExtractAction.h`). A shared `ActionUtil.h` provides the `OnlyFilename()` helper. Handlers access Rainman via service layer — e.g., `TheConstruct->GetFileService()`.
 
-### 4.4 CDMS → Rainman Coupling Map
+### 4.4 CDMS → Rainman Coupling
 
-Every CDMS file includes `Common.h`, which transitively includes `<Rainman.h>` (the god header pulling in 15 Rainman headers). Below are the **direct Rainman type usages** per CDMS file:
+CDMS accesses Rainman primarily through the **service layer** (`src/cdms/services/`). Each service wraps a Rainman subsystem and translates between Rainman types (`char*`, `CRainmanException*`) and wx types (`wxString`, error strings). Services use `Result<T>` (tag-dispatch based) for error handling.
 
-| CDMS File | Rainman Types Directly Used |
-|-----------|---------------------------|
-| `Construct.cpp` | `CModuleFile`, `CRgdHashTable` — creates/manages the loaded mod and hash table |
-| `frmFiles.cpp` | `IDirectoryTraverser::IIterator` — builds file tree |
-| `frmFiles_Actions.h` | `IFileStore::IStream`, `IOutputStream`, `CRgdFile`, `CLuaFile`, `CLuaFile2`, `CRgtFile`, `CChunkyFile`, `CSgaCreator`, `CInheritTable`, `CRgdHashTable`, `CModuleFile` — the most coupled file |
-| `frmRgdEditor.cpp` | `IMetaNode`, `IMetaTable`, `CRgdFile`, `CUcsFile` — tree editor for RGD data |
-| `frmScarEditor.cpp` | `CModuleFile` — checks module type for script behavior |
-| `frmModule.cpp` | `CModuleFile`, `CFolderHandler`, `CArchiveHandler`, `CRequiredHandler`, `CCompatibleHandler` — displays module metadata |
-| `Tools.cpp` | `CModuleFile`, `CUcsFile`, `CUcsHandler` — tool dispatch and UCS management |
-| `Tool_AESetup.cpp` | `CModuleFile`, `CUcsFile` — UCS→DAT conversion |
-| `Tool_AutoDPS.cpp` | `CRgdHashTable`, `CRgdFile`, `IMetaNode` — DPS calculation from weapon data |
-| `frmUCSEditor.cpp` | `CUcsFile` — localization string editing |
-| `frmSgaMake.cpp` | `CSgaCreator`, `CModuleFile` — archive creation wizard |
+```
+cdms/services/
+├── Result.h             # Result<T> with OkTag/ErrTag, ResultFromException()
+├── ModuleService.h/cpp  # Wraps CModuleFile (load, save, properties)
+├── FileService.h/cpp    # Wraps IFileStore/IDirectoryTraverser (open, iterate)
+├── FormatService.h/cpp  # Wraps format parsers (RGD, Chunky, RGT, RGM, BFX, UCS)
+└── HashService.h/cpp    # Wraps CRgdHashTable with lazy init
+```
+
+`Common.h` no longer includes any Rainman headers. Each CDMS `.cpp` file includes only the specific Rainman headers it needs (directory-qualified, e.g., `#include <rainman/module/CModuleFile.h>`).
 
 ### 4.5 Configuration System
 
@@ -466,20 +492,22 @@ The codebase bridges three string worlds:
 wchar_t* AsciiToUnicode(const char* sAscii);
 char* UnicodeToAscii(const wchar_t* wsUnicode);
 wxString AsciiTowxString(const char* sAscii);
-char* wxStringToAscii(const wxString& sString);  // caller must delete[]
+std::unique_ptr<char[]> wxStringToAscii(const wxString& sString);  // RAII, no manual delete
 ```
 
-**Issues**: No UTF-8 support; manual `new[]`/`delete[]` for conversions; potential memory leaks at conversion boundaries.
+**Remaining issue**: No UTF-8 support; ANSI/Latin-1 assumed throughout.
 
 ### 4.7 Tool Plugin System
 
 ```cpp
-class ConstructFrame::ITool {
+// ITool.h — standalone interface (was nested in ConstructFrame)
+class ITool {
     virtual const wxString& GetName() = 0;
     virtual const wxString& GetHelpString() = 0;
     virtual const wxString& GetBitmapName() = 0;
     virtual bool DoAction(ConstructFrame* pFrame) = 0;
 };
+// Backward compat: ConstructFrame::ITool = ::ITool (via using declaration)
 ```
 
 10 tools registered in `Construct.cpp` constructor:
@@ -494,7 +522,7 @@ class ConstructFrame::ITool {
 9. `CMakeLuaInheritTree` — inheritance visualization
 10. `CRefreshFilesTool` — file tree refresh
 
-Tools are dispatched via 20 hard-coded `LaunchModToolN()` menu handlers that call `DoTool(sName)`.
+Tools are dispatched via `ToolRegistry` using array-driven dispatch: a single `OnToolMenuCommand(wxCommandEvent&)` handler extracts the tool index from `IDM_ModToolBase + index` event IDs. Up to 100 tool slots are reserved.
 
 ---
 
@@ -505,15 +533,15 @@ Tools are dispatched via 20 hard-coded `LaunchModToolN()` menu handlers that cal
 ```
 CMakeLists.txt (top-level)
 ├── src/rainman/CMakeLists.txt
-│   ├── lua502 (STATIC library, 28 .c files)
-│   ├── lua512 (STATIC library, 28 .c files, /FI lua512_rename.h)
-│   └── rainman (STATIC library, GLOB *.cpp *.c, PCH pch_rainman.h)
+│   ├── lua502 (STATIC library, 28 .c files, in vendor/lua502/)
+│   ├── lua512 (STATIC library, 28 .c files, /FI lua512_rename.h, in vendor/lua512/)
+│   └── rainman (STATIC library, GLOB **/*.cpp **/*.c across subdirs, PCH pch_rainman.h)
 ├── src/cdms/CMakeLists.txt
-│   └── CorsixModStudio (WIN32 EXE, GLOB *.cpp *.c + resource.rc)
+│   └── CorsixModStudio (WIN32 EXE, GLOB *.cpp *.c + actions/*.h + resource.rc)
 ├── tests/rainman/CMakeLists.txt
 │   └── rainman_tests (EXE, explicit file list, gtest_discover_tests)
 └── tests/cdms/CMakeLists.txt
-    └── cdms_tests (EXE, explicit file list + 4 CDMS sources compiled in)
+    └── cdms_tests (EXE, explicit file list + CDMS sources compiled in)
 ```
 
 ### 5.2 Dependencies
@@ -553,45 +581,62 @@ Google Test with `gtest_discover_tests()` for auto-discovery. Single `test_main.
 
 ### 6.2 Test Coverage
 
+**Rainman tests** (26 test files in `tests/rainman/`):
+
 | Test File | Tested Class | Depth | Pattern |
 |-----------|-------------|-------|---------|
 | `exception_test.cpp` | `CRainmanException` | Good | Chaining, macros, formatting |
+| `exceptiondeleter_test.cpp` | `ExceptionDeleter` | Good | RAII cleanup, unique_ptr integration |
 | `memorystore_test.cpp` | `CMemoryStore` | Good | Read/write streams, seeks |
 | `sgafile_test.cpp` | `CSgaFile` | Partial | Error handling only (no valid archives) |
+| `sgacreator_test.cpp` | `CSgaCreator` | Good | Round-trip create → read → verify |
 | `rgdfile_test.cpp` | `CRgdFile` | Good | Create, save/load round-trips, nested tables |
-| `ucsfile_test.cpp` | `CUcsFile` | Good | Strings, load/resolve, dollar IDs |
 | `chunkyfile_test.cpp` | `CChunkyFile` | Good | Nested chunks, save/load, metadata |
-| `modulefile_test.cpp` | `CModuleFile` | Good | Config parsing, versions, archives |
 | `rgdhashtable_test.cpp` | `CRgdHashTable` | Good | Hash mapping, numeric keys |
+| `rgtfile_test.cpp` | `CRgtFile` | Good | TGA load, DXT codec, save/reload |
+| `rgmfile_test.cpp` | `CRgmFile` | Good | Load from CMemoryStore, material properties |
+| `cbfxfile_test.cpp` | `CBfxFile` | Good | RGD extension, Lua export |
+| `ucsfile_test.cpp` | `CUcsFile` | Good | Strings, load/resolve, dollar IDs |
+| `modulefile_test.cpp` | `CModuleFile` | Good | Config parsing, versions, archives, decomposition |
 | `filesystemstore_test.cpp` | `CFileSystemStore` | Partial | Read/write operations |
 | `inherittable_test.cpp` | `CInheritTable` | Good | Parentage, orphan assignment |
+| `luafile_test.cpp` | `CLuaFile` | Good | IMetaTable interface via CMemoryStore |
+| `luafile2_test.cpp` | `CLuaFile2` | Good | Load Lua script, verify metadata |
+| `luascript_test.cpp` | `CLuaScript` | Good | Load/execute scripts, error handling |
+| `luafromrgd_test.cpp` | `CLuaFromRgd` | Good | RGD→Lua conversion round-trip |
 | `callbacks_test.cpp` | `Callbacks` | Good | Printf-style formatting |
 | `crc32_case_idt_test.cpp` | `crc32_case_idt` | Good | Hash validation |
 | `writetime_test.cpp` | `WriteTime` | Good | Timestamp handling |
 | `internal_util_test.cpp` | `Internal_Util` | Good | String operations |
 | `md5_test.cpp` | `md5` | Good | RFC 1321 compliance |
 | `directorytraverser_test.cpp` | `IDirectoryTraverser` | Partial | Directory operations |
-| `config_test.cpp` (CDMS) | `ConfGetColour` | Good | Color retrieval with defaults |
-| `strings_test.cpp` (CDMS) | UI strings | Partial | String constant checks |
-| `strconv_test.cpp` (CDMS) | `strconv` | Partial | String conversion |
-| `utility_test.cpp` (CDMS) | `Utility` | Partial | Helper functions |
 
-### 6.3 Coverage Gaps
+**CDMS tests** (10 test files in `tests/cdms/`):
 
-**Untested Rainman classes** (ordered by estimated risk):
+| Test File | Tested Class | Depth | Pattern |
+|-----------|-------------|-------|---------|
+| `result_test.cpp` | `Result<T>` | Good | Ok/Err construction, tag dispatch |
+| `moduleservice_test.cpp` | `ModuleService` | Partial | Service wrapper, error paths |
+| `fileservice_test.cpp` | `FileService` | Partial | Stream/iterator wrapping |
+| `formatservice_test.cpp` | `FormatService` | Partial | Format parser wrapping |
+| `hashservice_test.cpp` | `HashService` | Partial | Lazy init, hash lookup |
+| `config_test.cpp` | `ConfGetColour` | Good | Color retrieval with defaults |
+| `strings_test.cpp` | UI strings | Partial | String constant checks |
+| `strconv_test.cpp` | `strconv` | Partial | String conversion |
+| `utility_test.cpp` | `Utility` | Partial | Helper functions |
+
+**Total: 338 tests passing** (36 test files: 26 Rainman + 10 CDMS).
+
+### 6.3 Remaining Coverage Gaps
+
+Most Rainman classes now have test coverage (~85% class-level). The following remain untested:
 
 | Class | Risk | Reason |
 |-------|------|--------|
-| `CLuaFile` / `CLuaFile2` | **Critical** | Core data format, complex Lua state management |
-| `CLuaScript` / `CLuaScript_Interface` | **Critical** | Scripting engine, Lua 5.0.2 integration |
-| `CLuaFromRgd` | **High** | RGD↔Lua conversion, depends on both |
-| `CSgaCreator` | **High** | Data integrity critical (creates archives) |
-| `CDoWModule` | **High** | Game installation scanning, 1,969 lines |
-| `CRgtFile` | **Medium** | Texture format (DXT compression) |
-| `CRgmFile` | **Medium** | Material format |
-| `CBfxFile` | **Medium** | Binary effects |
-| `CCohUcsFile` | **Low** | CoH localization variant |
-| `CDoWFileView` | **Low** | Virtual file view |
+| `CDoWModule` | **High** | Requires real game installation; 1,969 lines |
+| `CLuaScript_Interface` | N/A | Dead code (`#if 0`) |
+| `CCohUcsFile` | N/A | Dead code (`#if 0`) |
+| `CDoWFileView` | **Low** | Virtual file view, depends on game data |
 | `CFileMap` | **Low** | File index (980 lines but lower risk) |
 | `CLuaFileCache` | **Low** | Caching layer |
 | `CUcsTransaction` | **Low** | Transaction wrapper |
@@ -606,142 +651,136 @@ Google Test with `gtest_discover_tests()` for auto-discovery. Single `test_main.
 
 ## 7. Include Dependency Graph
 
+All Rainman includes now use directory-qualified paths with the `rainman/` prefix (e.g., `#include "rainman/core/Exception.h"`).
+
 ### 7.1 Rainman Internal Dependencies
 
 ```
 Foundation (no project deps):
-  gnuc_defines.h
-  WriteTime.h → gnuc_defines.h
-  Api.h → gnuc_defines.h
-  RainmanLog.h → Api.h
-  Lua51.h
-  crc32_case_idt.h
-  resource.h, resource1.h, memdebug.h
+  core/gnuc_defines.h
+  core/WriteTime.h → core/gnuc_defines.h
+  core/Api.h → core/gnuc_defines.h
+  core/RainmanLog.h → core/Api.h
+  lua/Lua51.h
+  util/crc32_case_idt.h
+  core/memdebug.h
 
 Core interfaces:
-  IFileStore.h → gnuc_defines.h, Api.h
-  Exception.h → gnuc_defines.h, Api.h
-  IDirectoryTraverser.h → gnuc_defines.h, IFileStore.h, WriteTime.h, Api.h
-  IMetaTable.h → gnuc_defines.h, Api.h, CMemoryStore.h
+  io/IFileStore.h → core/gnuc_defines.h, core/Api.h
+  core/Exception.h → core/gnuc_defines.h, core/Api.h, <memory> (ExceptionDeleter)
+  io/IDirectoryTraverser.h → core/gnuc_defines.h, io/IFileStore.h, core/WriteTime.h, core/Api.h
+  formats/IMetaTable.h → core/gnuc_defines.h, core/Api.h, io/CMemoryStore.h
 
 Stores:
-  CMemoryStore.h → gnuc_defines.h, IFileStore.h
-  CFileSystemStore.h → gnuc_defines.h, IFileStore.h, IDirectoryTraverser.h, Api.h
-  CSgaFile.h → gnuc_defines.h, IFileStore.h, IDirectoryTraverser.h, CMemoryStore.h, Api.h
-
-Utilities:
-  Callbacks.h → gnuc_defines.h, Api.h
-  CRgdHashTable.h → gnuc_defines.h, Api.h
-  CLuaFileCache.h → gnuc_defines.h, Api.h
+  io/CMemoryStore.h → core/gnuc_defines.h, io/IFileStore.h
+  io/CFileSystemStore.h → core/gnuc_defines.h, io/IFileStore.h, io/IDirectoryTraverser.h, core/Api.h
+  archive/CSgaFile.h → core/gnuc_defines.h, io/IFileStore.h, io/IDirectoryTraverser.h, io/CMemoryStore.h, core/Api.h
 
 Format parsers:
-  CChunkyFile.h → gnuc_defines.h, CMemoryStore.h, Exception.h
-  CUcsFile.h → gnuc_defines.h, IFileStore.h, Api.h
-  CCohUcsFile.h → IFileStore.h
-  CUcsTransaction.h → gnuc_defines.h, IFileStore.h, Api.h, CUcsFile.h
-  CRgdFile.h → gnuc_defines.h, IFileStore.h, IMetaTable.h, CRgdHashTable.h, CLuaFile.h, Api.h
-  CRgtFile.h → gnuc_defines.h, CChunkyFile.h
-  CRgmFile.h → gnuc_defines.h, CChunkyFile.h
-  CBfxFile.h → CRgdFile.h
+  formats/CChunkyFile.h → core/gnuc_defines.h, io/CMemoryStore.h, core/Exception.h
+  formats/CRgdFile.h → core/gnuc_defines.h, io/IFileStore.h, formats/IMetaTable.h, formats/CRgdHashTable.h, lua/CLuaFile.h, core/Api.h
+  formats/CBfxFile.h → formats/CRgdFile.h
+  localization/CUcsFile.h → core/gnuc_defines.h, io/IFileStore.h, core/Api.h
 
 Lua:
-  CLuaFile.h → gnuc_defines.h, IMetaTable.h, IFileStore.h, CLuaFileCache.h
-  CLuaFile2.h → gnuc_defines.h, IMetaTable.h, IFileStore.h, CLuaFileCache.h
-  CLuaScript.h → gnuc_defines.h, CLuaScript_Interface.h, Api.h
-  CLuaScript_Interface.h → CDoWModule.h
+  lua/CLuaFile.h → core/gnuc_defines.h, formats/IMetaTable.h, io/IFileStore.h, lua/CLuaFileCache.h
+  lua/CLuaFile2.h → core/gnuc_defines.h, formats/IMetaTable.h, io/IFileStore.h, lua/CLuaFileCache.h
 
-High-level (most includes):
-  CDoWFileView.h → gnuc_defines.h, IDirectoryTraverser.h, Api.h
-  CFileMap.h → gnuc_defines.h, IDirectoryTraverser.h, Api.h, CSgaFile.h, IFileStore.h
-  CDoWModule.h → gnuc_defines.h, CFileSystemStore.h, CDoWFileView.h, CSgaFile.h,
-                  CUcsFile.h, Callbacks.h, Api.h
-  CModuleFile.h → gnuc_defines.h, CSgaFile.h, CUcsFile.h, CDoWFileView.h, CFileMap.h,
-                   CFileSystemStore.h, Api.h, Callbacks.h  ← GOD HEADER (8 includes)
-  CRgdFileMacro.h → Lua51.h, CRgdFile.h, CModuleFile.h
-  CLuaFromRgd.h → gnuc_defines.h, IFileStore.h, IMetaTable.h, CRgdHashTable.h,
-                   CLuaFile.h, CRgdFile.h, CModuleFile.h, Api.h
-  Util.h → gnuc_defines.h, CRgdHashTable.h, IDirectoryTraverser.h, Api.h
-  Internal_Util.h → gnuc_defines.h, IDirectoryTraverser.h
-
-God header:
-  Rainman.h → Util.h, CDoWModule.h, CModuleFile.h, CSgaCreator.h, CBfxFile.h,
-              CLuaFile.h, CLuaFile2.h, CLuaFromRgd.h, Exception.h, CChunkyFile.h,
-              CRgtFile.h, CRgdFileMacro.h, CRgmFile.h, CUcsTransaction.h,
-              CInheritTable.h  ← 15 INCLUDES (pulls in everything)
+High-level (uses forward declarations to minimize coupling):
+  module/CModuleFile.h → core/gnuc_defines.h, io/IFileStore.h, io/IDirectoryTraverser.h,
+                          core/Api.h, core/Callbacks.h, module/CModuleMetadata.h
+                          + forward decls: CSgaFile, CUcsFile, CDoWFileView, CFileMap, CFileSystemStore
+  module/CDoWModule.h → core/gnuc_defines.h, io/CFileSystemStore.h, module/CDoWFileView.h,
+                         archive/CSgaFile.h, localization/CUcsFile.h, core/Callbacks.h, core/Api.h
+  formats/CRgdFileMacro.h → lua/Lua51.h, formats/CRgdFile.h + forward decl: CModuleFile
+  lua/CLuaFromRgd.h → core/gnuc_defines.h, io/IFileStore.h, formats/IMetaTable.h,
+                       formats/CRgdHashTable.h, lua/CLuaFile.h, core/Api.h
+                       + forward decls: CRgdFile, CModuleFile
 ```
 
 ### 7.2 CDMS Dependencies
 
 ```
 Foundation:
-  config.h, strconv.h, strings.h, Application.h → (no project deps)
+  config.h, strconv.h, strings.h, Application.h → (no Rainman deps)
 
 Utilities:
   Utility.h → strconv.h, strings.h
 
-Mid-level:
-  frmLoading.h, frmLuaInheritTree.h → (no project deps)
-  frmFiles.h → frmLuaInheritTree.h
-  Construct.h → frmLoading.h, frmFiles.h
-  frmModule.h → strings.h
-  frmScarEditor.h → strings.h
-  frmLocaleSelector.h → Construct.h
-  Tools.h → Construct.h, frmUCSSelector.h
+Service layer:
+  services/Result.h → (standalone, no Rainman deps)
+  services/ModuleService.h → Result.h + forward decl: CModuleFile
+  services/FileService.h → Result.h + forward decls: CModuleFile, IFileStore, IDirectoryTraverser
+  services/FormatService.h → Result.h + forward decls
+  services/HashService.h → Result.h + forward decl: CRgdHashTable
 
-God header:
-  Common.h → Construct.h, Utility.h, strconv.h, strings.h, <Rainman.h>
-  ↓
-  Every .cpp file includes Common.h → gets ALL of Rainman transitively
+Structural helpers:
+  ITool.h → (standalone interface)
+  ToolRegistry.h → ITool.h
+  MenuController.h → ToolRegistry.h
+  ModuleManager.h → services/*.h
+  TabManager.h → (wxAuiNotebook wrapper)
+
+Mid-level:
+  frmLoading.h, frmLuaInheritTree.h → (no Rainman deps)
+  frmFiles.h → frmLuaInheritTree.h
+  Construct.h → frmLoading.h, TabManager.h, frmFiles.h, <rainman/module/CModuleFile.h>,
+                ModuleManager.h, ITool.h, ToolRegistry.h, MenuController.h
+
+Common.h → Construct.h, Utility.h, strconv.h, strings.h
+  (NO Rainman.h — each .cpp includes only the specific Rainman headers it needs)
 ```
 
 ### 7.3 Key Observations
 
-1. **`Rainman.h` is a transitive god header**: It pulls in 15 Rainman headers, which transitively pull in nearly everything else. Any change to any Rainman header likely triggers a full CDMS rebuild.
+1. **`Rainman.h` deleted**: The god header that pulled in 15 Rainman headers no longer exists. Each CDMS file includes only what it needs.
 
-2. **`Common.h` bridges the coupling**: By including both `Construct.h` and `<Rainman.h>`, it ensures every CDMS source file depends on every Rainman header.
+2. **`Common.h` is lightweight**: No longer includes any Rainman headers. Just `Construct.h`, `Utility.h`, `strconv.h`, `strings.h`.
 
-3. **`CModuleFile.h` is the internal god header**: It includes 8 other Rainman headers, making it the heaviest single Rainman header.
+3. **`CModuleFile.h` uses forward declarations**: Reduced from 8 Rainman includes to 5 core includes + forward declarations for `CSgaFile`, `CUcsFile`, `CDoWFileView`, `CFileMap`, `CFileSystemStore`.
 
-4. **No circular includes detected**: The dependency graph is strictly acyclic. However, `CRgdFile` ↔ `CLuaFile` have a **logical** circular dependency (bidirectional conversion) even though the include graph is one-way (`CRgdFile.h` includes `CLuaFile.h`, not vice versa).
+4. **No circular includes**: The dependency graph remains strictly acyclic. `CRgdFile` ↔ `CLuaFile` have a logical circular dependency (bidirectional conversion) but the include graph is one-way.
 
-5. **Forward declarations are underused**: Most headers use full includes where forward declarations would suffice.
+5. **Service layer decouples CDMS from Rainman headers**: Service headers use forward declarations; only the `.cpp` files include the actual Rainman headers.
 
 ---
 
 ## 8. Technical Debt Inventory
 
-### 8.1 Structural Issues
+### 8.1 Structural Issues (Resolved)
 
-| ID | Issue | Severity | Location | Impact |
-|----|-------|----------|----------|--------|
-| S1 | **God header `Rainman.h`** pulls 15 headers | High | `include/rainman/Rainman.h` | Any Rainman change rebuilds all CDMS |
-| S2 | **God header `Common.h`** pulls Rainman.h + Construct.h | High | `src/cdms/Common.h` | Every CDMS file depends on everything |
-| S3 | **God class `CModuleFile`** (1,608 LOC, 60+ methods, 8 header deps) | High | `CModuleFile.h/cpp` | Central coupling point |
-| S4 | **God class `ConstructFrame`** (983 LOC, owns module + tabs + tools + hash table) | High | `Construct.h/cpp` | All GUI state in one class |
-| S5 | **Monster file `frmFiles_Actions.h`** (2,201 LOC, 30+ inline classes) | High | `frmFiles_Actions.h` | Unmaintainable inline handlers |
-| S6 | **No GUI↔Data abstraction layer** | High | All CDMS files | GUI directly manipulates Rainman types |
-| S7 | **Forward declarations underused** | Medium | Most .h files | Unnecessary compile-time coupling |
-| S8 | **Flat directory structure** | Medium | `src/rainman/` | 80 files in one directory, no subsystem grouping |
+All structural issues from the original assessment have been resolved:
 
-### 8.2 Memory & Safety Issues
+| ID | Issue | Resolution |
+|----|-------|------------|
+| ~~S1~~ | God header `Rainman.h` | **Deleted.** Each file includes only what it needs. |
+| ~~S2~~ | `Common.h` pulls Rainman.h | **Fixed.** `Common.h` no longer includes any Rainman headers. |
+| ~~S3~~ | God class `CModuleFile` (1,608 LOC) | **Decomposed** to 775 LOC. Extracted `CModuleMetadata`, `CModuleParser`, `CResourceLoader`. |
+| ~~S4~~ | God class `ConstructFrame` (983 LOC) | **Decomposed** to 718 LOC. Extracted `ModuleManager`, `TabManager`, `MenuController`, `ToolRegistry`. |
+| ~~S5~~ | Monster file `frmFiles_Actions.h` (2,201 LOC) | **Deleted.** Split into 32 individual action files in `src/cdms/actions/`. |
+| ~~S6~~ | No GUI↔Data abstraction layer | **Service layer added** (`ModuleService`, `FileService`, `FormatService`, `HashService`). |
+| ~~S7~~ | Forward declarations underused | **Fixed.** `CModuleFile.h`, `CLuaFromRgd.h`, `CFileMap.h`, `CRgdFileMacro.h` use forward declarations. |
+| ~~S8~~ | Flat directory structure | **Reorganized** into 8 subdirectories (`core/`, `io/`, `archive/`, `formats/`, `lua/`, `localization/`, `module/`, `util/`). |
 
-| ID | Issue | Severity | Location | Impact |
-|----|-------|----------|----------|--------|
-| M1 | **Manual stream ownership** (raw `new`/`delete`) | High | All IFileStore users | Leak risk on exception paths |
-| M2 | **Heap-allocated exceptions** with manual `destroy()` | High | Exception.h, ~50 throw sites | Leak risk if destroy() forgotten |
-| M3 | **Raw `new[]`/`delete[]` string conversions** | Medium | `strconv.h/cpp` | Leak risk at conversion boundaries |
-| M4 | **No RAII** for any resource type | High | Pervasive | Systematic leak risk |
-| M5 | **`unsigned long` instead of `size_t`** in APIs | Low | All interfaces | 32-bit limitation on x64 (but safe for game data) |
+### 8.2 Memory & Safety Issues (Mostly Resolved)
 
-### 8.3 Code Quality Issues
+| ID | Issue | Status |
+|----|-------|--------|
+| ~~M1~~ | Manual stream ownership | **Fixed.** `std::unique_ptr<IFileStore::IStream>` used throughout. |
+| ~~M2~~ | Manual `destroy()` for exceptions | **Fixed.** `ExceptionDeleter` enables `std::unique_ptr<CRainmanException, ExceptionDeleter>`. |
+| ~~M3~~ | Raw `new[]`/`delete[]` string conversions | **Fixed.** `wxStringToAscii` returns `std::unique_ptr<char[]>`. |
+| ~~M4~~ | No RAII for any resource type | **Fixed.** RAII added for streams, exceptions, and string conversions. |
+| M5 | **`unsigned long` instead of `size_t`** in APIs | Low | Remains — changing would cascade through all interfaces. Safe for game data sizes. |
 
-| ID | Issue | Severity | Location | Impact |
-|----|-------|----------|----------|--------|
-| Q1 | **20 duplicate `LaunchModToolN()` handlers** | Low | `Construct.h/cpp` | Violation of DRY |
-| Q2 | **No UTF-8 support** in string conversions | Medium | `strconv.h/cpp` | Incorrect for non-ASCII game data |
-| Q3 | **Bidirectional RGD↔Lua dependency** | Medium | `CRgdFile` ↔ `CLuaFile` | Logical circular dependency |
-| Q4 | **Windows-only APIs** (`LoadLibraryW`, `_wfopen`, etc.) | Low | Multiple files | Not portable (acceptable for now) |
-| Q5 | **~55% of classes untested** (esp. Lua subsystem) | High | `tests/` | Refactoring without safety net |
+### 8.3 Code Quality Issues (Mostly Resolved)
+
+| ID | Issue | Status |
+|----|-------|--------|
+| ~~Q1~~ | 20 duplicate `LaunchModToolN()` handlers | **Fixed.** Array-driven dispatch via `ToolRegistry` with single `OnToolMenuCommand()`. |
+| Q2 | **No UTF-8 support** in string conversions | Medium | Remains — ANSI/Latin-1 assumed throughout. |
+| Q3 | **Bidirectional RGD↔Lua dependency** | Medium | Remains — `CRgdFile` ↔ `CLuaFile` logical circular dependency. Include graph is one-way. |
+| Q4 | **Windows-only APIs** (`LoadLibraryW`, `_wfopen`, etc.) | Low | Remains — acceptable, cross-platform is a non-goal. |
+| ~~Q5~~ | ~55% of classes untested | **Fixed.** ~85% class-level coverage (338 tests, 36 test files). |
 
 ---
 
@@ -772,21 +811,26 @@ Create → VInit() → Use → destructor
          any operation
 ```
 
-Most classes require `VInit()` before use. Some accept init data via `void* pInitData`. There is no RAII — callers must manage the lifecycle manually.
+Most classes require `VInit()` before use. Some accept init data via `void* pInitData`. RAII wrappers exist for streams (`std::unique_ptr<IStream>`), exceptions (`ExceptionDeleter`), and string conversions (`std::unique_ptr<char[]>`), but the underlying Rainman classes still use manual lifecycle management.
 
 ### 9.3 File Format Load/Save
 
 ```cpp
-// Typical parser lifecycle:
+// Modern pattern (preferred):
 CRgdFile rgd;
-IFileStore::IStream* pStream = store.VOpenStream("data.rgd");
-rgd.Load(pStream);      // parser does NOT take ownership
-delete pStream;          // caller cleans up stream
+std::unique_ptr<IFileStore::IStream> pStream(store.VOpenStream("data.rgd"));
+rgd.Load(pStream.get());      // parser does NOT take ownership
+// stream auto-deleted on scope exit
 
 // Save:
-IFileStore::IOutputStream* pOut = store.VOpenOutputStream("data.rgd", true);
-rgd.Save(pOut);          // parser does NOT take ownership
-delete pOut;             // caller cleans up
+std::unique_ptr<IFileStore::IOutputStream> pOut(store.VOpenOutputStream("data.rgd", true));
+rgd.Save(pOut.get());          // parser does NOT take ownership
+// stream auto-deleted on scope exit
+
+// Legacy pattern (still exists in some code):
+IFileStore::IStream* pStream = store.VOpenStream("data.rgd");
+rgd.Load(pStream);
+delete pStream;
 ```
 
 ### 9.4 CMemoryStore in Tests
@@ -797,13 +841,12 @@ store.VInit();
 
 // Wrap raw data as a readable stream:
 char* pRange = store.MemoryRange((void*)data, dataLen);
-IFileStore::IStream* pStream = store.VOpenStream(pRange);
-// ... read from pStream ...
-delete pStream;
+std::unique_ptr<IFileStore::IStream> pStream(store.VOpenStream(pRange));
+// ... read from pStream.get() ...
 
 // Or use static helpers:
-auto* pStream = CMemoryStore::OpenStreamExt(pData, len, false);
-auto* pOutStream = CMemoryStore::OpenOutputStreamExt();
+std::unique_ptr<IFileStore::IStream> pStream(CMemoryStore::OpenStreamExt(pData, len, false));
+std::unique_ptr<IFileStore::IOutputStream> pOutStream(CMemoryStore::OpenOutputStreamExt());
 ```
 
 ---
