@@ -17,8 +17,7 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _RAINMAN_GNUC_DEFINES_H_
-#define _RAINMAN_GNUC_DEFINES_H_
+#pragma once
 #ifdef __GNUC__
 
 #define RAINMAN_GNUC
@@ -50,5 +49,3 @@ char *_ultoa(unsigned long iVal, char *sStr, int iRadix);
 #endif
 
 #define UNUSED(s) ((s))
-
-#endif

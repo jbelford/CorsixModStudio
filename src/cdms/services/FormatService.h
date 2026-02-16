@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _CDMS_FORMAT_SERVICE_H_
-#define _CDMS_FORMAT_SERVICE_H_
+#pragma once
 
 #include <wx/string.h>
 #include "Result.h"
@@ -71,5 +70,3 @@ class FormatService
     static Result<void> SaveUcs(CUcsFile *pUcs, const char *sFile);
     static Result<void> SaveUcs(CUcsFile *pUcs, const wxString &sFile);
 };
-
-#endif

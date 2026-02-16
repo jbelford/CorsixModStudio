@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _C_TASK_RUNNER_H_
-#define _C_TASK_RUNNER_H_
+#pragma once
 
 #include "CancellationToken.h"
 #include "CProgressChannel.h"
@@ -119,5 +118,3 @@ class CTaskRunner
     std::thread m_thread;
     std::atomic<bool> m_bRunning{false};
 };
-
-#endif

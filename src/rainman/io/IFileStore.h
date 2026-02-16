@@ -17,8 +17,7 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _I_FILE_STORE_H_
-#define _I_FILE_STORE_H_
+#pragma once
 
 #include "rainman/core/gnuc_defines.h"
 #include "rainman/core/Api.h"
@@ -164,5 +163,3 @@ class RAINMAN_API IFileStore
   protected:
     bool m_bInited;
 };
-
-#endif

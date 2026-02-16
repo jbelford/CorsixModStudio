@@ -17,8 +17,7 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _RAINMAN_UTIL_H_
-#define _RAINMAN_UTIL_H_
+#pragma once
 #include "rainman/core/gnuc_defines.h"
 
 #include "rainman/formats/CRgdHashTable.h"
@@ -101,5 +100,3 @@ RAINMAN_API void Rainman_ForEach(IDirectoryTraverser::IIterator *pDirectory, Rai
 */
 RAINMAN_API CRgdHashTable *Rainman_LoadDictionaries(const char *sPath, char **sCustom = 0,
                                                     bool bIgnoreLoadErrors = true);
-
-#endif

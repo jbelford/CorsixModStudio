@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _C_AI_ACTION_H_
-#define _C_AI_ACTION_H_
+#pragma once
 
 #include "frmFiles.h"
 #include "frmScarEditor.h"
@@ -51,5 +50,3 @@ class CAiAction : public frmFiles::IHandler
         pForm->Load(stream.get());
     }
 };
-
-#endif

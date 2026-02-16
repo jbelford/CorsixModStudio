@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _UTILITY_H_
-#define _UTILITY_H_
+#pragma once
 // For compilers that support precompilation, includes "wx/wx.h".
 #include <wx/wxprec.h>
 #include <wx/aui/auibook.h>
@@ -61,5 +60,3 @@ void BackupFile(wxString &sFile);
 void BackupFile(IFileStore *pStore, wxString &sFile);
 void RestoreBackupFile(wxString &sFile);
 void RestoreBackupFile(IFileStore *pStore, wxString &sFile);
-
-#endif

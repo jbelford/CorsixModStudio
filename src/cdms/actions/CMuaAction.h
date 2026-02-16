@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _C_MUA_ACTION_H_
-#define _C_MUA_ACTION_H_
+#pragma once
 
 #include "frmFiles.h"
 #include "frmRgdEditor.h"
@@ -60,5 +59,3 @@ class CMuaAction : public frmFiles::IHandler
         }
     }
 };
-
-#endif

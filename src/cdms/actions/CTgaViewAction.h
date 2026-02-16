@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _C_TGA_VIEW_ACTION_H_
-#define _C_TGA_VIEW_ACTION_H_
+#pragma once
 
 #include "frmFiles.h"
 #include "frmImage.h"
@@ -55,5 +54,3 @@ class CTgaViewAction : public frmFiles::IHandler
         pForm->SetIsTga(!bIs32);
     }
 };
-
-#endif

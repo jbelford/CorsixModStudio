@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _C_RGO_DEBURN_ACTION_H_
-#define _C_RGO_DEBURN_ACTION_H_
+#pragma once
 
 #include "frmFiles.h"
 #include "Construct.h"
@@ -136,5 +135,3 @@ class CRGODeBurnAction : public frmFiles::IHandler
         delete pOut;
     }
 };
-
-#endif

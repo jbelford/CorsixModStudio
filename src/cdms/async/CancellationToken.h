@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _C_CANCELLATION_TOKEN_H_
-#define _C_CANCELLATION_TOKEN_H_
+#pragma once
 
 #include <atomic>
 
@@ -41,5 +40,3 @@ class CCancellationToken
   private:
     std::atomic<bool> m_bCancelled{false};
 };
-
-#endif

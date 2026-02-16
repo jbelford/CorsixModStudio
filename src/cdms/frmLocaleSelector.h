@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _FRM_LOCALESELECTOR_H_
-#define _FRM_LOCALESELECTOR_H_
+#pragma once
 // For compilers that support precompilation, includes "wx/wx.h".
 #include <wx/wxprec.h>
 
@@ -36,26 +35,24 @@
 class frmLocaleSelector : public wxDialog
 {
   protected:
-	wxString m_sAnswer;
-	wxListBox *m_pList;
-	wxCheckBox *m_pCheckbox;
+    wxString m_sAnswer;
+    wxListBox *m_pList;
+    wxCheckBox *m_pCheckbox;
 
   public:
-	frmLocaleSelector(const wxString &sTitle, ConstructFrame::eLoadModGames eGame);
+    frmLocaleSelector(const wxString &sTitle, ConstructFrame::eLoadModGames eGame);
 
-	void OnSize(wxSizeEvent &event);
+    void OnSize(wxSizeEvent &event);
 
-	void OnNewClick(wxCommandEvent &event);
+    void OnNewClick(wxCommandEvent &event);
 
-	wxString &GetAnswer();
+    wxString &GetAnswer();
 
-	enum
-	{
-		IDC_LocaleList = wxID_HIGHEST + 1,
-		IDC_Remember
-	};
+    enum
+    {
+        IDC_LocaleList = wxID_HIGHEST + 1,
+        IDC_Remember
+    };
 
-	DECLARE_EVENT_TABLE()
+    DECLARE_EVENT_TABLE()
 };
-
-#endif

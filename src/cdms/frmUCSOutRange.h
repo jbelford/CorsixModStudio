@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _FRM_UCSOUTOFRANGE_H_
-#define _FRM_UCSOUTOFRANGE_H_
+#pragma once
 // For compilers that support precompilation, includes "wx/wx.h".
 #include <wx/wxprec.h>
 
@@ -35,17 +34,15 @@
 class frmUCSOutOfRange : public wxDialog
 {
   protected:
-	wxCheckBox *m_pCheckbox;
+    wxCheckBox *m_pCheckbox;
 
   public:
-	frmUCSOutOfRange(const wxString &sTitle, unsigned long iID);
+    frmUCSOutOfRange(const wxString &sTitle, unsigned long iID);
 
-	void OnSize(wxSizeEvent &event);
+    void OnSize(wxSizeEvent &event);
 
-	void OnYesClick(wxCommandEvent &event);
-	void OnNoClick(wxCommandEvent &event);
+    void OnYesClick(wxCommandEvent &event);
+    void OnNoClick(wxCommandEvent &event);
 
-	DECLARE_EVENT_TABLE()
+    DECLARE_EVENT_TABLE()
 };
-
-#endif

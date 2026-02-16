@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _FRM_IMAGE_H_
-#define _FRM_IMAGE_H_
+#pragma once
 // For compilers that support precompilation, includes "wx/wx.h".
 #include <wx/wxprec.h>
 
@@ -38,33 +37,31 @@
 class frmImageViewer : public wxWindow
 {
   protected:
-	CRgtFile *m_pRgtFile;
-	wxBitmap *m_pImageBitmap;
-	wxRadioBox *m_pSaveFileExt, *m_pSaveFileCompression, *m_pCurrentExt, *m_pCurrentCompression;
-	wxCheckBox *m_pSaveFileMips;
-	wxString m_sFilename;
-	wxTreeItemId m_oFileParent;
-	bool m_bOwnRgt;
+    CRgtFile *m_pRgtFile;
+    wxBitmap *m_pImageBitmap;
+    wxRadioBox *m_pSaveFileExt, *m_pSaveFileCompression, *m_pCurrentExt, *m_pCurrentCompression;
+    wxCheckBox *m_pSaveFileMips;
+    wxString m_sFilename;
+    wxTreeItemId m_oFileParent;
+    bool m_bOwnRgt;
 
   public:
-	frmImageViewer(wxTreeItemId &oFileParent, wxString sFilename, wxWindow *parent, wxWindowID id, CRgtFile *pImage,
-	               bool bOwnImage, const wxPoint &pos = wxDefaultPosition, const wxSize &size = wxDefaultSize);
-	virtual ~frmImageViewer();
+    frmImageViewer(wxTreeItemId &oFileParent, wxString sFilename, wxWindow *parent, wxWindowID id, CRgtFile *pImage,
+                   bool bOwnImage, const wxPoint &pos = wxDefaultPosition, const wxSize &size = wxDefaultSize);
+    virtual ~frmImageViewer();
 
-	void SetIsTga(bool bOnlyRGB);
-	void SetIsDds();
+    void SetIsTga(bool bOnlyRGB);
+    void SetIsDds();
 
-	void OnSize(wxSizeEvent &event);
-	void OnSave(wxCommandEvent &event);
+    void OnSize(wxSizeEvent &event);
+    void OnSave(wxCommandEvent &event);
 
-	void OnRadioButtonSaveExt(wxCommandEvent &event);
+    void OnRadioButtonSaveExt(wxCommandEvent &event);
 
-	enum
-	{
-		IDC_SaveFileExt = wxID_HIGHEST + 1,
-	};
+    enum
+    {
+        IDC_SaveFileExt = wxID_HIGHEST + 1,
+    };
 
-	DECLARE_EVENT_TABLE()
+    DECLARE_EVENT_TABLE()
 };
-
-#endif

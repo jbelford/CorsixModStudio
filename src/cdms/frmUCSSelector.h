@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _FRM_UCSSELECTOR_H_
-#define _FRM_UCSSELECTOR_H_
+#pragma once
 // For compilers that support precompilation, includes "wx/wx.h".
 #include <wx/wxprec.h>
 
@@ -38,41 +37,39 @@
 class frmUCSSelector : public wxDialog
 {
   protected:
-	bool m_bGotAnswer;
-	wxString m_sAnswer;
-	CUcsFile *m_pAnswer;
-	wxListBox *m_pList;
-	std::list<CUcsFile *> m_lstUcsFiles;
-	size_t m_iWritableUcsCount;
-	bool m_bAnswerIsReadOnly;
+    bool m_bGotAnswer;
+    wxString m_sAnswer;
+    CUcsFile *m_pAnswer;
+    wxListBox *m_pList;
+    std::list<CUcsFile *> m_lstUcsFiles;
+    size_t m_iWritableUcsCount;
+    bool m_bAnswerIsReadOnly;
 
-	void _AddReadOnlyModToList(CModuleFile *pMod, wxArrayString &aList);
+    void _AddReadOnlyModToList(CModuleFile *pMod, wxArrayString &aList);
 
   public:
-	/*!
-	    may throw a CRainmanException
-	*/
-	frmUCSSelector(const wxString &sTitle);
+    /*!
+        may throw a CRainmanException
+    */
+    frmUCSSelector(const wxString &sTitle);
 
-	void OnSize(wxSizeEvent &event);
+    void OnSize(wxSizeEvent &event);
 
-	void OnNewClick(wxCommandEvent &event);
-	void OnLoadClick(wxCommandEvent &event);
-	void OnCloseClick(wxCommandEvent &event);
+    void OnNewClick(wxCommandEvent &event);
+    void OnLoadClick(wxCommandEvent &event);
+    void OnCloseClick(wxCommandEvent &event);
 
-	bool GotAnswer();
-	wxString &GetAnswer();
-	CUcsFile *GetAnswerUcs();
-	bool IsAnswerUcsReadOnly();
+    bool GotAnswer();
+    wxString &GetAnswer();
+    CUcsFile *GetAnswerUcs();
+    bool IsAnswerUcsReadOnly();
 
-	bool SelectFromReference(unsigned long iVal);
+    bool SelectFromReference(unsigned long iVal);
 
-	enum
-	{
-		IDC_UCSList = wxID_HIGHEST + 1,
-	};
+    enum
+    {
+        IDC_UCSList = wxID_HIGHEST + 1,
+    };
 
-	DECLARE_EVENT_TABLE()
+    DECLARE_EVENT_TABLE()
 };
-
-#endif

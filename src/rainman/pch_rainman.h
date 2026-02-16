@@ -5,8 +5,7 @@
 ** to reduce redundant parsing. Lua headers are intentionally excluded because
 ** different TUs use different (conflicting) Lua versions.
 */
-#ifndef _PCH_RAINMAN_H_
-#define _PCH_RAINMAN_H_
+#pragma once
 
 // Standard library
 #include <cstdint>
@@ -19,5 +18,3 @@
 #include "rainman/core/Exception.h"
 #include "rainman/core/memdebug.h"
 #include "rainman/core/RainmanLog.h"
-
-#endif // _PCH_RAINMAN_H_

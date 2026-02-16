@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef STRINGS_H_
-#define STRINGS_H_
+#pragma once
 // For compilers that support precompilation, includes "wx/wx.h".
 #include "wx/wxprec.h"
 
@@ -436,4 +435,3 @@ S(redbutton_toolname, "Developer\'s Red Button")
 
 // End
 #undef S
-#endif

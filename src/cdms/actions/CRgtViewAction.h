@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _C_RGT_VIEW_ACTION_H_
-#define _C_RGT_VIEW_ACTION_H_
+#pragma once
 
 #include "frmFiles.h"
 #include "frmImage.h"
@@ -53,5 +52,3 @@ class CRgtViewAction : public frmFiles::IHandler
             wxString().Append(wxT("RGT")).Append(wxT(" [")).Append(OnlyFilename(sFile)).Append(wxT("]")), true);
     }
 };
-
-#endif

@@ -15,8 +15,7 @@
     along with Corsix's Mod Studio; if not, write to the Free Software
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
-#ifndef _TOOL_AE_SETUP_H_
-#define _TOOL_AE_SETUP_H_
+#pragma once
 
 #include <rainman/module/CModuleFile.h>
 // For compilers that support precompilation, includes "wx/wx.h".
@@ -36,52 +35,50 @@
 class frmUCSToDAT : public wxDialog
 {
   protected:
-	wxTextCtrl *m_pOutFile, *m_pRangeStart, *m_pRangeEnd;
+    wxTextCtrl *m_pOutFile, *m_pRangeStart, *m_pRangeEnd;
 
   public:
-	frmUCSToDAT();
+    frmUCSToDAT();
 
-	void OnBrowseOutClick(wxCommandEvent &event);
-	void OnGoClick(wxCommandEvent &event);
-	void OnCancelClick(wxCommandEvent &event);
+    void OnBrowseOutClick(wxCommandEvent &event);
+    void OnGoClick(wxCommandEvent &event);
+    void OnCancelClick(wxCommandEvent &event);
 
-	enum
-	{
-		IDC_FileOut = wxID_HIGHEST + 1,
-		IDC_BrowseOut,
-		IDC_Go,
-		IDC_Cancel,
-	};
+    enum
+    {
+        IDC_FileOut = wxID_HIGHEST + 1,
+        IDC_BrowseOut,
+        IDC_Go,
+        IDC_Cancel,
+    };
 
-	DECLARE_EVENT_TABLE()
+    DECLARE_EVENT_TABLE()
 };
 
 class UCSToDATConvertor
 {
   public:
-	UCSToDATConvertor();
-	~UCSToDATConvertor();
+    UCSToDATConvertor();
+    ~UCSToDATConvertor();
 
-	void setOutputFilename(const char *sFilename);
-	void setRange(unsigned long iStart, unsigned long iEnd);
-	void setModule(const CModuleFile *pModule);
+    void setOutputFilename(const char *sFilename);
+    void setRange(unsigned long iStart, unsigned long iEnd);
+    void setModule(const CModuleFile *pModule);
 
-	void doConvertion();
+    void doConvertion();
 
   protected:
-	char *m_sOutputName;
-	unsigned long m_iRangeStart, m_iRangeEnd;
-	const CModuleFile *m_pModule;
+    char *m_sOutputName;
+    unsigned long m_iRangeStart, m_iRangeEnd;
+    const CModuleFile *m_pModule;
 
-	// Used while converting:
-	void _startRange(unsigned long iValue);
-	void _endRange();
-	bool _nextEntry(unsigned long *, wchar_t **);
+    // Used while converting:
+    void _startRange(unsigned long iValue);
+    void _endRange();
+    bool _nextEntry(unsigned long *, wchar_t **);
 
-	FILE *m_fDAT;
-	size_t m_iUCSCount;
-	std::map<unsigned long, wchar_t *>::const_iterator *m_aUCSFiles;
-	std::map<unsigned long, wchar_t *>::const_iterator *m_aUCSFileEnds;
+    FILE *m_fDAT;
+    size_t m_iUCSCount;
+    std::map<unsigned long, wchar_t *>::const_iterator *m_aUCSFiles;
+    std::map<unsigned long, wchar_t *>::const_iterator *m_aUCSFileEnds;
 };
-
-#endif

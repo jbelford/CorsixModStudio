@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _C_TEXT_VIEW_ACTION_H_
-#define _C_TEXT_VIEW_ACTION_H_
+#pragma once
 
 #include "frmFiles.h"
 #include "frmScarEditor.h"
@@ -50,5 +49,3 @@ class CTextViewAction : public frmFiles::IHandler
         pForm->Load(stream.get());
     }
 };
-
-#endif

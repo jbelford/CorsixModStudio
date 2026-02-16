@@ -17,8 +17,7 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _LUA_INTERFACE_H_
-#define _LUA_INTERFACE_H_
+#pragma once
 /*
 extern "C" {
 #include <lua.h>
@@ -32,4 +31,3 @@ void LuaBind_CsgaFile(lua_State *L, CSgaFile* pObj, bool bOwn = true);
 void LuaBind_CucsFile(lua_State *L, CUcsFile* pObj, bool bOwn = true);
 void LuaBind_CdowModule(lua_State *L, CDoWModule* pObj, bool bOwn = true);
 */
-#endif

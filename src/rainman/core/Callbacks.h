@@ -17,8 +17,7 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _CALLBACKS_H_
-#define _CALLBACKS_H_
+#pragma once
 
 #include "rainman/core/gnuc_defines.h"
 #include "rainman/core/Api.h"
@@ -54,5 +53,3 @@ RAINMAN_API void CallCallback(CALLBACK_ARG, const char *sFormat, ...);
 
 //! Macro to be used to pass a callback to another function (eg. to CallCallback() )
 #define THE_CALLBACK fnStatusCallback, fnStatusCallbackTag
-
-#endif

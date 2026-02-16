@@ -17,8 +17,7 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _CHUNKY_FILE_H_
-#define _CHUNKY_FILE_H_
+#pragma once
 
 #include "rainman/core/gnuc_defines.h"
 #include "rainman/io/CMemoryStore.h"
@@ -28,98 +27,96 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 class RAINMAN_API CChunkyFile
 {
   public:
-	CChunkyFile();
-	~CChunkyFile();
+    CChunkyFile();
+    ~CChunkyFile();
 
-	void Load(IFileStore::IStream *pStream);
-	void Save(IFileStore::IOutputStream *pStream);
-	void New(long iVersion);
+    void Load(IFileStore::IStream *pStream);
+    void Save(IFileStore::IOutputStream *pStream);
+    void New(long iVersion);
 
-	class RAINMAN_API CChunk
-	{
-	  public:
-		CChunk();
-		~CChunk();
+    class RAINMAN_API CChunk
+    {
+      public:
+        CChunk();
+        ~CChunk();
 
-		enum eTypes
-		{
-			T_Folder,
-			T_Data
-		};
+        enum eTypes
+        {
+            T_Folder,
+            T_Data
+        };
 
-		// Applicable to all
-		eTypes GetType() const;
-		const char *GetName() const;
-		long GetVersion() const;
-		const char *GetDescriptor() const;
+        // Applicable to all
+        eTypes GetType() const;
+        const char *GetName() const;
+        long GetVersion() const;
+        const char *GetDescriptor() const;
 
-		void SetVersion(long iValue);
-		void SetDescriptor(const char *sValue);
-		void SetUnknown1(long iValue);
+        void SetVersion(long iValue);
+        void SetDescriptor(const char *sValue);
+        void SetUnknown1(long iValue);
 
-		// Only applicable to T_Data
-		CMemoryStore::CStream *GetData();
-		char *GetDataRaw();
-		unsigned long GetDataLength();
+        // Only applicable to T_Data
+        CMemoryStore::CStream *GetData();
+        char *GetDataRaw();
+        unsigned long GetDataLength();
 
-		void SetData(CMemoryStore::COutStream *pStream);
+        void SetData(CMemoryStore::COutStream *pStream);
 
-		// Only applicable to T_Folder
-		size_t GetChildCount() const;
-		CChunk *GetChild(size_t iN) const;
-		CChunk *GetChildByName(const char *sName, eTypes eType) const;
-		CChunk *AppendNew(const char *sName, CChunk::eTypes eType);
-		CChunk *InsertBefore(size_t iBefore, const char *sName, CChunk::eTypes eType);
-		void RemoveChild(size_t iN);
+        // Only applicable to T_Folder
+        size_t GetChildCount() const;
+        CChunk *GetChild(size_t iN) const;
+        CChunk *GetChildByName(const char *sName, eTypes eType) const;
+        CChunk *AppendNew(const char *sName, CChunk::eTypes eType);
+        CChunk *InsertBefore(size_t iBefore, const char *sName, CChunk::eTypes eType);
+        void RemoveChild(size_t iN);
 
-	  protected:
-		friend class CChunkyFile;
+      protected:
+        friend class CChunkyFile;
 
-		//! Read one chunk from file
-		/*!
-		    Reads one FOLDxxxx or DATAxxxx chunk from the stream.
-		    If it is a FOLDxxxx chunk then all the children will be read aswell,
-		    if it is a DATAxxxx chunk then the chunk data will be read into memory.
+        //! Read one chunk from file
+        /*!
+            Reads one FOLDxxxx or DATAxxxx chunk from the stream.
+            If it is a FOLDxxxx chunk then all the children will be read aswell,
+            if it is a DATAxxxx chunk then the chunk data will be read into memory.
 
-		    \param[in] pStream Input stream
-		    \return Returns true if all went well, false if the very first read operation gave an error (eg. end of
-		   stream), throws an exception for all other errors.
-		*/
-		bool _Load(IFileStore::IStream *pStream, long iChunkyVersion);
+            \param[in] pStream Input stream
+            \return Returns true if all went well, false if the very first read operation gave an error (eg. end of
+           stream), throws an exception for all other errors.
+        */
+        bool _Load(IFileStore::IStream *pStream, long iChunkyVersion);
 
-		void _Save(IFileStore::IOutputStream *pStream);
+        void _Save(IFileStore::IOutputStream *pStream);
 
-		unsigned long _FoldUpdateSize();
+        unsigned long _FoldUpdateSize();
 
-		eTypes m_eType;
-		char m_sName[5];
-		char *m_sDescriptor;
-		long m_iVersion;
+        eTypes m_eType;
+        char m_sName[5];
+        char *m_sDescriptor;
+        long m_iVersion;
 
-		long m_iUnknown1, m_iUnknown2;
+        long m_iUnknown1, m_iUnknown2;
 
-		char *m_pData;
-		unsigned long m_iDataLength;
+        char *m_pData;
+        unsigned long m_iDataLength;
 
-		std::vector<CChunk *> m_vChildren;
-	};
+        std::vector<CChunk *> m_vChildren;
+    };
 
-	long GetVersion() const;
+    long GetVersion() const;
 
-	size_t GetChildCount() const;
-	CChunk *GetChild(size_t iN) const;
-	CChunk *GetChildByName(const char *sName, CChunk::eTypes eType) const;
-	void RemoveChild(size_t iN);
+    size_t GetChildCount() const;
+    CChunk *GetChild(size_t iN) const;
+    CChunk *GetChildByName(const char *sName, CChunk::eTypes eType) const;
+    void RemoveChild(size_t iN);
 
-	CChunk *AppendNew(const char *sName, CChunk::eTypes eType);
+    CChunk *AppendNew(const char *sName, CChunk::eTypes eType);
 
   protected:
-	char m_sHeader[17];
-	long m_iVersion;
+    char m_sHeader[17];
+    long m_iVersion;
 
-	long m_iUnknown1, m_iUnknown2, m_iUnknown3, m_iUnknown4;
+    long m_iUnknown1, m_iUnknown2, m_iUnknown3, m_iUnknown4;
 
-	std::vector<CChunk *> m_vChunks;
+    std::vector<CChunk *> m_vChunks;
 };
-
-#endif // #ifndef _CHUNKY_FILE_H_

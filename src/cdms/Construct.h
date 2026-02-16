@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _CONSTRUCT_H_
-#define _CONSTRUCT_H_
+#pragma once
 // For compilers that support precompilation, includes "wx/wx.h".
 #include <wx/wxprec.h>
 
@@ -193,5 +192,3 @@ enum
     // Stuff
     IDC_Splitter
 };
-
-#endif

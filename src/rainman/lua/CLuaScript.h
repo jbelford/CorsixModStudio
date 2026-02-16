@@ -17,8 +17,7 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _C_LUA_SCRIPT_H_
-#define _C_LUA_SCRIPT_H_
+#pragma once
 
 #include "rainman/core/gnuc_defines.h"
 extern "C"
@@ -31,17 +30,15 @@ extern "C"
 class RAINMAN_API CLuaScript
 {
   public:
-	CLuaScript(void);
-	~CLuaScript(void);
+    CLuaScript(void);
+    ~CLuaScript(void);
 
-	void Load(const char *sFile);
-	void Execute();
-	const char *GetLuaError(); // Obsolete?
+    void Load(const char *sFile);
+    void Execute();
+    const char *GetLuaError(); // Obsolete?
   protected:
-	lua_State *m_pLua;
-	char *m_sLuaError;
+    lua_State *m_pLua;
+    char *m_sLuaError;
 
-	void _Clean();
+    void _Clean();
 };
-
-#endif

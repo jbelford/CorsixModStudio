@@ -15,8 +15,7 @@
     along with Corsix's Mod Studio; if not, write to the Free Software
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
-#ifndef _TOOL_AUTO_DPS_H_
-#define _TOOL_AUTO_DPS_H_
+#pragma once
 
 #include <rainman/io/IDirectoryTraverser.h>
 #include <rainman/formats/IMetaTable.h>
@@ -29,48 +28,48 @@ namespace AutoDPS_Internal
 
 struct tAutoDPS_WeaponInfo
 {
-	tAutoDPS_WeaponInfo();
-	~tAutoDPS_WeaponInfo();
+    tAutoDPS_WeaponInfo();
+    ~tAutoDPS_WeaponInfo();
 
-	char *sFileName;
-	wchar_t *sUiName;
+    char *sFileName;
+    wchar_t *sUiName;
 
-	float iMinDamage;  // GameData\area_effect\weapon_damage\armour_damage\min_damage
-	float iMaxDamage;  // GameData\area_effect\weapon_damage\armour_damage\max_damage
-	float iAccuracy;   // GameData\accuracy
-	float iReloadTime; // GameData\reload_time
+    float iMinDamage;  // GameData\area_effect\weapon_damage\armour_damage\min_damage
+    float iMaxDamage;  // GameData\area_effect\weapon_damage\armour_damage\max_damage
+    float iAccuracy;   // GameData\accuracy
+    float iReloadTime; // GameData\reload_time
 
-	float iMinDamageValue; // GameData\area_effect\weapon_damage\armour_damage\min_damage_value
-	float iDefaultAP;      // GameData\area_effect\weapon_damage\armour_damage\armour_piercing
-	// mapped from GameData\area_effect\weapon_damage\armour_damage\armour_piercing_types\entry_01 through 15
-	// key: entry_nn\armour_type reference, value: entry_nn\armour_piercing_value
-	std::map<char *, float> mapAP;
+    float iMinDamageValue; // GameData\area_effect\weapon_damage\armour_damage\min_damage_value
+    float iDefaultAP;      // GameData\area_effect\weapon_damage\armour_damage\armour_piercing
+    // mapped from GameData\area_effect\weapon_damage\armour_damage\armour_piercing_types\entry_01 through 15
+    // key: entry_nn\armour_type reference, value: entry_nn\armour_piercing_value
+    std::map<char *, float> mapAP;
 
-	// Results of analysis
-	std::vector<std::pair<bool, float>> vAnalysisOutput;
+    // Results of analysis
+    std::vector<std::pair<bool, float>> vAnalysisOutput;
 };
 
 struct tAutoDPS_AP
 {
-	tAutoDPS_AP();
-	~tAutoDPS_AP();
+    tAutoDPS_AP();
+    ~tAutoDPS_AP();
 
-	char *sFilename;
-	char *sNicename;
+    char *sFilename;
+    char *sNicename;
 
-	std::vector<char *> vUnitList;
+    std::vector<char *> vUnitList;
 };
 
 struct tAutoDPS_Package
 {
-	tAutoDPS_Package();
-	~tAutoDPS_Package();
+    tAutoDPS_Package();
+    ~tAutoDPS_Package();
 
-	std::vector<tAutoDPS_WeaponInfo *> pWeapons;
+    std::vector<tAutoDPS_WeaponInfo *> pWeapons;
 
-	std::vector<tAutoDPS_AP *> pAPTypes;
+    std::vector<tAutoDPS_AP *> pAPTypes;
 
-	IDirectoryTraverser *pDirectories;
+    IDirectoryTraverser *pDirectories;
 };
 
 IMetaNode *AutoDPS_GetTableChild(IMetaNode::IMetaTable *pTable, const char *sChildName);
@@ -95,5 +94,3 @@ void AutoDPS_AddUnitList(AutoDPS_Internal::tAutoDPS_Package *pPackage, IDirector
 void AutoDPS_OutputHTML(AutoDPS_Internal::tAutoDPS_Package *pPackage, const char *sOutFile);
 
 }; // namespace AutoDPS
-
-#endif

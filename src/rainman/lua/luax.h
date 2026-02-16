@@ -17,8 +17,7 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _LUA_X_H_
-#define _LUA_X_H_
+#pragma once
 #include "rainman/core/gnuc_defines.h"
 extern "C"
 {
@@ -91,5 +90,3 @@ template <class T> T *lua51x_newuserdata(lua_State *L) { return (T *)lua51_newus
     is popped off the stack and nothing is pushed back on.
 int luax_GetParent(lua_State* L);
 */
-
-#endif

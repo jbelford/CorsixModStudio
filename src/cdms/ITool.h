@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _I_TOOL_H_
-#define _I_TOOL_H_
+#pragma once
 
 #include <wx/string.h>
 
@@ -32,5 +31,3 @@ class ITool
 
     virtual void DoAction() = 0;
 };
-
-#endif // _I_TOOL_H_

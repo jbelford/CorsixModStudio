@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _FRM_MODULE_H_
-#define _FRM_MODULE_H_
+#pragma once
 // For compilers that support precompilation, includes "wx/wx.h".
 #include <wx/wxprec.h>
 
@@ -36,100 +35,98 @@
 class frmModule : public wxWindow
 {
   public:
-	frmModule(wxWindow *parent, wxWindowID id, const wxPoint &pos = wxDefaultPosition,
-	          const wxSize &size = wxDefaultSize);
+    frmModule(wxWindow *parent, wxWindowID id, const wxPoint &pos = wxDefaultPosition,
+              const wxSize &size = wxDefaultSize);
 
-	void OnSize(wxSizeEvent &event);
+    void OnSize(wxSizeEvent &event);
 
-	enum
-	{
-		IDP_General = wxID_HIGHEST + 1,
-		IDP_DataFolders,
-		IDP_DataArchives,
-		IDP_RequiredMods,
-		IDP_CompatibleMods
-	};
+    enum
+    {
+        IDP_General = wxID_HIGHEST + 1,
+        IDP_DataFolders,
+        IDP_DataArchives,
+        IDP_RequiredMods,
+        IDP_CompatibleMods
+    };
 
   protected:
-	class pgMain : public wxWindow
-	{
-	  protected:
-		bool m_bDoneInit;
+    class pgMain : public wxWindow
+    {
+      protected:
+        bool m_bDoneInit;
 
-	  public:
-		pgMain(wxWindow *parent, wxWindowID id, const wxPoint &pos = wxDefaultPosition,
-		       const wxSize &size = wxDefaultSize);
+      public:
+        pgMain(wxWindow *parent, wxWindowID id, const wxPoint &pos = wxDefaultPosition,
+               const wxSize &size = wxDefaultSize);
 
-		void OnSize(wxSizeEvent &event);
+        void OnSize(wxSizeEvent &event);
 
-		enum
-		{
-			IDC_Description = wxID_HIGHEST + 1,
-			IDC_DllName,
-			IDC_ModFolder,
-			IDC_TextureFE,
-			IDC_TextureIcon,
-			IDC_UIName,
-			IDC_VersionMajor,
-			IDC_VersionMinor,
-			IDC_VersionRevision,
-			IDC_VersionHelp
-		};
+        enum
+        {
+            IDC_Description = wxID_HIGHEST + 1,
+            IDC_DllName,
+            IDC_ModFolder,
+            IDC_TextureFE,
+            IDC_TextureIcon,
+            IDC_UIName,
+            IDC_VersionMajor,
+            IDC_VersionMinor,
+            IDC_VersionRevision,
+            IDC_VersionHelp
+        };
 
-		void InitModFolderList(wxControlWithItems *pList);
-		void InitDllList(wxControlWithItems *pList);
+        void InitModFolderList(wxControlWithItems *pList);
+        void InitDllList(wxControlWithItems *pList);
 
-		void OnDescriptionUpdate(wxCommandEvent &event);
-		void OnUINameUpdate(wxCommandEvent &event);
-		void OnTextureFEUpdate(wxCommandEvent &event);
-		void OnTextureIconUpdate(wxCommandEvent &event);
+        void OnDescriptionUpdate(wxCommandEvent &event);
+        void OnUINameUpdate(wxCommandEvent &event);
+        void OnTextureFEUpdate(wxCommandEvent &event);
+        void OnTextureIconUpdate(wxCommandEvent &event);
 
-		DECLARE_EVENT_TABLE()
-	};
+        DECLARE_EVENT_TABLE()
+    };
 
-	class pgDataFolders : public wxWindow
-	{
-	  public:
-		pgDataFolders(wxWindow *parent, wxWindowID id, const wxPoint &pos = wxDefaultPosition,
-		              const wxSize &size = wxDefaultSize, const wxString &sTitle = AppStr(mod_datafolders_caption),
-		              const wxString &sItemName = AppStr(mod_datafolder), bool bUpdateMessage = true,
-		              void (*pInitList)(wxArrayString &) = FillInitialValues);
+    class pgDataFolders : public wxWindow
+    {
+      public:
+        pgDataFolders(wxWindow *parent, wxWindowID id, const wxPoint &pos = wxDefaultPosition,
+                      const wxSize &size = wxDefaultSize, const wxString &sTitle = AppStr(mod_datafolders_caption),
+                      const wxString &sItemName = AppStr(mod_datafolder), bool bUpdateMessage = true,
+                      void (*pInitList)(wxArrayString &) = FillInitialValues);
 
-		void OnSize(wxSizeEvent &event);
+        void OnSize(wxSizeEvent &event);
 
-		static void FillInitialValues(wxArrayString &aInitialValues);
+        static void FillInitialValues(wxArrayString &aInitialValues);
 
-		DECLARE_EVENT_TABLE()
-	};
+        DECLARE_EVENT_TABLE()
+    };
 
-	class pgDataArchives : public pgDataFolders
-	{
-	  public:
-		pgDataArchives(wxWindow *parent, wxWindowID id, const wxPoint &pos = wxDefaultPosition,
-		               const wxSize &size = wxDefaultSize);
+    class pgDataArchives : public pgDataFolders
+    {
+      public:
+        pgDataArchives(wxWindow *parent, wxWindowID id, const wxPoint &pos = wxDefaultPosition,
+                       const wxSize &size = wxDefaultSize);
 
-		static void FillInitialValues(wxArrayString &aInitialValues);
-	};
+        static void FillInitialValues(wxArrayString &aInitialValues);
+    };
 
-	class pgRequiredMods : public pgDataFolders
-	{
-	  public:
-		pgRequiredMods(wxWindow *parent, wxWindowID id, const wxPoint &pos = wxDefaultPosition,
-		               const wxSize &size = wxDefaultSize);
+    class pgRequiredMods : public pgDataFolders
+    {
+      public:
+        pgRequiredMods(wxWindow *parent, wxWindowID id, const wxPoint &pos = wxDefaultPosition,
+                       const wxSize &size = wxDefaultSize);
 
-		static void FillInitialValues(wxArrayString &aInitialValues);
-	};
+        static void FillInitialValues(wxArrayString &aInitialValues);
+    };
 
-	class pgCompatibleMods : public pgDataFolders
-	{
-	  public:
-		pgCompatibleMods(wxWindow *parent, wxWindowID id, const wxPoint &pos = wxDefaultPosition,
-		                 const wxSize &size = wxDefaultSize);
+    class pgCompatibleMods : public pgDataFolders
+    {
+      public:
+        pgCompatibleMods(wxWindow *parent, wxWindowID id, const wxPoint &pos = wxDefaultPosition,
+                         const wxSize &size = wxDefaultSize);
 
-		static void FillInitialValues(wxArrayString &aInitialValues);
-	};
+        static void FillInitialValues(wxArrayString &aInitialValues);
+    };
 
-	DECLARE_EVENT_TABLE()
+    DECLARE_EVENT_TABLE()
 };
-
-#endif

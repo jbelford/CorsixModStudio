@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _FRM_CREDITS_H_
-#define _FRM_CREDITS_H_
+#pragma once
 // For compilers that support precompilation, includes "wx/wx.h".
 #include <wx/wxprec.h>
 #include <wx/aui/auibook.h>
@@ -37,18 +36,16 @@
 class frmCredits : public wxDialog
 {
   protected:
-	wxBitmap *m_pLoadingImage;
-	wxStaticText *m_pText;
+    wxBitmap *m_pLoadingImage;
+    wxStaticText *m_pText;
 
   public:
-	frmCredits();
-	~frmCredits();
+    frmCredits();
+    ~frmCredits();
 
-	void OnPaint(wxPaintEvent &event);
+    void OnPaint(wxPaintEvent &event);
 
-	void SetMessage(wxString &sMsg);
+    void SetMessage(wxString &sMsg);
 
-	DECLARE_EVENT_TABLE()
+    DECLARE_EVENT_TABLE()
 };
-
-#endif

@@ -17,8 +17,7 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _BFX_FILE_H_
-#define _BFX_FILE_H_
+#pragma once
 
 #include "rainman/formats/CRgdFile.h"
 #include <lua.h>
@@ -26,12 +25,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 class RAINMAN_API CBfxFile : public CRgdFile
 {
   public:
-	CBfxFile();
-	void SaveAsBfxLua(IFileStore::IOutputStream *pStream, lua_State *Lmap);
+    CBfxFile();
+    void SaveAsBfxLua(IFileStore::IOutputStream *pStream, lua_State *Lmap);
 
   protected:
-	void _SaveRaw(IFileStore::IOutputStream *pStream, _RgdEntry *pSource, lua_State *Lmap, bool bNumericID = false,
-	              size_t iIndentLvl = 0);
+    void _SaveRaw(IFileStore::IOutputStream *pStream, _RgdEntry *pSource, lua_State *Lmap, bool bNumericID = false,
+                  size_t iIndentLvl = 0);
 };
-
-#endif

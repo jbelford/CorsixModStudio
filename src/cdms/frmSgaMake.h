@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _FRM_SGAMAKE_H_
-#define _FRM_SGAMAKE_H_
+#pragma once
 // For compilers that support precompilation, includes "wx/wx.h".
 #include <wx/wxprec.h>
 
@@ -35,30 +34,28 @@
 class frmSgaMake : public wxDialog
 {
   protected:
-	wxTextCtrl *m_pInDir;
-	wxComboBox *m_pOutFile, *m_pTocName;
+    wxTextCtrl *m_pInDir;
+    wxComboBox *m_pOutFile, *m_pTocName;
 
   public:
-	frmSgaMake();
+    frmSgaMake();
 
-	void OnBrowseInClick(wxCommandEvent &event);
-	void OnBrowseOutClick(wxCommandEvent &event);
-	void OnGoClick(wxCommandEvent &event);
-	void OnCancelClick(wxCommandEvent &event);
-	void OnFileOutUpdated(wxCommandEvent &event);
+    void OnBrowseInClick(wxCommandEvent &event);
+    void OnBrowseOutClick(wxCommandEvent &event);
+    void OnGoClick(wxCommandEvent &event);
+    void OnCancelClick(wxCommandEvent &event);
+    void OnFileOutUpdated(wxCommandEvent &event);
 
-	enum
-	{
-		IDC_DirIn = wxID_HIGHEST + 1,
-		IDC_BrowseIn,
-		IDC_FileOut,
-		IDC_BrowseOut,
-		IDC_TocName,
-		IDC_Go,
-		IDC_Cancel
-	};
+    enum
+    {
+        IDC_DirIn = wxID_HIGHEST + 1,
+        IDC_BrowseIn,
+        IDC_FileOut,
+        IDC_BrowseOut,
+        IDC_TocName,
+        IDC_Go,
+        IDC_Cancel
+    };
 
-	DECLARE_EVENT_TABLE()
+    DECLARE_EVENT_TABLE()
 };
-
-#endif

@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _FRM_FILESELECTOR_H_
-#define _FRM_FILESELECTOR_H_
+#pragma once
 // For compilers that support precompilation, includes "wx/wx.h".
 #include <wx/wxprec.h>
 
@@ -38,48 +37,46 @@
 class CFileSelectorTreeItemData : public wxTreeItemData
 {
   public:
-	CFileSelectorTreeItemData(IDirectoryTraverser::IIterator *pItr, bool bToFillWith);
-	const char *sMod;
-	const char *sSource;
+    CFileSelectorTreeItemData(IDirectoryTraverser::IIterator *pItr, bool bToFillWith);
+    const char *sMod;
+    const char *sSource;
 
-	IDirectoryTraverser::IIterator *pToFillWith;
+    IDirectoryTraverser::IIterator *pToFillWith;
 };
 
 class frmFileSelector : public wxDialog
 {
   protected:
-	wxString m_sBaseFolder;
-	wxString m_sFile;
-	wxString m_sRgdModeExt;
-	wxTreeCtrl *m_pTree;
-	wxTextCtrl *m_pText;
-	wxColour m_cThisMod, m_cOtherMod, m_cEngine;
+    wxString m_sBaseFolder;
+    wxString m_sFile;
+    wxString m_sRgdModeExt;
+    wxTreeCtrl *m_pTree;
+    wxTextCtrl *m_pText;
+    wxColour m_cThisMod, m_cOtherMod, m_cEngine;
 
-	void MakeChildren(const wxTreeItemId &parent);
-	bool m_bRgdMode;
+    void MakeChildren(const wxTreeItemId &parent);
+    bool m_bRgdMode;
 
-	void FindAndSelect(wxString sFile);
+    void FindAndSelect(wxString sFile);
 
   public:
-	frmFileSelector(wxString sBaseFolder, wxString sExistingSelection, bool bRgdMode);
-	virtual ~frmFileSelector();
+    frmFileSelector(wxString sBaseFolder, wxString sExistingSelection, bool bRgdMode);
+    virtual ~frmFileSelector();
 
-	void OnSize(wxSizeEvent &event);
+    void OnSize(wxSizeEvent &event);
 
-	void OnOkClick(wxCommandEvent &event);
-	void OnCloseClick(wxCommandEvent &event);
-	void OnTreeExpanding(wxTreeEvent &event);
-	void OnTreeSelect(wxTreeEvent &event);
+    void OnOkClick(wxCommandEvent &event);
+    void OnCloseClick(wxCommandEvent &event);
+    void OnTreeExpanding(wxTreeEvent &event);
+    void OnTreeSelect(wxTreeEvent &event);
 
-	inline wxString &GetBaseFolder() { return m_sBaseFolder; }
-	inline wxString &GetFile() { return m_sFile; }
+    inline wxString &GetBaseFolder() { return m_sBaseFolder; }
+    inline wxString &GetFile() { return m_sFile; }
 
-	enum
-	{
-		IDC_FilesTable = wxID_HIGHEST + 1,
-	};
+    enum
+    {
+        IDC_FilesTable = wxID_HIGHEST + 1,
+    };
 
-	DECLARE_EVENT_TABLE()
+    DECLARE_EVENT_TABLE()
 };
-
-#endif

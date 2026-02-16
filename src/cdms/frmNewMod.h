@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _FRM_NEWMOD_H_
-#define _FRM_NEWMOD_H_
+#pragma once
 // For compilers that support precompilation, includes "wx/wx.h".
 #include <wx/wxprec.h>
 
@@ -35,38 +34,36 @@
 class frmNewMod : public wxDialog
 {
   protected:
-	wxTextCtrl *m_pName;
-	wxChoice *m_pList;
-	wxStaticText *m_pCreation;
-	wxString m_sDoWPath, m_sCoHPath, m_sDCPath, m_sSSPath;
-	wxString _UpdatePath(wxString sName);
+    wxTextCtrl *m_pName;
+    wxChoice *m_pList;
+    wxStaticText *m_pCreation;
+    wxString m_sDoWPath, m_sCoHPath, m_sDCPath, m_sSSPath;
+    wxString _UpdatePath(wxString sName);
 
-	void _MakeCOH(char *sNiceName, char *sDirectoryFullPath, char *sDirectoryName, FILE *fModule);
-	void _MakeCOH_Language(char *sToc, char *sName1, char *sName2, char *sDirectoryName, FILE *fModule);
+    void _MakeCOH(char *sNiceName, char *sDirectoryFullPath, char *sDirectoryName, FILE *fModule);
+    void _MakeCOH_Language(char *sToc, char *sName1, char *sName2, char *sDirectoryName, FILE *fModule);
 
   public:
-	/*!
-	    may throw a CRainmanException
-	*/
-	frmNewMod();
+    /*!
+        may throw a CRainmanException
+    */
+    frmNewMod();
 
-	void OnNewClick(wxCommandEvent &event);
-	void OnCancelClick(wxCommandEvent &event);
-	wxString GetPath();
+    void OnNewClick(wxCommandEvent &event);
+    void OnCancelClick(wxCommandEvent &event);
+    wxString GetPath();
 
-	void OnGameChange(wxCommandEvent &event);
-	void OnBrowseClick(wxCommandEvent &event);
+    void OnGameChange(wxCommandEvent &event);
+    void OnBrowseClick(wxCommandEvent &event);
 
-	enum
-	{
-		IDC_Name = wxID_HIGHEST + 1,
-		IDC_New,
-		IDC_Cancel,
-		IDC_Game,
-		IDC_Browse
-	};
+    enum
+    {
+        IDC_Name = wxID_HIGHEST + 1,
+        IDC_New,
+        IDC_Cancel,
+        IDC_Game,
+        IDC_Browse
+    };
 
-	DECLARE_EVENT_TABLE()
+    DECLARE_EVENT_TABLE()
 };
-
-#endif

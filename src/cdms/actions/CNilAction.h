@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _C_NIL_ACTION_H_
-#define _C_NIL_ACTION_H_
+#pragma once
 
 #include "frmFiles.h"
 
@@ -28,5 +27,3 @@ class CNilAction : public CLuaAction
 
     virtual wxString VGetAction() const { return wxT("View as NIL file"); }
 };
-
-#endif

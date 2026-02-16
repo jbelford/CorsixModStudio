@@ -19,8 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 // This file is included in every .cpp file to allow easier memory leak tracing in debug mode
 
-#ifndef _MEM_DEBUG_H_
-#define _MEM_DEBUG_H_
+#pragma once
 
 #include "rainman/core/gnuc_defines.h"
 
@@ -33,11 +32,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #define strdup(s) strdup_memdebug(s, __FILE__, __LINE__)
 static char *strdup_memdebug(const char *s, const char *sFile, unsigned long iLine)
 {
-	size_t iL = strlen(s);
-	char *sR = new (_NORMAL_BLOCK, sFile, iLine) char[iL + 1];
-	memcpy((void *)sR, (const void *)s, iL);
-	sR[iL] = 0;
-	return sR;
+    size_t iL = strlen(s);
+    char *sR = new (_NORMAL_BLOCK, sFile, iLine) char[iL + 1];
+    memcpy((void *)sR, (const void *)s, iL);
+    sR[iL] = 0;
+    return sR;
 }
 #else
 #define DEBUG_NEW new
@@ -45,6 +44,5 @@ static char *strdup_memdebug(const char *s, const char *sFile, unsigned long iLi
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
-#endif
 #endif
 #endif

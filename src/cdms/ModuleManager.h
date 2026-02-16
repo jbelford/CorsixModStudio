@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _MODULE_MANAGER_H_
-#define _MODULE_MANAGER_H_
+#pragma once
 
 #include <rainman/module/CModuleFile.h>
 #include <rainman/formats/CRgdHashTable.h>
@@ -59,5 +58,3 @@ class ModuleManager
     CRgdHashTable *m_pRgdHashTable;
     char *m_sRgdHashCustomOut;
 };
-
-#endif

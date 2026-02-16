@@ -1,5 +1,4 @@
-#ifndef _CDMS_COMMON_H_
-#define _CDMS_COMMON_H_
+#pragma once
 
 #include "Construct.h"
 #include "Utility.h"
@@ -10,6 +9,4 @@
 // Debug memory tracking disabled — #define new conflicts with C++17 headers
 #ifdef _DEBUG
 #include <crtdbg.h>
-#endif
-
 #endif

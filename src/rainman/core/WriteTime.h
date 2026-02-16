@@ -17,8 +17,7 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _WRITETIME_H_
-#define _WRITETIME_H_
+#pragma once
 
 #include "rainman/core/gnuc_defines.h"
 
@@ -54,5 +53,3 @@ inline tLastWriteTime GetInvalidWriteTime() { return 0; }
     Otherwise, returns false
 */
 inline bool IsWriteTimeNewer(tLastWriteTime oA, tLastWriteTime oB) { return (oA > oB); }
-
-#endif

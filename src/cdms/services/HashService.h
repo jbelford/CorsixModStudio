@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _CDMS_HASH_SERVICE_H_
-#define _CDMS_HASH_SERVICE_H_
+#pragma once
 
 #include <wx/string.h>
 #include "Result.h"
@@ -77,5 +76,3 @@ class HashService
     CRgdHashTable *m_pHashTable;
     char *m_sCustomOutPath;
 };
-
-#endif

@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _STRCONV_H_
-#define _STRCONV_H_
+#pragma once
 
 #include <memory>
 #include <string.h>
@@ -52,5 +51,3 @@ wxString AsciiTowxString(const char *sAscii);
     \return Returns a string, or 0 on error
 */
 std::unique_ptr<char[]> wxStringToAscii(const wxString &oStr);
-
-#endif

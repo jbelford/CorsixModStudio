@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _C_WX_TASK_RUNNER_H_
-#define _C_WX_TASK_RUNNER_H_
+#pragma once
 
 #include "CTaskRunner.h"
 #include <wx/event.h>
@@ -67,5 +66,3 @@ class CWxTaskRunner
     wxEvtHandler *m_pHandler;
     CTaskRunner m_runner;
 };
-
-#endif

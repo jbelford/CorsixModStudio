@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _FRM_TABDIALOG_H_
-#define _FRM_TABDIALOG_H_
+#pragma once
 // For compilers that support precompilation, includes "wx/wx.h".
 #include <wx/wxprec.h>
 #include <wx/aui/auibook.h>
@@ -36,22 +35,20 @@
 class frmTabDialog : public wxDialog
 {
   protected:
-	wxAuiNotebook *m_pTabs;
+    wxAuiNotebook *m_pTabs;
 
   public:
-	/*!
-	    may throw a CRainmanException
-	*/
-	frmTabDialog(const wxString &sTitle);
+    /*!
+        may throw a CRainmanException
+    */
+    frmTabDialog(const wxString &sTitle);
 
-	void OnSize(wxSizeEvent &event);
-	void OnCloseWindow(wxCloseEvent &event);
+    void OnSize(wxSizeEvent &event);
+    void OnCloseWindow(wxCloseEvent &event);
 
-	void OnTabClose(wxAuiNotebookEvent &event);
+    void OnTabClose(wxAuiNotebookEvent &event);
 
-	wxAuiNotebook *GetTabs();
+    wxAuiNotebook *GetTabs();
 
-	DECLARE_EVENT_TABLE()
+    DECLARE_EVENT_TABLE()
 };
-
-#endif

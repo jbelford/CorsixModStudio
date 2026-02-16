@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _FRM_RGMMATERIALEDITOR_H_
-#define _FRM_RGMMATERIALEDITOR_H_
+#pragma once
 // For compilers that support precompilation, includes "wx/wx.h".
 #include <wx/wxprec.h>
 
@@ -43,41 +42,39 @@ class RgmMaterialwxPropertyGridManager;
 class frmRgmMaterialEditor : public wxWindow
 {
   protected:
-	wxPropertyGrid *m_pPropertyGrid;
-	wxTreeCtrl *m_pTables;
-	wxSplitterWindow *m_pSplitter;
-	RgmMaterialwxPropertyGridManager *m_pPropManager;
-	wxString m_sFilename;
-	wxTreeItemId m_oFileParent;
+    wxPropertyGrid *m_pPropertyGrid;
+    wxTreeCtrl *m_pTables;
+    wxSplitterWindow *m_pSplitter;
+    RgmMaterialwxPropertyGridManager *m_pPropManager;
+    wxString m_sFilename;
+    wxTreeItemId m_oFileParent;
 
-	CRgmFile *m_pRgmFile;
-	bool m_bOwnRgm;
+    CRgmFile *m_pRgmFile;
+    bool m_bOwnRgm;
 
-	void _FillLeft();
-	void _FillRight(CRgmFile::CMaterial *pMaterial);
+    void _FillLeft();
+    void _FillRight(CRgmFile::CMaterial *pMaterial);
 
-	wxPGProperty *GetVariableEditor(CRgmFile::CMaterial::CVariable *pVar);
+    wxPGProperty *GetVariableEditor(CRgmFile::CMaterial::CVariable *pVar);
 
   public:
-	frmRgmMaterialEditor(wxTreeItemId &oFileParent, wxString sFilename, wxWindow *parent, wxWindowID id,
-	                     const wxPoint &pos = wxDefaultPosition, const wxSize &size = wxDefaultSize);
-	~frmRgmMaterialEditor();
+    frmRgmMaterialEditor(wxTreeItemId &oFileParent, wxString sFilename, wxWindow *parent, wxWindowID id,
+                         const wxPoint &pos = wxDefaultPosition, const wxSize &size = wxDefaultSize);
+    ~frmRgmMaterialEditor();
 
-	void SetObject(CRgmFile *pRgmFile, bool bTakeOwnership);
+    void SetObject(CRgmFile *pRgmFile, bool bTakeOwnership);
 
-	void OnSize(wxSizeEvent &event);
-	void OnPropertyChange(wxPropertyGridEvent &event);
-	void OnTreeSelect(wxTreeEvent &event);
-	void OnTreeRightClick(wxTreeEvent &event);
-	void OnSave(wxCommandEvent &event);
+    void OnSize(wxSizeEvent &event);
+    void OnPropertyChange(wxPropertyGridEvent &event);
+    void OnTreeSelect(wxTreeEvent &event);
+    void OnTreeRightClick(wxTreeEvent &event);
+    void OnSave(wxCommandEvent &event);
 
-	enum
-	{
-		IDC_PropertyGrid = wxID_HIGHEST + 1,
-		IDC_TablesTree,
-	};
+    enum
+    {
+        IDC_PropertyGrid = wxID_HIGHEST + 1,
+        IDC_TablesTree,
+    };
 
-	DECLARE_EVENT_TABLE()
+    DECLARE_EVENT_TABLE()
 };
-
-#endif

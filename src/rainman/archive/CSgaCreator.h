@@ -17,8 +17,7 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _C_SGA_CREATOR_H_
-#define _C_SGA_CREATOR_H_
+#pragma once
 
 #include "rainman/core/gnuc_defines.h"
 #include "rainman/io/IFileStore.h"
@@ -34,51 +33,49 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 class RAINMAN_API CSgaCreator
 {
   public:
-	//! Stores information about files that are to be packed
-	class CInputFile
-	{
-	  private:
-		friend class CSgaCreator;
-		size_t iNameOffset; //!< Where in sFullPath the actual file name begins
-		tLastWriteTime oLastWriteTime;
-		char *sFullPath; //!< The full path of the file in pFileStore
-		IFileStore *pFileStore;
+    //! Stores information about files that are to be packed
+    class CInputFile
+    {
+      private:
+        friend class CSgaCreator;
+        size_t iNameOffset; //!< Where in sFullPath the actual file name begins
+        tLastWriteTime oLastWriteTime;
+        char *sFullPath; //!< The full path of the file in pFileStore
+        IFileStore *pFileStore;
 
-	  public:
-		static bool OpLT(CInputFile *oA, CInputFile *oB); //!< Is oA less than oB?
-		~CInputFile();
-	};
+      public:
+        static bool OpLT(CInputFile *oA, CInputFile *oB); //!< Is oA less than oB?
+        ~CInputFile();
+    };
 
-	//! Stores information about directories that are to be packed
-	class CInputDirectory
-	{
-	  private:
-		friend class CSgaCreator;
-		std::vector<CSgaCreator::CInputDirectory *> vDirsList; //!< Sub-directories
-		std::vector<CSgaCreator::CInputFile *> vFilesList;
-		char *sNameFull;
+    //! Stores information about directories that are to be packed
+    class CInputDirectory
+    {
+      private:
+        friend class CSgaCreator;
+        std::vector<CSgaCreator::CInputDirectory *> vDirsList; //!< Sub-directories
+        std::vector<CSgaCreator::CInputFile *> vFilesList;
+        char *sNameFull;
 
-	  public:
-		static bool OpLT(CInputDirectory *oA, CInputDirectory *oB); //!< Is oA less than oB?
-		void FullCount(size_t &iDirCount, size_t &iFileCount);      //!< Count the number of directories and files
-		~CInputDirectory();
-	};
+      public:
+        static bool OpLT(CInputDirectory *oA, CInputDirectory *oB); //!< Is oA less than oB?
+        void FullCount(size_t &iDirCount, size_t &iFileCount);      //!< Count the number of directories and files
+        ~CInputDirectory();
+    };
 
-	//! Create a new SGA archive
-	/*!
-	    \param[in] pDirectory The input directory to turn into an SGA
-	    \param[in] pStore The file store tied to pDirectory
-	    \param[in] sOutputFile The full name and path of the file to create
-	    \param[in] iVersion Set to 2 to create DoW compatible archives; set to 4 to create CoH compatible archives
-	    \return Returns no value but throws an= CRainmanException on error
-	*/
-	static void CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileStore *pStore, const char *sTocName,
-	                      const char *sOutputFile, long iVersion = 4, const char *sArchiveTitle = 0,
-	                      const char *sTocTitle = 0);
+    //! Create a new SGA archive
+    /*!
+        \param[in] pDirectory The input directory to turn into an SGA
+        \param[in] pStore The file store tied to pDirectory
+        \param[in] sOutputFile The full name and path of the file to create
+        \param[in] iVersion Set to 2 to create DoW compatible archives; set to 4 to create CoH compatible archives
+        \return Returns no value but throws an= CRainmanException on error
+    */
+    static void CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileStore *pStore, const char *sTocName,
+                          const char *sOutputFile, long iVersion = 4, const char *sArchiveTitle = 0,
+                          const char *sTocTitle = 0);
 
   private:
-	static CInputDirectory *_ScanDirectory(IDirectoryTraverser::IIterator *pDirectory, IFileStore *pStore,
-	                                       size_t iDirBaseL = 0);
+    static CInputDirectory *_ScanDirectory(IDirectoryTraverser::IIterator *pDirectory, IFileStore *pStore,
+                                           size_t iDirBaseL = 0);
 };
-
-#endif

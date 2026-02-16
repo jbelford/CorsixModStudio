@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _FRM_WELCOME_H_
-#define _FRM_WELCOME_H_
+#pragma once
 // For compilers that support precompilation, includes "wx/wx.h".
 #include <wx/wxprec.h>
 
@@ -35,39 +34,37 @@
 class frmWelcome : public wxWindow
 {
   protected:
-	wxBitmap *m_pDonateBitmap;
-	bool bFirstMouseEvent;
+    wxBitmap *m_pDonateBitmap;
+    bool bFirstMouseEvent;
 
   public:
-	frmWelcome(wxWindow *parent, wxWindowID id, const wxPoint &pos = wxDefaultPosition,
-	           const wxSize &size = wxDefaultSize);
-	~frmWelcome();
+    frmWelcome(wxWindow *parent, wxWindowID id, const wxPoint &pos = wxDefaultPosition,
+               const wxSize &size = wxDefaultSize);
+    ~frmWelcome();
 
-	void OnSize(wxSizeEvent &event);
-	void OnQuit(wxCommandEvent &event);
-	void OnLoadSga(wxCommandEvent &event);
-	void OnLoadMod(wxCommandEvent &event);
-	void OnLoadModDC(wxCommandEvent &event);
-	void OnLoadModSS(wxCommandEvent &event);
-	void OnLoadModCoH(wxCommandEvent &event);
-	void OnNewMod(wxCommandEvent &event);
-	void OnMouseEvent(wxMouseEvent &event);
+    void OnSize(wxSizeEvent &event);
+    void OnQuit(wxCommandEvent &event);
+    void OnLoadSga(wxCommandEvent &event);
+    void OnLoadMod(wxCommandEvent &event);
+    void OnLoadModDC(wxCommandEvent &event);
+    void OnLoadModSS(wxCommandEvent &event);
+    void OnLoadModCoH(wxCommandEvent &event);
+    void OnNewMod(wxCommandEvent &event);
+    void OnMouseEvent(wxMouseEvent &event);
 
-	DECLARE_EVENT_TABLE()
+    DECLARE_EVENT_TABLE()
 };
 
 enum
 {
-	// File Menu
-	IDC_NewMod = wxID_HIGHEST + 1,
-	IDC_LoadMod,
-	IDC_LoadSga,
-	IDC_LoadModDC,
-	IDC_LoadModSS,
-	IDC_LoadModCoH,
-	IDC_Help,
-	IDC_Quit,
-	IDC_Donate
+    // File Menu
+    IDC_NewMod = wxID_HIGHEST + 1,
+    IDC_LoadMod,
+    IDC_LoadSga,
+    IDC_LoadModDC,
+    IDC_LoadModSS,
+    IDC_LoadModCoH,
+    IDC_Help,
+    IDC_Quit,
+    IDC_Donate
 };
-
-#endif

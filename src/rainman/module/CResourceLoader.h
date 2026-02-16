@@ -17,8 +17,7 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _C_RESOURCE_LOADER_H_
-#define _C_RESOURCE_LOADER_H_
+#pragma once
 
 #include "rainman/core/Callbacks.h"
 #include "rainman/module/CModuleFile.h"
@@ -46,5 +45,3 @@ class CResourceLoader
     static void LoadCohEngine(CModuleFile &module, const char *sFolder, const char *sUiName, unsigned long iLoadWhat,
                               unsigned short iNum, CALLBACK_ARG);
 };
-
-#endif

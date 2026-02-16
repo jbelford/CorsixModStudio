@@ -17,8 +17,7 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _C_RGM_FILE_H_
-#define _C_RGM_FILE_H_
+#pragma once
 
 #include "rainman/core/gnuc_defines.h"
 #include "rainman/formats/CChunkyFile.h"
@@ -26,88 +25,86 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 class RAINMAN_API CRgmFile
 {
   public:
-	class RAINMAN_API CMaterial
-	{
-	  public:
-		const char *GetName() const;
-		const char *GetDxName() const;
-		void SetName(const char *sValue);
-		void SetDxName(const char *sValue);
+    class RAINMAN_API CMaterial
+    {
+      public:
+        const char *GetName() const;
+        const char *GetDxName() const;
+        void SetName(const char *sValue);
+        void SetDxName(const char *sValue);
 
-		class RAINMAN_API CVariable
-		{
-		  public:
-			enum eValTypes
-			{
-				VT_Text,
-				VT_Number,
-				VT_NumberArray,
-			};
+        class RAINMAN_API CVariable
+        {
+          public:
+            enum eValTypes
+            {
+                VT_Text,
+                VT_Number,
+                VT_NumberArray,
+            };
 
-			const char *GetName() const;
-			eValTypes GetType() const;
-			const char *GetValueText() const;
-			float GetValueNumber() const;
+            const char *GetName() const;
+            eValTypes GetType() const;
+            const char *GetValueText() const;
+            float GetValueNumber() const;
 
-			void SetName(const char *sName);
-			void SetValueText(const char *sValue);
-			void SetValueNumber(float fValue);
+            void SetName(const char *sName);
+            void SetValueText(const char *sValue);
+            void SetValueNumber(float fValue);
 
-		  protected:
-			friend class CRgmFile::CMaterial;
-			CVariable(CChunkyFile::CChunk *pChunk);
-			CVariable();
-			~CVariable();
-			void _Free();
-			void _WriteChunk();
+          protected:
+            friend class CRgmFile::CMaterial;
+            CVariable(CChunkyFile::CChunk *pChunk);
+            CVariable();
+            ~CVariable();
+            void _Free();
+            void _WriteChunk();
 
-			CChunkyFile::CChunk *m_pOurChunk;
-			eValTypes m_eValType;
-			union
-			{
-				char *m_sValue;
-				float m_fValue;
-			};
-			char *m_sName;
-		};
+            CChunkyFile::CChunk *m_pOurChunk;
+            eValTypes m_eValType;
+            union
+            {
+                char *m_sValue;
+                float m_fValue;
+            };
+            char *m_sName;
+        };
 
-		size_t GetVariableCount() const;
-		CVariable *GetVariable(size_t i);
-		void DeleteVariable(size_t i);
-		CVariable *NewVariable();
+        size_t GetVariableCount() const;
+        CVariable *GetVariable(size_t i);
+        void DeleteVariable(size_t i);
+        CVariable *NewVariable();
 
-	  protected:
-		friend class CRgmFile;
-		char *m_sName;
-		char *m_sDxName;
-		std::vector<CVariable *> m_vVariables;
-		CChunkyFile::CChunk *m_pOurChunk;
+      protected:
+        friend class CRgmFile;
+        char *m_sName;
+        char *m_sDxName;
+        std::vector<CVariable *> m_vVariables;
+        CChunkyFile::CChunk *m_pOurChunk;
 
-		CMaterial(CChunkyFile::CChunk *pChunk);
-		~CMaterial();
+        CMaterial(CChunkyFile::CChunk *pChunk);
+        ~CMaterial();
 
-		void _Free();
-		void _ParseInfo(CChunkyFile::CChunk *pChunk);
-		void _WriteChunk();
-	};
+        void _Free();
+        void _ParseInfo(CChunkyFile::CChunk *pChunk);
+        void _WriteChunk();
+    };
 
-	CRgmFile();
-	~CRgmFile();
+    CRgmFile();
+    ~CRgmFile();
 
-	void Load(IFileStore::IStream *pStream);
-	void Save(IFileStore::IOutputStream *pStream);
+    void Load(IFileStore::IStream *pStream);
+    void Save(IFileStore::IOutputStream *pStream);
 
-	size_t GetMaterialCount() const;
-	CMaterial *GetMaterial(size_t i);
+    size_t GetMaterialCount() const;
+    CMaterial *GetMaterial(size_t i);
 
   protected:
-	CChunkyFile *m_pChunky;
-	std::vector<CMaterial *> m_vMaterials;
+    CChunkyFile *m_pChunky;
+    std::vector<CMaterial *> m_vMaterials;
 
-	void _Free();
-	void _ParseChunk(CChunkyFile::CChunk *pChunk);
-	bool _TSETPrune(CChunkyFile::CChunk *pChunk, std::vector<std::pair<bool, const char *>> &vUsedTextures,
-	                size_t &iTSETCount);
+    void _Free();
+    void _ParseChunk(CChunkyFile::CChunk *pChunk);
+    bool _TSETPrune(CChunkyFile::CChunk *pChunk, std::vector<std::pair<bool, const char *>> &vUsedTextures,
+                    size_t &iTSETCount);
 };
-
-#endif

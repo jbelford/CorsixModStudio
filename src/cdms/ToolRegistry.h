@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _TOOL_REGISTRY_H_
-#define _TOOL_REGISTRY_H_
+#pragma once
 
 #include "ITool.h"
 #include <vector>
@@ -38,5 +37,3 @@ class ToolRegistry
   private:
     std::vector<ITool *> m_vTools;
 };
-
-#endif // _TOOL_REGISTRY_H_

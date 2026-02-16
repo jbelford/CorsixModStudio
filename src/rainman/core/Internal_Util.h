@@ -17,8 +17,7 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _INTERNAL_UTIL_H_
-#define _INTERNAL_UTIL_H_
+#pragma once
 
 #include "rainman/core/gnuc_defines.h"
 #include <stdio.h>
@@ -38,29 +37,27 @@ void Util_EnsureEndsWith(char *sStr, char cChar, char cChar2);
 template <class T> class AutoDelete
 {
   public:
-	T *p;
-	bool a;
-	AutoDelete(T *pp, bool bArray) : p(pp), a(bArray) {}
-	~AutoDelete()
-	{
-		if (a)
-			delete[] p;
-		else
-			delete p;
-	}
-	void reset(T *pp, bool bArray)
-	{
-		p = pp;
-		a = bArray;
-	}
-	void del()
-	{
-		if (a)
-			delete[] p;
-		else
-			delete p;
-		p = 0;
-	}
+    T *p;
+    bool a;
+    AutoDelete(T *pp, bool bArray) : p(pp), a(bArray) {}
+    ~AutoDelete()
+    {
+        if (a)
+            delete[] p;
+        else
+            delete p;
+    }
+    void reset(T *pp, bool bArray)
+    {
+        p = pp;
+        a = bArray;
+    }
+    void del()
+    {
+        if (a)
+            delete[] p;
+        else
+            delete p;
+        p = 0;
+    }
 };
-
-#endif

@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _CONFIG_H_
-#define _CONFIG_H_
+#pragma once
 // For compilers that support precompilation, includes "wx/wx.h".
 #include <wx/wxprec.h>
 #include <wx/aui/auibook.h>
@@ -62,5 +61,3 @@ wxString ConfGetCoHFolder();
     may throw a CRainmanException
 */
 wxString ConfGetModToolsFolder();
-
-#endif

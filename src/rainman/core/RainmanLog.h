@@ -17,8 +17,7 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _RAINMAN_LOG_H_
-#define _RAINMAN_LOG_H_
+#pragma once
 
 #include "rainman/core/Api.h"
 
@@ -37,21 +36,21 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 class RAINMAN_API RainmanLog
 {
   public:
-	//! Initialise console + rotating-file sinks.
-	/*!
-	    Safe to call more than once (subsequent calls are no-ops).
-	    \param[in] sLogDir  Directory for log files (default: "logs")
-	*/
-	static void init(const char *sLogDir = "logs");
+    //! Initialise console + rotating-file sinks.
+    /*!
+        Safe to call more than once (subsequent calls are no-ops).
+        \param[in] sLogDir  Directory for log files (default: "logs")
+    */
+    static void init(const char *sLogDir = "logs");
 
-	//! Return the "rainman" logger (library layer).
-	static std::shared_ptr<spdlog::logger> get();
+    //! Return the "rainman" logger (library layer).
+    static std::shared_ptr<spdlog::logger> get();
 
-	//! Return the "cdms" logger (GUI layer).
-	static std::shared_ptr<spdlog::logger> getCdms();
+    //! Return the "cdms" logger (GUI layer).
+    static std::shared_ptr<spdlog::logger> getCdms();
 
   private:
-	static bool s_bInitialised;
+    static bool s_bInitialised;
 };
 
 // ---------------------------------------------------------------------------
@@ -70,5 +69,3 @@ class RAINMAN_API RainmanLog
 #define CDMS_LOG_WARN(...) SPDLOG_LOGGER_WARN(RainmanLog::getCdms(), __VA_ARGS__)
 #define CDMS_LOG_ERROR(...) SPDLOG_LOGGER_ERROR(RainmanLog::getCdms(), __VA_ARGS__)
 #define CDMS_LOG_CRITICAL(...) SPDLOG_LOGGER_CRITICAL(RainmanLog::getCdms(), __VA_ARGS__)
-
-#endif // _RAINMAN_LOG_H_

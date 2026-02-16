@@ -1,7 +1,6 @@
 // This file is public domain; see md5.c for details
 
-#ifndef MD5_H
-#define MD5_H
+#pragma once
 
 #include "rainman/core/Api.h"
 
@@ -13,9 +12,9 @@ typedef unsigned long uint32;
 
 struct RAINMAN_API MD5Context
 {
-	uint32 buf[4];
-	uint32 bits[2];
-	unsigned char in[64];
+    uint32 buf[4];
+    uint32 bits[2];
+    unsigned char in[64];
 };
 
 //! Create a new MD5 stream
@@ -71,5 +70,3 @@ RAINMAN_API void MD5Transform(uint32 buf[4], uint32 in[16]);
  * This is needed to make RSAREF happy on some MS-DOS compilers.
  */
 typedef struct MD5Context MD5_CTX;
-
-#endif /* !MD5_H */

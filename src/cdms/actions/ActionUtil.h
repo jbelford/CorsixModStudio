@@ -16,11 +16,8 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _ACTION_UTIL_H_
-#define _ACTION_UTIL_H_
+#pragma once
 
 #include <wx/string.h>
 
 inline wxString OnlyFilename(wxString sName) { return sName.AfterLast('\\'); }
-
-#endif

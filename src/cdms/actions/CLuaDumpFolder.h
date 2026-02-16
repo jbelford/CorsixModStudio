@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _C_LUA_DUMP_FOLDER_H_
-#define _C_LUA_DUMP_FOLDER_H_
+#pragma once
 
 #include "frmFiles.h"
 #include "Construct.h"
@@ -110,5 +109,3 @@ class CLuaDumpFolder : public frmFiles::IHandler
         delete m_pProgress;
     }
 };
-
-#endif

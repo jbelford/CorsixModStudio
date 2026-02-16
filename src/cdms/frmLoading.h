@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _FRM_LOADING_H_
-#define _FRM_LOADING_H_
+#pragma once
 // For compilers that support precompilation, includes "wx/wx.h".
 #include <wx/wxprec.h>
 #include <wx/aui/auibook.h>
@@ -51,5 +50,3 @@ class frmLoading : public wxFrame
 
     DECLARE_EVENT_TABLE()
 };
-
-#endif

@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _TAB_MANAGER_H_
-#define _TAB_MANAGER_H_
+#pragma once
 
 #include <wx/wxprec.h>
 #include <wx/aui/auibook.h>
@@ -60,5 +59,3 @@ class TabManager
     wxSplitterWindow *m_pSplitter;
     wxAuiNotebook *m_pTabs;
 };
-
-#endif

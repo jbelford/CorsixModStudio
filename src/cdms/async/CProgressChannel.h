@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _C_PROGRESS_CHANNEL_H_
-#define _C_PROGRESS_CHANNEL_H_
+#pragma once
 
 #include <functional>
 #include <string>
@@ -51,5 +50,3 @@ class CProgressChannel
   private:
     ProgressCallback m_fnOnProgress;
 };
-
-#endif

@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _APPLICATION_H_
-#define _APPLICATION_H_
+#pragma once
 // For compilers that support precompilation, includes "wx/wx.h".
 #include "wx/wxprec.h"
 
@@ -34,14 +33,12 @@
 
 class CDMSApplication : public wxApp
 {
-	virtual bool OnInit();
-	virtual int OnExit();
-	virtual int OnRun();
+    virtual bool OnInit();
+    virtual int OnExit();
+    virtual int OnRun();
 #ifndef _DEBUG
-	virtual bool OnExceptionInMainLoop();
+    virtual bool OnExceptionInMainLoop();
 #endif
 };
 
 DECLARE_APP(CDMSApplication)
-
-#endif

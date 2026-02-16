@@ -17,8 +17,7 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _RAINMAN_EXCEPTION_H_
-#define _RAINMAN_EXCEPTION_H_
+#pragma once
 
 #include "rainman/core/gnuc_defines.h"
 #include "rainman/core/Api.h"
@@ -106,5 +105,3 @@ template <class T> __inline T CheckString(T pObj, const char *sFile, unsigned lo
 
 #define PAUSE_THROW CRainmanException *pPausedException = new EXCEPTION_CLASS
 #define UNPAUSE_THROW throw pPausedException
-
-#endif

@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _CDMS_RESULT_H_
-#define _CDMS_RESULT_H_
+#pragma once
 
 #include <wx/string.h>
 #include <rainman/core/Exception.h>
@@ -151,5 +150,3 @@ template <typename T> Result<T> ResultFromExceptionT(CRainmanException *pE)
     pE->destroy();
     return Result<T>::Err(std::move(msg));
 }
-
-#endif

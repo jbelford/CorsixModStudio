@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _CTRL_STATUS_TEXT_H_
-#define _CTRL_STATUS_TEXT_H_
+#pragma once
 // For compilers that support precompilation, includes "wx/wx.h".
 #include <wx/wxprec.h>
 
@@ -38,4 +37,3 @@ template <class T> T *SBT(T *pWnd, wxString sMsg)
     AddStatusbarText(pWnd, sMsg);
     return pWnd;
 }
-#endif

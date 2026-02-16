@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _C_RGM_MATERIAL_ACTION_H_
-#define _C_RGM_MATERIAL_ACTION_H_
+#pragma once
 
 #include "frmFiles.h"
 #include "frmRgmMaterialEditor.h"
@@ -55,5 +54,3 @@ class CRGMMaterialAction : public frmFiles::IHandler
         pForm->SetObject(pRgm, true);
     }
 };
-
-#endif

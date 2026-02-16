@@ -17,8 +17,7 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _RAINMAN_API_H_
-#define _RAINMAN_API_H_
+#pragma once
 #include "rainman/core/gnuc_defines.h"
 
 // #pragma warning( disable : 4251 )
@@ -36,4 +35,3 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #define RAINMAN_API __declspec(dllimport)
 #endif // RAINMAN_EXPORTS
 #endif // RAINMAN_GNUC
-#endif

@@ -16,120 +16,117 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _CDMS_TOOLS_H_
-#define _CDMS_TOOLS_H_
+#pragma once
 #include "Construct.h"
 #include "frmUCSSelector.h"
 
 class CLocaleTool : public ConstructFrame::ITool
 {
   public:
-	virtual wxString GetName();
-	virtual wxString GetHelpString();
-	virtual wxString GetBitmapName();
+    virtual wxString GetName();
+    virtual wxString GetHelpString();
+    virtual wxString GetBitmapName();
 
-	virtual void DoAction();
+    virtual void DoAction();
 };
 
 class CAESetupTool : public ConstructFrame::ITool
 {
   public:
-	virtual wxString GetName();
-	virtual wxString GetHelpString();
-	virtual wxString GetBitmapName();
+    virtual wxString GetName();
+    virtual wxString GetHelpString();
+    virtual wxString GetBitmapName();
 
-	virtual void DoAction();
+    virtual void DoAction();
 };
 
 class CUcsTool : public ConstructFrame::ITool
 {
   public:
-	virtual wxString GetName();
-	virtual wxString GetHelpString();
-	virtual wxString GetBitmapName();
+    virtual wxString GetName();
+    virtual wxString GetHelpString();
+    virtual wxString GetBitmapName();
 
-	virtual void DoAction();
-	static void HandleSelectorResponse(frmUCSSelector *pSelector, wxAuiNotebook *pTabsDestination,
-	                                   unsigned long *pResult = 0, bool bRegisterTabStrip = false);
+    virtual void DoAction();
+    static void HandleSelectorResponse(frmUCSSelector *pSelector, wxAuiNotebook *pTabsDestination,
+                                       unsigned long *pResult = 0, bool bRegisterTabStrip = false);
 };
 
 class CAttribSnapshotTool : public ConstructFrame::ITool
 {
   public:
-	virtual wxString GetName();
-	virtual wxString GetHelpString();
-	virtual wxString GetBitmapName();
+    virtual wxString GetName();
+    virtual wxString GetHelpString();
+    virtual wxString GetBitmapName();
 
-	virtual void DoAction();
+    virtual void DoAction();
 };
 
 class CSgaPackerTool : public ConstructFrame::ITool
 {
   public:
-	virtual wxString GetName();
-	virtual wxString GetHelpString();
-	virtual wxString GetBitmapName();
+    virtual wxString GetName();
+    virtual wxString GetHelpString();
+    virtual wxString GetBitmapName();
 
-	virtual void DoAction();
+    virtual void DoAction();
 };
 
 class CExtractAllTool : public ConstructFrame::ITool
 {
   public:
-	virtual wxString GetName();
-	virtual wxString GetHelpString();
-	virtual wxString GetBitmapName();
+    virtual wxString GetName();
+    virtual wxString GetHelpString();
+    virtual wxString GetBitmapName();
 
-	virtual void DoAction();
+    virtual void DoAction();
 };
 
 class CDpsCalculatorTool : public ConstructFrame::ITool
 {
   public:
-	virtual wxString GetName();
-	virtual wxString GetHelpString();
-	virtual wxString GetBitmapName();
+    virtual wxString GetName();
+    virtual wxString GetHelpString();
+    virtual wxString GetBitmapName();
 
-	virtual void DoAction();
+    virtual void DoAction();
 };
 
 class CRedButtonTool : public ConstructFrame::ITool
 {
   public:
-	virtual wxString GetName();
-	virtual wxString GetHelpString();
-	virtual wxString GetBitmapName();
+    virtual wxString GetName();
+    virtual wxString GetHelpString();
+    virtual wxString GetBitmapName();
 
-	virtual void DoAction();
+    virtual void DoAction();
 };
 
 class CMakeLuaInheritTree : public ConstructFrame::ITool
 {
   protected:
-	static void _ForEach(IDirectoryTraverser::IIterator *pItr, void *pTag);
-	void _DoLua(IDirectoryTraverser::IIterator *pItr);
+    static void _ForEach(IDirectoryTraverser::IIterator *pItr, void *pTag);
+    void _DoLua(IDirectoryTraverser::IIterator *pItr);
 
   public:
-	CMakeLuaInheritTree();
-	virtual wxString GetName();
-	virtual wxString GetHelpString();
-	virtual wxString GetBitmapName();
+    CMakeLuaInheritTree();
+    virtual wxString GetName();
+    virtual wxString GetHelpString();
+    virtual wxString GetBitmapName();
 
-	static bool _DoesExist(const char *sFol);
-	void Do(const char *sAttrib);
-	virtual void DoAction();
-	CInheritTable *pTable;
-	size_t iAttribL;
+    static bool _DoesExist(const char *sFol);
+    void Do(const char *sAttrib);
+    virtual void DoAction();
+    CInheritTable *pTable;
+    size_t iAttribL;
 };
 
 class CRefreshFilesTool : public ConstructFrame::ITool
 {
   public:
-	virtual wxString GetName();
-	virtual wxString GetHelpString();
-	virtual wxString GetBitmapName();
+    virtual wxString GetName();
+    virtual wxString GetHelpString();
+    virtual wxString GetBitmapName();
 
-	virtual void DoAction();
+    virtual void DoAction();
 };
-
-#endif

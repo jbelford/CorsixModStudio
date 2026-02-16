@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _C_RGD_MACRO_ACTION_H_
-#define _C_RGD_MACRO_ACTION_H_
+#pragma once
 
 #include "frmFiles.h"
 #include "frmRgdMacro.h"
@@ -36,5 +35,3 @@ class CRgdMacroAction : public frmFiles::IHandler
         oMacro.ShowModal();
     }
 };
-
-#endif

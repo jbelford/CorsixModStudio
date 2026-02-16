@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _FRM_UCSEDITOR_H_
-#define _FRM_UCSEDITOR_H_
+#pragma once
 // For compilers that support precompilation, includes "wx/wx.h".
 #include <wx/wxprec.h>
 
@@ -38,50 +37,48 @@
 class frmUCSEditor : public wxWindow
 {
   protected:
-	wxPropertyGrid *m_pPropertyGrid;
-	CUcsTransaction *m_pUCS;
-	bool m_bReadOnly;
-	bool m_bNeedsSave;
-	unsigned long *m_pResultVal;
-	wxAuiNotebook *m_pTabStripForLoad;
-	wxButton *m_pLoadButton;
+    wxPropertyGrid *m_pPropertyGrid;
+    CUcsTransaction *m_pUCS;
+    bool m_bReadOnly;
+    bool m_bNeedsSave;
+    unsigned long *m_pResultVal;
+    wxAuiNotebook *m_pTabStripForLoad;
+    wxButton *m_pLoadButton;
 
   public:
-	frmUCSEditor(wxWindow *parent, wxWindowID id, bool bReadOnly, const wxPoint &pos = wxDefaultPosition,
-	             const wxSize &size = wxDefaultSize, unsigned long *pResult = 0);
-	~frmUCSEditor();
+    frmUCSEditor(wxWindow *parent, wxWindowID id, bool bReadOnly, const wxPoint &pos = wxDefaultPosition,
+                 const wxSize &size = wxDefaultSize, unsigned long *pResult = 0);
+    ~frmUCSEditor();
 
-	/*!
-	    will throw a CRainmanException on error
-	*/
-	void FillFromCUcsFile(CUcsFile *pUcs, unsigned long iSelect = ULONG_MAX);
+    /*!
+        will throw a CRainmanException on error
+    */
+    void FillFromCUcsFile(CUcsFile *pUcs, unsigned long iSelect = ULONG_MAX);
 
-	void SetTabStripForLoad(wxAuiNotebook *pTabStrib);
+    void SetTabStripForLoad(wxAuiNotebook *pTabStrib);
 
-	void OnSize(wxSizeEvent &event);
-	void OnPropertyChange(wxPropertyGridEvent &event);
-	void OnNewEntry(wxCommandEvent &event);
+    void OnSize(wxSizeEvent &event);
+    void OnPropertyChange(wxPropertyGridEvent &event);
+    void OnNewEntry(wxCommandEvent &event);
 
-	void OnLoad(wxCommandEvent &event);
-	void OnClose(wxCommandEvent &event);
-	void OnApply(wxCommandEvent &event);
+    void OnLoad(wxCommandEvent &event);
+    void OnClose(wxCommandEvent &event);
+    void OnApply(wxCommandEvent &event);
 
-	void DoSave();
-	void OnSaveFile(wxCommandEvent &event);
+    void DoSave();
+    void OnSaveFile(wxCommandEvent &event);
 
-	void OnCloseWindow(wxCloseEvent &event);
+    void OnCloseWindow(wxCloseEvent &event);
 
-	enum
-	{
-		IDC_PropertyGrid = wxID_HIGHEST + 1,
-		IDC_ToolSave,
-		IDC_ToolAdd,
+    enum
+    {
+        IDC_PropertyGrid = wxID_HIGHEST + 1,
+        IDC_ToolSave,
+        IDC_ToolAdd,
 
-		IDC_ToolApply,
-		IDC_ToolClose,
-	};
+        IDC_ToolApply,
+        IDC_ToolClose,
+    };
 
-	DECLARE_EVENT_TABLE()
+    DECLARE_EVENT_TABLE()
 };
-
-#endif

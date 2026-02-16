@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _CDMS_FILE_SERVICE_H_
-#define _CDMS_FILE_SERVICE_H_
+#pragma once
 
 #include <wx/string.h>
 #include "Result.h"
@@ -118,5 +117,3 @@ class FileService
     IFileStore *m_pStore;
     IDirectoryTraverser *m_pTraverser;
 };
-
-#endif

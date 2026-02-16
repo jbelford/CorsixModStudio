@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _MENU_CONTROLLER_H_
-#define _MENU_CONTROLLER_H_
+#pragma once
 
 class wxFrame;
 class ToolRegistry;
@@ -29,5 +28,3 @@ class MenuController
     // Binds dynamic tool menu items to the given event handler method.
     void Build(wxFrame *pFrame, ToolRegistry &registry);
 };
-
-#endif // _MENU_CONTROLLER_H_

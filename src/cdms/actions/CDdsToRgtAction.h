@@ -16,8 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _C_DDS_TO_RGT_ACTION_H_
-#define _C_DDS_TO_RGT_ACTION_H_
+#pragma once
 
 #include "frmFiles.h"
 #include "Construct.h"
@@ -128,5 +127,3 @@ class CDdsToRgtAction : public frmFiles::IHandler
         free(saOutFile);
     }
 };
-
-#endif
