@@ -522,11 +522,11 @@ Each phase is a standalone unit of work. Complete one before starting the next. 
 
 ### Phase F: Modernization (Long-Term)
 
-1. Migrate stream callers to `StreamGuard` (opt-in)
-2. Add exception RAII wrapper alongside `destroy()` pattern
-3. Modernize string handling at Rainman↔CDMS boundary
-4. Extract `ModuleManager` from `ConstructFrame` (module lifecycle management)
-5. Extract `TabManager` from `ConstructFrame` (wxAuiNotebook tab management)
+1. ~~Replace manual `delete pStream` with `std::unique_ptr<IFileStore::IStream>` (deleted `StreamGuard.h`)~~
+2. ~~Add `ExceptionDeleter` for `std::unique_ptr<CRainmanException, ExceptionDeleter>`, replacing manual `destroy()` calls~~
+3. ~~Modernize string handling: `wxStringToAscii()` returns `std::unique_ptr<char[]>`, eliminating manual `delete[]`~~
+4. ~~Extract `ModuleManager` from `ConstructFrame` (module lifecycle, services, hash table)~~
+5. ~~Extract `TabManager` from `ConstructFrame` (wxAuiNotebook tab management)~~
 6. Consider `CModuleFile` decomposition (only with full test coverage)
 
 ---
