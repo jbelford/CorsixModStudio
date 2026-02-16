@@ -47,12 +47,10 @@ class CRGMMaterialAction : public frmFiles::IHandler
             ErrorBox("Cannot open file");
             return;
         }
-        IFileStore::IStream *pStream = streamResult.value().release();
+        auto &stream = streamResult.value();
 
         CRgmFile *pRgm = new CRgmFile;
-        pRgm->Load(pStream);
-
-        delete pStream;
+        pRgm->Load(stream.get());
 
         pForm->SetObject(pRgm, true);
     }

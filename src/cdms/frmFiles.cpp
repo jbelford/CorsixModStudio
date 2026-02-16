@@ -39,6 +39,8 @@ extern "C"
 
 #include <wx/progdlg.h>
 #include <wx/clipbrd.h>
+#include <memory>
+#include <rainman/io/IFileStore.h>
 #include <rainman/lua/CLuaFromRgd.h>
 #include <rainman/formats/CBfxFile.h>
 #include <rainman/formats/CChunkyFile.h>
@@ -160,11 +162,10 @@ void CLuaAction::VHandle(wxString sFile, wxTreeItemId &oParent, wxTreeItemId &oF
         ErrorBox("Cannot open file");
         return;
     }
-    IFileStore::IStream *pStream = streamResult.value().release();
+    std::unique_ptr<IFileStore::IStream> pStream(streamResult.value().release());
     char *saFile = wxStringToAscii(sFile);
-    CLuaFile2 *pLua = DoLoad2(pStream, saFile);
+    CLuaFile2 *pLua = DoLoad2(pStream.get(), saFile);
     delete[] saFile;
-    delete pStream;
     if (pLua)
     {
         frmRGDEditor *pForm;

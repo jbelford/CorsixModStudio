@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include "rainman/formats/CRgmFile.h"
 #include "rainman/io/CMemoryStore.h"
-#include "rainman/io/StreamGuard.h"
+#include <memory>
 #include "rainman/core/Exception.h"
 #include <cstring>
 #include <vector>
@@ -72,7 +72,7 @@ TEST(RgmFileEmpty, DefaultConstructor)
 TEST_F(RgmFileTest, LoadSingleMaterial)
 {
 	auto *pChunkyData = BuildRgmChunky("TestMaterial", "StandardShader");
-	rainman::StreamGuard inStream(CMemoryStore::OpenStreamExt(
+	std::unique_ptr<IFileStore::IStream> inStream(CMemoryStore::OpenStreamExt(
 	    const_cast<char *>(pChunkyData->GetData()), pChunkyData->GetDataLength(), false));
 
 	rgm.Load(inStream.get());
@@ -88,7 +88,7 @@ TEST_F(RgmFileTest, LoadSingleMaterial)
 TEST_F(RgmFileTest, LoadMultipleMaterials)
 {
 	auto *pChunkyData = BuildRgmChunky("Material_A", "ShaderA", "Material_B", "ShaderB");
-	rainman::StreamGuard inStream(CMemoryStore::OpenStreamExt(
+	std::unique_ptr<IFileStore::IStream> inStream(CMemoryStore::OpenStreamExt(
 	    const_cast<char *>(pChunkyData->GetData()), pChunkyData->GetDataLength(), false));
 
 	rgm.Load(inStream.get());
@@ -104,7 +104,7 @@ TEST_F(RgmFileTest, LoadMultipleMaterials)
 TEST_F(RgmFileTest, SetMaterialName)
 {
 	auto *pChunkyData = BuildRgmChunky("OrigName", "OrigDx");
-	rainman::StreamGuard inStream(CMemoryStore::OpenStreamExt(
+	std::unique_ptr<IFileStore::IStream> inStream(CMemoryStore::OpenStreamExt(
 	    const_cast<char *>(pChunkyData->GetData()), pChunkyData->GetDataLength(), false));
 	rgm.Load(inStream.get());
 	delete pChunkyData;
@@ -123,7 +123,7 @@ TEST_F(RgmFileTest, SaveAndReloadRoundTrip)
 {
 	// Load initial data
 	auto *pChunkyData = BuildRgmChunky("RoundTrip", "DxShader");
-	rainman::StreamGuard inStream(CMemoryStore::OpenStreamExt(
+	std::unique_ptr<IFileStore::IStream> inStream(CMemoryStore::OpenStreamExt(
 	    const_cast<char *>(pChunkyData->GetData()), pChunkyData->GetDataLength(), false));
 	rgm.Load(inStream.get());
 	delete pChunkyData;
@@ -138,7 +138,7 @@ TEST_F(RgmFileTest, SaveAndReloadRoundTrip)
 
 	// Reload into a new CRgmFile
 	CRgmFile rgm2;
-	rainman::StreamGuard reloadStream(CMemoryStore::OpenStreamExt(
+	std::unique_ptr<IFileStore::IStream> reloadStream(CMemoryStore::OpenStreamExt(
 	    const_cast<char *>(pSaveStream->GetData()), pSaveStream->GetDataLength(), false));
 	rgm2.Load(reloadStream.get());
 
@@ -151,7 +151,7 @@ TEST_F(RgmFileTest, SaveAndReloadRoundTrip)
 TEST_F(RgmFileTest, MultipleMaterialsSaveAndReload)
 {
 	auto *pChunkyData = BuildRgmChunky("MatAlpha", "DxAlpha", "MatBeta", "DxBeta");
-	rainman::StreamGuard inStream(CMemoryStore::OpenStreamExt(
+	std::unique_ptr<IFileStore::IStream> inStream(CMemoryStore::OpenStreamExt(
 	    const_cast<char *>(pChunkyData->GetData()), pChunkyData->GetDataLength(), false));
 	rgm.Load(inStream.get());
 	delete pChunkyData;
@@ -162,7 +162,7 @@ TEST_F(RgmFileTest, MultipleMaterialsSaveAndReload)
 
 	// Reload
 	CRgmFile rgm2;
-	rainman::StreamGuard reloadStream(CMemoryStore::OpenStreamExt(
+	std::unique_ptr<IFileStore::IStream> reloadStream(CMemoryStore::OpenStreamExt(
 	    const_cast<char *>(pSaveStream->GetData()), pSaveStream->GetDataLength(), false));
 	rgm2.Load(reloadStream.get());
 
@@ -177,7 +177,7 @@ TEST_F(RgmFileTest, MultipleMaterialsSaveAndReload)
 TEST_F(RgmFileTest, LoadInvalidDataThrows)
 {
 	const char garbage[] = "This is not a chunky file";
-	rainman::StreamGuard stream(CMemoryStore::OpenStreamExt(
+	std::unique_ptr<IFileStore::IStream> stream(CMemoryStore::OpenStreamExt(
 	    const_cast<char *>(garbage), sizeof(garbage) - 1, false));
 
 	CRainmanException *caught = nullptr;

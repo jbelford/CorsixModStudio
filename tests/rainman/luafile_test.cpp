@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include "rainman/lua/CLuaFile.h"
 #include "rainman/io/CMemoryStore.h"
-#include "rainman/io/StreamGuard.h"
+#include <memory>
 #include "rainman/core/Exception.h"
 #include <cstring>
 #include <string>
@@ -15,7 +15,7 @@ protected:
 
 	void loadScript(const char* sScript, const char* sFileName = "test.lua")
 	{
-		rainman::StreamGuard inStream(CMemoryStore::OpenStreamExt(
+		std::unique_ptr<IFileStore::IStream> inStream(CMemoryStore::OpenStreamExt(
 		    const_cast<char*>(sScript), static_cast<unsigned long>(strlen(sScript)), false));
 		lua.Load(inStream.get(), &store, sFileName);
 	}

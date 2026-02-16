@@ -42,12 +42,10 @@ class CRgtViewAction : public frmFiles::IHandler
             ErrorBox("Cannot open file");
             return;
         }
-        IFileStore::IStream *pStream = streamResult.value().release();
+        auto &stream = streamResult.value();
 
         CRgtFile *pRgt = new CRgtFile;
-        pRgt->Load(pStream);
-
-        delete pStream;
+        pRgt->Load(stream.get());
 
         frmImageViewer *pForm;
         TheConstruct->GetTabs()->AddPage(

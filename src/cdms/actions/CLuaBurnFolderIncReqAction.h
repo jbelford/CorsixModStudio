@@ -118,9 +118,8 @@ class CLuaBurnFolderIncReqAction : public frmFiles::IHandler
                         }
                         else
                         {
-                            IFileStore::IStream *pStream = streamResult.value().release();
-                            CLuaFile *pLua = CLuaAction::DoLoad(pStream, saFile, m_pCache);
-                            delete pStream;
+                            auto &stream = streamResult.value();
+                            CLuaFile *pLua = CLuaAction::DoLoad(stream.get(), saFile, m_pCache);
                             if (pLua)
                             {
                                 CRgdFile *pRgd = new CRgdFile;
@@ -137,35 +136,36 @@ class CLuaBurnFolderIncReqAction : public frmFiles::IHandler
                                         goto skip_recurse_lua_load_ok_code;
                                     }
                                     BackupFile(TheConstruct->GetModuleService().GetModule(), AsciiTowxString(saRgd));
-                                    IFileStore::IOutputStream *pOutStream = 0;
-                                    try
                                     {
-                                        auto outResult = TheConstruct->GetFileService().OpenOutputStream(
-                                            AsciiTowxString(saRgd), true);
-                                        pOutStream = outResult ? outResult.value().release() : nullptr;
-                                    }
-                                    catch (CRainmanException *pE)
-                                    {
-                                        ErrorBoxE(pE);
-                                        pOutStream = 0;
-                                    }
-                                    if (pOutStream)
-                                    {
+                                        std::unique_ptr<IFileStore::IOutputStream> outStream;
                                         try
                                         {
-                                            pRgd->Save(pOutStream);
+                                            auto outResult = TheConstruct->GetFileService().OpenOutputStream(
+                                                AsciiTowxString(saRgd), true);
+                                            if (outResult)
+                                                outStream = std::move(outResult.value());
                                         }
                                         catch (CRainmanException *pE)
                                         {
                                             ErrorBoxE(pE);
-                                            RestoreBackupFile(TheConstruct->GetModuleService().GetModule(),
-                                                              AsciiTowxString(saRgd));
                                         }
-                                        delete pOutStream;
-                                    }
-                                    else
-                                    {
-                                        sError = AppStr(err_write);
+                                        if (outStream)
+                                        {
+                                            try
+                                            {
+                                                pRgd->Save(outStream.get());
+                                            }
+                                            catch (CRainmanException *pE)
+                                            {
+                                                ErrorBoxE(pE);
+                                                RestoreBackupFile(TheConstruct->GetModuleService().GetModule(),
+                                                                  AsciiTowxString(saRgd));
+                                            }
+                                        }
+                                        else
+                                        {
+                                            sError = AppStr(err_write);
+                                        }
                                     }
                                 skip_recurse_lua_load_ok_code:
                                     delete pRgd;

@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include "rainman/formats/CRgtFile.h"
 #include "rainman/io/CMemoryStore.h"
-#include "rainman/io/StreamGuard.h"
+#include <memory>
 #include "rainman/core/Exception.h"
 #include <cstring>
 #include <string>
@@ -66,7 +66,7 @@ TEST(RgtFileEmpty, DefaultConstructor)
 TEST_F(RgtFileTest, LoadMinimalTga)
 {
 	auto tga = makeRedTga();
-	rainman::StreamGuard stream(CMemoryStore::OpenStreamExt(
+	std::unique_ptr<IFileStore::IStream> stream(CMemoryStore::OpenStreamExt(
 	    reinterpret_cast<char*>(tga.data()), static_cast<unsigned long>(tga.size()), false));
 
 	EXPECT_NO_THROW(rgt.LoadTGA(stream.get()));
@@ -79,7 +79,7 @@ TEST_F(RgtFileTest, LoadMinimalTga)
 TEST_F(RgtFileTest, LoadTgaImageProperties)
 {
 	auto tga = makeRedTga();
-	rainman::StreamGuard stream(CMemoryStore::OpenStreamExt(
+	std::unique_ptr<IFileStore::IStream> stream(CMemoryStore::OpenStreamExt(
 	    reinterpret_cast<char*>(tga.data()), static_cast<unsigned long>(tga.size()), false));
 
 	rgt.LoadTGA(stream.get());
@@ -108,7 +108,7 @@ TEST_F(RgtFileTest, LoadTga24Bit)
 	tga.push_back(0);   // R
 
 	bool is32Bit = true;
-	rainman::StreamGuard stream(CMemoryStore::OpenStreamExt(
+	std::unique_ptr<IFileStore::IStream> stream(CMemoryStore::OpenStreamExt(
 	    reinterpret_cast<char*>(tga.data()), static_cast<unsigned long>(tga.size()), false));
 
 	rgt.LoadTGA(stream.get(), false, &is32Bit);
@@ -123,7 +123,7 @@ TEST_F(RgtFileTest, SaveTgaRoundTrip)
 {
 	// Load a TGA
 	auto tga = makeRedTga();
-	rainman::StreamGuard stream(CMemoryStore::OpenStreamExt(
+	std::unique_ptr<IFileStore::IStream> stream(CMemoryStore::OpenStreamExt(
 	    reinterpret_cast<char*>(tga.data()), static_cast<unsigned long>(tga.size()), false));
 	rgt.LoadTGA(stream.get());
 
@@ -134,7 +134,7 @@ TEST_F(RgtFileTest, SaveTgaRoundTrip)
 
 	// Reload the saved TGA
 	CRgtFile rgt2;
-	rainman::StreamGuard stream2(CMemoryStore::OpenStreamExt(
+	std::unique_ptr<IFileStore::IStream> stream2(CMemoryStore::OpenStreamExt(
 	    const_cast<char*>(pOut->GetData()), pOut->GetDataLength(), false));
 	rgt2.LoadTGA(stream2.get());
 
@@ -148,7 +148,7 @@ TEST_F(RgtFileTest, SaveAndLoadRgtChunky)
 {
 	// Load a TGA, save as RGT chunky, reload
 	auto tga = makeRedTga();
-	rainman::StreamGuard stream(CMemoryStore::OpenStreamExt(
+	std::unique_ptr<IFileStore::IStream> stream(CMemoryStore::OpenStreamExt(
 	    reinterpret_cast<char*>(tga.data()), static_cast<unsigned long>(tga.size()), false));
 	rgt.LoadTGA(stream.get());
 
@@ -159,7 +159,7 @@ TEST_F(RgtFileTest, SaveAndLoadRgtChunky)
 
 	// Reload the RGT
 	CRgtFile rgt2;
-	rainman::StreamGuard stream2(CMemoryStore::OpenStreamExt(
+	std::unique_ptr<IFileStore::IStream> stream2(CMemoryStore::OpenStreamExt(
 	    const_cast<char*>(pOut->GetData()), pOut->GetDataLength(), false));
 	rgt2.Load(stream2.get());
 
@@ -173,7 +173,7 @@ TEST_F(RgtFileTest, SaveAndLoadRgtChunky)
 TEST_F(RgtFileTest, MipLevelInfo)
 {
 	auto tga = makeRedTga();
-	rainman::StreamGuard stream(CMemoryStore::OpenStreamExt(
+	std::unique_ptr<IFileStore::IStream> stream(CMemoryStore::OpenStreamExt(
 	    reinterpret_cast<char*>(tga.data()), static_cast<unsigned long>(tga.size()), false));
 	rgt.LoadTGA(stream.get());
 

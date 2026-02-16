@@ -64,11 +64,10 @@ class CLuaBurnAction : public frmFiles::IHandler
             ErrorBox("Cannot open file");
             return;
         }
-        IFileStore::IStream *pStream = streamResult.value().release();
+        auto &stream = streamResult.value();
         char *saFile = wxStringToAscii(sFile);
 
-        CLuaFile *pLua = CLuaAction::DoLoad(pStream, saFile);
-        delete pStream;
+        CLuaFile *pLua = CLuaAction::DoLoad(stream.get(), saFile);
         if (pLua)
         {
             CRgdFile *pRgd = new CRgdFile;
@@ -88,9 +87,9 @@ class CLuaBurnAction : public frmFiles::IHandler
                     bool bMovedTOC = ConvertLuaFilenameToRgd(saFile);
                     BackupFile(TheConstruct->GetModuleService().GetModule(), AsciiTowxString(saFile));
                     auto outResult = TheConstruct->GetFileService().OpenOutputStream(AsciiTowxString(saFile), true);
-                    IFileStore::IOutputStream *pOutStream = outResult ? outResult.value().release() : nullptr;
-                    if (pOutStream)
+                    if (outResult)
                     {
+                        auto &outStream = outResult.value();
                         auto itrResult =
                             TheConstruct->GetFileService().Iterate(AsciiTowxString(saFile).BeforeLast('\\'));
                         IDirectoryTraverser::IIterator *pDir = itrResult ? itrResult.value().release() : nullptr;
@@ -102,7 +101,7 @@ class CLuaBurnAction : public frmFiles::IHandler
                         delete pDir;
                         try
                         {
-                            pRgd->Save(pOutStream);
+                            pRgd->Save(outStream.get());
                             wxMessageBox(AppStr(rgd_burngood), VGetAction(), wxICON_INFORMATION, TheConstruct);
                         }
                         catch (CRainmanException *pE)
@@ -110,7 +109,6 @@ class CLuaBurnAction : public frmFiles::IHandler
                             ErrorBoxE(pE);
                             RestoreBackupFile(TheConstruct->GetModuleService().GetModule(), AsciiTowxString(saFile));
                         }
-                        delete pOutStream;
                     }
                     else
                     {

@@ -23,7 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include <time.h>
 #include "rainman/core/memdebug.h"
 #include "rainman/core/Exception.h"
-#include "rainman/io/StreamGuard.h"
+#include <memory>
 
 static char *mystrdup(const char *sStr)
 {
@@ -876,11 +876,11 @@ void CDoWModule::Load(const char *sFile, CALLBACK_ARG)
         CSgaFile *pSga = new CSgaFile;
         if (pSga)
         {
-            rainman::StreamGuard guardIn;
+            std::unique_ptr<IFileStore::IStream> guardIn;
             IDirectoryTraverser::IIterator *pDirItr = 0;
             try
             {
-                guardIn = rainman::StreamGuard(m_pFSO->VOpenStream(sFolderFullPath));
+                guardIn = std::unique_ptr<IFileStore::IStream>(m_pFSO->VOpenStream(sFolderFullPath));
             }
             catch (CRainmanException *pE)
             {
@@ -1001,11 +1001,11 @@ void CDoWModule::Load(const char *sFile, CALLBACK_ARG)
                 throw new CRainmanException(__FILE__, __LINE__, "Memory allocation error");
             }
 
-            rainman::StreamGuard guardIn;
+            std::unique_ptr<IFileStore::IStream> guardIn;
             IDirectoryTraverser::IIterator *pDirItr = 0;
             try
             {
-                guardIn = rainman::StreamGuard(m_pFSO->VOpenStream(sEngineFile));
+                guardIn = std::unique_ptr<IFileStore::IStream>(m_pFSO->VOpenStream(sEngineFile));
                 pEngineSga->Load(guardIn.get(), m_pFSO->VGetLastWriteTime(sEngineFile));
                 pEngineSga->VInit(guardIn.get());
                 guardIn.release();
@@ -1040,11 +1040,11 @@ void CDoWModule::Load(const char *sFile, CALLBACK_ARG)
                     throw new CRainmanException(__FILE__, __LINE__, "Memory allocation error");
                 }
 
-                rainman::StreamGuard guardIn;
+                std::unique_ptr<IFileStore::IStream> guardIn;
                 IDirectoryTraverser::IIterator *pDirItr = 0;
                 try
                 {
-                    guardIn = rainman::StreamGuard(m_pFSO->VOpenStream(sEngineFile));
+                    guardIn = std::unique_ptr<IFileStore::IStream>(m_pFSO->VOpenStream(sEngineFile));
                     pEngineSga->Load(guardIn.get(), m_pFSO->VGetLastWriteTime(sEngineFile));
                     pEngineSga->VInit(guardIn.get());
                     guardIn.release();
@@ -1120,10 +1120,10 @@ void CDoWModule::Load(const char *sFile, CALLBACK_ARG)
                     {
                         CallCallback(THE_CALLBACK, "Loading UCS file \'%s\' for \'%s\'", pItr->VGetName(),
                                      m_sModFileName);
-                        rainman::StreamGuard guardFile;
+                        std::unique_ptr<IFileStore::IStream> guardFile;
                         try
                         {
-                            guardFile = rainman::StreamGuard(pItr->VOpenFile());
+                            guardFile = std::unique_ptr<IFileStore::IStream>(pItr->VOpenFile());
                         }
                         catch (CRainmanException *pE)
                         {
@@ -1350,7 +1350,7 @@ void CDoWModule::RebuildFileview(const char* sRefFile)
         CSgaFile* pSga = new CSgaFile;
         if(pSga)
         {
-            rainman::StreamGuard guardIn(m_pFSO->VOpenStream(sFolderFullPath));
+            std::unique_ptr<IFileStore::IStream> guardIn(m_pFSO->VOpenStream(sFolderFullPath));
             if(guardIn && pSga->Load(guardIn.get()) && pSga->VInit(guardIn.get()))
             {
                 guardIn.release();
@@ -1445,7 +1445,7 @@ void CDoWModule::RebuildFileview(const char* sRefFile)
             return false;
         }
 
-        rainman::StreamGuard guardIn(m_pFSO->VOpenStream(sEngineFile));
+        std::unique_ptr<IFileStore::IStream> guardIn(m_pFSO->VOpenStream(sEngineFile));
         if(guardIn && pEngineSga->Load(guardIn.get()) && pEngineSga->VInit(guardIn.get()))
         {
             guardIn.release();

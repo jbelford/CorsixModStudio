@@ -24,11 +24,11 @@
 
 // --- Stream operations ---
 
-Result<rainman::StreamGuard> FileService::OpenStream(const wxString &sPath)
+Result<std::unique_ptr<IFileStore::IStream>> FileService::OpenStream(const wxString &sPath)
 {
     char *sFile = wxStringToAscii(sPath);
     if (!sFile)
-        return Result<rainman::StreamGuard>::Err(wxT("Memory allocation error"));
+        return Result<std::unique_ptr<IFileStore::IStream>>::Err(wxT("Memory allocation error"));
 
     IFileStore::IStream *pStream = nullptr;
     try
@@ -38,21 +38,22 @@ Result<rainman::StreamGuard> FileService::OpenStream(const wxString &sPath)
     catch (CRainmanException *pE)
     {
         delete[] sFile;
-        return ResultFromExceptionT<rainman::StreamGuard>(pE);
+        return ResultFromExceptionT<std::unique_ptr<IFileStore::IStream>>(pE);
     }
 
     delete[] sFile;
     if (!pStream)
-        return Result<rainman::StreamGuard>::Err(wxT("Cannot open file"));
+        return Result<std::unique_ptr<IFileStore::IStream>>::Err(wxT("Cannot open file"));
 
-    return Result<rainman::StreamGuard>::Ok(rainman::StreamGuard(pStream));
+    return Result<std::unique_ptr<IFileStore::IStream>>::Ok(std::unique_ptr<IFileStore::IStream>(pStream));
 }
 
-Result<rainman::OutputStreamGuard> FileService::OpenOutputStream(const wxString &sPath, bool bEraseIfPresent)
+Result<std::unique_ptr<IFileStore::IOutputStream>> FileService::OpenOutputStream(const wxString &sPath,
+                                                                                 bool bEraseIfPresent)
 {
     char *sFile = wxStringToAscii(sPath);
     if (!sFile)
-        return Result<rainman::OutputStreamGuard>::Err(wxT("Memory allocation error"));
+        return Result<std::unique_ptr<IFileStore::IOutputStream>>::Err(wxT("Memory allocation error"));
 
     IFileStore::IOutputStream *pStream = nullptr;
     try
@@ -62,14 +63,14 @@ Result<rainman::OutputStreamGuard> FileService::OpenOutputStream(const wxString 
     catch (CRainmanException *pE)
     {
         delete[] sFile;
-        return ResultFromExceptionT<rainman::OutputStreamGuard>(pE);
+        return ResultFromExceptionT<std::unique_ptr<IFileStore::IOutputStream>>(pE);
     }
 
     delete[] sFile;
     if (!pStream)
-        return Result<rainman::OutputStreamGuard>::Err(wxT("Cannot open output stream"));
+        return Result<std::unique_ptr<IFileStore::IOutputStream>>::Err(wxT("Cannot open output stream"));
 
-    return Result<rainman::OutputStreamGuard>::Ok(rainman::OutputStreamGuard(pStream));
+    return Result<std::unique_ptr<IFileStore::IOutputStream>>::Ok(std::unique_ptr<IFileStore::IOutputStream>(pStream));
 }
 
 // --- Directory traversal ---

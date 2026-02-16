@@ -3,7 +3,7 @@
 #include "rainman/archive/CSgaFile.h"
 #include "rainman/io/CFileSystemStore.h"
 #include "rainman/io/CMemoryStore.h"
-#include "rainman/io/StreamGuard.h"
+#include <memory>
 #include "rainman/core/Exception.h"
 #include <cstring>
 #include <filesystem>
@@ -78,7 +78,7 @@ TEST_F(SgaCreatorTest, CreateAndReadBackVersion4)
 	// Load the SGA
 	CFileSystemStore readStore;
 	readStore.VInit();
-	rainman::StreamGuard sgaStream(readStore.VOpenStream(sgaPath.c_str()));
+	std::unique_ptr<IFileStore::IStream> sgaStream(readStore.VOpenStream(sgaPath.c_str()));
 	ASSERT_TRUE(sgaStream);
 
 	CSgaFile sga;
@@ -101,7 +101,7 @@ TEST_F(SgaCreatorTest, CreateAndReadBackVersion4)
 			if (strcmp(pSgaIter->VGetName(), "readme.txt") == 0)
 			{
 				foundReadme = true;
-				rainman::StreamGuard fileStream(pSgaIter->VOpenFile());
+				std::unique_ptr<IFileStore::IStream> fileStream(pSgaIter->VOpenFile());
 				std::string content = readStream(fileStream.get());
 				EXPECT_EQ(content, "Hello SGA");
 			}
@@ -121,7 +121,7 @@ TEST_F(SgaCreatorTest, CreateAndReadBackVersion4)
 					    strcmp(pSubIter->VGetName(), "data.bin") == 0)
 					{
 						foundDataBin = true;
-						rainman::StreamGuard fileStream(pSubIter->VOpenFile());
+						std::unique_ptr<IFileStore::IStream> fileStream(pSubIter->VOpenFile());
 						std::string content = readStream(fileStream.get());
 						EXPECT_EQ(content, "BinaryContent");
 					}
@@ -158,7 +158,7 @@ TEST_F(SgaCreatorTest, CreateAndReadBackVersion2)
 	// Load header and verify version
 	CFileSystemStore readStore;
 	readStore.VInit();
-	rainman::StreamGuard sgaStream(readStore.VOpenStream(sgaPath.c_str()));
+	std::unique_ptr<IFileStore::IStream> sgaStream(readStore.VOpenStream(sgaPath.c_str()));
 	ASSERT_TRUE(sgaStream);
 
 	CSgaFile sga;

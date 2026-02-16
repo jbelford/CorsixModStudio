@@ -84,20 +84,17 @@ class CBFXRGTDeBurnAction : public frmFiles::IHandler
                                 ErrorBox("Cannot open file");
                                 return iCount;
                             }
-                            IFileStore::IStream *pStream = streamResult.value().release();
+                            auto &stream = streamResult.value();
 
                             CRgtFile *pRgt = new CRgtFile;
-                            pRgt->Load(pStream);
+                            pRgt->Load(stream.get());
 
                             strcpy(strrchr(saFile, '.'), ".tga");
                             auto outResult =
                                 TheConstruct->GetFileService().OpenOutputStream(AsciiTowxString(saFile), true);
-                            IFileStore::IOutputStream *pOutStr = outResult ? outResult.value().release() : nullptr;
-                            pRgt->SaveTGA(pOutStr);
+                            pRgt->SaveTGA(outResult ? outResult.value().get() : nullptr);
 
                             delete pRgt;
-                            delete pOutStr;
-                            delete pStream;
                         }
 
                         delete[] saFile;

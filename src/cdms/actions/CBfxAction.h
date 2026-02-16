@@ -47,13 +47,11 @@ class CBfxAction : public frmFiles::IHandler
             ErrorBox("Cannot open file");
             return;
         }
-        IFileStore::IStream *pStream = streamResult.value().release();
+        auto &stream = streamResult.value();
 
         CRgdFile *pRgd = new CRgdFile;
         pRgd->SetHashTable(TheConstruct->GetHashService().GetHashTable());
-        pRgd->Load(pStream);
-
-        delete pStream;
+        pRgd->Load(stream.get());
 
         if (!pForm->FillFromMetaNode(pRgd))
         {

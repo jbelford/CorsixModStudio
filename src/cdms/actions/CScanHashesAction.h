@@ -75,11 +75,10 @@ class CScanHashesAction : public frmFiles::IHandler
                         auto streamResult = TheConstruct->GetFileService().OpenStream(sFile);
                         if (streamResult)
                         {
-                            IFileStore::IStream *pStream = streamResult.value().release();
+                            auto &stream = streamResult.value();
                             CRgdFile oRGD;
                             oRGD.SetHashTable(TheConstruct->GetHashService().GetHashTable());
-                            oRGD.Load(pStream);
-                            delete pStream;
+                            oRGD.Load(stream.get());
                         }
                     }
                 }

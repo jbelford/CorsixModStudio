@@ -2,7 +2,7 @@
 #include "rainman/formats/CBfxFile.h"
 #include "rainman/io/CMemoryStore.h"
 #include "rainman/formats/CRgdHashTable.h"
-#include "rainman/io/StreamGuard.h"
+#include <memory>
 #include "rainman/core/Exception.h"
 #include <cstring>
 #include <string>

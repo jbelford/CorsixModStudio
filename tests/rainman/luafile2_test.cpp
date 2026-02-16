@@ -2,7 +2,7 @@
 #include "rainman/lua/CLuaFile2.h"
 #include "rainman/io/CMemoryStore.h"
 #include "rainman/lua/CLuaFileCache.h"
-#include "rainman/io/StreamGuard.h"
+#include <memory>
 #include "rainman/core/Exception.h"
 #include <cstring>
 #include <string>
@@ -17,7 +17,7 @@ protected:
 	// Load a Lua script from a string
 	void loadScript(const char *sScript, const char *sFileName = "test.lua")
 	{
-		rainman::StreamGuard inStream(CMemoryStore::OpenStreamExt(
+		std::unique_ptr<IFileStore::IStream> inStream(CMemoryStore::OpenStreamExt(
 		    const_cast<char *>(sScript), (unsigned long)strlen(sScript), false));
 		lua.loadFile(inStream.get(), &store, sFileName);
 	}
@@ -209,7 +209,7 @@ TEST_F(LuaFile2Test, LoadNullStreamThrows)
 TEST_F(LuaFile2Test, LoadNullStoreThrows)
 {
 	const char *script = "GameData = {}";
-	rainman::StreamGuard inStream(CMemoryStore::OpenStreamExt(
+	std::unique_ptr<IFileStore::IStream> inStream(CMemoryStore::OpenStreamExt(
 	    const_cast<char *>(script), (unsigned long)strlen(script), false));
 
 	CRainmanException *caught = nullptr;

@@ -42,12 +42,10 @@ class CDdsViewAction : public frmFiles::IHandler
             ErrorBox("Cannot open file");
             return;
         }
-        IFileStore::IStream *pStream = streamResult.value().release();
+        auto &stream = streamResult.value();
 
         CRgtFile *pRgt = new CRgtFile;
-        pRgt->LoadDDS(pStream);
-
-        delete pStream;
+        pRgt->LoadDDS(stream.get());
 
         frmImageViewer *pForm;
         TheConstruct->GetTabs()->AddPage(

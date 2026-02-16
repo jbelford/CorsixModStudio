@@ -23,7 +23,7 @@
 #include "Result.h"
 #include <rainman/io/IFileStore.h>
 #include <rainman/io/IDirectoryTraverser.h>
-#include <rainman/io/StreamGuard.h>
+#include <memory>
 
 //! RAII wrapper for IDirectoryTraverser::IIterator pointers.
 class IteratorGuard
@@ -83,11 +83,11 @@ class FileService
 
     // --- Stream operations (RAII) ---
 
-    //! Open a read stream, returning a StreamGuard that auto-deletes on scope exit.
-    Result<rainman::StreamGuard> OpenStream(const wxString &sPath);
+    //! Open a read stream, returning a unique_ptr that auto-deletes on scope exit.
+    Result<std::unique_ptr<IFileStore::IStream>> OpenStream(const wxString &sPath);
 
-    //! Open a write stream, returning an OutputStreamGuard.
-    Result<rainman::OutputStreamGuard> OpenOutputStream(const wxString &sPath, bool bEraseIfPresent);
+    //! Open a write stream, returning a unique_ptr.
+    Result<std::unique_ptr<IFileStore::IOutputStream>> OpenOutputStream(const wxString &sPath, bool bEraseIfPresent);
 
     // --- Directory traversal ---
 

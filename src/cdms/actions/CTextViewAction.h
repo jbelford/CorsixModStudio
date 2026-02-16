@@ -45,11 +45,9 @@ class CTextViewAction : public frmFiles::IHandler
             ErrorBox("Cannot open file");
             return;
         }
-        IFileStore::IStream *pStream = streamResult.value().release();
+        auto &stream = streamResult.value();
 
-        pForm->Load(pStream);
-
-        delete pStream;
+        pForm->Load(stream.get());
     }
 };
 

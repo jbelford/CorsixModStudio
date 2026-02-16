@@ -33,6 +33,7 @@
 // Rainman_RGDDump.h removed; RgdDump usage is commented-out dead code
 #include <rainman/util/Util.h>
 #include <rainman/io/CFileSystemStore.h>
+#include <rainman/io/IFileStore.h>
 #include "Common.h"
 #include "rainman/core/RainmanLog.h"
 
@@ -326,13 +327,13 @@ void CMakeLuaInheritTree::_ForEach(IDirectoryTraverser::IIterator *pItr, void *p
 
 void CMakeLuaInheritTree::_DoLua(IDirectoryTraverser::IIterator *pItr)
 {
-    IFileStore::IStream *pStream = pItr->VOpenFile();
+    std::unique_ptr<IFileStore::IStream> pStream(pItr->VOpenFile());
     char *sRef = 0;
 
     CLuaFile oLua;
     try
     {
-        sRef = oLua.GetReferencedFile(pStream);
+        sRef = oLua.GetReferencedFile(pStream.get());
     }
     catch (CRainmanException *pE)
     {
@@ -346,12 +347,11 @@ void CMakeLuaInheritTree::_DoLua(IDirectoryTraverser::IIterator *pItr)
         try
         {
             pStream->VSeek(0, IFileStore::IStream::SL_Root);
-            oLua.Load(pStream, TheConstruct->GetModuleService().GetModule(), pItr->VGetFullPath());
+            oLua.Load(pStream.get(), TheConstruct->GetModuleService().GetModule(), pItr->VGetFullPath());
             iChildCount = oLua.VGetChildCount();
         }
         catch (CRainmanException *pE)
         {
-            delete pStream;
             ErrorBoxE(pE);
             return;
         }
@@ -392,7 +392,6 @@ void CMakeLuaInheritTree::_DoLua(IDirectoryTraverser::IIterator *pItr)
             }
             catch (CRainmanException *pE)
             {
-                delete pStream;
                 delete pChild;
                 delete pTable;
                 ErrorBoxE(pE);
@@ -404,12 +403,9 @@ void CMakeLuaInheritTree::_DoLua(IDirectoryTraverser::IIterator *pItr)
         }
         if (sRef == 0)
         {
-            delete pStream;
             QUICK_THROW("Cannot find Reference for file");
         }
     }
-    delete pStream;
-
     CInheritTable::CNode *pThis = pTable->findOrMake(pItr->VGetFullPath() + iAttribL);
     CInheritTable::CNode *pReff = pTable->findOrMake(sRef);
     pThis->setParent(pReff);
@@ -474,7 +470,8 @@ void CRedButtonTool::DoAction()
     oFSO.VInit();
     try
     {
-        delete oFSO.VOpenOutputStream("I:\\j\\k\\l\\m\\n\\o\\p\\q.test", true);
+        std::unique_ptr<IFileStore::IOutputStream> guard(
+            oFSO.VOpenOutputStream("I:\\j\\k\\l\\m\\n\\o\\p\\q.test", true));
     }
     catch (CRainmanException *pE)
     {

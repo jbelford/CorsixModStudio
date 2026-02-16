@@ -35,7 +35,7 @@ extern "C"
 #include "rainman/module/CModuleFile.h"
 #include "rainman/module/CFileMap.h"
 #include "rainman/core/Exception.h"
-#include "rainman/io/StreamGuard.h"
+#include <memory>
 #include "rainman/core/memdebug.h"
 
 extern "C"
@@ -319,10 +319,10 @@ int CLuaFile::_Inherit(lua_State *L)
     }
     strcpy(sFullPathFile, "attrib\\attrib\\");
     strcat(sFullPathFile, sFile);
-    rainman::StreamGuard pStream;
+    std::unique_ptr<IFileStore::IStream> pStream;
     try
     {
-        pStream = rainman::StreamGuard(pFiles->VOpenStream(sFullPathFile));
+        pStream = std::unique_ptr<IFileStore::IStream>(pFiles->VOpenStream(sFullPathFile));
     }
     catch (CRainmanException *pE)
     {
@@ -333,7 +333,7 @@ int CLuaFile::_Inherit(lua_State *L)
 
         try
         {
-            pStream = rainman::StreamGuard(pFiles->VOpenStream(sFullPathFile));
+            pStream = std::unique_ptr<IFileStore::IStream>(pFiles->VOpenStream(sFullPathFile));
         }
         catch (CRainmanException *pE)
         {
@@ -469,10 +469,10 @@ int CLuaFile::_InheritMeta(lua_State *L)
     }
     strcpy(sFullPathFile, "attrib\\attrib\\");
     strcat(sFullPathFile, sFile);
-    rainman::StreamGuard pStream;
+    std::unique_ptr<IFileStore::IStream> pStream;
     try
     {
-        pStream = rainman::StreamGuard(pFiles->VOpenStream(sFullPathFile));
+        pStream = std::unique_ptr<IFileStore::IStream>(pFiles->VOpenStream(sFullPathFile));
     }
     catch (CRainmanException *pE)
     {
@@ -483,7 +483,7 @@ int CLuaFile::_InheritMeta(lua_State *L)
 
         try
         {
-            pStream = rainman::StreamGuard(pFiles->VOpenStream(sFullPathFile));
+            pStream = std::unique_ptr<IFileStore::IStream>(pFiles->VOpenStream(sFullPathFile));
         }
         catch (CRainmanException *pE)
         {
@@ -629,10 +629,10 @@ int CLuaFile::_Reference(lua_State *L)
     }
     strcpy(sFullPathFile, "attrib\\attrib\\");
     strcat(sFullPathFile, sFile);
-    rainman::StreamGuard pStream;
+    std::unique_ptr<IFileStore::IStream> pStream;
     try
     {
-        pStream = rainman::StreamGuard(pFiles->VOpenStream(sFullPathFile));
+        pStream = std::unique_ptr<IFileStore::IStream>(pFiles->VOpenStream(sFullPathFile));
     }
     catch (CRainmanException *pE)
     {
@@ -643,7 +643,7 @@ int CLuaFile::_Reference(lua_State *L)
 
         try
         {
-            pStream = rainman::StreamGuard(pFiles->VOpenStream(sFullPathFile));
+            pStream = std::unique_ptr<IFileStore::IStream>(pFiles->VOpenStream(sFullPathFile));
         }
         catch (CRainmanException *pE)
         {

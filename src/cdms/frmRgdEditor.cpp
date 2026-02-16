@@ -32,6 +32,8 @@
 #include <wx/tbarbase.h>
 #include "Common.h"
 #include <cstdint>
+#include <memory>
+#include <rainman/io/IFileStore.h>
 #include <rainman/core/RainmanLog.h>
 
 extern "C"
@@ -1420,12 +1422,10 @@ void frmRGDEditor::OnPaste(wxCommandEvent &event)
             wxTheClipboard->GetData(oData);
             char *pObjData = new char[oData.GetDataSize()];
             oData.GetDataHere(pObjData);
-            CMemoryStore::CStream *pStream =
-                CMemoryStore::OpenStreamExt(pObjData, (unsigned long)oData.GetDataSize(), true);
+            std::unique_ptr<IFileStore::IStream> pStream(
+                CMemoryStore::OpenStreamExt(pObjData, (unsigned long)oData.GetDataSize(), true));
 
-            pData->pNode->SGetNodeFromRainmanRgd(pStream, false);
-
-            delete pStream;
+            pData->pNode->SGetNodeFromRainmanRgd(pStream.get(), false);
 
             _SyncTreeView(pData->pNode, oNode);
 
@@ -1451,8 +1451,8 @@ void frmRGDEditor::OnPasteInto(wxCommandEvent &event)
             wxTheClipboard->GetData(oData);
             char *pObjData = new char[oData.GetDataSize()];
             oData.GetDataHere(pObjData);
-            CMemoryStore::CStream *pStream =
-                CMemoryStore::OpenStreamExt(pObjData, (unsigned long)oData.GetDataSize(), true);
+            std::unique_ptr<IFileStore::IStream> pStream(
+                CMemoryStore::OpenStreamExt(pObjData, (unsigned long)oData.GetDataSize(), true));
 
             unsigned long iNodeHash, iNodeNameLen;
             char *sNodeName = 0;
@@ -1496,10 +1496,8 @@ void frmRGDEditor::OnPasteInto(wxCommandEvent &event)
                 delete[] sNodeName;
             if (!pExistingChild)
                 pExistingChild = pData->pTable->VAddChild("__$ModStudioTemp$__");
-            pExistingChild->SGetNodeFromRainmanRgd(pStream, true);
+            pExistingChild->SGetNodeFromRainmanRgd(pStream.get(), true);
             delete pExistingChild;
-
-            delete pStream;
 
             _SyncTreeView(pData->pNode, oNode);
 

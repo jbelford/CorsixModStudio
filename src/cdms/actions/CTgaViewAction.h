@@ -42,13 +42,11 @@ class CTgaViewAction : public frmFiles::IHandler
             ErrorBox("Cannot open file");
             return;
         }
-        IFileStore::IStream *pStream = streamResult.value().release();
+        auto &stream = streamResult.value();
 
         bool bIs32 = true;
         CRgtFile *pRgt = new CRgtFile;
-        pRgt->LoadTGA(pStream, false, &bIs32);
-
-        delete pStream;
+        pRgt->LoadTGA(stream.get(), false, &bIs32);
 
         frmImageViewer *pForm;
         TheConstruct->GetTabs()->AddPage(

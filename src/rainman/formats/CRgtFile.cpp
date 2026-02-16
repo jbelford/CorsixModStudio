@@ -21,6 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include <zlib.h>
 #include "rainman/core/Exception.h"
 #include "rainman/core/memdebug.h"
+#include <memory>
 #include <time.h>
 #include <squish.h>
 
@@ -71,7 +72,7 @@ void CRgtFile::_MakeFileBurnInfo(CChunkyFile *pChunkyFile)
     pChunk->SetVersion(2);
     pChunk->SetDescriptor("FileBurnInfo");
 
-    CMemoryStore::COutStream *pOutStream = CMemoryStore::OpenOutputStreamExt();
+    std::unique_ptr<IFileStore::IOutputStream> pOutStream(CMemoryStore::OpenOutputStreamExt());
     unsigned long iN;
     iN = 25;
     pOutStream->VWrite(1, sizeof(uint32_t), &iN);
@@ -99,8 +100,7 @@ void CRgtFile::_MakeFileBurnInfo(CChunkyFile *pChunkyFile)
     iN = 0;
     pOutStream->VWrite(1, sizeof(uint32_t), &iN);
 
-    pChunk->SetData(pOutStream);
-    delete pOutStream;
+    pChunk->SetData(static_cast<CMemoryStore::COutStream *>(pOutStream.get()));
 }
 
 void CRgtFile::_MakeDataAttr(CChunkyFile::CChunk *pParentChunk, long iWidth, long iHeight, long iUnknown)
@@ -109,13 +109,12 @@ void CRgtFile::_MakeDataAttr(CChunkyFile::CChunk *pParentChunk, long iWidth, lon
 
     pChunk->SetVersion(1);
 
-    CMemoryStore::COutStream *pOutStream = CMemoryStore::OpenOutputStreamExt();
+    std::unique_ptr<IFileStore::IOutputStream> pOutStream(CMemoryStore::OpenOutputStreamExt());
     pOutStream->VWrite(1, sizeof(uint32_t), &iUnknown);
     pOutStream->VWrite(1, sizeof(uint32_t), &iWidth);
     pOutStream->VWrite(1, sizeof(uint32_t), &iHeight);
 
-    pChunk->SetData(pOutStream);
-    delete pOutStream;
+    pChunk->SetData(static_cast<CMemoryStore::COutStream *>(pOutStream.get()));
 }
 
 void CRgtFile::_MakeDataData(CChunkyFile::CChunk *pParentChunk, long iVal1, long iVal2, int iType)
@@ -125,13 +124,12 @@ void CRgtFile::_MakeDataData(CChunkyFile::CChunk *pParentChunk, long iVal1, long
     pChunk->SetVersion(iType);
     pChunk->SetUnknown1(1);
 
-    CMemoryStore::COutStream *pOutStream = CMemoryStore::OpenOutputStreamExt();
+    std::unique_ptr<IFileStore::IOutputStream> pOutStream(CMemoryStore::OpenOutputStreamExt());
     pOutStream->VWrite(1, sizeof(uint32_t), &iVal1);
     if (iType == 3)
         pOutStream->VWrite(1, sizeof(uint32_t), &iVal2);
 
-    pChunk->SetData(pOutStream);
-    delete pOutStream;
+    pChunk->SetData(static_cast<CMemoryStore::COutStream *>(pOutStream.get()));
 }
 
 void CRgtFile::_MakeDataInfo(CChunkyFile::CChunk *pParentChunk, long iWidth, long iHeight, char iFinalByte)
@@ -140,7 +138,7 @@ void CRgtFile::_MakeDataInfo(CChunkyFile::CChunk *pParentChunk, long iWidth, lon
 
     pChunk->SetVersion(2);
 
-    CMemoryStore::COutStream *pOutStream = CMemoryStore::OpenOutputStreamExt();
+    std::unique_ptr<IFileStore::IOutputStream> pOutStream(CMemoryStore::OpenOutputStreamExt());
 
     pOutStream->VWrite(1, sizeof(uint32_t), &iWidth);
     pOutStream->VWrite(1, sizeof(uint32_t), &iHeight);
@@ -155,8 +153,7 @@ void CRgtFile::_MakeDataInfo(CChunkyFile::CChunk *pParentChunk, long iWidth, lon
     pOutStream->VWrite(1, sizeof(uint32_t), &N);
     pOutStream->VWrite(1, 1, &iFinalByte);
 
-    pChunk->SetData(pOutStream);
-    delete pOutStream;
+    pChunk->SetData(static_cast<CMemoryStore::COutStream *>(pOutStream.get()));
 }
 
 void CRgtFile::_MakeDxtcDataTexFormat(CChunkyFile::CChunk *pParentChunk, unsigned long iWidth, unsigned long iHeight,
@@ -165,7 +162,7 @@ void CRgtFile::_MakeDxtcDataTexFormat(CChunkyFile::CChunk *pParentChunk, unsigne
     CChunkyFile::CChunk *pChunk = pParentChunk->AppendNew("TFMT", CChunkyFile::CChunk::T_Data);
     pChunk->SetVersion(1);
     pChunk->SetUnknown1(-1);
-    CMemoryStore::COutStream *pOutStream = CMemoryStore::OpenOutputStreamExt();
+    std::unique_ptr<IFileStore::IOutputStream> pOutStream(CMemoryStore::OpenOutputStreamExt());
 
     long N;
     pOutStream->VWrite(1, sizeof(uint32_t), &iWidth);
@@ -196,8 +193,7 @@ void CRgtFile::_MakeDxtcDataTexFormat(CChunkyFile::CChunk *pParentChunk, unsigne
     char c = 1;
     pOutStream->VWrite(1, 1, &c);
 
-    pChunk->SetData(pOutStream);
-    delete pOutStream;
+    pChunk->SetData(static_cast<CMemoryStore::COutStream *>(pOutStream.get()));
 }
 
 void CRgtFile::_MakeDxtcData(CMemoryStore::COutStream *pTMAN, CMemoryStore::COutStream *pTDAT,
@@ -375,7 +371,7 @@ void CRgtFile::LoadTGA(IFileStore::IStream *pFile, bool bMakeMips, bool *pIs32Bi
     // Write data
     CChunkyFile::CChunk *pChunkData = pFoldChunk->AppendNew("DATA", CChunkyFile::CChunk::T_Data);
     pChunkData->SetVersion(1);
-    CMemoryStore::COutStream *pOutData = CMemoryStore::OpenOutputStreamExt();
+    std::unique_ptr<IFileStore::IOutputStream> pOutData(CMemoryStore::OpenOutputStreamExt());
 
     unsigned char *pDatIn = new unsigned char[(iTga_BPP >> 3) * iTga_W * iTga_H];
     pFile->VRead(iTga_W * iTga_H, iTga_BPP / 8, pDatIn);
@@ -397,8 +393,7 @@ void CRgtFile::LoadTGA(IFileStore::IStream *pFile, bool bMakeMips, bool *pIs32Bi
     }
 
     delete[] pDatIn;
-    pChunkData->SetData(pOutData);
-    delete pOutData;
+    pChunkData->SetData(static_cast<CMemoryStore::COutStream *>(pOutData.get()));
 
     // All done
     _LoadFromChunky();
@@ -457,10 +452,9 @@ void CRgtFile::_MakeTgaImagMips(CChunkyFile::CChunk *pTXTR, unsigned long iWidth
     // Write data
     CChunkyFile::CChunk *pChunkData = pIMAG->AppendNew("DATA", CChunkyFile::CChunk::T_Data);
     pChunkData->SetVersion(1);
-    CMemoryStore::COutStream *pOutData = CMemoryStore::OpenOutputStreamExt();
+    std::unique_ptr<IFileStore::IOutputStream> pOutData(CMemoryStore::OpenOutputStreamExt());
     pOutData->VWrite(iWidth * iHeight, 4, pRGBAData);
-    pChunkData->SetData(pOutData);
-    delete pOutData;
+    pChunkData->SetData(static_cast<CMemoryStore::COutStream *>(pOutData.get()));
 
     _MakeTgaImagMips(pTXTR, iWidth, iHeight, pRGBAData);
     delete[] pRGBAData;
@@ -586,22 +580,22 @@ void CRgtFile::LoadDDS(IFileStore::IStream *pFile)
     pChunkTMAN->SetVersion(1);
     pChunkTMAN->SetUnknown1(-1);
     CMemoryStore::COutStream *pOutTMAN = CMemoryStore::OpenOutputStreamExt();
+    std::unique_ptr<IFileStore::IOutputStream> pOutTMANGuard(pOutTMAN);
 
     // Make DATATDAT
     CChunkyFile::CChunk *pChunkTDAT = pFoldChunk->AppendNew("TDAT", CChunkyFile::CChunk::T_Data);
     pChunkTDAT->SetVersion(1);
     pChunkTDAT->SetUnknown1(-1);
     CMemoryStore::COutStream *pOutTDAT = CMemoryStore::OpenOutputStreamExt();
+    std::unique_ptr<IFileStore::IOutputStream> pOutTDATGuard(pOutTDAT);
 
     // Write TMAN & TDAT
     _MakeDxtcData(pOutTMAN, pOutTDAT, pFile, iDDS_Width, iDDS_Height, sDDSPF_FourCC[3] - '0',
                   (iDDSC_Caps1 & 0x400000 ? true : false));
 
     pChunkTMAN->SetData(pOutTMAN);
-    delete pOutTMAN;
 
     pChunkTDAT->SetData(pOutTDAT);
-    delete pOutTDAT;
 
     // All done
     _LoadFromChunky();
@@ -1039,7 +1033,7 @@ void CRgtFile::_Load_Dxtc()
     if (!pDataChunk)
         throw new CRainmanException(__FILE__, __LINE__, "Cannot find DATATFMT");
 
-    CMemoryStore::CStream *pStr = pDataChunk->GetData();
+    std::unique_ptr<IFileStore::IStream> pStr(pDataChunk->GetData());
 
     pStr->VRead(1, sizeof(uint32_t), &m_iWidth);
     pStr->VRead(1, sizeof(uint32_t), &m_iHeight);
@@ -1062,20 +1056,18 @@ void CRgtFile::_Load_Dxtc()
         break;
     }
 
-    delete pStr;
-
     // Read mip info and data
     pDataChunk = pChunk->GetChildByName("TMAN", CChunkyFile::CChunk::T_Data);
     if (!pDataChunk)
         throw new CRainmanException(__FILE__, __LINE__, "Cannot find DATATMAN");
 
-    pStr = pDataChunk->GetData();
+    pStr = std::unique_ptr<IFileStore::IStream>(pDataChunk->GetData());
 
     pDataChunk = pChunk->GetChildByName("TDAT", CChunkyFile::CChunk::T_Data);
     if (!pDataChunk)
         throw new CRainmanException(__FILE__, __LINE__, "Cannot find DATATDAT");
 
-    CMemoryStore::CStream *pDataStr = pDataChunk->GetData();
+    std::unique_ptr<IFileStore::IStream> pDataStr(pDataChunk->GetData());
 
     pStr->VRead(1, sizeof(uint32_t), &m_iMipCount);
     for (long iMipLevel = 0; iMipLevel < m_iMipCount; ++iMipLevel)
@@ -1117,9 +1109,6 @@ void CRgtFile::_Load_Dxtc()
     m_iHeight = m_pMipLevels[m_iMipCurrent]->m_iHeight;
     m_iDataLength = m_pMipLevels[m_iMipCurrent]->m_iDataLength;
     m_pData = m_pMipLevels[m_iMipCurrent]->m_pData + 16;
-
-    delete pStr;
-    delete pDataStr;
 }
 
 void CRgtFile::_Load_Tga()
@@ -1136,12 +1125,10 @@ void CRgtFile::_Load_Tga()
     if (!pDataChunk)
         throw new CRainmanException(__FILE__, __LINE__, "Cannot find DATAINFO");
 
-    CMemoryStore::CStream *pStr = pDataChunk->GetData();
+    std::unique_ptr<IFileStore::IStream> pStr(pDataChunk->GetData());
 
     pStr->VRead(1, sizeof(uint32_t), &m_iWidth);
     pStr->VRead(1, sizeof(uint32_t), &m_iHeight);
-
-    delete pStr;
 
     // Read data
     size_t iN = pChunk->GetChildCount();
@@ -1158,11 +1145,10 @@ void CRgtFile::_Load_Tga()
 
                 _MipLevel *pCurrentLevel = new _MipLevel;
 
-                pStr = pDataChunk->GetData();
+                pStr = std::unique_ptr<IFileStore::IStream>(pDataChunk->GetData());
                 pStr->VSeek(4, IFileStore::IStream::SL_Current);
                 pStr->VRead(1, sizeof(uint32_t), &pCurrentLevel->m_iWidth);
                 pStr->VRead(1, sizeof(uint32_t), &pCurrentLevel->m_iHeight);
-                delete pStr;
 
                 pDataChunk = pChild->GetChildByName("DATA", CChunkyFile::CChunk::T_Data);
                 if (!pDataChunk)
@@ -1175,9 +1161,8 @@ void CRgtFile::_Load_Tga()
 
                 pCurrentLevel->m_pData = new unsigned char[pCurrentLevel->m_iDataLength];
 
-                pStr = pDataChunk->GetData();
+                pStr = std::unique_ptr<IFileStore::IStream>(pDataChunk->GetData());
                 pStr->VRead((unsigned long)pCurrentLevel->m_iDataLength, 1, pCurrentLevel->m_pData);
-                delete pStr;
 
                 m_pMipLevels[m_iMipCurrent = m_iMipCount] = pCurrentLevel;
                 ++m_iMipCount;

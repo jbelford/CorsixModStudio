@@ -42,11 +42,10 @@ class CMuaAction : public frmFiles::IHandler
             ErrorBox("Cannot open file");
             return;
         }
-        IFileStore::IStream *pStream = streamResult.value().release();
+        auto &stream = streamResult.value();
         char *saFile = wxStringToAscii(sFile);
-        CLuaFile *pLua = CLuaAction::DoLoad(pStream, saFile);
+        CLuaFile *pLua = CLuaAction::DoLoad(stream.get(), saFile);
         delete[] saFile;
-        delete pStream;
         if (pLua)
         {
             frmRGDEditor *pForm;
