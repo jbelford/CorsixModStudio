@@ -5,7 +5,8 @@ description: Write new C++ code that follows CorsixModStudio codebase convention
 
 # C++ Developer
 
-Write new C++ code that follows the CorsixModStudio codebase conventions across all layers.
+Write new C++ code that follows CorsixModStudio codebase conventions across all layers,
+**preferring modern C++17 practices** wherever it is safe to do so.
 
 ## Workflow
 
@@ -16,8 +17,10 @@ Write new C++ code that follows the CorsixModStudio codebase conventions across 
    **Vendored Lua** (`src/rainman/lua502/`) → Consult [references/lua-rules.md](references/lua-rules.md)
 
 2. Apply the common conventions below to all new code.
-3. After writing code, add new files to the appropriate `CMakeLists.txt`.
-4. Build and verify: `cmake --build build --config Debug`
+3. **Default to modern C++17** — see the Modern C++ Practices section. Fall back to legacy
+   style only at existing API boundaries or when modifying existing code to keep diffs small.
+4. After writing code, add new files to the appropriate `CMakeLists.txt`.
+5. Build and verify: `cmake --build --preset debug`
 
 ## File Header
 
@@ -90,10 +93,33 @@ char* pBuffer = CHECK_MEM(new char[1024]);  // throws if allocation fails
 
 ## Memory Management
 
-- Use raw `new`/`delete` — no smart pointers in existing APIs.
-- Callers own stream objects returned by `VOpenStream()`/`VOpenOutputStream()` — caller must `delete` them.
-- Use `AutoDelete<T>` (from `Internal_Util.h`) for RAII cleanup of raw pointers when convenient.
-- Use `CHECK_MEM(new ...)` for all allocations that could fail.
+### New code (preferred)
+
+Use **RAII and smart pointers** for all new internal code:
+
+```cpp
+// Prefer std::unique_ptr for owned heap objects
+auto pBuffer = std::make_unique<char[]>(1024);
+
+// Use a custom deleter for IStream* returned by VOpenStream()
+auto pStream = std::unique_ptr<IFileStore::IStream>(store.VOpenStream("path"));
+pStream->VRead(1, sizeof(unsigned long), &iValue);
+// stream is automatically deleted when pStream goes out of scope
+
+// Use a custom deleter for CRainmanException* if you need to hold one
+auto pEx = std::unique_ptr<CRainmanException, decltype(&CRainmanException::destroy)>(
+    pCaught, &CRainmanException::destroy);
+```
+
+### Legacy API boundaries
+
+When implementing or overriding existing virtual interfaces that return raw pointers
+(e.g., `VOpenStream()`, `VOpenOutputStream()`), continue to return raw `new`-allocated
+objects — **callers** of those interfaces are responsible for deletion.
+Within the implementation body, still prefer smart pointers for intermediate allocations.
+
+- Use `CHECK_MEM(new ...)` for allocations that must not fail at API boundaries.
+- Use `AutoDelete<T>` (from `Internal_Util.h`) when interfacing with legacy cleanup patterns.
 
 ## RAINMAN_API Macro
 
@@ -117,12 +143,99 @@ public:
 };
 ```
 
-## Legacy Type Rules
+## Modern C++ Practices
 
-- Use `unsigned long` for sizes and counts in public APIs (not `size_t` or `uint32_t` — changing would cascade through the codebase).
-- Use `long` for signed offsets (e.g., seek positions).
+**Default to modern C++17** in all new code. Only fall back to legacy style at existing API
+boundaries or when editing existing code where consistency matters more.
+
+### Smart pointers & RAII
+- Prefer `std::unique_ptr` / `std::make_unique` for owned heap objects.
+- Wrap raw-pointer returns from legacy APIs (e.g., `VOpenStream()`) in `std::unique_ptr`
+  at the call site for automatic cleanup.
+- For `CRainmanException*`, use a `unique_ptr` with a custom deleter that calls `destroy()`.
+
+### Modern types (internal / new code)
+| Use | Instead of | When |
+|-----|-----------|------|
+| `std::string` / `std::string_view` | `char*` / `const char*` | Internal storage & parameters |
+| `std::size_t` | `unsigned long` | Internal sizes & loop counters |
+| `std::uint32_t`, `std::int64_t` | `unsigned long`, `long` | Internal fixed-width data |
+| `std::vector<T>` | `T*` + manual `new[]`/`delete[]` | Owning dynamic arrays |
+| `std::array<T,N>` | `T[N]` raw array | Fixed-size arrays |
+| `std::optional<T>` | sentinel value / out-parameter | Nullable return values |
+| `std::span<T>` (C++20) or pointer+size | `T*` + separate length | Non-owning views (when C++20 is available) |
+
+> **API boundaries**: Public virtual interfaces and methods that override existing
+> signatures must continue using `unsigned long`, `char*`, etc. to match.
+
+### Keywords & syntax
+- **`auto`** — use for iterators, factory returns, lambdas, and any type that is obvious
+  from the right-hand side. Avoid `auto` when the type is not immediately clear.
+- **`nullptr`** — never use `NULL` or `0` for null pointers.
+- **`override`** — always mark virtual overrides. Add `override` to every reimplemented
+  virtual method.
+- **`const` / `constexpr`** — mark variables, parameters, and methods `const` wherever
+  possible. Use `constexpr` for compile-time constants.
+- **`enum class`** — prefer over plain `enum` for new enumerations.
+- **`[[nodiscard]]`** — add to functions whose return value must not be ignored
+  (e.g., factory functions, error codes).
+- **`noexcept`** — mark functions that are guaranteed not to throw (note: the codebase
+  throws `CRainmanException*`, so many functions cannot be noexcept).
+
+### Loops & algorithms
+- Prefer **range-based for** over index-based iteration:
+  ```cpp
+  for (const auto& item : m_tItems) { ... }
+  ```
+- Prefer **`<algorithm>`** functions (`std::find_if`, `std::transform`, `std::any_of`, etc.)
+  over hand-written loops when they improve clarity.
+- Use **structured bindings** for pairs, tuples, and map entries:
+  ```cpp
+  for (const auto& [key, value] : myMap) { ... }
+  ```
+
+### Strings
+- Prefer `std::string` for new string storage and `std::string_view` for non-owning
+  read-only access.
+- Use `std::format` (C++20, or `fmt::format` if available) over `sprintf` / `snprintf`
+  for new formatting code if the build supports it; otherwise `std::ostringstream` or
+  `snprintf` is acceptable.
+
+### Initialization
+- Use **brace initialization** for aggregates and containers:
+  ```cpp
+  std::vector<int> ids = {1, 2, 3};
+  ```
+- Prefer **in-class member initializers** over constructor initializer lists for default
+  values:
+  ```cpp
+  class CMyClass {
+      bool m_bInited = false;
+      unsigned long m_iCount = 0;
+  };
+  ```
+
+### What NOT to modernize
+These legacy patterns must be preserved for compatibility — do not change them:
+- **Heap-allocated exceptions** (`throw new CRainmanException`) — this is a project-wide
+  convention, not a mistake.
+- **`RAINMAN_API` macro** on public classes.
+- **Hungarian-prefixed member names** (`m_sName`, `m_pStream`).
+- **`C`/`I` class prefixes** and **`V` virtual-method prefix**.
+- **Include guards** (`_C_CLASS_NAME_H_` style) — do not replace with `#pragma once`.
+- **`unsigned long` in public/virtual API signatures** — changing cascades.
+- **Vendored Lua code** — never touch `lua502/` or `lua512/`.
+
+## Legacy Type Rules (API boundaries only)
+
+These rules apply when implementing or overriding existing public/virtual interfaces.
+For purely internal new code, prefer modern types (see above).
+
+- Use `unsigned long` for sizes and counts in **existing public APIs** (changing would cascade through the codebase).
+- Use `long` for signed offsets in existing seek interfaces.
 - Use Windows-only APIs where the codebase already does (`_wfopen`, `LoadLibraryW`, `GetProcAddress`).
-- C-style casts exist throughout; match existing style in the file you're editing.
+- Match the existing cast style (C-style or `static_cast`) of the file you're editing.
+  In new files, prefer `static_cast` / `reinterpret_cast` / `const_cast`.
 
 ## Build Integration
 
@@ -143,6 +256,6 @@ add_executable(rainman_tests
 
 ### Build & Verify
 ```powershell
-cmake --build build --config Debug
-ctest --test-dir build -C Debug --output-on-failure
+cmake --build --preset debug
+ctest --preset debug
 ```

@@ -41,8 +41,19 @@ protected:
 3. Streams throw `CRainmanException*` on errors (read past end, seek out of range).
 4. Always check `m_bInited` before operations.
 
+**Modern (preferred) usage — wrap in `std::unique_ptr` at the call site:**
 ```cpp
-// Correct usage pattern:
+CMyStore store;
+store.VInit();
+
+auto pStream = std::unique_ptr<IFileStore::IStream>(store.VOpenStream("path/to/file"));
+unsigned long iValue;
+pStream->VRead(1, sizeof(unsigned long), &iValue);
+// pStream is auto-deleted on scope exit or exception
+```
+
+**Legacy usage (when editing existing code):**
+```cpp
 CMyStore store;
 store.VInit();
 
@@ -115,8 +126,10 @@ protected:
 
 Key rules:
 - `Load()` reads from a stream but does NOT take ownership (caller still deletes the stream).
-- Data is stored as raw C arrays or `std::vector<T*>`.
-- Destructor must `delete[]` all owned memory.
+- For **new** parser classes, prefer `std::vector<T>` and `std::string` for internal storage
+  instead of raw `char**` / `T*` arrays.
+- Existing parser classes use raw C arrays — match their style when modifying them.
+- Destructor must clean up all owned memory (smart pointers handle this automatically).
 
 ## Directory Traversal
 
@@ -133,9 +146,12 @@ public:
 
 ## Adding a New Rainman Class
 
-1. Create `CNewClass.h` and `CNewClass.cpp` in `src/rainman/`.
+1. Create `CNewClass.h` and `CNewClass.cpp` in the appropriate subdirectory under `src/rainman/`.
 2. Add the LGPL header to both files.
-3. Use `#include "gnuc_defines.h"` and `#include "Api.h"`.
+3. Use `#include "rainman/core/Api.h"` and any needed headers with fully-qualified `rainman/` prefix.
 4. Apply `RAINMAN_API` to the class declaration.
 5. Use `_C_NEW_CLASS_H_` style include guard.
-6. Files are auto-discovered by `file(GLOB)` — just rebuild.
+6. **Default to modern C++17**: use `std::unique_ptr`, `std::string`, `std::vector`, `auto`,
+   `override`, `nullptr`, range-for, etc. Only use legacy patterns at API boundaries
+   that must match existing virtual signatures.
+7. Files are auto-discovered by `file(GLOB)` — just rebuild.

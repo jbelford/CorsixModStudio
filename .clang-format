@@ -4,8 +4,6 @@ Language: Cpp
 Standard: c++17
 ColumnLimit: 120
 IndentWidth: 4
-UseTab: ForIndentation
-TabWidth: 4
 InsertNewlineAtEOF: true
 BreakBeforeBraces: Allman
 

@@ -452,11 +452,21 @@ Each phase is a standalone unit of work. Complete one before starting the next. 
 
 ### Phase D: CDMS Service Layer
 
-1. Create `ModuleService` wrapping `CModuleFile` operations
-2. Create `FileService` wrapping `IFileStore`/`IDirectoryTraverser`
-3. Migrate `Construct.cpp` to use services
-4. Migrate `frmFiles.cpp` to use `FileService`
-5. Gradually migrate remaining CDMS files
+1. ~~Create `Result<T>` error type in `services/Result.h`~~
+2. ~~Create `services/` directory and update `CMakeLists.txt`~~
+3. ~~Create `ModuleService` wrapping `CModuleFile` operations~~
+4. ~~Create `FileService` wrapping `IFileStore`/`IDirectoryTraverser`~~
+5. ~~Create `FormatService` wrapping format parsers (RGD, Chunky, RGT, RGM, BFX, UCS)~~
+6. ~~Create `HashService` wrapping `CRgdHashTable` with lazy init~~
+7. ~~Migrate `Construct.cpp` to use services (`DoLoadSga`, `SetLocale`, `GetRgdHashTable`)~~
+8. Migrate `frmFiles.cpp` tree traversal + action handlers to use `FileService`
+9. Migrate format editor files to use `FormatService` (`frmRgdEditor`, `frmRgdMacro`, `frmRgmMaterialEditor`, `frmImage`, `frmScarEditor`, `frmUCSEditor`)
+10. Migrate module-related files to use `ModuleService` (`frmModule`, `frmMassExtract`, `frmUCSSelector`, `Tool_AESetup`)
+11. Migrate file-navigation files to use `FileService` (`frmFileSelector`, `frmLuaInheritTree`)
+12. Migrate tool files (`Tool_AutoDPS`, `Tools.cpp`)
+13. Migrate utility/config files (`Utility.h`, `config.cpp`, `frmSgaMake.cpp`)
+14. Remove unused Rainman includes from migrated CDMS files
+15. Final clean build + test verification
 
 ### Phase E: CDMS Structural Cleanup
 
