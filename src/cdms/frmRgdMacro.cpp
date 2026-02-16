@@ -22,12 +22,12 @@
 #include "strconv.h"
 #include "Utility.h"
 #include <wx/file.h>
-#include <Util.h>
+#include <util/Util.h>
 #include "Common.h"
 
 extern "C"
 {
-#include "crc32_case_idt.h"
+#include "util/crc32_case_idt.h"
 }
 
 BEGIN_EVENT_TABLE(frmRgdMacro, wxDialog)

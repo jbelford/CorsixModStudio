@@ -25,10 +25,10 @@
 #include <errno.h>
 #include <wx/textdlg.h>
 #include <wx/filename.h>
-#include <CFileSystemStore.h>
-#include <CSgaCreator.h>
+#include <io/CFileSystemStore.h>
+#include <archive/CSgaCreator.h>
 #include "Common.h"
-#include "RainmanLog.h"
+#include "core/RainmanLog.h"
 
 BEGIN_EVENT_TABLE(frmSgaMake, wxDialog)
 EVT_BUTTON(IDC_BrowseIn, frmSgaMake::OnBrowseInClick)

@@ -31,7 +31,7 @@
 #include "wx/wx.h"
 #endif
 // ----------------------------
-#include <CRgdFileMacro.h>
+#include <formats/CRgdFileMacro.h>
 #include <wx/stc/stc.h>
 #include <wx/treectrl.h>
 

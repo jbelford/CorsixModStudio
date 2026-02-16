@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "WriteTime.h"
+#include "core/WriteTime.h"
 
 TEST(WriteTimeTest, GetInvalidWriteTimeReturnsZero) {
     EXPECT_EQ(GetInvalidWriteTime(), 0ULL);

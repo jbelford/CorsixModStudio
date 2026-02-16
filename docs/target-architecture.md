@@ -73,11 +73,11 @@
 
 | Aspect | Current | Target |
 |--------|---------|--------|
-| Rainman layout | 80 files flat in `src/rainman/` | Grouped into 6 subdirectories |
-| CDMS→Rainman coupling | Direct (via `Common.h` → `Rainman.h` god header) | Via service/adapter layer |
-| Header coupling | `Rainman.h` pulls 15 headers; `Common.h` pulls all | Targeted per-class includes; forward declarations |
-| Stream ownership | Raw `new`/`delete` | RAII wrappers alongside existing API |
-| Test coverage | ~45% class-level | 80%+ class-level |
+| Rainman layout | ✅ Grouped into 8 subdirectories (`core/`, `io/`, `archive/`, `formats/`, `lua/`, `localization/`, `module/`, `util/`) | Grouped into 8 subdirectories |
+| CDMS→Rainman coupling | ✅ Targeted per-class includes; forward declarations | Via service/adapter layer |
+| Header coupling | ✅ `Rainman.h` removed; directory-qualified includes | Targeted per-class includes; forward declarations |
+| Stream ownership | ✅ RAII wrappers (`StreamGuard`) alongside existing API | RAII wrappers alongside existing API |
+| Test coverage | ~65% class-level | 80%+ class-level |
 | God classes | `CModuleFile`, `ConstructFrame`, `frmFiles_Actions.h` | Decomposed into focused classes |
 
 ---
@@ -149,12 +149,12 @@ src/rainman/
 │   ├── hash.c                   # Jenkins hash
 │   └── md5.h/c                  # MD5 hashing
 │
-├── include/rainman/
-│   └── Rainman.h                # Public umbrella (kept for compat, discouraged)
+├── vendor/
+│   ├── lua502/                  # Vendored Lua 5.0.2 (do not modify)
+│   └── lua512/                  # Vendored Lua 5.1.2 (do not modify)
 │
-├── lua502/                      # Vendored Lua 5.0.2 (unchanged)
-├── lua512/                      # Lua 5.1.2 type headers (unchanged)
-└── lua512src/                   # Vendored Lua 5.1.2 (unchanged)
+├── pch_rainman.h                # Precompiled header
+└── CMakeLists.txt               # Build configuration
 ```
 
 ### 3.2 Header Coupling Reduction
@@ -441,12 +441,14 @@ Each phase is a standalone unit of work. Complete one before starting the next. 
 4. Replace per-file `#include <Rainman.h>` in CDMS `.cpp` files with targeted includes
 5. Remove `<Rainman.h>` from `Common.h`
 
-### Phase C: Rainman Subdirectory Reorganization
+### Phase C: Rainman Subdirectory Reorganization ✅
 
-1. Create subdirectories: `core/`, `io/`, `archive/`, `formats/`, `lua/`, `localization/`, `module/`, `util/`
-2. Move files in small batches (one subdirectory at a time)
-3. Update `CMakeLists.txt` glob patterns and include paths
-4. Verify full build + test after each batch
+1. ~~Create subdirectories: `core/`, `io/`, `archive/`, `formats/`, `lua/`, `localization/`, `module/`, `util/`~~
+2. ~~Move files in small batches (one subdirectory at a time)~~
+3. ~~Update `CMakeLists.txt` glob patterns and include paths~~
+4. ~~Verify full build + test after each batch~~
+5. ~~Delete unused vendored `zLib/` directory~~
+6. ~~Adopt directory-qualified includes (`#include "core/Exception.h"`, etc.)~~
 
 ### Phase D: CDMS Service Layer
 

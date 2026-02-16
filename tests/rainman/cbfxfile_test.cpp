@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
-#include "CBfxFile.h"
-#include "CMemoryStore.h"
-#include "CRgdHashTable.h"
-#include "StreamGuard.h"
-#include "Exception.h"
+#include "formats/CBfxFile.h"
+#include "io/CMemoryStore.h"
+#include "formats/CRgdHashTable.h"
+#include "io/StreamGuard.h"
+#include "core/Exception.h"
 #include <cstring>
 #include <string>
 

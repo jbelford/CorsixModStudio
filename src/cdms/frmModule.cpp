@@ -22,7 +22,7 @@
 #include "CtrlStatusText.h"
 #include "strings.h"
 #include <wx/notebook.h>
-#include <CFileSystemStore.h>
+#include <io/CFileSystemStore.h>
 #include "Common.h"
 
 BEGIN_EVENT_TABLE(frmModule, wxWindow)

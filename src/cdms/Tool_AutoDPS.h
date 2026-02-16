@@ -18,9 +18,9 @@
 #ifndef _TOOL_AUTO_DPS_H_
 #define _TOOL_AUTO_DPS_H_
 
-#include <IDirectoryTraverser.h>
-#include <IMetaTable.h>
-#include <CRgdFile.h>
+#include <io/IDirectoryTraverser.h>
+#include <formats/IMetaTable.h>
+#include <formats/CRgdFile.h>
 #include <map>
 #include <vector>
 

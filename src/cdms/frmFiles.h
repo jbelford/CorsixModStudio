@@ -31,12 +31,12 @@
 #include "wx/wx.h"
 #endif
 // ----------------------------
-#include <IDirectoryTraverser.h>
-#include <IFileStore.h>
-#include <CModuleFile.h>
-#include <CLuaFile.h>
-#include <CLuaFile2.h>
-#include <CLuaFileCache.h>
+#include <io/IDirectoryTraverser.h>
+#include <io/IFileStore.h>
+#include <module/CModuleFile.h>
+#include <lua/CLuaFile.h>
+#include <lua/CLuaFile2.h>
+#include <lua/CLuaFileCache.h>
 #include <wx/treectrl.h>
 #include <wx/aui/auibook.h>
 #include <wx/listctrl.h>

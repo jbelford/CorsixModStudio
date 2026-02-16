@@ -31,8 +31,8 @@
 #include "wx/wx.h"
 #endif
 // ----------------------------
-#include <CUcsFile.h>
-#include <CModuleFile.h>
+#include <localization/CUcsFile.h>
+#include <module/CModuleFile.h>
 #include <list>
 
 class frmUCSSelector : public wxDialog

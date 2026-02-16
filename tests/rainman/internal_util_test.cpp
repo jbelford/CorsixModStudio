@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "Internal_Util.h"
+#include "core/Internal_Util.h"
 #include <cstring>
 
 TEST(InternalUtil, MystrdupCreatesExactCopy) {

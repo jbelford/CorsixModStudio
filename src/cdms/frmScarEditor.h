@@ -31,7 +31,7 @@
 #include "wx/wx.h"
 #endif
 // ----------------------------
-#include <IFileStore.h>
+#include <io/IFileStore.h>
 #include <wx/stc/stc.h>
 #include <list>
 #include <stack>

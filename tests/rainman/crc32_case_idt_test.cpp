@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "crc32_case_idt.h"
+#include "util/crc32_case_idt.h"
 
 TEST(Crc32CaseIdt, NullBufferReturnsZero) {
     EXPECT_EQ(crc32_case_idt(0, nullptr, 0), 0UL);

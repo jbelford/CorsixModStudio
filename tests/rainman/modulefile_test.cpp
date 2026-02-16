@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "CModuleFile.h"
-#include "Exception.h"
+#include "module/CModuleFile.h"
+#include "core/Exception.h"
 #include <cstring>
 #include <filesystem>
 #include <fstream>

@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 extern "C" {
-#include "md5.h"
+#include "util/md5.h"
 }
 #include <cstring>
 #include <cstdio>

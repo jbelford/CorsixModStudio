@@ -25,7 +25,7 @@ cmake --build --preset tidy-debug
 
 # Run clang-tidy manually (command-line)
 .\tools\run-clang-tidy.ps1                         # all Rainman sources
-.\tools\run-clang-tidy.ps1 src/rainman/CSgaFile.cpp # single file
+.\tools\run-clang-tidy.ps1 src/rainman/archive/CSgaFile.cpp # single file
 .\tools\run-clang-tidy.ps1 -Fix                    # auto-fix
 ```
 
@@ -37,17 +37,23 @@ cmake --build --preset tidy-debug
 
 This is a modernization of a ~2006 C++ modding IDE for Dawn of War / Company of Heroes. The codebase has two layers:
 
-**Rainman** (`src/rainman/`) — Static library (~25k lines) for Relic game file format I/O. No UI dependencies. This is where most active development happens (Phases 2–3). Key abstractions:
-- `IFileStore` → `CMemoryStore`, `CFileSystemStore`, `CSgaFile` — polymorphic I/O with `VOpenStream()`/`VOpenOutputStream()` returning `IStream`/`IOutputStream` objects
-- `CRgdFile`, `CUcsFile`, `CChunkyFile`, `CModuleFile` — parsers for Relic's proprietary formats
-- `CSgaCreator` — SGA archive writer
-- `CInheritTable` — Lua-based data inheritance resolution
+**Rainman** (`src/rainman/`) — Static library (~25k lines) for Relic game file format I/O. No UI dependencies. Organized into subdirectories:
+- `core/` — Exception handling, logging, callbacks, API macros, utility types
+- `io/` — `IFileStore`, `CMemoryStore`, `CFileSystemStore`, `StreamGuard` (RAII wrapper)
+- `archive/` — `CSgaFile` (SGA reader), `CSgaCreator` (SGA writer)
+- `formats/` — `CRgdFile`, `CChunkyFile`, `CRgtFile`, `CRgmFile`, `CBfxFile`, `IMetaTable`, `CRgdHashTable`
+- `lua/` — `CLuaFile`, `CLuaFile2`, `CInheritTable`, `CLuaFromRgd`, `CLuaScript`, `luax`
+- `localization/` — `CUcsFile`, `CCohUcsFile`, `CUcsTransaction`
+- `module/` — `CModuleFile`, `CDoWModule`, `CDoWFileView`, `CFileMap`
+- `util/` — `Util`, `crc32_case_idt`, `hash`, `md5`
+
+All includes use directory-qualified paths (e.g., `#include "core/Exception.h"`, `#include <io/IFileStore.h>`).
 
 **CDMS** (`src/cdms/`) — wxWidgets GUI application built on Rainman. Not yet ported (Phase 4, blocked on wxWidgets 3.2 migration).
 
-**Vendored Lua 5.0.2** (`src/rainman/lua502/`) — Corsix's patched Lua 5.0.2, built as static library `lua502`. Do not modify or upgrade — game data compatibility requires this exact version.
+**Vendored Lua 5.0.2** (`src/rainman/vendor/lua502/`) — Corsix's patched Lua 5.0.2, built as static library `lua502`. Do not modify or upgrade — game data compatibility requires this exact version.
 
-**Vendored Lua 5.1.2** (`src/rainman/lua512src/`) — Built as static library `lua512` with all public symbols renamed via `lua512_rename.h` (`lua_` → `lua51_`) to avoid linker conflicts with Lua 5.0.2. The `lua512/` directory contains only type headers for the older runtime-loading path (`LoadLibraryW` / `GetProcAddress` in `Lua51.cpp`).
+**Vendored Lua 5.1.2** (`src/rainman/vendor/lua512/`) — Built as static library `lua512` with all public symbols renamed via `lua512_rename.h` (`lua_` → `lua51_`) to avoid linker conflicts with Lua 5.0.2. Consumer code uses `lua/Lua51.h` which declares the renamed API directly.
 
 ## Key Conventions
 
@@ -61,7 +67,7 @@ pException->destroy();  // NOT delete
 Use the macros: `QUICK_THROW("msg")`, `CATCH_THROW("msg")`, `IGNORE_EXCEPTIONS`, `CHECK_MEM(new Foo)`.
 
 ### API export macro
-All public Rainman classes use `RAINMAN_API` (defined in `Api.h`). It expands to nothing in the current static-lib build (`RAINMAN_NO_EXPORTS` is defined), but must remain on class declarations for future DLL compatibility.
+All public Rainman classes use `RAINMAN_API` (defined in `core/Api.h`). It expands to nothing in the current static-lib build (`RAINMAN_NO_EXPORTS` is defined), but must remain on class declarations for future DLL compatibility.
 
 ### Naming
 - Classes: `C` prefix for concrete (`CSgaFile`), `I` prefix for interfaces (`IFileStore`)

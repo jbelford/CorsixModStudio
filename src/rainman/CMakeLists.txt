@@ -1,75 +1,75 @@
 # Lua 5.0.2 - vendored static library
 # Only the core library + standard libs (no lua/luac executables)
 add_library(lua502 STATIC
-    lua502/lapi.c
-    lua502/lcode.c
-    lua502/ldebug.c
-    lua502/ldo.c
-    lua502/ldump.c
-    lua502/lfunc.c
-    lua502/lgc.c
-    lua502/llex.c
-    lua502/lmem.c
-    lua502/lobject.c
-    lua502/lopcodes.c
-    lua502/lparser.c
-    lua502/lstate.c
-    lua502/lstring.c
-    lua502/ltable.c
-    lua502/ltm.c
-    lua502/lundump.c
-    lua502/lvm.c
-    lua502/lzio.c
+    vendor/lua502/lapi.c
+    vendor/lua502/lcode.c
+    vendor/lua502/ldebug.c
+    vendor/lua502/ldo.c
+    vendor/lua502/ldump.c
+    vendor/lua502/lfunc.c
+    vendor/lua502/lgc.c
+    vendor/lua502/llex.c
+    vendor/lua502/lmem.c
+    vendor/lua502/lobject.c
+    vendor/lua502/lopcodes.c
+    vendor/lua502/lparser.c
+    vendor/lua502/lstate.c
+    vendor/lua502/lstring.c
+    vendor/lua502/ltable.c
+    vendor/lua502/ltm.c
+    vendor/lua502/lundump.c
+    vendor/lua502/lvm.c
+    vendor/lua502/lzio.c
     # Standard libraries
-    lua502/lbaselib.c
-    lua502/ldblib.c
-    lua502/liolib.c
-    lua502/lmathlib.c
-    lua502/loadlib.c
-    lua502/lstrlib.c
-    lua502/ltablib.c
-    lua502/lauxlib.c
+    vendor/lua502/lbaselib.c
+    vendor/lua502/ldblib.c
+    vendor/lua502/liolib.c
+    vendor/lua502/lmathlib.c
+    vendor/lua502/loadlib.c
+    vendor/lua502/lstrlib.c
+    vendor/lua502/ltablib.c
+    vendor/lua502/lauxlib.c
 )
 
-target_include_directories(lua502 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/lua502)
+target_include_directories(lua502 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/vendor/lua502)
 target_compile_definitions(lua502 PRIVATE _CRT_SECURE_NO_WARNINGS)
 set_target_properties(lua502 PROPERTIES C_STANDARD 99)
 
 # Lua 5.1.2 - vendored static library with renamed symbols
 # All public symbols are prefixed lua51_ to avoid conflicts with Lua 5.0.2
 add_library(lua512 STATIC
-    lua512src/lapi.c
-    lua512src/lauxlib.c
-    lua512src/lbaselib.c
-    lua512src/lcode.c
-    lua512src/ldblib.c
-    lua512src/ldebug.c
-    lua512src/ldo.c
-    lua512src/ldump.c
-    lua512src/lfunc.c
-    lua512src/lgc.c
-    lua512src/linit.c
-    lua512src/liolib.c
-    lua512src/llex.c
-    lua512src/lmathlib.c
-    lua512src/lmem.c
-    lua512src/loadlib.c
-    lua512src/lobject.c
-    lua512src/lopcodes.c
-    lua512src/loslib.c
-    lua512src/lparser.c
-    lua512src/lstate.c
-    lua512src/lstring.c
-    lua512src/lstrlib.c
-    lua512src/ltable.c
-    lua512src/ltablib.c
-    lua512src/ltm.c
-    lua512src/lundump.c
-    lua512src/lvm.c
-    lua512src/lzio.c
+    vendor/lua512/lapi.c
+    vendor/lua512/lauxlib.c
+    vendor/lua512/lbaselib.c
+    vendor/lua512/lcode.c
+    vendor/lua512/ldblib.c
+    vendor/lua512/ldebug.c
+    vendor/lua512/ldo.c
+    vendor/lua512/ldump.c
+    vendor/lua512/lfunc.c
+    vendor/lua512/lgc.c
+    vendor/lua512/linit.c
+    vendor/lua512/liolib.c
+    vendor/lua512/llex.c
+    vendor/lua512/lmathlib.c
+    vendor/lua512/lmem.c
+    vendor/lua512/loadlib.c
+    vendor/lua512/lobject.c
+    vendor/lua512/lopcodes.c
+    vendor/lua512/loslib.c
+    vendor/lua512/lparser.c
+    vendor/lua512/lstate.c
+    vendor/lua512/lstring.c
+    vendor/lua512/lstrlib.c
+    vendor/lua512/ltable.c
+    vendor/lua512/ltablib.c
+    vendor/lua512/ltm.c
+    vendor/lua512/lundump.c
+    vendor/lua512/lvm.c
+    vendor/lua512/lzio.c
 )
 
-target_include_directories(lua512 PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lua512src)
+target_include_directories(lua512 PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/vendor/lua512)
 target_compile_definitions(lua512 PRIVATE _CRT_SECURE_NO_WARNINGS)
 set_target_properties(lua512 PROPERTIES C_STANDARD 99)
 # Force-include the rename header so all symbols get lua51_ prefix
@@ -84,7 +84,17 @@ find_package(ZLIB REQUIRED)
 find_package(unofficial-libsquish CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 
-file(GLOB RAINMAN_SOURCES "*.cpp" "*.c")
+file(GLOB RAINMAN_SOURCES
+    "*.cpp" "*.c"
+    "core/*.cpp" "core/*.c"
+    "util/*.cpp" "util/*.c"
+    "io/*.cpp" "io/*.c"
+    "localization/*.cpp" "localization/*.c"
+    "archive/*.cpp" "archive/*.c"
+    "formats/*.cpp" "formats/*.c"
+    "lua/*.cpp" "lua/*.c"
+    "module/*.cpp" "module/*.c"
+)
 # Exclude gnuc_defines.cpp on MSVC (it provides GNUC compatibility shims)
 if(MSVC)
     list(FILTER RAINMAN_SOURCES EXCLUDE REGEX "gnuc_defines\\.cpp$")
@@ -95,9 +105,8 @@ add_library(rainman STATIC ${RAINMAN_SOURCES})
 target_include_directories(rainman
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/rainman
     PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/lua502
+        ${CMAKE_CURRENT_SOURCE_DIR}/vendor/lua502
 )
 
 target_link_libraries(rainman
@@ -131,6 +140,6 @@ if(MSVC)
 endif()
 
 # Precompiled header for C++ sources (skip C files — PCH has C++ content)
-set_source_files_properties(crc32_case_idt.c hash.c md5.c
+set_source_files_properties(util/crc32_case_idt.c util/hash.c util/md5.c
     PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
 target_precompile_headers(rainman PRIVATE pch_rainman.h)

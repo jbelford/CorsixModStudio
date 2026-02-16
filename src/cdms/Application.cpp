@@ -26,7 +26,7 @@
 #include <wx/sysopt.h>
 #include <wx/image.h>
 #include "Common.h"
-#include "RainmanLog.h"
+#include "core/RainmanLog.h"
 
 IMPLEMENT_APP(CDMSApplication)
 

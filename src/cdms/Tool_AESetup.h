@@ -18,7 +18,7 @@
 #ifndef _TOOL_AE_SETUP_H_
 #define _TOOL_AE_SETUP_H_
 
-#include <CModuleFile.h>
+#include <module/CModuleFile.h>
 // For compilers that support precompilation, includes "wx/wx.h".
 #include <wx/wxprec.h>
 

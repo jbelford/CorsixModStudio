@@ -16,8 +16,8 @@
 #include <algorithm>
 
 // Core rainman headers (included by 28-31 of ~40 TUs)
-#include "Exception.h"
-#include "memdebug.h"
-#include "RainmanLog.h"
+#include "core/Exception.h"
+#include "core/memdebug.h"
+#include "core/RainmanLog.h"
 
 #endif // _PCH_RAINMAN_H_

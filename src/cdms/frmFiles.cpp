@@ -39,12 +39,12 @@ extern "C"
 
 #include <wx/progdlg.h>
 #include <wx/clipbrd.h>
-#include <CLuaFromRgd.h>
-#include <CBfxFile.h>
-#include <Util.h>
-#include <CChunkyFile.h>
+#include <lua/CLuaFromRgd.h>
+#include <formats/CBfxFile.h>
+#include <util/Util.h>
+#include <formats/CChunkyFile.h>
 #include "Common.h"
-#include <RainmanLog.h>
+#include <core/RainmanLog.h>
 
 BEGIN_EVENT_TABLE(frmFiles, wxWindow)
 EVT_SIZE(frmFiles::OnSize)

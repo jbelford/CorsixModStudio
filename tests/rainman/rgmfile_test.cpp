@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
-#include "CRgmFile.h"
-#include "CMemoryStore.h"
-#include "StreamGuard.h"
-#include "Exception.h"
+#include "formats/CRgmFile.h"
+#include "io/CMemoryStore.h"
+#include "io/StreamGuard.h"
+#include "core/Exception.h"
 #include <cstring>
 #include <vector>
 

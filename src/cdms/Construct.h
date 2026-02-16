@@ -35,8 +35,8 @@
 #include "wx/splitter.h"
 #include "frmLoading.h"
 #include "frmFiles.h"
-#include <CModuleFile.h>
-#include <CRgdHashTable.h>
+#include <module/CModuleFile.h>
+#include <formats/CRgdHashTable.h>
 
 class ConstructFrame : public wxFrame
 {

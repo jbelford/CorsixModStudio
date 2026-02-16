@@ -31,9 +31,9 @@
 #include "wx/wx.h"
 #endif
 // ----------------------------
-#include <CRgdFile.h>
-#include <IMetaTable.h>
-#include <CLuaFile2.h>
+#include <formats/CRgdFile.h>
+#include <formats/IMetaTable.h>
+#include <lua/CLuaFile2.h>
 #include <wx/propgrid/propgrid.h>
 #include <wx/splitter.h>
 #include <wx/treectrl.h>

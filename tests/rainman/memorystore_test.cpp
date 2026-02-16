@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "CMemoryStore.h"
-#include "Exception.h"
+#include "io/CMemoryStore.h"
+#include "core/Exception.h"
 #include <cstring>
 
 class MemoryStoreTest : public ::testing::Test {

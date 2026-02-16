@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
-#include "CSgaCreator.h"
-#include "CSgaFile.h"
-#include "CFileSystemStore.h"
-#include "CMemoryStore.h"
-#include "StreamGuard.h"
-#include "Exception.h"
+#include "archive/CSgaCreator.h"
+#include "archive/CSgaFile.h"
+#include "io/CFileSystemStore.h"
+#include "io/CMemoryStore.h"
+#include "io/StreamGuard.h"
+#include "core/Exception.h"
 #include <cstring>
 #include <filesystem>
 #include <fstream>

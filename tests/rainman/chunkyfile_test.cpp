@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
-#include "CChunkyFile.h"
-#include "CMemoryStore.h"
-#include "Exception.h"
+#include "formats/CChunkyFile.h"
+#include "io/CMemoryStore.h"
+#include "core/Exception.h"
 #include <cstring>
 
 class ChunkyFileTest : public ::testing::Test {

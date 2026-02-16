@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "CFileSystemStore.h"
-#include "Exception.h"
+#include "io/CFileSystemStore.h"
+#include "core/Exception.h"
 #include <cstring>
 #include <filesystem>
 #include <process.h>

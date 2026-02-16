@@ -25,14 +25,14 @@ extern "C"
 {
 #include <lua.h>
 #include <lauxlib.h>
-#include <Lua51.h>
+#include <lua/Lua51.h>
 }
 #include <wx/toolbar.h>
 #include <wx/tbarbase.h>
 #include <algorithm>
 #include "Common.h"
 #include <cstdint>
-#include <RainmanLog.h>
+#include <core/RainmanLog.h>
 
 BEGIN_EVENT_TABLE(frmScarEditor, wxWindow)
 EVT_SIZE(frmScarEditor::OnSize)
