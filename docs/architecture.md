@@ -1,6 +1,7 @@
 # CorsixModStudio — Architecture Document
 
 > **Status**: Living document — captures the as-is architecture after all migration phases (A–F) are complete.
+> **Next steps**: See [target-architecture-v2.md](target-architecture-v2.md) for the planned concurrency + MVP architecture (Phases G–L).
 > **Audience**: Contributors, AI assistants, and future maintainers.
 
 ---

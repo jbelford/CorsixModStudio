@@ -1,6 +1,7 @@
-# CorsixModStudio — Target Architecture & Refactoring Roadmap
+# CorsixModStudio — Target Architecture & Refactoring Roadmap (v1)
 
-> **Status**: Active — Phases A–F complete. Based on the as-is analysis in [architecture.md](architecture.md).
+> **Status**: ✅ Complete — Phases A–F are all done. This document is kept for historical reference.
+> **Successor**: See [target-architecture-v2.md](target-architecture-v2.md) for the next north star (concurrency + MVP).
 
 ---
 
