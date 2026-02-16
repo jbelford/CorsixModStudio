@@ -23,7 +23,9 @@ param(
     [Parameter(Position = 0, ValueFromRemainingArguments)]
     [string[]]$Files,
 
-    [switch]$Fix
+    [switch]$Fix,
+
+    [string]$LogFile
 )
 
 Set-StrictMode -Version Latest
@@ -107,10 +109,16 @@ $Files | ForEach-Object -Parallel {
             $bag.Add($line)
         }
     }
-} -ThrottleLimit 8
+} -ThrottleLimit ([Environment]::ProcessorCount)
 
 # --- Summary ----------------------------------------------------------------------
 $warnings = @($allWarnings)
+
+if ($LogFile) {
+    $warnings | Sort-Object | Set-Content $LogFile
+    Write-Host "Wrote $($warnings.Count) warning(s) to $LogFile" -ForegroundColor DarkGray
+}
+
 Write-Host "`n=== $($warnings.Count) warning(s) ===" -ForegroundColor Yellow
 
 if ($warnings.Count -gt 0) {
