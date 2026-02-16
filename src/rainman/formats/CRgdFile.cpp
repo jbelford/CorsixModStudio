@@ -190,7 +190,7 @@ void CRgdFile::Save(IFileStore::IOutputStream *pStream)
     }
 
     // Write chunks
-    for (std::vector<_RgdChunk *>::iterator itr = m_vRgdChunks.begin(); itr != m_vRgdChunks.end(); ++itr)
+    for (auto itr = m_vRgdChunks.begin(); itr != m_vRgdChunks.end(); ++itr)
     {
         if (*itr == m_pDataChunk)
         {
@@ -349,7 +349,7 @@ void CRgdFile::_RgdTableToLuaState(lua_State *L, CRgdFile::_RgdEntry *pTable)
 
     // Children
     std::vector<_RgdEntry *> *pChildren = pTable->Data.t;
-    for (std::vector<_RgdEntry *>::iterator itr = pChildren->begin(); itr != pChildren->end(); ++itr)
+    for (auto itr = pChildren->begin(); itr != pChildren->end(); ++itr)
     {
         // Add name to lua stack
         if ((**itr).sName)
@@ -467,7 +467,7 @@ void CRgdFile::_LoadLua(lua_State *L, _RgdEntry *pDest, bool bSkipThisLevelRef)
 
     case LUA_TUSERDATA:
     {
-        tLuaTableProtector *pTmp = (tLuaTableProtector *)lua_touserdata(L, -1);
+        auto *pTmp = (tLuaTableProtector *)lua_touserdata(L, -1);
         if (pTmp->iMagic != 0x7291BEEF)
             throw new CRainmanException(__FILE__, __LINE__, "Data type not supported");
         lua_pushlightuserdata(L, (void *)pTmp);
@@ -627,7 +627,7 @@ void CRgdFile::Load(IFileStore::IStream *pStream)
             auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
             break;
         }
-        _RgdChunk *pChunk = new _RgdChunk;
+        auto *pChunk = new _RgdChunk;
         if (pChunk == nullptr)
         {
             delete[] sChunkHeadTempBuffer;
@@ -832,7 +832,7 @@ void CRgdFile::_Clean()
     m_RgdHeader.iUnknown6 = 0;
     m_pDataChunk = nullptr;
 
-    for (std::vector<_RgdChunk *>::iterator itr = m_vRgdChunks.begin(); itr != m_vRgdChunks.end(); ++itr)
+    for (auto itr = m_vRgdChunks.begin(); itr != m_vRgdChunks.end(); ++itr)
     {
         if ((**itr).sString != nullptr)
         {
@@ -873,7 +873,7 @@ void CRgdFile::_CleanRgdTable(CRgdFile::_RgdEntry *pTable)
     {
         if (pTable->Data.t != nullptr)
         {
-            for (std::vector<_RgdEntry *>::iterator itr = pTable->Data.t->begin(); itr != pTable->Data.t->end(); ++itr)
+            for (auto itr = pTable->Data.t->begin(); itr != pTable->Data.t->end(); ++itr)
             {
                 switch ((**itr).Type)
                 {
@@ -908,7 +908,7 @@ void CRgdFile::_WriteRawRgdData(IFileStore::IOutputStream *pStream, _RgdEntry *p
     if (pSource->Type != DT_Table && pSource->Type != sk_TableInt)
         throw new CRainmanException(nullptr, __FILE__, __LINE__, "Source is not a table (%i)", (int)pSource->Type);
     std::vector<_RgdEntry *> vEntries;
-    for (std::vector<_RgdEntry *>::iterator itr = pSource->Data.t->begin(); itr != pSource->Data.t->end(); ++itr)
+    for (auto itr = pSource->Data.t->begin(); itr != pSource->Data.t->end(); ++itr)
     {
         if ((**itr).Type != DT_NoData)
             vEntries.push_back(*itr);
@@ -949,7 +949,7 @@ void CRgdFile::_WriteRawRgdData(IFileStore::IOutputStream *pStream, _RgdEntry *p
     CATCH_THROW("Seek error")
 
     // Write actual keys
-    for (std::vector<_RgdEntry *>::iterator itr = vEntries.begin(); itr != vEntries.end(); ++itr)
+    for (auto itr = vEntries.begin(); itr != vEntries.end(); ++itr)
     {
         // We need to pad the data so that if it is N bytes big, it falls on an N byte boundry
         // Relic does this, and it's more efficient this way
@@ -986,8 +986,7 @@ void CRgdFile::_WriteRawRgdData(IFileStore::IOutputStream *pStream, _RgdEntry *p
             unsigned long iType = (**itr).Type;
             if ((**itr).Type == DT_Table || (**itr).Type == sk_TableInt)
             {
-                for (std::vector<_RgdEntry *>::iterator itrT = (**itr).Data.t->begin(); itrT != (**itr).Data.t->end();
-                     ++itrT)
+                for (auto itrT = (**itr).Data.t->begin(); itrT != (**itr).Data.t->end(); ++itrT)
                 {
                     if ((**itrT).sName == nullptr)
                         goto not_all_numeric;
@@ -1248,7 +1247,7 @@ void CRgdFile::_ProcessRawRgdData(IFileStore::IStream *pStream, _RgdEntry *pDest
         case DT_WString:
         {
             unsigned long iStrLen = 8, iLen = 0;
-            wchar_t *sTmp = new wchar_t[iStrLen];
+            auto *sTmp = new wchar_t[iStrLen];
             if (sTmp == nullptr)
                 QUICK_THROW("Memory error")
             do
@@ -1266,7 +1265,7 @@ void CRgdFile::_ProcessRawRgdData(IFileStore::IStream *pStream, _RgdEntry *pDest
                 if (iLen == iStrLen)
                 {
                     iStrLen <<= 1;
-                    wchar_t *sNew = new wchar_t[iStrLen];
+                    auto *sNew = new wchar_t[iStrLen];
                     if (sNew == nullptr)
                     {
                         delete[] sTmp;
@@ -1749,7 +1748,7 @@ bool _SortCMetaTableChildren(CRgdFile::_RgdEntry *p1, CRgdFile::_RgdEntry *p2)
 CRgdFile::CMetaTable::CMetaTable(_RgdEntry *pData)
 {
     m_pData = pData;
-    for (std::vector<_RgdEntry *>::iterator itr = m_pData->Data.t->begin(); itr != m_pData->Data.t->end(); ++itr)
+    for (auto itr = m_pData->Data.t->begin(); itr != m_pData->Data.t->end(); ++itr)
     {
         if ((*itr) != m_pData->pExt)
             m_vecChildren.push_back(*itr);
@@ -1795,8 +1794,7 @@ void CRgdFile::CMetaTable::VSetReferenceType(IMetaNode::eDataTypes eType)
     {
         if (m_pData->pExt)
         {
-            for (std::vector<_RgdEntry *>::iterator itr = m_pData->Data.t->begin(); itr != m_pData->Data.t->end();
-                 ++itr)
+            for (auto itr = m_pData->Data.t->begin(); itr != m_pData->Data.t->end(); ++itr)
             {
                 if ((*itr) == m_pData->pExt)
                 {
@@ -1868,7 +1866,7 @@ void CRgdFile::CMetaTable::VSetReferenceWString(const wchar_t *wsValue)
 
 IMetaNode *CRgdFile::CMetaTable::VAddChild(const char *sName)
 {
-    _RgdEntry *pNew = new _RgdEntry;
+    auto *pNew = new _RgdEntry;
     if (!pNew)
         QUICK_THROW("Memory allocate error")
     pNew->Data.b = false;
@@ -1879,7 +1877,7 @@ IMetaNode *CRgdFile::CMetaTable::VAddChild(const char *sName)
         m_pData->pParentFile->m_pHashTable = new CRgdHashTable;
     pNew->sName = m_pData->pParentFile->m_pHashTable->HashToValue(
         pNew->iHash = m_pData->pParentFile->m_pHashTable->ValueToHash(sName));
-    for (std::vector<_RgdEntry *>::iterator itr = m_pData->Data.t->begin(); itr != m_pData->Data.t->end(); ++itr)
+    for (auto itr = m_pData->Data.t->begin(); itr != m_pData->Data.t->end(); ++itr)
     {
         if (((**itr).sName && pNew->sName && (stricmp((**itr).sName, pNew->sName) == 0)) ||
             (pNew->iHash == (**itr).iHash))
@@ -1899,7 +1897,7 @@ void CRgdFile::CMetaTable::VDeleteChild(unsigned long iIndex)
     if (iIndex >= VGetChildCount())
         throw new CRainmanException(nullptr, __FILE__, __LINE__, "Index %lu beyond %lu", iIndex, VGetChildCount());
     _RgdEntry *pToDelete = m_vecChildren[iIndex];
-    for (std::vector<_RgdEntry *>::iterator itr = m_pData->Data.t->begin(); itr != m_pData->Data.t->end(); ++itr)
+    for (auto itr = m_pData->Data.t->begin(); itr != m_pData->Data.t->end(); ++itr)
     {
         if ((*itr) == pToDelete)
         {
@@ -2072,7 +2070,7 @@ void CRgdFile::_ReadRainmanRgdData(IFileStore::IStream *pInput, CRgdFile::_RgdEn
         while (iDataLen)
         {
             --iDataLen;
-            _RgdEntry *pNew = new _RgdEntry;
+            auto *pNew = new _RgdEntry;
             pNew->Data.b = false;
             pNew->Type = IMetaNode::DT_Bool;
             pNew->pExt = nullptr;
@@ -2140,7 +2138,7 @@ void CRgdFile::_WriteRainmanRgdData(CMemoryStore::COutStream *pOutput, CRgdFile:
         std::vector<_RgdEntry *> *pT = pSource->Data.t;
         iL = pT->size();
         pOutput->VWrite(1, sizeof(uint32_t), &iL);
-        for (std::vector<_RgdEntry *>::iterator itr = pT->begin(); itr != pT->end(); ++itr)
+        for (auto itr = pT->begin(); itr != pT->end(); ++itr)
         {
             _WriteRainmanRgdData(pOutput, *itr);
         }

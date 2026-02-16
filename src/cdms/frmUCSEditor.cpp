@@ -56,7 +56,7 @@ void frmUCSEditor::OnClose(wxCommandEvent &event)
     if (oClose.GetVeto())
         return;
 
-    frmTabDialog *pParent = (frmTabDialog *)GetParent()->GetParent();
+    auto *pParent = (frmTabDialog *)GetParent()->GetParent();
     pParent->EndModal(wxID_OK);
 }
 
@@ -83,7 +83,7 @@ frmUCSEditor::frmUCSEditor(wxWindow *parent, wxWindowID id, bool bReadOnly, cons
     m_pResultVal = pResult;
     m_bNeedsSave = false;
     m_bReadOnly = bReadOnly;
-    wxBoxSizer *pTopSizer = new wxBoxSizer(wxVERTICAL);
+    auto *pTopSizer = new wxBoxSizer(wxVERTICAL);
 
     wxToolBar *pToolbar;
     pTopSizer->Add(pToolbar = new wxToolBar(this, -1, wxDefaultPosition, wxDefaultSize,
@@ -111,7 +111,7 @@ frmUCSEditor::frmUCSEditor(wxWindow *parent, wxWindowID id, bool bReadOnly, cons
                                                         wxPG_DEFAULT_STYLE | wxPG_HIDE_MARGIN),
                    1, wxEXPAND | wxALL, 0);
 
-    wxBoxSizer *pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
+    auto *pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
     wxWindow *pBgTemp, *pButton2;
 
     pButtonSizer->Add(m_pLoadButton = new wxButton(this, wxID_OPEN, AppStr(ucsedit_load_title)), 0, wxEXPAND | wxALL,
@@ -146,7 +146,7 @@ void frmUCSEditor::SetTabStripForLoad(wxAuiNotebook *pTabStrib)
 void frmUCSEditor::OnLoad(wxCommandEvent &event)
 {
     UNUSED(event);
-    frmUCSSelector *pSelector = new frmUCSSelector(wxT("Select UCS to get value from"));
+    auto *pSelector = new frmUCSSelector(wxT("Select UCS to get value from"));
     CUcsTool::HandleSelectorResponse(&*pSelector, m_pTabStripForLoad, m_pResultVal, true);
 }
 
@@ -167,7 +167,7 @@ void frmUCSEditor::FillFromCUcsFile(CUcsFile *pUcs, unsigned long iSelect)
     {
         throw new CModStudioException(__FILE__, __LINE__, "Unable to get UCS mappings", pE);
     }
-    for (std::map<unsigned long, wchar_t *>::iterator itr = pEntries->begin(); itr != pEntries->end(); ++itr)
+    for (auto itr = pEntries->begin(); itr != pEntries->end(); ++itr)
     {
         if (itr->second)
         {
@@ -254,7 +254,7 @@ void frmUCSEditor::OnNewEntry(wxCommandEvent &event)
                 TheConfig->Read(AppStr(config_mod_ucsrangeremember), &bDontAsk, false);
                 if (!bDontAsk)
                 {
-                    frmUCSOutOfRange *pQuestion = new frmUCSOutOfRange(AppStr(ucsrange_title), iNewID);
+                    auto *pQuestion = new frmUCSOutOfRange(AppStr(ucsrange_title), iNewID);
                     if (pQuestion->ShowModal() == wxID_NO)
                     {
                         delete pQuestion;
@@ -273,7 +273,7 @@ void frmUCSEditor::OnNewEntry(wxCommandEvent &event)
                 ErrorBoxE(pE);
                 return;
             }
-            for (std::map<unsigned long, wchar_t *>::iterator itr = pEntries->begin(); itr != pEntries->end(); ++itr)
+            for (auto itr = pEntries->begin(); itr != pEntries->end(); ++itr)
             {
                 if (itr->second)
                 {
@@ -455,7 +455,7 @@ void frmUCSEditor::OnCloseWindow(wxCloseEvent &event)
 {
     if (m_bNeedsSave)
     {
-        wxMessageDialog *dialog =
+        auto *dialog =
             new wxMessageDialog(this, wxT("UCS has been modified. Save file?"), wxT("UCS Editor"), wxYES_NO | wxCANCEL);
 
         int ans = dialog->ShowModal();

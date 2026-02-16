@@ -45,8 +45,8 @@ frmWelcome::frmWelcome(wxWindow *parent, wxWindowID id, const wxPoint &pos, cons
     m_pDonateBitmap->SetMask(new wxMask(*m_pDonateBitmap, wxColour(255, 0, 255)));
 
     SetBackgroundStyle(wxBG_STYLE_SYSTEM);
-    wxBoxSizer *pTopSizer = new wxBoxSizer(wxVERTICAL);
-    wxButton *pNewMod = new wxButton(this, IDC_NewMod, AppStr(new_mod), wxDefaultPosition, FromDIP(wxSize(150, -1)));
+    auto *pTopSizer = new wxBoxSizer(wxVERTICAL);
+    auto *pNewMod = new wxButton(this, IDC_NewMod, AppStr(new_mod), wxDefaultPosition, FromDIP(wxSize(150, -1)));
     SetBackgroundColour(pNewMod->GetBackgroundColour());
 
     srand((unsigned)time(nullptr));

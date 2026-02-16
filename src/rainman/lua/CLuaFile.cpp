@@ -40,8 +40,8 @@ extern "C"
 
 extern "C"
 {
-    typedef unsigned long int ub4; /* unsigned 4-byte quantities */
-    typedef unsigned char ub1;
+    using ub4 = unsigned long int; /* unsigned 4-byte quantities */
+    using ub1 = unsigned char;
     ub4 hash(ub1 *k, ub4 length, ub4 initval);
     ub4 hash3(ub1 *k, ub4 length, ub4 initval);
 }
@@ -71,7 +71,7 @@ struct tLuaTableProtector
     // o[k]
     static int OnIndex(lua_State *L)
     {
-        tLuaTableProtector *pThis = (tLuaTableProtector *)lua_touserdata(L, -2);
+        auto *pThis = (tLuaTableProtector *)lua_touserdata(L, -2);
         if (pThis->iOwnIt)
         {
             lua_pushlightuserdata(L, (void *)pThis);
@@ -107,17 +107,17 @@ struct tLuaTableProtector
             lua_pushvalue(L, -2);
             if (lua_type(L, -2) == LUA_TTABLE)
             {
-                tLuaTableProtector *pWrap = (tLuaTableProtector *)lua_newuserdata(L, sizeof(tLuaTableProtector));
+                auto *pWrap = (tLuaTableProtector *)lua_newuserdata(L, sizeof(tLuaTableProtector));
                 pWrap->Init(L, -3, false);
             }
             else if (lua_type(L, -2) == LUA_TUSERDATA)
             {
-                tLuaTableProtector *pExisting = (tLuaTableProtector *)lua_touserdata(L, -2);
+                auto *pExisting = (tLuaTableProtector *)lua_touserdata(L, -2);
                 if (pExisting->iMagic == 0x7291BEEF)
                 {
                     lua_pushlightuserdata(L, (void *)pExisting);
                     lua_gettable(L, LUA_REGISTRYINDEX); // swap {w -1} with {t}
-                    tLuaTableProtector *pWrap = (tLuaTableProtector *)lua_newuserdata(L, sizeof(tLuaTableProtector));
+                    auto *pWrap = (tLuaTableProtector *)lua_newuserdata(L, sizeof(tLuaTableProtector));
                     pWrap->Init(L, -2, false, nullptr);
                     lua_remove(L, -2); // remove {v} so that {w -1}
                 }
@@ -147,7 +147,7 @@ struct tLuaTableProtector
     // o[k] = v
     static int OnNewIndex(lua_State *L)
     {
-        tLuaTableProtector *pThis = (tLuaTableProtector *)lua_touserdata(L, -3);
+        auto *pThis = (tLuaTableProtector *)lua_touserdata(L, -3);
         if (pThis->iOwnIt)
         {
             lua_pushlightuserdata(L, (void *)pThis);
@@ -272,14 +272,14 @@ int CLuaFile::_Inherit(lua_State *L)
         lua_error(L);
     }
 
-    IFileStore *pFiles = (IFileStore *)lua_touserdata(L, lua_upvalueindex(1));
+    auto *pFiles = (IFileStore *)lua_touserdata(L, lua_upvalueindex(1));
     lua_pushstring(L, "m_pRefQueue");
     lua_gettable(L, LUA_REGISTRYINDEX);
-    std::deque<const char *> *pRefQueue = (std::deque<const char *> *)lua_touserdata(L, -1);
+    auto *pRefQueue = (std::deque<const char *> *)lua_touserdata(L, -1);
     lua_pop(L, 1);
     lua_pushstring(L, "m_pCache");
     lua_gettable(L, LUA_REGISTRYINDEX);
-    CLuaFileCache *pCache = (CLuaFileCache *)lua_touserdata(L, -1);
+    auto *pCache = (CLuaFileCache *)lua_touserdata(L, -1);
     lua_pop(L, 1);
 
     const char *sFile = lua_tostring(L, -1);
@@ -423,14 +423,14 @@ int CLuaFile::_InheritMeta(lua_State *L)
         lua_error(L);
     }
 
-    IFileStore *pFiles = (IFileStore *)lua_touserdata(L, lua_upvalueindex(1));
+    auto *pFiles = (IFileStore *)lua_touserdata(L, lua_upvalueindex(1));
     lua_pushstring(L, "m_pRefQueue");
     lua_gettable(L, LUA_REGISTRYINDEX);
-    std::deque<const char *> *pRefQueue = (std::deque<const char *> *)lua_touserdata(L, -1);
+    auto *pRefQueue = (std::deque<const char *> *)lua_touserdata(L, -1);
     lua_pop(L, 1);
     lua_pushstring(L, "m_pCache");
     lua_gettable(L, LUA_REGISTRYINDEX);
-    CLuaFileCache *pCache = (CLuaFileCache *)lua_touserdata(L, -1);
+    auto *pCache = (CLuaFileCache *)lua_touserdata(L, -1);
     lua_pop(L, 1);
     CLuaFile *pLua;
     const char *sFile = lua_tostring(L, -1);
@@ -584,14 +584,14 @@ int CLuaFile::_Reference(lua_State *L)
         lua_error(L);
     }
 
-    IFileStore *pFiles = (IFileStore *)lua_touserdata(L, lua_upvalueindex(1));
+    auto *pFiles = (IFileStore *)lua_touserdata(L, lua_upvalueindex(1));
     lua_pushstring(L, "m_pRefQueue");
     lua_gettable(L, LUA_REGISTRYINDEX);
-    std::deque<const char *> *pRefQueue = (std::deque<const char *> *)lua_touserdata(L, -1);
+    auto *pRefQueue = (std::deque<const char *> *)lua_touserdata(L, -1);
     lua_pop(L, 1);
     lua_pushstring(L, "m_pCache");
     lua_gettable(L, LUA_REGISTRYINDEX);
-    CLuaFileCache *pCache = (CLuaFileCache *)lua_touserdata(L, -1);
+    auto *pCache = (CLuaFileCache *)lua_touserdata(L, -1);
     lua_pop(L, 1);
     CLuaFile *pLua;
     const char *sFile = lua_tostring(L, -1);
@@ -738,7 +738,7 @@ int CLuaFile::_meta_index(lua_State *L)
     bool bIsNew = lua_toboolean(L, lua_upvalueindex(1)) ? true : false;
     lua_pushstring(L, "m_pRefQueue");
     lua_gettable(L, LUA_REGISTRYINDEX);
-    std::deque<const char *> *pRefQueue = (std::deque<const char *> *)lua_touserdata(L, -1);
+    auto *pRefQueue = (std::deque<const char *> *)lua_touserdata(L, -1);
     lua_pop(L, 1);
     // Get $dow_mod_studio
     lua_pushstring(L, "$dow_mod_studio"); // push 1: +1
@@ -783,7 +783,7 @@ int CLuaFile::_meta_index(lua_State *L)
 
 void CLuaFile::_PopMyMetaFromNodeList()
 {
-    for (_NodeList::iterator itr = m_lstGlobals.begin(); itr != m_lstGlobals.end(); ++itr)
+    for (auto itr = m_lstGlobals.begin(); itr != m_lstGlobals.end(); ++itr)
     {
         if (((*itr)->eNameType == CLuaFile::_NodeLocator::NT_String) && (strcmp((*itr)->sName, "$dow_mod_studio") == 0))
         {
@@ -949,7 +949,7 @@ void CLuaFile::Load(IFileStore::IStream *pStream, IFileStore *pFiles, const char
 
         if (strnicmp("generic", sFileName, 7) == 0)
         {
-            CModuleFile *pMod = (CModuleFile *)pFiles;
+            auto *pMod = (CModuleFile *)pFiles;
             pMod->GetFileMap()->RewriteToC("attrib", "generic");
         }
     }
@@ -983,7 +983,7 @@ void CLuaFile::Load(IFileStore::IStream *pStream, IFileStore *pFiles, const char
     lua_setmetatable(m_pLua, LUA_GLOBALSINDEX); // pop 1: -1
 
     sFileName = sFileName ? sFileName : "lua file";
-    for (std::deque<const char *>::iterator itr = m_pRefQueue->begin(); itr != m_pRefQueue->end(); ++itr)
+    for (auto itr = m_pRefQueue->begin(); itr != m_pRefQueue->end(); ++itr)
     {
         if (stricmp(*itr, sFileName) == 0)
         {
@@ -1005,7 +1005,7 @@ void CLuaFile::Load(IFileStore::IStream *pStream, IFileStore *pFiles, const char
     {
         if (strnicmp("generic", sFileName, 7) == 0)
         {
-            CModuleFile *pMod = (CModuleFile *)pFiles;
+            auto *pMod = (CModuleFile *)pFiles;
             pMod->GetFileMap()->UnrewriteToC("attrib");
         }
         delete m_pRefQueue;
@@ -1024,7 +1024,7 @@ void CLuaFile::Load(IFileStore::IStream *pStream, IFileStore *pFiles, const char
         }
         case LUA_TLIGHTUSERDATA:
         {
-            CRainmanException *pE = (CRainmanException *)lua_touserdata(m_pLua, -1);
+            auto *pE = (CRainmanException *)lua_touserdata(m_pLua, -1);
             char *sLuaError = strdup(pE->getMessage());
             _Clean();
             m_sLuaError = sLuaError;
@@ -1082,7 +1082,7 @@ void CLuaFile::_Clean()
         m_sLuaError = nullptr;
     }
 
-    for (_NodeList::iterator itr = m_lstGlobals.begin(); itr != m_lstGlobals.end(); ++itr)
+    for (auto itr = m_lstGlobals.begin(); itr != m_lstGlobals.end(); ++itr)
     {
         if ((*itr)->eNameType == _NodeLocator::NT_String)
             free((*itr)->sName);
@@ -1454,7 +1454,7 @@ CLuaFile::CMetaNode::eDataTypes CLuaFile::CMetaNode::VGetType()
 
     case LUA_TUSERDATA:
     {
-        tLuaTableProtector *pExisting = (tLuaTableProtector *)lua_touserdata(m_pLua, -1);
+        auto *pExisting = (tLuaTableProtector *)lua_touserdata(m_pLua, -1);
         if (pExisting->iMagic == 0x7291BEEF)
             eRet = DT_Table;
     }
@@ -1482,7 +1482,7 @@ float CLuaFile::CMetaNode::VGetValueFloat()
         lua_pop(m_pLua, 1);
         throw new CRainmanException(__FILE__, __LINE__, "Is not a number");
     }
-    float f = (float)lua_tonumber(m_pLua, -1);
+    auto f = (float)lua_tonumber(m_pLua, -1);
     lua_pop(m_pLua, 1);
     return f;
 }
@@ -1551,7 +1551,7 @@ IMetaNode::IMetaTable *CLuaFile::CMetaNode::VGetValueMetatable()
     }
     if (lua_isuserdata(m_pLua, -1))
     {
-        tLuaTableProtector *pExisting = (tLuaTableProtector *)lua_touserdata(m_pLua, -1);
+        auto *pExisting = (tLuaTableProtector *)lua_touserdata(m_pLua, -1);
         if (pExisting->iMagic != 0x7291BEEF)
         {
             lua_pop(m_pLua, 1);
@@ -1566,7 +1566,7 @@ IMetaNode::IMetaTable *CLuaFile::CMetaNode::VGetValueMetatable()
             throw new CRainmanException(__FILE__, __LINE__, "Not a table");
         }
     }
-    CLuaFile::CMetaTable *t = new CLuaFile::CMetaTable(m_pLua);
+    auto *t = new CLuaFile::CMetaTable(m_pLua);
     if (!t)
     {
         lua_pop(m_pLua, 1);
@@ -1654,7 +1654,7 @@ void CLuaFile::CMetaTable::_Init(const CLuaFile::_NodeLocator *pParent)
     {
         throw new CRainmanException(__FILE__, __LINE__, "Could not make node list", pE);
     }
-    for (CLuaFile::_NodeList::iterator itr = m_vecChildren.begin(); itr != m_vecChildren.end(); ++itr)
+    for (auto itr = m_vecChildren.begin(); itr != m_vecChildren.end(); ++itr)
     {
         if (((*itr)->eNameType == CLuaFile::_NodeLocator::NT_String) && (strcmp((*itr)->sName, "$dow_mod_studio") == 0))
         {
@@ -1681,7 +1681,7 @@ void CLuaFile::CMetaTable::_Init(const CLuaFile::_NodeLocator *pParent)
 
 CLuaFile::CMetaTable::~CMetaTable()
 {
-    for (_NodeList::iterator itr = m_vecChildren.begin(); itr != m_vecChildren.end(); ++itr)
+    for (auto itr = m_vecChildren.begin(); itr != m_vecChildren.end(); ++itr)
     {
         if ((*itr)->eNameType == _NodeLocator::NT_String)
             free((*itr)->sName);

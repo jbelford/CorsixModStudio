@@ -60,8 +60,7 @@ bool CRgmFile::_TSETPrune(CChunkyFile::CChunk *pChunk, std::vector<std::pair<boo
             {
                 const char *sTextureName = pChunk->GetDescriptor();
 
-                for (std::vector<std::pair<bool, const char *>>::iterator itr = vUsedTextures.begin();
-                     itr != vUsedTextures.end(); ++itr)
+                for (auto itr = vUsedTextures.begin(); itr != vUsedTextures.end(); ++itr)
                 {
                     if (stricmp(sTextureName, itr->second) == 0)
                     {
@@ -101,16 +100,15 @@ bool CRgmFile::_TSETPrune(CChunkyFile::CChunk *pChunk, std::vector<std::pair<boo
 void CRgmFile::Save(IFileStore::IOutputStream *pStream)
 {
     RAINMAN_LOG_INFO("CRgmFile::Save() — writing RGM model file");
-    for (std::vector<CMaterial *>::iterator itr = m_vMaterials.begin(); itr != m_vMaterials.end(); ++itr)
+    for (auto itr = m_vMaterials.begin(); itr != m_vMaterials.end(); ++itr)
     {
         (**itr)._WriteChunk();
     }
 
     std::vector<std::pair<bool, const char *>> vUsedTextures;
-    for (std::vector<CMaterial *>::iterator itr = m_vMaterials.begin(); itr != m_vMaterials.end(); ++itr)
+    for (auto itr = m_vMaterials.begin(); itr != m_vMaterials.end(); ++itr)
     {
-        for (std::vector<CMaterial::CVariable *>::iterator itr2 = (**itr).m_vVariables.begin();
-             itr2 != (**itr).m_vVariables.end(); ++itr2)
+        for (auto itr2 = (**itr).m_vVariables.begin(); itr2 != (**itr).m_vVariables.end(); ++itr2)
         {
             if ((**itr2).GetType() == CMaterial::CVariable::VT_Text)
             {
@@ -135,13 +133,12 @@ void CRgmFile::Save(IFileStore::IOutputStream *pStream)
                         ;
                     else if (*sVal == 0 && sVal[-1] != '\\')
                     {
-                        for (std::vector<std::pair<bool, const char *>>::iterator itr3 = vUsedTextures.begin();
-                             itr3 != vUsedTextures.end(); ++itr3)
+                        for (auto itr3 = vUsedTextures.begin(); itr3 != vUsedTextures.end(); ++itr3)
                         {
                             if (stricmp(itr3->second, sValCopy) == 0)
                                 goto already_got_tex;
                         }
-                        vUsedTextures.push_back(std::make_pair(false, sValCopy));
+                        vUsedTextures.emplace_back(false, sValCopy);
                     already_got_tex:;
                     }
                     else
@@ -194,8 +191,7 @@ void CRgmFile::Save(IFileStore::IOutputStream *pStream)
             }
         }
 
-        for (std::vector<std::pair<bool, const char *>>::iterator itr = vUsedTextures.begin();
-             itr != vUsedTextures.end(); ++itr)
+        for (auto itr = vUsedTextures.begin(); itr != vUsedTextures.end(); ++itr)
         {
             if (!itr->first)
             {
@@ -220,7 +216,7 @@ void CRgmFile::Save(IFileStore::IOutputStream *pStream)
 
         if (pINFO)
         {
-            unsigned short *pVal = (unsigned short *)pINFO->GetDataRaw();
+            auto *pVal = (unsigned short *)pINFO->GetDataRaw();
             ++pVal;
             *pVal = (unsigned short)iTSETCount;
         }
@@ -246,7 +242,7 @@ void CRgmFile::CMaterial::_WriteChunk()
             try
             {
                 CMemoryStore::COutStream *pData = CMemoryStore::OpenOutputStreamExt();
-                unsigned long iL = (unsigned long)strlen(m_sDxName);
+                auto iL = (unsigned long)strlen(m_sDxName);
                 pData->VWrite(1, sizeof(uint32_t), &iL);
                 pData->VWrite(iL, 1, m_sDxName);
                 pChild->SetData(pData);
@@ -260,7 +256,7 @@ void CRgmFile::CMaterial::_WriteChunk()
         }
     }
 
-    for (std::vector<CVariable *>::iterator itr = m_vVariables.begin(); itr != m_vVariables.end(); ++itr)
+    for (auto itr = m_vVariables.begin(); itr != m_vVariables.end(); ++itr)
     {
         (**itr)._WriteChunk();
     }
@@ -357,7 +353,7 @@ void CRgmFile::CMaterial::_Free()
 {
     delete[] m_sName;
     delete[] m_sDxName;
-    for (std::vector<CVariable *>::iterator itr = m_vVariables.begin(); itr != m_vVariables.end(); ++itr)
+    for (auto itr = m_vVariables.begin(); itr != m_vVariables.end(); ++itr)
     {
         delete *itr;
     }
@@ -573,7 +569,7 @@ void CRgmFile::CMaterial::CVariable::_Free()
 
 void CRgmFile::_Free()
 {
-    for (std::vector<CMaterial *>::iterator itr = m_vMaterials.begin(); itr != m_vMaterials.end(); ++itr)
+    for (auto itr = m_vMaterials.begin(); itr != m_vMaterials.end(); ++itr)
     {
         delete *itr;
     }

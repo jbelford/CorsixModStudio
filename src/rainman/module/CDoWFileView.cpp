@@ -151,8 +151,7 @@ bool CDoWFileView::_SortFiles(CDoWFileView::_VirtFile *a, CDoWFileView::_VirtFil
 
 void CDoWFileView::_EnsureOutputFolder(_VirtFolder *pFolder, unsigned long *pSourceID)
 {
-    for (std::map<unsigned long, char *>::iterator itr = pFolder->mapSourceFolderNames.begin();
-         itr != pFolder->mapSourceFolderNames.end(); ++itr)
+    for (auto itr = pFolder->mapSourceFolderNames.begin(); itr != pFolder->mapSourceFolderNames.end(); ++itr)
     {
         if (m_vSourceFlags[itr->first].second)
         {
@@ -379,7 +378,7 @@ IDirectoryTraverser::IIterator *CDoWFileView::CIterator::VOpenSubDir()
 {
     if (m_iWhat != 1)
         throw new CRainmanException(__FILE__, __LINE__, "Can only open directories");
-    CIterator *pItr = new CIterator(*m_FoldIter, m_pStore);
+    auto *pItr = new CIterator(*m_FoldIter, m_pStore);
     if (pItr == nullptr)
         throw new CRainmanException(__FILE__, __LINE__, "Memory allocate error");
     if (pItr && pItr->m_iWhat == 0)
@@ -572,8 +571,7 @@ IDirectoryTraverser::IIterator *CDoWFileView::VIterate(const char *sPath)
     while (iPartLength)
     {
         bool bFound = false;
-        for (std::vector<_VirtFolder *>::iterator itr = pFolder->vChildFolders.begin();
-             itr != pFolder->vChildFolders.end(); ++itr)
+        for (auto itr = pFolder->vChildFolders.begin(); itr != pFolder->vChildFolders.end(); ++itr)
         {
             if (strlen((**itr).sName) == iPartLength && strnicmp((**itr).sName, sPath, iPartLength) == 0)
             {
@@ -590,7 +588,7 @@ IDirectoryTraverser::IIterator *CDoWFileView::VIterate(const char *sPath)
         iPartLength = (unsigned long)(sSlashLoc ? sSlashLoc - sPath : strlen(sPath));
     }
 
-    CIterator *pItr = new CIterator(pFolder, (CDoWFileView *)this);
+    auto *pItr = new CIterator(pFolder, (CDoWFileView *)this);
     if (pItr && pItr->VGetType() == IDirectoryTraverser::IIterator::T_Nothing)
     {
         delete pItr;
@@ -612,13 +610,13 @@ void CDoWFileView::AddFileSource(IDirectoryTraverser *pTrav, IDirectoryTraverser
     if (pIOStore == nullptr)
         throw new CRainmanException(__FILE__, __LINE__, "Null pIOStore");
 
-    unsigned long iModID = static_cast<unsigned long>(m_vModNames.size());
-    unsigned long iSourceID = static_cast<unsigned long>(m_vSourceNames.size());
+    auto iModID = static_cast<unsigned long>(m_vModNames.size());
+    auto iSourceID = static_cast<unsigned long>(m_vSourceNames.size());
 
     m_vModNames.push_back(strdup(sMod));
     m_vSourceNames.push_back(strdup(sSourceType));
     m_vSourceStores.push_back(pIOStore);
-    m_vSourceFlags.push_back(std::make_pair(bCanWrite, bIsOutput));
+    m_vSourceFlags.emplace_back(bCanWrite, bIsOutput);
     m_vSourceDirItrs.push_back(pTrav);
 
     try
@@ -651,14 +649,14 @@ void CDoWFileView::_Clean()
 {
     _CleanFolder(&m_RootFolder);
 
-    for (std::vector<char *>::iterator itr = m_vModNames.begin(); itr != m_vModNames.end(); ++itr)
+    for (auto itr = m_vModNames.begin(); itr != m_vModNames.end(); ++itr)
     {
         if (*itr)
             free(*itr);
     }
     m_vModNames.clear();
 
-    for (std::vector<char *>::iterator itr = m_vSourceNames.begin(); itr != m_vSourceNames.end(); ++itr)
+    for (auto itr = m_vSourceNames.begin(); itr != m_vSourceNames.end(); ++itr)
     {
         if (*itr)
             free(*itr);
@@ -671,8 +669,7 @@ void CDoWFileView::_Clean()
 void CDoWFileView::_CleanFolder(_VirtFolder *pFolder)
 {
     // Clean source folder names
-    for (std::map<unsigned long, char *>::iterator itr = pFolder->mapSourceFolderNames.begin();
-         itr != pFolder->mapSourceFolderNames.end(); ++itr)
+    for (auto itr = pFolder->mapSourceFolderNames.begin(); itr != pFolder->mapSourceFolderNames.end(); ++itr)
     {
         if (itr->second)
             free(itr->second);
@@ -680,8 +677,7 @@ void CDoWFileView::_CleanFolder(_VirtFolder *pFolder)
     pFolder->mapSourceFolderNames.clear();
 
     // Clean files
-    for (std::vector<_VirtFile *>::iterator itr = pFolder->vChildFiles.begin(); itr != pFolder->vChildFiles.end();
-         ++itr)
+    for (auto itr = pFolder->vChildFiles.begin(); itr != pFolder->vChildFiles.end(); ++itr)
     {
         if ((**itr).sName)
             free((**itr).sName);
@@ -690,8 +686,7 @@ void CDoWFileView::_CleanFolder(_VirtFolder *pFolder)
     pFolder->vChildFiles.clear();
 
     // Clean sub-folders
-    for (std::vector<_VirtFolder *>::iterator itr = pFolder->vChildFolders.begin(); itr != pFolder->vChildFolders.end();
-         ++itr)
+    for (auto itr = pFolder->vChildFolders.begin(); itr != pFolder->vChildFolders.end(); ++itr)
     {
         if ((**itr).sName)
             free((**itr).sName);
@@ -720,8 +715,8 @@ void CDoWFileView::_RawMapFolder(unsigned long iModID, unsigned long iSourceID,
         if (pSourceDirectory->VGetType() == IDirectoryTraverser::IIterator::T_File)
         {
             _VirtFile *pOldFile = nullptr;
-            for (std::vector<_VirtFile *>::iterator itr = pDestination->vChildFiles.begin();
-                 !pOldFile && itr != pDestination->vChildFiles.end(); ++itr)
+            for (auto itr = pDestination->vChildFiles.begin(); !pOldFile && itr != pDestination->vChildFiles.end();
+                 ++itr)
             {
                 if (stricmp((**itr).sName, pSourceDirectory->VGetName()) == 0)
                 {
@@ -731,7 +726,7 @@ void CDoWFileView::_RawMapFolder(unsigned long iModID, unsigned long iSourceID,
             }
             if (!pOldFile)
             {
-                _VirtFile *pNewFile = new _VirtFile;
+                auto *pNewFile = new _VirtFile;
                 if (pNewFile == nullptr)
                     throw new CRainmanException(__FILE__, __LINE__, "Memory allocation error");
                 if (pNewFile->bInReqMod = bIsReqMod)
@@ -756,15 +751,15 @@ void CDoWFileView::_RawMapFolder(unsigned long iModID, unsigned long iSourceID,
         else
         {
             _VirtFolder *pTarget = nullptr;
-            for (std::vector<_VirtFolder *>::iterator itr = pDestination->vChildFolders.begin();
-                 !pTarget && itr != pDestination->vChildFolders.end(); ++itr)
+            for (auto itr = pDestination->vChildFolders.begin(); !pTarget && itr != pDestination->vChildFolders.end();
+                 ++itr)
             {
                 if (stricmp((**itr).sName, pSourceDirectory->VGetName()) == 0)
                     pTarget = *itr;
             }
             if (!pTarget)
             {
-                _VirtFolder *pNewFolder = new _VirtFolder;
+                auto *pNewFolder = new _VirtFolder;
                 if (pNewFolder == nullptr)
                     throw new CRainmanException(__FILE__, __LINE__, "Memory allocation error");
                 pNewFolder->pParent = pDestination;

@@ -45,7 +45,7 @@ frmModule::frmModule(wxWindow *parent, wxWindowID id, const wxPoint &pos, const 
     : wxWindow(parent, id, pos, size)
 {
     SetBackgroundStyle(wxBG_STYLE_SYSTEM);
-    wxBoxSizer *pTopSizer = new wxBoxSizer(wxVERTICAL);
+    auto *pTopSizer = new wxBoxSizer(wxVERTICAL);
     wxNotebook *pTabs;
 
     pTopSizer->Add(pTabs = new wxNotebook(this, -1, wxPoint(0, 0)), 1, wxEXPAND | wxALL, 3);
@@ -71,7 +71,7 @@ frmModule::pgMain::pgMain(wxWindow *parent, wxWindowID id, const wxPoint &pos, c
 {
     m_bDoneInit = false;
     SetBackgroundStyle(wxBG_STYLE_SYSTEM);
-    wxFlexGridSizer *pTopSizer = new wxFlexGridSizer(2);
+    auto *pTopSizer = new wxFlexGridSizer(2);
     pTopSizer->SetFlexibleDirection(wxHORIZONTAL);
     pTopSizer->AddGrowableCol(1, 1);
     wxStaticText *pBgTemp;
@@ -112,7 +112,7 @@ frmModule::pgMain::pgMain(wxWindow *parent, wxWindowID id, const wxPoint &pos, c
     pTopSizer->Add(SBT(new wxTextCtrl(this, IDC_UIName, modSvc.GetUiName()), AppStr(mod_uiname_help)), 0,
                    wxALL | wxEXPAND, 3);
 
-    wxBoxSizer *pVersionSizer = new wxBoxSizer(wxHORIZONTAL);
+    auto *pVersionSizer = new wxBoxSizer(wxHORIZONTAL);
     wchar_t sNumBuffer[34];
     _ltow(modSvc.GetVersionMajor(), sNumBuffer, 10);
     pVersionSizer->Add(SBT(new wxTextCtrl(this, IDC_VersionMajor, sNumBuffer), AppStr(mod_version_help)), 1,
@@ -262,7 +262,7 @@ frmModule::pgDataFolders::pgDataFolders(wxWindow *parent, wxWindowID id, const w
     : wxWindow(parent, id, pos, size)
 {
     SetBackgroundStyle(wxBG_STYLE_SYSTEM);
-    wxBoxSizer *pTopSizer = new wxBoxSizer(wxVERTICAL);
+    auto *pTopSizer = new wxBoxSizer(wxVERTICAL);
     wxStaticText *pBgTemp;
 
     wxArrayString aActiveValues;
@@ -271,7 +271,7 @@ frmModule::pgDataFolders::pgDataFolders(wxWindow *parent, wxWindowID id, const w
     pTopSizer->Add(pBgTemp = new wxStaticText(this, -1, sTitle), 0, wxALIGN_LEFT | wxALL, 3);
     pTopSizer->Add(new wxListBox(this, -1, wxDefaultPosition, wxDefaultSize, aActiveValues), 1, wxALL | wxEXPAND, 3);
 
-    wxBoxSizer *pButtons = new wxBoxSizer(wxHORIZONTAL);
+    auto *pButtons = new wxBoxSizer(wxHORIZONTAL);
     pButtons->Add(SBT(new wxBitmapButton(this, -1, wxIcon(wxT("#111"), wxBITMAP_TYPE_ICO_RESOURCE, 16, 16)),
                       AppStrS(mod_add_a_new, sItemName)),
                   0, wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL | wxALL, 3);

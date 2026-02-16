@@ -38,7 +38,7 @@ frmUCSToDAT::frmUCSToDAT()
                wxFRAME_FLOAT_ON_PARENT | wxFRAME_TOOL_WINDOW | wxCAPTION)
 {
     CentreOnParent();
-    wxFlexGridSizer *pTopSizer = new wxFlexGridSizer(3);
+    auto *pTopSizer = new wxFlexGridSizer(3);
     pTopSizer->SetFlexibleDirection(wxHORIZONTAL);
     pTopSizer->AddGrowableCol(1, 1);
 
@@ -67,7 +67,7 @@ frmUCSToDAT::frmUCSToDAT()
     m_pRangeEnd->SetValidator(oValidator);
     pTopSizer->AddSpacer(0);
 
-    wxBoxSizer *pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
+    auto *pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
     pButtonSizer->Add(new wxButton(this, IDC_Cancel, AppStr(newmod_cancel)), 0, wxEXPAND | wxALL, 3);
     pButtonSizer->Add(new wxButton(this, IDC_Go, AppStr(newmod_create)), 0, wxEXPAND | wxALL, 3);
 
@@ -111,7 +111,7 @@ void frmUCSToDAT::OnGoClick(wxCommandEvent &event)
         return;
     }
 
-    frmMessage *pMsg = new frmMessage(wxT("IDB_TOOL_AESETUP"), AppStr(aesetup_message));
+    auto *pMsg = new frmMessage(wxT("IDB_TOOL_AESETUP"), AppStr(aesetup_message));
     pMsg->Show(true);
     wxSafeYield(pMsg);
 

@@ -32,8 +32,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 extern "C"
 {
-    typedef unsigned long int ub4; /* unsigned 4-byte quantities */
-    typedef unsigned char ub1;
+    using ub4 = unsigned long int; /* unsigned 4-byte quantities */
+    using ub1 = unsigned char;
     ub4 hash(ub1 *k, ub4 length, ub4 initval);
     ub4 hash3(ub1 *k, ub4 length, ub4 initval);
 }
@@ -424,7 +424,7 @@ IMetaNode::IMetaTable *MakeLuaFromRgdAndNil_LoadTable(IMetaNode::IMetaTable *pSr
             {
                 if (bIsLuaStream)
                 {
-                    CLuaFile *pLua = new CLuaFile;
+                    auto *pLua = new CLuaFile;
                     try
                     {
                         pLua->Load(pInStream.get(), pStore, sFullpath);
@@ -463,7 +463,7 @@ IMetaNode::IMetaTable *MakeLuaFromRgdAndNil_LoadTable(IMetaNode::IMetaTable *pSr
                 }
                 else
                 {
-                    CRgdFile *pRgd = new CRgdFile;
+                    auto *pRgd = new CRgdFile;
                     try
                     {
                         pRgd->SetHashTable(pHashTable);
@@ -709,8 +709,7 @@ void MakeLuaFromRgdAndNil_MakeNil_OnFile_Recurse(IMetaNode *pNode, MakeLuaFromRg
 {
     IMetaNode::IMetaTable *pTable = nullptr;
     MakeLuaFromRgdAndNil_Nil_Value *pVal = nullptr;
-    for (std::vector<MakeLuaFromRgdAndNil_Nil_Value *>::iterator itr = pOurNode->vValues.begin();
-         itr != pOurNode->vValues.end(); ++itr)
+    for (auto itr = pOurNode->vValues.begin(); itr != pOurNode->vValues.end(); ++itr)
     {
         if ((**itr).IsEqual(pNode, &pTable))
         {
@@ -1187,7 +1186,7 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
         for (unsigned long i = 0; i < iNRgd; ++i)
         {
             // Add all of the RGD's table's children to the node list
-            MakeLuaFromRgdAndNil_TableEntry *pEntry = new MakeLuaFromRgdAndNil_TableEntry;
+            auto *pEntry = new MakeLuaFromRgdAndNil_TableEntry;
             try
             {
                 pEntry->pRgdNode = pTableRgd->VGetChild(i);
@@ -1245,8 +1244,7 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
 
             bool bDone = false;
             // Look for an entry in the list with the same name/hash
-            for (std::vector<MakeLuaFromRgdAndNil_TableEntry *>::iterator itr = m_vTableEntries.begin();
-                 itr != m_vTableEntries.end(); ++itr)
+            for (auto itr = m_vTableEntries.begin(); itr != m_vTableEntries.end(); ++itr)
             {
                 if ((**itr).iHash == iHash)
                 {
@@ -1260,7 +1258,7 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
             if (!bDone)
             {
                 // Add a new entry if one doesn't already exist
-                MakeLuaFromRgdAndNil_TableEntry *pEntry = new MakeLuaFromRgdAndNil_TableEntry;
+                auto *pEntry = new MakeLuaFromRgdAndNil_TableEntry;
                 pEntry->pInhNode = pNode;
                 pEntry->iHash = iHash;
                 pEntry->sName = strdup(sName);
@@ -1268,8 +1266,7 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
             }
         }
         // Print all of the entries in the list
-        for (std::vector<MakeLuaFromRgdAndNil_TableEntry *>::iterator itr = m_vTableEntries.begin();
-             itr != m_vTableEntries.end(); ++itr)
+        for (auto itr = m_vTableEntries.begin(); itr != m_vTableEntries.end(); ++itr)
         {
             char *sNewPrefix = new char[strlen(sPrefix) + 5 + ((**itr).sName ? strlen((**itr).sName) : 10)];
             strcpy(sNewPrefix, sPrefix);

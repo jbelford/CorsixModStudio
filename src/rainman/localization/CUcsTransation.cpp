@@ -27,7 +27,7 @@ CUcsTransaction::~CUcsTransaction() { _Clean(); }
 
 void CUcsTransaction::Save(const char *sFile)
 {
-    for (std::map<unsigned long, wchar_t *>::iterator itr = m_mapValues.begin(); itr != m_mapValues.end(); ++itr)
+    for (auto itr = m_mapValues.begin(); itr != m_mapValues.end(); ++itr)
     {
         m_pRawFile->ReplaceString(itr->first, itr->second);
     }
@@ -49,7 +49,7 @@ std::map<unsigned long, wchar_t *> *CUcsTransaction::GetRawMap()
     m_mapCombinationValues.clear();
     m_mapCombinationValues = *m_pRawFile->GetRawMap();
 
-    for (std::map<unsigned long, wchar_t *>::iterator itr = m_mapValues.begin(); itr != m_mapValues.end(); ++itr)
+    for (auto itr = m_mapValues.begin(); itr != m_mapValues.end(); ++itr)
     {
         m_mapCombinationValues[itr->first] = itr->second;
     }

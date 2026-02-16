@@ -71,7 +71,7 @@ void CUcsFile::Save(const char *sFile)
         throw new CRainmanException(nullptr, __FILE__, __LINE__, "Cannot open file \'%s\' in mode \'wb\'", sFile);
     unsigned short iHeader = 0xFEFF;
     fwrite(&iHeader, 2, 1, f);
-    for (std::map<unsigned long, wchar_t *>::iterator itr = m_mapValues.begin(); itr != m_mapValues.end(); ++itr)
+    for (auto itr = m_mapValues.begin(); itr != m_mapValues.end(); ++itr)
     {
         if (itr->second)
         {
@@ -102,7 +102,7 @@ const std::map<unsigned long, wchar_t *> *CUcsFile::GetRawMap() const { return &
 
 static wchar_t *mywcsdup(const char *sStr)
 {
-    wchar_t *s = new wchar_t[strlen(sStr) + 1];
+    auto *s = new wchar_t[strlen(sStr) + 1];
     if (s == nullptr)
         return nullptr;
     for (size_t i = 0; i <= strlen(sStr); ++i)
@@ -116,7 +116,7 @@ static wchar_t *mywcsdup(const wchar_t *sStr)
         Equivalent to wcsdup(), except uses "new" instead of "malloc"
         (and thus "delete" instead of "free")
     */
-    wchar_t *s = new wchar_t[wcslen(sStr) + 1];
+    auto *s = new wchar_t[wcslen(sStr) + 1];
     if (s == nullptr)
         return nullptr;
     wcscpy(s, sStr);
@@ -152,7 +152,7 @@ static wchar_t *readwideline(IFileStore::IStream *pStream, unsigned long iInitSi
         {
             if (++iWordsRead >= (iInitSize - 1)) // _shouldn't_ be '>' but you never know...
             {
-                wchar_t *sTmp = new wchar_t[iInitSize <<= 1];
+                auto *sTmp = new wchar_t[iInitSize <<= 1];
                 if (sTmp == nullptr)
                 {
                     delete[] sBuffer;
@@ -344,7 +344,7 @@ void CUcsFile::ReplaceString(unsigned long iID, wchar_t *pString)
 
 void CUcsFile::_Clean()
 {
-    for (std::map<unsigned long, wchar_t *>::iterator itr = m_mapValues.begin(); itr != m_mapValues.end(); ++itr)
+    for (auto itr = m_mapValues.begin(); itr != m_mapValues.end(); ++itr)
         delete[] itr->second;
     m_mapValues.erase(m_mapValues.begin(), m_mapValues.end());
 }

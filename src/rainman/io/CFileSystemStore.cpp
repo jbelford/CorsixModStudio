@@ -30,8 +30,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 CFileSystemStore::CFileSystemStore()
 {
 #ifdef EXTEND_FILESTORE_WITH_TRAVERSE
-    for (int i = 0; i < 26; ++i)
-        m_bDrivePresent[i] = false;
+    for (bool &i : m_bDrivePresent)
+        i = false;
 #endif
 }
 
@@ -71,7 +71,7 @@ IFileStore::IStream *CFileSystemStore::VOpenStream(const char *sFile)
                                     strerror(errno), errno);
     }
 
-    CStream *pStream = new CStream();
+    auto *pStream = new CStream();
     if (pStream == nullptr)
     {
         fclose(fFile);
@@ -95,7 +95,7 @@ IFileStore::IStream *CFileSystemStore::OpenStreamW(const wchar_t *sFile)
         throw new CRainmanException(nullptr, __FILE__, __LINE__, "Could not open \'%S\'", sFile);
     }
 
-    CStream *pStream = new CStream();
+    auto *pStream = new CStream();
     if (pStream == nullptr)
     {
         fclose(fFile);
@@ -173,7 +173,7 @@ IFileStore::IOutputStream *CFileSystemStore::OpenOutputStreamW(const wchar_t *sF
     }
     if (fFile == nullptr)
         throw new CRainmanException(nullptr, __FILE__, __LINE__, "Could not open \'%S\'", sFile);
-    COutputStream *pStream = new COutputStream();
+    auto *pStream = new COutputStream();
     if (pStream == nullptr)
     {
         fclose(fFile);
@@ -209,7 +209,7 @@ IFileStore::IOutputStream *CFileSystemStore::VOpenOutputStream(const char *sFile
     }
     if (fFile == nullptr)
         throw new CRainmanException(nullptr, __FILE__, __LINE__, "Could not open \'%s\' for writing", sFile);
-    COutputStream *pStream = new COutputStream();
+    auto *pStream = new COutputStream();
     if (pStream == nullptr)
     {
         fclose(fFile);
@@ -253,7 +253,7 @@ void CFileSystemStore::COutputStream::VRead(unsigned long iItemCount, unsigned l
         throw new CRainmanException(__FILE__, __LINE__, "No file associated with stream");
     unsigned long iByteCount = iItemCount * iItemSize;
 
-    unsigned char *pTempDest = new unsigned char[iByteCount];
+    auto *pTempDest = new unsigned char[iByteCount];
     if (pTempDest == nullptr)
         throw new CRainmanException(__FILE__, __LINE__, "Failed to allocate memory");
 
@@ -313,7 +313,7 @@ void CFileSystemStore::CStream::VRead(unsigned long iItemCount, unsigned long iI
         throw new CRainmanException(__FILE__, __LINE__, "No file associated with stream");
     unsigned long iByteCount = iItemCount * iItemSize;
 
-    unsigned char *pTempDest = new unsigned char[iByteCount];
+    auto *pTempDest = new unsigned char[iByteCount];
     if (pTempDest == nullptr)
         throw new CRainmanException(__FILE__, __LINE__, "Failed to allocate memory");
 
@@ -381,7 +381,7 @@ static char *mystrdup(const char *sStr)
 
 static wchar_t *mystrdup(const wchar_t *sStr)
 {
-    wchar_t *s = new wchar_t[wcslen(sStr) + 1];
+    auto *s = new wchar_t[wcslen(sStr) + 1];
     if (s == nullptr)
         return nullptr;
     wcscpy(s, sStr);

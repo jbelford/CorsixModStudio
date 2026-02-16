@@ -23,8 +23,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 extern "C"
 {
-    typedef unsigned long int ub4; /* unsigned 4-byte quantities */
-    typedef unsigned char ub1;
+    using ub4 = unsigned long int; /* unsigned 4-byte quantities */
+    using ub1 = unsigned char;
     ub4 hash(ub1 *k, ub4 length, ub4 initval);
     ub4 hash3(ub1 *k, ub4 length, ub4 initval);
 }
@@ -56,8 +56,7 @@ void CRgdHashTable::New() { _Clean(); }
 
 void CRgdHashTable::FillUnknownList(std::vector<unsigned long> &oList)
 {
-    for (std::map<unsigned long, CRgdHashTable::_Value>::iterator itr = m_mHashTable.begin(); itr != m_mHashTable.end();
-         ++itr)
+    for (auto itr = m_mHashTable.begin(); itr != m_mHashTable.end(); ++itr)
     {
         if (itr->second.sString == nullptr)
             oList.push_back(itr->first);
@@ -278,7 +277,7 @@ void CRgdHashTable::SaveCustomKeys(const char *sFile)
 
     fputs("#RGD_DIC\n# This dictionary is generated from any keys that are \'discovered\'\n", fFile);
 
-    for (std::map<unsigned long, _Value>::iterator itr = m_mHashTable.begin(); itr != m_mHashTable.end(); ++itr)
+    for (auto itr = m_mHashTable.begin(); itr != m_mHashTable.end(); ++itr)
     {
         if (itr->second.bCustom)
         {
@@ -437,7 +436,7 @@ CRgdHashTable::_Value::_Value()
 
 void CRgdHashTable::_Clean()
 {
-    for (std::map<unsigned long, _Value>::iterator itr = m_mHashTable.begin(); itr != m_mHashTable.end(); ++itr)
+    for (auto itr = m_mHashTable.begin(); itr != m_mHashTable.end(); ++itr)
     {
         if (itr->second.sString)
             delete[] itr->second.sString;

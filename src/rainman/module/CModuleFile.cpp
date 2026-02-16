@@ -376,7 +376,7 @@ void CModuleFile::_Clean()
 
     m_pParentModule = nullptr;
 
-    for (std::vector<CFolderHandler *>::iterator itr = m_vFolders.begin(); itr != m_vFolders.end(); ++itr)
+    for (auto itr = m_vFolders.begin(); itr != m_vFolders.end(); ++itr)
     {
         if ((**itr).m_sName)
             free((**itr).m_sName);
@@ -384,7 +384,7 @@ void CModuleFile::_Clean()
     }
     m_vFolders.clear();
 
-    for (std::vector<CArchiveHandler *>::iterator itr = m_vArchives.begin(); itr != m_vArchives.end(); ++itr)
+    for (auto itr = m_vArchives.begin(); itr != m_vArchives.end(); ++itr)
     {
         if ((**itr).m_sName)
             free((**itr).m_sName);
@@ -392,7 +392,7 @@ void CModuleFile::_Clean()
     }
     m_vArchives.clear();
 
-    for (std::vector<CRequiredHandler *>::iterator itr = m_vRequireds.begin(); itr != m_vRequireds.end(); ++itr)
+    for (auto itr = m_vRequireds.begin(); itr != m_vRequireds.end(); ++itr)
     {
         if ((**itr).m_sName)
             free((**itr).m_sName);
@@ -400,7 +400,7 @@ void CModuleFile::_Clean()
     }
     m_vRequireds.clear();
 
-    for (std::vector<CCompatibleHandler *>::iterator itr = m_vCompatibles.begin(); itr != m_vCompatibles.end(); ++itr)
+    for (auto itr = m_vCompatibles.begin(); itr != m_vCompatibles.end(); ++itr)
     {
         if ((**itr).m_sName)
             free((**itr).m_sName);
@@ -408,7 +408,7 @@ void CModuleFile::_Clean()
     }
     m_vCompatibles.clear();
 
-    for (std::vector<CCohDataSource *>::iterator itr = m_vDataSources.begin(); itr != m_vDataSources.end(); ++itr)
+    for (auto itr = m_vDataSources.begin(); itr != m_vDataSources.end(); ++itr)
     {
         if ((**itr).m_sToc)
             free((**itr).m_sToc);
@@ -417,8 +417,7 @@ void CModuleFile::_Clean()
         if ((**itr).m_sFolder)
             free((**itr).m_sFolder);
 
-        for (std::vector<CArchiveHandler *>::iterator itr2 = (**itr).m_vArchives.begin();
-             itr2 != (**itr).m_vArchives.end(); ++itr2)
+        for (auto itr2 = (**itr).m_vArchives.begin(); itr2 != (**itr).m_vArchives.end(); ++itr2)
         {
             if ((**itr2).m_sName)
                 free((**itr2).m_sName);
@@ -444,7 +443,7 @@ void CModuleFile::_CleanResources()
         m_pNewFileMap = nullptr;
     }
 
-    for (std::vector<CArchiveHandler *>::iterator itr = m_vArchives.begin(); itr != m_vArchives.end(); ++itr)
+    for (auto itr = m_vArchives.begin(); itr != m_vArchives.end(); ++itr)
     {
         if ((**itr).m_pHandle)
         {
@@ -455,14 +454,14 @@ void CModuleFile::_CleanResources()
         (**itr).m_pHandle = nullptr;
     }
 
-    for (std::vector<CRequiredHandler *>::iterator itr = m_vRequireds.begin(); itr != m_vRequireds.end(); ++itr)
+    for (auto itr = m_vRequireds.begin(); itr != m_vRequireds.end(); ++itr)
     {
         if ((**itr).m_pHandle)
             delete (**itr).m_pHandle;
         (**itr).m_pHandle = nullptr;
     }
 
-    for (std::vector<CUcsHandler *>::iterator itr = m_vLocaleTexts.begin(); itr != m_vLocaleTexts.end(); ++itr)
+    for (auto itr = m_vLocaleTexts.begin(); itr != m_vLocaleTexts.end(); ++itr)
     {
         if ((**itr).m_pHandle)
             delete (**itr).m_pHandle;
@@ -472,10 +471,9 @@ void CModuleFile::_CleanResources()
     }
     m_vLocaleTexts.clear();
 
-    for (std::vector<CCohDataSource *>::iterator itr = m_vDataSources.begin(); itr != m_vDataSources.end(); ++itr)
+    for (auto itr = m_vDataSources.begin(); itr != m_vDataSources.end(); ++itr)
     {
-        for (std::vector<CArchiveHandler *>::iterator itr2 = (**itr).m_vArchives.begin();
-             itr2 != (**itr).m_vArchives.end(); ++itr2)
+        for (auto itr2 = (**itr).m_vArchives.begin(); itr2 != (**itr).m_vArchives.end(); ++itr2)
         {
             if ((**itr2).m_pHandle)
             {
@@ -487,7 +485,7 @@ void CModuleFile::_CleanResources()
         }
     }
 
-    for (std::vector<CModuleFile *>::iterator itr = m_vEngines.begin(); itr != m_vEngines.end(); ++itr)
+    for (auto itr = m_vEngines.begin(); itr != m_vEngines.end(); ++itr)
     {
         delete *itr;
     }
@@ -533,7 +531,7 @@ void CModuleFile::LoadSgaAsMod(const char *sFileName, CALLBACK_ARG)
 
     m_metadata.m_sModFolder = strdup("");
 
-    CArchiveHandler *pHandler = new CArchiveHandler;
+    auto *pHandler = new CArchiveHandler;
     pHandler->m_iNumber = 0;
     pHandler->m_pHandle = pSga;
     pHandler->m_sName = strdup(m_sFilename);
@@ -706,7 +704,7 @@ const char *CModuleFile::GetApplicationPath() const { return m_sApplicationPath;
 
 void CModuleFile::NewUCS(const char *sName, CUcsFile *pUcs)
 {
-    CUcsHandler *pHandler = new CUcsHandler;
+    auto *pHandler = new CUcsHandler;
     pHandler->m_sName = strdup(sName);
     pHandler->m_pHandle = pUcs;
 
@@ -739,19 +737,19 @@ const wchar_t *CModuleFile::ResolveUCS(unsigned long iStringID)
 {
     const wchar_t *t;
 
-    for (std::vector<CUcsHandler *>::iterator itr = m_vLocaleTexts.begin(); itr != m_vLocaleTexts.end(); ++itr)
+    for (auto itr = m_vLocaleTexts.begin(); itr != m_vLocaleTexts.end(); ++itr)
     {
         if ((*itr) && (**itr).m_pHandle && (t = (**itr).m_pHandle->ResolveStringID(iStringID)))
             return t;
     }
 
-    for (std::vector<CRequiredHandler *>::iterator itr = m_vRequireds.begin(); itr != m_vRequireds.end(); ++itr)
+    for (auto itr = m_vRequireds.begin(); itr != m_vRequireds.end(); ++itr)
     {
         if ((*itr) && (**itr).m_pHandle && (t = (**itr).m_pHandle->ResolveUCS(iStringID)))
             return t;
     }
 
-    for (std::vector<CModuleFile *>::iterator itr = m_vEngines.begin(); itr != m_vEngines.end(); ++itr)
+    for (auto itr = m_vEngines.begin(); itr != m_vEngines.end(); ++itr)
     {
         if ((*itr) && (t = (*itr)->ResolveUCS(iStringID)))
             return t;

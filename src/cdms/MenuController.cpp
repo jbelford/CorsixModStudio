@@ -26,7 +26,7 @@ void MenuController::Build(wxFrame *pFrame, ToolRegistry &registry)
     auto *pConstruct = static_cast<ConstructFrame *>(pFrame);
 
     // File menu
-    wxMenu *pMenu_File = new wxMenu;
+    auto *pMenu_File = new wxMenu;
     pMenu_File->Append(wxID_NEW, AppStr(new_mod_menu), AppStr(new_mod));
     pMenu_File->Append(IDM_LoadModDoWWA, AppStr(open_mod_menu), AppStr(open_mod_help));
     pMenu_File->Append(IDM_LoadModDC, AppStr(open_moddc_menu), AppStr(open_moddc_help));
@@ -39,7 +39,7 @@ void MenuController::Build(wxFrame *pFrame, ToolRegistry &registry)
     pMenu_File->Enable(wxID_CLOSE, false);
 
     // Mod menu
-    wxMenu *pMenu_Mod = new wxMenu;
+    auto *pMenu_Mod = new wxMenu;
     pMenu_Mod->Append(wxID_PROPERTIES, AppStr(mod_properties_menu), AppStr(mod_properties_help));
     pMenu_Mod->AppendSeparator();
     for (size_t t = 0; t < registry.GetCount(); ++t)
@@ -50,7 +50,7 @@ void MenuController::Build(wxFrame *pFrame, ToolRegistry &registry)
     }
 
     // Relic tools menu
-    wxMenu *pMenu_RelicTools = new wxMenu;
+    auto *pMenu_RelicTools = new wxMenu;
     pMenu_RelicTools->Append(IDM_AttributeEditor, AppStr(attr_editor_menu), AppStr(attr_editor_help));
     pMenu_RelicTools->Append(IDM_AudioEditor, AppStr(audio_editor_menu), AppStr(audio_editor_help));
     pMenu_RelicTools->Append(IDM_ChunkyViewer, AppStr(chunky_view_menu), AppStr(chunky_view_help));
@@ -60,7 +60,7 @@ void MenuController::Build(wxFrame *pFrame, ToolRegistry &registry)
     pMenu_RelicTools->Append(IDM_ObjectEditor, AppStr(object_editor_menu), AppStr(object_editor_help));
 
     // Play menu
-    wxMenu *pMenu_Play = new wxMenu;
+    auto *pMenu_Play = new wxMenu;
     pMenu_Play->Append(IDM_PlayCOH, AppStr(play_coh), AppStr(play_coh_help));
     pMenu_Play->Append(IDM_PlayW40k, AppStr(play_w40k), AppStr(play_w40k_help));
     pMenu_Play->Append(IDM_PlayWXP, AppStr(play_wxp), AppStr(play_wxp_help));
@@ -78,7 +78,7 @@ void MenuController::Build(wxFrame *pFrame, ToolRegistry &registry)
     pMenu_Play->Enable(IDM_PlaySS, false);
 
     // Help menu
-    wxMenu *pMenu_Help = new wxMenu;
+    auto *pMenu_Help = new wxMenu;
     pMenu_Help->Append(wxID_HELP_CONTENTS, AppStr(help_index_menu), AppStr(help_index_help));
     pMenu_Help->Append(IDM_RDNWikiNew, AppStr(rdn_new_wiki_menu), AppStr(rdn_new_wiki_help));
     pMenu_Help->Append(IDM_ForumDoW, AppStr(forum_dow_menu), AppStr(forum_dow_help));
@@ -92,7 +92,7 @@ void MenuController::Build(wxFrame *pFrame, ToolRegistry &registry)
     pMenu_Help->Append(IDM_HideDonate, AppStr(hidedonate_menu), AppStr(hidedonate_help));
 
     // Assemble menu bar
-    wxMenuBar *pMenuBar = new wxMenuBar;
+    auto *pMenuBar = new wxMenuBar;
     pMenuBar->Append(pMenu_File, AppStr(file_menu));
     pMenuBar->Append(pMenu_Mod, AppStr(mod_menu));
     pMenuBar->Append(pMenu_RelicTools, AppStr(relic_tools_menu));

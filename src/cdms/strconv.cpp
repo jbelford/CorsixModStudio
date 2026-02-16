@@ -22,7 +22,7 @@
 wchar_t *AsciiToUnicode(const char *sAscii)
 {
     size_t iLen = strlen(sAscii) + 1;
-    wchar_t *pUnicode = new wchar_t[iLen];
+    auto *pUnicode = new wchar_t[iLen];
     if (!pUnicode)
         return nullptr;
     for (size_t i = 0; i < iLen; ++i)
@@ -35,7 +35,7 @@ wchar_t *AsciiToUnicode(const char *sAscii)
 wchar_t *AsciiToUnicodeDel(char *sAscii)
 {
     size_t iLen = strlen(sAscii) + 1;
-    wchar_t *pUnicode = new wchar_t[iLen];
+    auto *pUnicode = new wchar_t[iLen];
     if (!pUnicode)
     {
         delete[] sAscii;
@@ -52,7 +52,7 @@ wchar_t *AsciiToUnicodeDel(char *sAscii)
 wchar_t *AsciiToUnicodeFree(char *sAscii)
 {
     size_t iLen = strlen(sAscii) + 1;
-    wchar_t *pUnicode = new wchar_t[iLen];
+    auto *pUnicode = new wchar_t[iLen];
     if (!pUnicode)
     {
         free(sAscii);
@@ -86,7 +86,7 @@ char *UnicodeToAscii(const wchar_t *pUnicode)
 wxString AsciiTowxString(const char *sAscii)
 {
     if (sAscii == nullptr)
-        return wxString();
+        return {};
     /*
     wchar_t* pUnicode = AsciiToUnicode(sAscii);
     if(!pUnicode) return wxString();

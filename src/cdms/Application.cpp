@@ -32,37 +32,37 @@ IMPLEMENT_APP(CDMSApplication)
 
 bool CDMSApplication::OnInit()
 {
-	RainmanLog::init();
-	CDMS_LOG_INFO("CorsixModStudio application starting");
-	wxSystemOptions::SetOption(wxT("msw.remap"), 0);
+    RainmanLog::init();
+    CDMS_LOG_INFO("CorsixModStudio application starting");
+    wxSystemOptions::SetOption(wxT("msw.remap"), 0);
 
-	// wxFileConfig prepends APPDATA to relative paths, so resolve to absolute
-	wxString sAbsConfigPath = wxFileName(AppStr(configfile_name)).GetAbsolutePath();
-	wxConfigBase::Set(
-	    new wxFileConfig(wxEmptyString, wxEmptyString, sAbsConfigPath, wxEmptyString, wxCONFIG_USE_LOCAL_FILE));
+    // wxFileConfig prepends APPDATA to relative paths, so resolve to absolute
+    wxString sAbsConfigPath = wxFileName(AppStr(configfile_name)).GetAbsolutePath();
+    wxConfigBase::Set(
+        new wxFileConfig(wxEmptyString, wxEmptyString, sAbsConfigPath, wxEmptyString, wxCONFIG_USE_LOCAL_FILE));
 
-	wxConfigBase::Get()->SetRecordDefaults(true);
-	wxConfigBase::Get()->SetExpandEnvVars(false);
-	wxConfigBase::Get()->SetPath(AppStr(config_initialpath));
+    wxConfigBase::Get()->SetRecordDefaults(true);
+    wxConfigBase::Get()->SetExpandEnvVars(false);
+    wxConfigBase::Get()->SetPath(AppStr(config_initialpath));
 
-	wxImage::AddHandler(new wxTGAHandler);
+    wxImage::AddHandler(new wxTGAHandler);
 
-	//_CrtSetBreakAlloc(5143);
+    //_CrtSetBreakAlloc(5143);
 
-	ConstructFrame *pConstruct = new ConstructFrame(AppStr(app_name), wxDefaultPosition, wxSize(500, 500));
-	pConstruct->SetIcon(wxIcon(wxT("APPICON"), wxBITMAP_TYPE_ICO_RESOURCE));
-	pConstruct->Show(true);
-	pConstruct->Maximize(true);
-	SetTopWindow(pConstruct);
-	return true;
+    auto *pConstruct = new ConstructFrame(AppStr(app_name), wxDefaultPosition, wxSize(500, 500));
+    pConstruct->SetIcon(wxIcon(wxT("APPICON"), wxBITMAP_TYPE_ICO_RESOURCE));
+    pConstruct->Show(true);
+    pConstruct->Maximize(true);
+    SetTopWindow(pConstruct);
+    return true;
 }
 
 int CDMSApplication::OnExit()
 {
-	CDMS_LOG_INFO("CorsixModStudio application shutting down");
-	wxFileConfig *pConfig = (wxFileConfig *)wxConfigBase::Get();
-	pConfig->Flush();
-	return wxApp::OnExit();
+    CDMS_LOG_INFO("CorsixModStudio application shutting down");
+    auto *pConfig = (wxFileConfig *)wxConfigBase::Get();
+    pConfig->Flush();
+    return wxApp::OnExit();
 }
 
 #ifndef _DEBUG
@@ -72,20 +72,20 @@ bool CDMSApplication::OnExceptionInMainLoop() { throw; }
 int CDMSApplication::OnRun()
 {
 #ifndef _DEBUG
-	try
-	{
+    try
+    {
 #endif
-		return wxApp::OnRun();
+        return wxApp::OnRun();
 #ifndef _DEBUG
-	}
-	catch (CRainmanException *pE)
-	{
-		_ErrorBox(pE, __FILE__, __LINE__, true);
-		return -1;
-	}
-	catch (...)
-	{
-		_ErrorBox(wxT("Unhandled exception (not from Rainman)"), __FILE__, __LINE__);
-	}
+    }
+    catch (CRainmanException *pE)
+    {
+        _ErrorBox(pE, __FILE__, __LINE__, true);
+        return -1;
+    }
+    catch (...)
+    {
+        _ErrorBox(wxT("Unhandled exception (not from Rainman)"), __FILE__, __LINE__);
+    }
 #endif
 }

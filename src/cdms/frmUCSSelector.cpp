@@ -71,7 +71,7 @@ frmUCSSelector::frmUCSSelector(const wxString &sTitle)
     m_bAnswerIsReadOnly = false;
     m_pAnswer = nullptr;
     CentreOnParent();
-    wxBoxSizer *pTopSizer = new wxBoxSizer(wxVERTICAL);
+    auto *pTopSizer = new wxBoxSizer(wxVERTICAL);
 
     wxArrayString aModUCSs;
     size_t iUCSCount;
@@ -117,7 +117,7 @@ frmUCSSelector::frmUCSSelector(const wxString &sTitle)
     pTopSizer->Add(m_pList = new wxListBox(this, IDC_UCSList, wxDefaultPosition, wxDefaultSize, aModUCSs), 1,
                    wxALL | wxEXPAND, 3);
 
-    wxBoxSizer *pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
+    auto *pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
 
     pButtonSizer->Add(new wxButton(this, wxID_NEW, AppStr(ucsselect_new)), 0, wxEXPAND | wxALL, 3);
     pButtonSizer->Add(new wxButton(this, wxID_OPEN, AppStr(ucsselect_open)), 0, wxEXPAND | wxALL, 3);
@@ -176,7 +176,7 @@ void frmUCSSelector::OnLoadClick(wxCommandEvent &event)
         m_bAnswerIsReadOnly = (((size_t)iSelection) >= m_iWritableUcsCount);
         if (TheConstruct->GetModuleService().GetModuleType() == CModuleFile::MT_CompanyOfHeroes)
             m_bAnswerIsReadOnly = false;
-        std::list<CUcsFile *>::iterator itr = m_lstUcsFiles.begin();
+        auto itr = m_lstUcsFiles.begin();
         while (iSelection)
             --iSelection, ++itr;
         m_pAnswer = *itr;
@@ -188,7 +188,7 @@ void frmUCSSelector::OnLoadClick(wxCommandEvent &event)
 bool frmUCSSelector::SelectFromReference(unsigned long iVal)
 {
     int iN = 0;
-    for (std::list<CUcsFile *>::iterator itr = m_lstUcsFiles.begin(); itr != m_lstUcsFiles.end(); ++itr, ++iN)
+    for (auto itr = m_lstUcsFiles.begin(); itr != m_lstUcsFiles.end(); ++itr, ++iN)
     {
         if (*itr && (**itr).ResolveStringID(iVal))
         {

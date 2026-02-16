@@ -53,7 +53,7 @@ void frmMassExtract::_FillCheckList(CModuleFile *pMod, bool bIsRoot, wxArrayStri
     {
         CModuleFile::CArchiveHandler *pArch = pMod->GetArchive(i);
         sList.Add(sMod + wxT("\'s ") + AsciiTowxString(pArch->GetFileName()));
-        vList.push_back(_tSrc(pMod->GetFileMapName(), pArch->GetFileName()));
+        vList.emplace_back(pMod->GetFileMapName(), pArch->GetFileName());
     }
 
     // Data folders
@@ -64,10 +64,10 @@ void frmMassExtract::_FillCheckList(CModuleFile *pMod, bool bIsRoot, wxArrayStri
         {
             CModuleFile::CFolderHandler *pFold = pMod->GetFolder(i);
             sList.Add(sMod + wxT("\'s ") + AsciiTowxString(pFold->GetName()) + wxT(" folder"));
-            vList.push_back(_tSrc(pMod->GetFileMapName(), pFold->GetName()));
+            vList.emplace_back(pMod->GetFileMapName(), pFold->GetName());
         }
         sList.Add(sMod + wxT("\'s Data Generic folder"));
-        vList.push_back(_tSrc(pMod->GetFileMapName(), "Data Generic"));
+        vList.emplace_back(pMod->GetFileMapName(), "Data Generic");
     }
 
     // Data sources
@@ -83,13 +83,13 @@ void frmMassExtract::_FillCheckList(CModuleFile *pMod, bool bIsRoot, wxArrayStri
             {
                 CModuleFile::CArchiveHandler *pArch = pSrc->GetArchive(i);
                 sList.Add(AsciiTowxString(pArch->GetFileName()));
-                vList.push_back(_tSrc(nullptr, pArch->GetFileName()));
+                vList.emplace_back(nullptr, pArch->GetFileName());
             }
 
             if ((pSrc->IsFolderWritable() == false) && pSrc->GetFolder() && *pSrc->GetFolder())
             {
                 sList.Add(AsciiTowxString(pSrc->GetFolder()) + wxT(" folder"));
-                vList.push_back(_tSrc(nullptr, pSrc->GetFolder()));
+                vList.emplace_back(nullptr, pSrc->GetFolder());
             }
         }
     }
@@ -122,14 +122,14 @@ size_t frmMassExtract::_DoExtract(wxTreeCtrl *pTree, wxTreeItemId &oFolder, wxSt
     wxTreeItemId oChild = pTree->GetFirstChild(oFolder, oCookie);
     while (oChild.IsOk())
     {
-        CFilesTreeItemData *pData = (CFilesTreeItemData *)pTree->GetItemData(oChild);
+        auto *pData = (CFilesTreeItemData *)pTree->GetItemData(oChild);
         if (pData && pData->sMod)
         {
             // File
             // const char* sTmp = strrchr(pData->sSource, '.');
             // bool bSga = (sTmp && (stricmp(sTmp, ".sga") == 0));
             bool bExtract = false;
-            for (std::vector<_tSrc>::iterator itr = m_vActiveSrcs.begin(); itr != m_vActiveSrcs.end(); ++itr)
+            for (auto itr = m_vActiveSrcs.begin(); itr != m_vActiveSrcs.end(); ++itr)
             {
                 if ((itr->sMod == nullptr || (stricmp(pData->sMod, itr->sMod) == 0)) &&
                     stricmp(pData->sSource, itr->sSrc) == 0)
@@ -197,7 +197,7 @@ frmMassExtract::frmMassExtract(wxString sFile, wxTreeItemId &oFolder, bool bForc
                wxFRAME_FLOAT_ON_PARENT | wxFRAME_TOOL_WINDOW | wxCAPTION)
 {
     CentreOnParent();
-    wxBoxSizer *pTopSizer = new wxBoxSizer(wxVERTICAL);
+    auto *pTopSizer = new wxBoxSizer(wxVERTICAL);
 
     wxArrayString oStrs;
     _FillCheckList(TheConstruct->GetModule(), true, oStrs, m_vSrcs);
@@ -206,7 +206,7 @@ frmMassExtract::frmMassExtract(wxString sFile, wxTreeItemId &oFolder, bool bForc
     pTopSizer->Add(m_pGauge = new wxGauge(this, -1, 1, wxDefaultPosition, wxDefaultSize, wxGA_HORIZONTAL | wxGA_SMOOTH),
                    0, wxEXPAND | wxALL, 3);
 
-    wxBoxSizer *pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
+    auto *pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
     pButtonSizer->Add(m_pSelectAllBtn = new wxButton(this, IDC_SelectAll, AppStr(massext_selectall)), 0,
                       wxFIXED_MINSIZE | wxALL, 3);
     pButtonSizer->Add(m_pAdvancedBtn = new wxButton(this, IDC_Advanced, AppStr(massext_advanced_show)), 0,

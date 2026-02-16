@@ -237,7 +237,7 @@ void CSgaFile::Load(IFileStore::IStream *pStream, tLastWriteTime oWriteTime)
         This way, for example, file and folder names do not need two VSeek()s and byte by byte string reading
         as a pointer can simply be set to the location in memory.
     */
-    unsigned char *pDataHeader = new unsigned char[m_SgaHeader.iDataHeaderSize];
+    auto *pDataHeader = new unsigned char[m_SgaHeader.iDataHeaderSize];
     if (pDataHeader == nullptr)
     {
         _Clean();

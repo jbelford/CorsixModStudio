@@ -44,7 +44,7 @@ frmSgaMake::frmSgaMake()
                wxFRAME_FLOAT_ON_PARENT | wxFRAME_TOOL_WINDOW | wxCAPTION)
 {
     CentreOnParent();
-    wxFlexGridSizer *pTopSizer = new wxFlexGridSizer(3);
+    auto *pTopSizer = new wxFlexGridSizer(3);
     pTopSizer->SetFlexibleDirection(wxHORIZONTAL);
     pTopSizer->AddGrowableCol(1, 1);
 
@@ -116,7 +116,7 @@ frmSgaMake::frmSgaMake()
                    1, wxALL | wxEXPAND, 3);
     pTopSizer->AddSpacer(0);
 
-    wxBoxSizer *pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
+    auto *pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
     pButtonSizer->Add(new wxButton(this, IDC_Cancel, AppStr(newmod_cancel)), 0, wxEXPAND | wxALL, 3);
     pButtonSizer->Add(new wxButton(this, IDC_Go, AppStr(newmod_create)), 0, wxEXPAND | wxALL, 3);
 
@@ -216,7 +216,7 @@ void frmSgaMake::OnGoClick(wxCommandEvent &event)
         }
 
         // Make the SGA
-        frmMessage *pMsg = new frmMessage(wxT("IDB_SGAPACK"), AppStr(sgapack_message));
+        auto *pMsg = new frmMessage(wxT("IDB_SGAPACK"), AppStr(sgapack_message));
         pMsg->Show(true);
         wxSafeYield(pMsg);
 

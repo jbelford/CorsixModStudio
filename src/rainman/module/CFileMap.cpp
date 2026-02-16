@@ -127,8 +127,7 @@ CFileMap::_DataSource *CFileMap::_MakeFolderWritable(CFileMap::_Folder *pFolder,
     }
 
     // Check the folder for siutable sources
-    for (std::map<_DataSource *, char *>::iterator itr = pFolder->mapSourceNames.begin();
-         itr != pFolder->mapSourceNames.end(); ++itr)
+    for (auto itr = pFolder->mapSourceNames.begin(); itr != pFolder->mapSourceNames.end(); ++itr)
     {
         _DataSource *pDS = itr->first;
         if (pDS->iSortNumber <= iSortNumExisting && pDS->bIsDefaultOutput)
@@ -532,7 +531,7 @@ void CFileMap::RewriteToC(const char *sOld, const char *sNew)
 {
     _TOC *pTocKey = nullptr;
 
-    for (std::vector<_TOC *>::iterator itr = m_vTOCs.begin(); itr != m_vTOCs.end(); ++itr)
+    for (auto itr = m_vTOCs.begin(); itr != m_vTOCs.end(); ++itr)
     {
         if (stricmp((**itr).sName, sOld) == 0)
         {
@@ -559,7 +558,7 @@ void CFileMap::RewriteToC(const char *sOld, const char *sNew)
     {
         _TOC *pTocVal = nullptr;
 
-        for (std::vector<_TOC *>::iterator itr = m_vTOCs.begin(); itr != m_vTOCs.end(); ++itr)
+        for (auto itr = m_vTOCs.begin(); itr != m_vTOCs.end(); ++itr)
         {
             if (stricmp((**itr).sName, sNew) == 0)
             {
@@ -596,7 +595,7 @@ CFileMap::_File *CFileMap::_FindFile(const char *sName, CFileMap::_Folder **ppFo
     size_t iPartLen = sSlashLoc ? sSlashLoc - sName : strlen(sName);
     _TOC *pToc = nullptr;
 
-    for (std::vector<_TOC *>::iterator itr = m_vTOCs.begin(); itr != m_vTOCs.end(); ++itr)
+    for (auto itr = m_vTOCs.begin(); itr != m_vTOCs.end(); ++itr)
     {
         if ((strlen((**itr).sName) == iPartLen) && (strnicmp((**itr).sName, sName, iPartLen) == 0))
         {
@@ -611,7 +610,7 @@ CFileMap::_File *CFileMap::_FindFile(const char *sName, CFileMap::_Folder **ppFo
     {
         // Build list of available TOC names for diagnostic output
         std::string sAvailable;
-        for (std::vector<_TOC *>::iterator itr = m_vTOCs.begin(); itr != m_vTOCs.end(); ++itr)
+        for (auto itr = m_vTOCs.begin(); itr != m_vTOCs.end(); ++itr)
         {
             if (!sAvailable.empty())
                 sAvailable += ", ";
@@ -670,7 +669,7 @@ CFileMap::_File *CFileMap::_FindFile(const char *sName, CFileMap::_Folder **ppFo
         }
         if (!bFound)
         {
-            _Folder *pNewFolder = new _Folder;
+            auto *pNewFolder = new _Folder;
             pNewFolder->pParent = pFolder;
             size_t iLParent = strlen(pFolder->sFullName);
             pNewFolder->sFullName = new char[iLParent + iPartLen + 2];
@@ -768,20 +767,18 @@ void CFileMap::_CleanFolder(_Folder *pFolder)
 {
     free(pFolder->sFullName);
 
-    for (std::vector<_File *>::iterator itr = pFolder->vChildFiles.begin(); itr != pFolder->vChildFiles.end(); ++itr)
+    for (auto itr = pFolder->vChildFiles.begin(); itr != pFolder->vChildFiles.end(); ++itr)
     {
         free((**itr).sName);
         delete *itr;
     }
 
-    for (std::vector<_Folder *>::iterator itr = pFolder->vChildFolders.begin(); itr != pFolder->vChildFolders.end();
-         ++itr)
+    for (auto itr = pFolder->vChildFolders.begin(); itr != pFolder->vChildFolders.end(); ++itr)
     {
         _CleanFolder(*itr);
     }
 
-    for (std::map<_DataSource *, char *>::iterator itr = pFolder->mapSourceNames.begin();
-         itr != pFolder->mapSourceNames.end(); ++itr)
+    for (auto itr = pFolder->mapSourceNames.begin(); itr != pFolder->mapSourceNames.end(); ++itr)
     {
         free(itr->second);
     }
@@ -791,14 +788,14 @@ void CFileMap::_CleanFolder(_Folder *pFolder)
 
 void CFileMap::_Clean()
 {
-    for (std::vector<_TOC *>::iterator itr = m_vTOCs.begin(); itr != m_vTOCs.end(); ++itr)
+    for (auto itr = m_vTOCs.begin(); itr != m_vTOCs.end(); ++itr)
     {
         free((**itr).sName);
         _CleanFolder((**itr).pRootFolder);
         delete *itr;
     }
 
-    for (std::vector<_DataSource *>::iterator itr = m_vDataSources.begin(); itr != m_vDataSources.end(); ++itr)
+    for (auto itr = m_vDataSources.begin(); itr != m_vDataSources.end(); ++itr)
     {
         free((**itr).sModName);
         free((**itr).sSourceName);
@@ -810,7 +807,7 @@ void CFileMap::MapSingleFile(void *pSource, const char *sTocName, const char *sF
 {
     // Get ToC
     _TOC *pToc = nullptr;
-    for (std::vector<_TOC *>::iterator itr = m_vTOCs.begin(); itr != m_vTOCs.end(); ++itr)
+    for (auto itr = m_vTOCs.begin(); itr != m_vTOCs.end(); ++itr)
     {
         if (stricmp((**itr).sName, sTocName) == 0)
         {
@@ -841,8 +838,7 @@ void CFileMap::MapSingleFile(void *pSource, const char *sTocName, const char *sF
         size_t iPartL = sPathSeperator - sPathPartial;
 
         _Folder *pTheFolder = nullptr;
-        for (std::vector<_Folder *>::iterator itr = pCurrentFolder->vChildFolders.begin();
-             itr != pCurrentFolder->vChildFolders.end(); ++itr)
+        for (auto itr = pCurrentFolder->vChildFolders.begin(); itr != pCurrentFolder->vChildFolders.end(); ++itr)
         {
             if (strlen((**itr).sName) == iPartL && strnicmp((**itr).sName, sPathPartial, iPartL) == 0)
             {
@@ -878,8 +874,7 @@ void CFileMap::MapSingleFile(void *pSource, const char *sTocName, const char *sF
 
     // Do File
     _File *pTheFile = nullptr;
-    for (std::vector<_File *>::iterator itr = pCurrentFolder->vChildFiles.begin();
-         itr != pCurrentFolder->vChildFiles.end(); ++itr)
+    for (auto itr = pCurrentFolder->vChildFiles.begin(); itr != pCurrentFolder->vChildFiles.end(); ++itr)
     {
         if (stricmp(sPathPartial, (**itr).sName) == 0)
         {
@@ -904,7 +899,7 @@ void CFileMap::MapIteratorDeep(void *pSource, const char *sPath, IDirectoryTrave
     size_t iPartLen = sPathSplit ? (sPathSplit - sPath) : strlen(sPath);
 
     _TOC *pToc = nullptr;
-    for (std::vector<_TOC *>::iterator itr = m_vTOCs.begin(); itr != m_vTOCs.end(); ++itr)
+    for (auto itr = m_vTOCs.begin(); itr != m_vTOCs.end(); ++itr)
     {
         if (strlen((**itr).sName) == iPartLen && strnicmp((**itr).sName, sPath, iPartLen) == 0)
         {
@@ -933,8 +928,7 @@ void CFileMap::MapIteratorDeep(void *pSource, const char *sPath, IDirectoryTrave
         iPartLen = sPathSplit ? (sPathSplit - sPath) : strlen(sPath);
 
         pChild = nullptr;
-        for (std::vector<_Folder *>::iterator itr = pFolder->vChildFolders.begin(); itr != pFolder->vChildFolders.end();
-             ++itr)
+        for (auto itr = pFolder->vChildFolders.begin(); itr != pFolder->vChildFolders.end(); ++itr)
         {
             if (strlen((**itr).sName) == iPartLen && strnicmp((**itr).sName, sPath, iPartLen) == 0)
             {
@@ -964,7 +958,7 @@ void CFileMap::MapIteratorDeep(void *pSource, const char *sPath, IDirectoryTrave
 void CFileMap::MapIterator(void *pSource, const char *sTocName, IDirectoryTraverser::IIterator *pItr)
 {
     _TOC *pToc = nullptr;
-    for (std::vector<_TOC *>::iterator itr = m_vTOCs.begin(); itr != m_vTOCs.end(); ++itr)
+    for (auto itr = m_vTOCs.begin(); itr != m_vTOCs.end(); ++itr)
     {
         if (stricmp((**itr).sName, sTocName) == 0)
         {
@@ -1004,13 +998,13 @@ void CFileMap::_FolderSetupSourceNameFromSingleFileMap(_Folder *pFolder, _DataSo
 
 void CFileMap::EraseSource(void *_pSource)
 {
-    _DataSource *pSource = (_DataSource *)_pSource;
-    for (std::vector<_TOC *>::iterator itr = m_vTOCs.begin(); itr != m_vTOCs.end(); ++itr)
+    auto *pSource = (_DataSource *)_pSource;
+    for (auto itr = m_vTOCs.begin(); itr != m_vTOCs.end(); ++itr)
     {
         _EraseSourceFromFolder(pSource, (**itr).pRootFolder);
     }
 
-    for (std::vector<_DataSource *>::iterator itr = m_vDataSources.begin(); itr != m_vDataSources.end(); ++itr)
+    for (auto itr = m_vDataSources.begin(); itr != m_vDataSources.end(); ++itr)
     {
         if (*itr == pSource)
         {
@@ -1031,13 +1025,12 @@ void CFileMap::_EraseSourceFromFolder(_DataSource *pSource, _Folder *pFolder)
         pFolder->mapSourceNames.erase(pSource);
     }
 
-    for (std::vector<_Folder *>::iterator itr = pFolder->vChildFolders.begin(); itr != pFolder->vChildFolders.end();
-         ++itr)
+    for (auto itr = pFolder->vChildFolders.begin(); itr != pFolder->vChildFolders.end(); ++itr)
     {
         _EraseSourceFromFolder(pSource, *itr);
     }
 
-    for (std::vector<_File *>::iterator itr = pFolder->vChildFiles.begin(); itr != pFolder->vChildFiles.end(); ++itr)
+    for (auto itr = pFolder->vChildFiles.begin(); itr != pFolder->vChildFiles.end(); ++itr)
     {
         if ((**itr).mapSources.find(pSource) != (**itr).mapSources.end())
         {
@@ -1060,8 +1053,7 @@ void CFileMap::_RawMap(_DataSource *pSource, IDirectoryTraverser::IIterator *pIt
             if (!pSource->bIsPureOutput)
             {
                 _File *pTheFile = nullptr;
-                for (std::vector<_File *>::iterator itr = pFolder->vChildFiles.begin();
-                     itr != pFolder->vChildFiles.end(); ++itr)
+                for (auto itr = pFolder->vChildFiles.begin(); itr != pFolder->vChildFiles.end(); ++itr)
                 {
                     if (stricmp((**itr).sName, pItr->VGetName()) == 0)
                     {
@@ -1082,8 +1074,7 @@ void CFileMap::_RawMap(_DataSource *pSource, IDirectoryTraverser::IIterator *pIt
         else
         {
             _Folder *pTheFolder = nullptr;
-            for (std::vector<_Folder *>::iterator itr = pFolder->vChildFolders.begin();
-                 itr != pFolder->vChildFolders.end(); ++itr)
+            for (auto itr = pFolder->vChildFolders.begin(); itr != pFolder->vChildFolders.end(); ++itr)
             {
                 if (stricmp((**itr).sName, pItr->VGetName()) == 0)
                 {

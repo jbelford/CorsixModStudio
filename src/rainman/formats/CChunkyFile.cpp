@@ -32,7 +32,7 @@ CChunkyFile::CChunkyFile()
 
 CChunkyFile::~CChunkyFile()
 {
-    for (std::vector<CChunk *>::iterator itr = m_vChunks.begin(); itr != m_vChunks.end(); ++itr)
+    for (auto itr = m_vChunks.begin(); itr != m_vChunks.end(); ++itr)
     {
         delete *itr;
     }
@@ -40,7 +40,7 @@ CChunkyFile::~CChunkyFile()
 
 void CChunkyFile::New(long iVersion)
 {
-    for (std::vector<CChunk *>::iterator itr = m_vChunks.begin(); itr != m_vChunks.end(); ++itr)
+    for (auto itr = m_vChunks.begin(); itr != m_vChunks.end(); ++itr)
     {
         delete *itr;
     }
@@ -174,7 +174,7 @@ void CChunkyFile::Save(IFileStore::IOutputStream *pStream)
         throw new CRainmanException(__FILE__, __LINE__, "Error writing to stream", pE);
     }
 
-    for (std::vector<CChunk *>::iterator itr = m_vChunks.begin(); itr != m_vChunks.end(); ++itr)
+    for (auto itr = m_vChunks.begin(); itr != m_vChunks.end(); ++itr)
     {
         (**itr)._Save(pStream);
     }
@@ -302,7 +302,7 @@ unsigned long CChunkyFile::CChunk::_FoldUpdateSize()
     if (m_eType == T_Folder)
     {
         iDataLength = 0;
-        for (std::vector<CChunk *>::iterator itr = m_vChildren.begin(); itr != m_vChildren.end(); ++itr)
+        for (auto itr = m_vChildren.begin(); itr != m_vChildren.end(); ++itr)
         {
             iDataLength += (**itr)._FoldUpdateSize();
         }
@@ -357,7 +357,7 @@ void CChunkyFile::CChunk::_Save(IFileStore::IOutputStream *pStream)
 
     if (m_eType == T_Folder)
     {
-        for (std::vector<CChunk *>::iterator itr = m_vChildren.begin(); itr != m_vChildren.end(); ++itr)
+        for (auto itr = m_vChildren.begin(); itr != m_vChildren.end(); ++itr)
         {
             (**itr)._Save(pStream);
         }
@@ -394,7 +394,7 @@ const char *CChunkyFile::CChunk::GetDescriptor() const { return (const char *)(m
 
 CChunkyFile::CChunk *CChunkyFile::GetChildByName(const char *sName, CChunkyFile::CChunk::eTypes eType) const
 {
-    for (std::vector<CChunk *>::const_iterator itr = m_vChunks.begin(); itr != m_vChunks.end(); ++itr)
+    for (auto itr = m_vChunks.begin(); itr != m_vChunks.end(); ++itr)
     {
         CChunkyFile::CChunk::eTypes eT = (**itr).m_eType;
         const char *s = (**itr).m_sName;
@@ -418,7 +418,7 @@ void CChunkyFile::RemoveChild(size_t iN) { m_vChunks.erase(m_vChunks.begin() + i
 
 CChunkyFile::CChunk *CChunkyFile::CChunk::GetChildByName(const char *sName, CChunkyFile::CChunk::eTypes eType) const
 {
-    for (std::vector<CChunk *>::const_iterator itr = m_vChildren.begin(); itr != m_vChildren.end(); ++itr)
+    for (auto itr = m_vChildren.begin(); itr != m_vChildren.end(); ++itr)
     {
         if ((**itr).m_eType == eType && strcmp(sName, (**itr).m_sName) == 0)
             return *itr;
@@ -463,7 +463,7 @@ CChunkyFile::CChunk::~CChunk()
     if (m_pData)
         delete[] m_pData;
 
-    for (std::vector<CChunk *>::iterator itr = m_vChildren.begin(); itr != m_vChildren.end(); ++itr)
+    for (auto itr = m_vChildren.begin(); itr != m_vChildren.end(); ++itr)
     {
         delete *itr;
     }

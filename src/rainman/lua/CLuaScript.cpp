@@ -91,7 +91,7 @@ void CLuaScript::Execute()
         }
         case LUA_TLIGHTUSERDATA:
         {
-            CRainmanException *pE = (CRainmanException *)lua_touserdata(m_pLua, -1);
+            auto *pE = (CRainmanException *)lua_touserdata(m_pLua, -1);
             char *sLuaError = strdup(pE->getMessage());
             _Clean();
             m_sLuaError = sLuaError;

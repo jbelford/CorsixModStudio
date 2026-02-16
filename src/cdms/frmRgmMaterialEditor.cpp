@@ -195,11 +195,11 @@ frmRgmMaterialEditor::frmRgmMaterialEditor(wxTreeItemId &oFileParent, wxString s
                                            wxWindowID id, const wxPoint &pos, const wxSize &size)
     : m_oFileParent(oFileParent), m_sFilename(sFilename), wxWindow(parent, id, pos, size)
 {
-    wxBoxSizer *pTopSizer = new wxBoxSizer(wxVERTICAL);
+    auto *pTopSizer = new wxBoxSizer(wxVERTICAL);
 
     pTopSizer->Add(m_pSplitter = new wxSplitterWindow(this, -1), 1, wxEXPAND | wxALL, 0);
 
-    wxBoxSizer *pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
+    auto *pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
     wxWindow *pBgTemp;
     pButtonSizer->Add(pBgTemp = new wxButton(this, wxID_SAVE, AppStr(rgd_save)), 0, wxEXPAND | wxALL, 3);
     pTopSizer->Add(pButtonSizer, 0, wxALIGN_RIGHT);

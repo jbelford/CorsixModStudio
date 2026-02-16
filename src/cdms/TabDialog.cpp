@@ -30,7 +30,7 @@ frmTabDialog::frmTabDialog(const wxString &sTitle)
                wxFRAME_FLOAT_ON_PARENT | wxCAPTION | wxCLOSE_BOX | wxRESIZE_BORDER | wxMAXIMIZE_BOX | wxSYSTEM_MENU)
 {
     CentreOnParent();
-    wxBoxSizer *pTopSizer = new wxBoxSizer(wxVERTICAL);
+    auto *pTopSizer = new wxBoxSizer(wxVERTICAL);
 
     m_pTabs = nullptr;
 

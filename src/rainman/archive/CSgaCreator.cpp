@@ -47,12 +47,12 @@ bool CSgaCreator::CInputDirectory::OpLT(CSgaCreator::CInputDirectory *oA, CSgaCr
 void CSgaCreator::CInputDirectory::FullCount(size_t &iDirCount, size_t &iFileCount)
 {
     ++iDirCount;
-    for (std::vector<CSgaCreator::CInputFile *>::iterator itr = vFilesList.begin(); itr != vFilesList.end(); ++itr)
+    for (auto itr = vFilesList.begin(); itr != vFilesList.end(); ++itr)
     {
         if (*itr)
             ++iFileCount;
     }
-    for (std::vector<CSgaCreator::CInputDirectory *>::iterator itr = vDirsList.begin(); itr != vDirsList.end(); ++itr)
+    for (auto itr = vDirsList.begin(); itr != vDirsList.end(); ++itr)
     {
         if (*itr)
             (*itr)->FullCount(iDirCount, iFileCount);
@@ -62,11 +62,11 @@ void CSgaCreator::CInputDirectory::FullCount(size_t &iDirCount, size_t &iFileCou
 CSgaCreator::CInputDirectory::~CInputDirectory()
 {
     free(sNameFull);
-    for (std::vector<CSgaCreator::CInputFile *>::iterator itr = vFilesList.begin(); itr != vFilesList.end(); ++itr)
+    for (auto itr = vFilesList.begin(); itr != vFilesList.end(); ++itr)
     {
         delete *itr;
     }
-    for (std::vector<CSgaCreator::CInputDirectory *>::iterator itr = vDirsList.begin(); itr != vDirsList.end(); ++itr)
+    for (auto itr = vDirsList.begin(); itr != vDirsList.end(); ++itr)
     {
         delete *itr;
     }
@@ -376,13 +376,11 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
                 dataHeader->VWrite(1, (unsigned long)sizeof(unsigned short), &iSTmp);
 
                 // Identify child folders/files
-                for (std::vector<CInputDirectory *>::iterator itr = pDir->vDirsList.begin();
-                     itr != pDir->vDirsList.end(); ++itr)
+                for (auto itr = pDir->vDirsList.begin(); itr != pDir->vDirsList.end(); ++itr)
                 {
                     qDirsTodo.push(*itr);
                 }
-                for (std::vector<CInputFile *>::iterator itr = pDir->vFilesList.begin(); itr != pDir->vFilesList.end();
-                     ++itr)
+                for (auto itr = pDir->vFilesList.begin(); itr != pDir->vFilesList.end(); ++itr)
                 {
                     vFilesList.push_back(*itr);
                 }
@@ -390,8 +388,7 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
 
             // File headers properly phase 1
             iFilesLoc = dataHeader->VTell();
-            for (std::vector<CInputFile *>::iterator itr = vFilesList.begin(); itr != vFilesList.end();
-                 ++itr, iFilesLoc += iFileOutLength)
+            for (auto itr = vFilesList.begin(); itr != vFilesList.end(); ++itr, iFilesLoc += iFileOutLength)
             {
                 dataHeader->VSeek(iFilesLoc, IFileStore::IStream::SL_Root);
 
@@ -422,8 +419,7 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
         long iPreDataSize = 0;
         if (iVersion == 4)
             iPreDataSize = 260;
-        for (std::vector<CInputFile *>::iterator itr = vFilesList.begin(); itr != vFilesList.end();
-             ++itr, iFilesLoc += iFileOutLength)
+        for (auto itr = vFilesList.begin(); itr != vFilesList.end(); ++itr, iFilesLoc += iFileOutLength)
         {
             std::unique_ptr<IFileStore::IStream> fileStream;
             try

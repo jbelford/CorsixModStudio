@@ -5,8 +5,8 @@
 
 extern "C"
 {
-    typedef unsigned long int ub4; /* unsigned 4-byte quantities */
-    typedef unsigned char ub1;
+    using ub4 = unsigned long int; /* unsigned 4-byte quantities */
+    using ub1 = unsigned char;
     ub4 hash(ub1 *k, ub4 length, ub4 initval);
     ub4 hash3(ub1 *k, ub4 length, ub4 initval);
 }
@@ -27,7 +27,7 @@ CInheritTable::CNode::~CNode()
         free(m_sFullName);
     if (m_sMiniName)
         free(m_sMiniName);
-    for (std::vector<CNode *>::iterator itr = m_vChildren.begin(); itr != m_vChildren.end(); ++itr)
+    for (auto itr = m_vChildren.begin(); itr != m_vChildren.end(); ++itr)
     {
         delete *itr;
     }
@@ -38,8 +38,7 @@ void CInheritTable::CNode::setParent(CInheritTable::CNode *pParent)
     // Remove from old parent's child list
     if (m_pParent)
     {
-        std::vector<CNode *>::iterator itr =
-            std::find(m_pParent->m_vChildren.begin(), m_pParent->m_vChildren.end(), (CNode *)this);
+        auto itr = std::find(m_pParent->m_vChildren.begin(), m_pParent->m_vChildren.end(), (CNode *)this);
         if (itr != m_pParent->m_vChildren.end())
         {
             m_pParent->m_vChildren.erase(itr);
@@ -61,7 +60,7 @@ void CInheritTable::CNode::print(FILE *f, int iL)
     for (int i = 0; i < iL; ++i)
         fputc(' ', f);
     fprintf(f, "%s (%s)\n", m_sMiniName, m_sFullName);
-    for (std::vector<CNode *>::iterator itr = m_vChildren.begin(); itr != m_vChildren.end(); ++itr)
+    for (auto itr = m_vChildren.begin(); itr != m_vChildren.end(); ++itr)
     {
         (**itr).print(f, iL + 1);
     }
@@ -142,7 +141,7 @@ void CInheritTable::assignOrphansTo(CNode *pNode)
 {
     RAINMAN_LOG_TRACE("CInheritTable::assignOrphansTo()");
     CNode *pNode2;
-    for (std::map<unsigned long, CNode *>::iterator itr = m_mapNodes.begin(); itr != m_mapNodes.end(); ++itr)
+    for (auto itr = m_mapNodes.begin(); itr != m_mapNodes.end(); ++itr)
     {
         if (itr->first != 0)
         {

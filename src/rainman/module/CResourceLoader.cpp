@@ -408,8 +408,8 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
         if (module.m_sScenarioPackRootFolder && *module.m_sScenarioPackRootFolder &&
             module.m_metadata.m_sScenarioPackFolder && *module.m_metadata.m_sScenarioPackFolder)
         {
-            wchar_t *sArchivesPath = new wchar_t[wcslen(module.m_sScenarioPackRootFolder) +
-                                                 strlen(module.m_metadata.m_sScenarioPackFolder) + 2];
+            auto *sArchivesPath = new wchar_t[wcslen(module.m_sScenarioPackRootFolder) +
+                                              strlen(module.m_metadata.m_sScenarioPackFolder) + 2];
             swprintf(sArchivesPath, L"%s\\%S", module.m_sScenarioPackRootFolder,
                      module.m_metadata.m_sScenarioPackFolder);
             IDirectoryTraverser::IIterator *pItr = nullptr;

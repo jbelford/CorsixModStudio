@@ -167,15 +167,14 @@ void CBfxFile::_SaveRaw(IFileStore::IOutputStream *pStream, _RgdEntry *pSource, 
         pStream->VWriteString("{\r\n");
 
         std::vector<_RgdEntry *> vEntries;
-        for (std::vector<_RgdEntry *>::iterator itr = pSource->Data.t->begin(); itr != pSource->Data.t->end(); ++itr)
+        for (auto itr = pSource->Data.t->begin(); itr != pSource->Data.t->end(); ++itr)
         {
             vEntries.push_back(*itr);
         }
 
         bool bIsNumericT = true;
-        for (size_t i = 0; i < vEntries.size(); ++i)
+        for (auto p : vEntries)
         {
-            _RgdEntry *p = vEntries[i];
             const char *sT = p->sName;
             if (p->sName == nullptr)
             {
@@ -194,9 +193,9 @@ void CBfxFile::_SaveRaw(IFileStore::IOutputStream *pStream, _RgdEntry *pSource, 
         }
         sort(vEntries.begin(), vEntries.end(), bIsNumericT ? _SortOutEntriesNum : _SortCMetaTableChildren);
 
-        for (size_t i = 0; i < vEntries.size(); ++i)
+        for (auto &vEntrie : vEntries)
         {
-            _SaveRaw(pStream, vEntries.at(i), Lmap, bIsNumericT, iIndentLvl + 1);
+            _SaveRaw(pStream, vEntrie, Lmap, bIsNumericT, iIndentLvl + 1);
         }
         for (size_t i = 0; i < iIndentLvl; ++i)
             pStream->VWriteString("\t");

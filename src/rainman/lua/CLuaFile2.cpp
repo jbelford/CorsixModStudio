@@ -14,8 +14,8 @@ extern "C"
 #include "rainman/util/crc32_case_idt.h"
 extern "C"
 {
-    typedef unsigned long int ub4; /* unsigned 4-byte quantities */
-    typedef unsigned char ub1;
+    using ub4 = unsigned long int; /* unsigned 4-byte quantities */
+    using ub1 = unsigned char;
     ub4 hash(ub1 *k, ub4 length, ub4 initval);
     ub4 hash3(ub1 *k, ub4 length, ub4 initval);
 }
@@ -189,7 +189,7 @@ CLuaFile2 *CLuaFile2::_getOwner(lua_State *L)
 {
     lua_pushstring(L, "CLuaFile2");
     lua_gettable(L, LUA_GLOBALSINDEX);
-    CLuaFile2 *p = (CLuaFile2 *)lua_touserdata(L, -1);
+    auto *p = (CLuaFile2 *)lua_touserdata(L, -1);
     lua_pop(L, 1);
     return p;
 }
@@ -290,7 +290,7 @@ int CLuaFile2::_luaParent(const char *sFnName, const char *sTableToGrab)
     try
     {
         // Grab other required stuff
-        IFileStore *pFiles = (IFileStore *)lua_touserdata(L, lua_upvalueindex(1));
+        auto *pFiles = (IFileStore *)lua_touserdata(L, lua_upvalueindex(1));
         const char *sFileName = lua_tostring(L, -1);
         if (pFiles == nullptr || sFileName == nullptr)
             QUICK_THROW("Invalid argument")
@@ -553,7 +553,7 @@ CLuaStateTable::~CLuaStateTable()
 {
     if (bDeleteNodes)
     {
-        for (std::vector<CLuaStateNode *>::iterator itr = m_vNodes.begin(); itr != m_vNodes.end(); ++itr)
+        for (auto itr = m_vNodes.begin(); itr != m_vNodes.end(); ++itr)
         {
             delete *itr;
         }
@@ -568,7 +568,7 @@ IMetaNode::IMetaTable *CLuaFile2::asMetaTable()
 {
     lua_pushstring(L, "_G");
     lua_gettable(L, LUA_GLOBALSINDEX);
-    CTable *p = new CTable(L, true);
+    auto *p = new CTable(L, true);
     lua_pop(L, 1);
     return p;
 }
@@ -579,7 +579,7 @@ IMetaNode *CLuaStateTable::VGetChild(unsigned long iIndex)
 
     lua_pushstring(mL, pCur->sName);
     pCur->m_L.push(mL);
-    CLuaStateNode *pNew = new CLuaStateNode(mL, -1, -2);
+    auto *pNew = new CLuaStateNode(mL, -1, -2);
     lua_pop(mL, 2);
     return pNew;
 }
@@ -616,7 +616,7 @@ CLuaStateStackNode::CLuaStateStackNode(lua_State *L)
 
 CLuaStateStackNode::~CLuaStateStackNode()
 {
-    for (std::vector<CLuaStateNode *>::iterator itr = m_vNodes.begin(); itr != m_vNodes.end(); ++itr)
+    for (auto itr = m_vNodes.begin(); itr != m_vNodes.end(); ++itr)
     {
         delete *itr;
     }
@@ -632,8 +632,8 @@ const char *CLuaStateStackNode::VGetValueString() { QUICK_THROW("Unsupported"); 
 const wchar_t *CLuaStateStackNode::VGetValueWString() { QUICK_THROW("Unsupported"); }
 IMetaNode::IMetaTable *CLuaStateStackNode::VGetValueMetatable()
 {
-    CLuaStateTable *p = new CLuaStateTable(m_L, true);
-    for (std::vector<CLuaStateNode *>::iterator itr = m_vNodes.begin(); itr != m_vNodes.end(); ++itr)
+    auto *p = new CLuaStateTable(m_L, true);
+    for (auto itr = m_vNodes.begin(); itr != m_vNodes.end(); ++itr)
     {
         p->add(*itr);
     }
@@ -666,7 +666,7 @@ void CLuaFile2::CTable::VDoRefresh()
     if (m_sRef)
         free(m_sRef);
     m_sRef = nullptr;
-    for (std::vector<CLuaFile2::CNode *>::iterator itr = m_vNodes.begin(); itr != m_vNodes.end(); ++itr)
+    for (auto itr = m_vNodes.begin(); itr != m_vNodes.end(); ++itr)
     {
         delete *itr;
     }
@@ -690,7 +690,7 @@ void CLuaFile2::CTable::_DoLoad()
             // get name / hash
             lua_pushvalue(L, -2); // K V K T T
             const char *sName = lua_tostring(L, -1);
-            unsigned long iHash = (unsigned long)hash((ub1 *)sName, (ub4)strlen(sName), 0);
+            auto iHash = (unsigned long)hash((ub1 *)sName, (ub4)strlen(sName), 0);
 
             if (sName[0] == '$')
             {
@@ -722,7 +722,7 @@ void CLuaFile2::CTable::_DoLoad()
             }
 
             // look for existing
-            for (std::vector<CLuaFile2::CNode *>::iterator itr = m_vNodes.begin(); itr != m_vNodes.end(); ++itr)
+            for (auto itr = m_vNodes.begin(); itr != m_vNodes.end(); ++itr)
             {
                 if ((**itr).m_iNodeHash == iHash)
                 {
@@ -734,7 +734,7 @@ void CLuaFile2::CTable::_DoLoad()
             // add to node list
             // K V K T T
             {
-                CLuaFile2::CNode *pNode = new CLuaFile2::CNode(L, -3, -4);
+                auto *pNode = new CLuaFile2::CNode(L, -3, -4);
                 pNode->L = L;
                 pNode->m_sName = strdup(sName);
                 pNode->m_iNodeHash = iHash;
@@ -829,7 +829,7 @@ CLuaFile2::CTable::~CTable()
     m_oTablePtr.kill(L);
     if (m_sRef)
         free(m_sRef);
-    for (std::vector<CLuaFile2::CNode *>::iterator itr = m_vNodes.begin(); itr != m_vNodes.end(); ++itr)
+    for (auto itr = m_vNodes.begin(); itr != m_vNodes.end(); ++itr)
     {
         delete *itr;
     }
@@ -840,7 +840,7 @@ unsigned long CLuaFile2::CTable::VGetChildCount() { return m_vNodes.size(); }
 IMetaNode *CLuaFile2::CTable::VGetChild(unsigned long iIndex)
 {
     CLuaFile2::CNode *pNode = m_vNodes[iIndex];
-    CLuaFile2::CNode *p = new CLuaFile2::CNode(L, &pNode->m_oTablePtr, &pNode->m_oKeyPtr);
+    auto *p = new CLuaFile2::CNode(L, &pNode->m_oTablePtr, &pNode->m_oKeyPtr);
     p->L = L;
     p->m_sName = strdup(pNode->m_sName);
     p->m_iNodeHash = pNode->m_iNodeHash;
@@ -880,7 +880,7 @@ IMetaNode *CLuaFile2::CTable::VAddChild(const char *sName)
     CLuaFile2::_LuaLocator oL(L, -1);
     lua_pop(L, 2);
 
-    CLuaFile2::CNode *pNode = new CLuaFile2::CNode(L, &m_oTablePtr, &oL);
+    auto *pNode = new CLuaFile2::CNode(L, &m_oTablePtr, &oL);
     pNode->L = L;
     pNode->m_iType = LUA_TSTRING;
     pNode->m_sName = strdup(sName);
@@ -1309,7 +1309,7 @@ void CLuaFile2::_saveTable(const char *sPrefix, IFileStore::IOutputStream *pStre
                 }
             }
         }
-        _SaveKey *pKey = new _SaveKey;
+        auto *pKey = new _SaveKey;
         if (lua_isstring(L, -1))
         {
             pKey->iWhat = 2;
@@ -1335,7 +1335,7 @@ void CLuaFile2::_saveTable(const char *sPrefix, IFileStore::IOutputStream *pStre
 
     std::sort(vKeys.begin(), vKeys.end(), _SaveKey::_Sort);
 
-    for (std::vector<_SaveKey *>::iterator itr = vKeys.begin(); itr != vKeys.end(); ++itr)
+    for (auto itr = vKeys.begin(); itr != vKeys.end(); ++itr)
     {
         switch ((**itr).iWhat)
         {

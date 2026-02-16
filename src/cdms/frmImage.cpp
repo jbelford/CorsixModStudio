@@ -64,7 +64,7 @@ frmImageViewer::frmImageViewer(wxTreeItemId &oFileParent, wxString sFilename, wx
                                CRgtFile *pImage, bool bOwnImage, const wxPoint &pos, const wxSize &size)
     : m_oFileParent(oFileParent), m_sFilename(sFilename), wxWindow(parent, id, pos, size)
 {
-    wxBoxSizer *pTopSizer = new wxBoxSizer(wxVERTICAL);
+    auto *pTopSizer = new wxBoxSizer(wxVERTICAL);
 
     m_pRgtFile = pImage;
     m_pImageBitmap = nullptr;
@@ -79,7 +79,7 @@ frmImageViewer::frmImageViewer(wxTreeItemId &oFileParent, wxString sFilename, wx
         delete pTgaSpace;
     }
 
-    wxStaticBoxSizer *pImgSizer = new wxStaticBoxSizer(wxVERTICAL, this, wxT("Current Image"));
+    auto *pImgSizer = new wxStaticBoxSizer(wxVERTICAL, this, wxT("Current Image"));
 
     wxArrayString aFileTypes, aCompressionTypes;
 
@@ -137,7 +137,7 @@ frmImageViewer::frmImageViewer(wxTreeItemId &oFileParent, wxString sFilename, wx
 
     pTopSizer->Add(pImgSizer, 1, wxEXPAND | wxALL, 3);
 
-    wxStaticBoxSizer *pSaveSizer = new wxStaticBoxSizer(wxVERTICAL, this, wxT("Save Copy"));
+    auto *pSaveSizer = new wxStaticBoxSizer(wxVERTICAL, this, wxT("Save Copy"));
 
     pSaveSizer->Add(m_pSaveFileExt = new wxRadioBox(this, IDC_SaveFileExt, wxT("File"), wxDefaultPosition,
                                                     wxDefaultSize, aFileTypes),

@@ -33,7 +33,7 @@ frmUCSOutOfRange::frmUCSOutOfRange(const wxString &sTitle, unsigned long iID)
                wxFRAME_FLOAT_ON_PARENT | wxFRAME_TOOL_WINDOW | wxCAPTION)
 {
     CentreOnParent();
-    wxBoxSizer *pTopSizer = new wxBoxSizer(wxVERTICAL);
+    auto *pTopSizer = new wxBoxSizer(wxVERTICAL);
 
     wxString sCaption;
     sCaption.Printf(AppStr(ucsrange_caption), iID);
@@ -41,7 +41,7 @@ frmUCSOutOfRange::frmUCSOutOfRange(const wxString &sTitle, unsigned long iID)
     wxWindow *pBgTemp;
     pTopSizer->Add(pBgTemp = new wxStaticText(this, -1, sCaption), 0, wxALIGN_LEFT | wxALL, 3);
 
-    wxBoxSizer *pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
+    auto *pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
 
     pButtonSizer->Add(new wxButton(this, wxID_YES, AppStr(ucsrange_yes)), 0, wxEXPAND | wxALL, 3);
     pButtonSizer->Add(new wxButton(this, wxID_NO, AppStr(ucsrange_no)), 0, wxEXPAND | wxALL, 3);
@@ -70,7 +70,7 @@ void frmUCSOutOfRange::OnYesClick(wxCommandEvent &event)
     TheConfig->Write(AppStr(config_mod_ucsrangeremember), m_pCheckbox->GetValue());
     // Flush immediately so preference persists even if the
     // application exits before OnExit's Flush() is reached.
-    wxFileConfig *pCfg = dynamic_cast<wxFileConfig *>(wxConfigBase::Get());
+    auto *pCfg = dynamic_cast<wxFileConfig *>(wxConfigBase::Get());
     if (pCfg)
         pCfg->Flush();
     EndModal(wxID_YES);
@@ -80,7 +80,7 @@ void frmUCSOutOfRange::OnNoClick(wxCommandEvent &event)
 {
     UNUSED(event);
     TheConfig->Write(AppStr(config_mod_ucsrangeremember), m_pCheckbox->GetValue());
-    wxFileConfig *pCfg = dynamic_cast<wxFileConfig *>(wxConfigBase::Get());
+    auto *pCfg = dynamic_cast<wxFileConfig *>(wxConfigBase::Get());
     if (pCfg)
         pCfg->Flush();
     EndModal(wxID_NO);

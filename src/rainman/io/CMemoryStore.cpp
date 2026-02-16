@@ -41,7 +41,7 @@ void CMemoryStore::VInit(void *pUnused)
 
 char *CMemoryStore::MemoryRange(void *pBegin, unsigned long iLength)
 {
-    _MemRange *Range = new _MemRange;
+    auto *Range = new _MemRange;
     if (Range == nullptr)
         throw new CRainmanException(__FILE__, __LINE__, "Failed to allocate memory");
     Range->i = iLength;
@@ -55,8 +55,8 @@ IFileStore::IStream *CMemoryStore::VOpenStream(const char *sFile)
     RAINMAN_LOG_DEBUG("CMemoryStore::VOpenStream(\"{}\")", sFile ? sFile : "(null)");
     if (sFile == nullptr)
         throw new CRainmanException(__FILE__, __LINE__, "No stream descriptor");
-    _MemRange *Range = (_MemRange *)sFile;
-    CStream *pStream = new CStream();
+    auto *Range = (_MemRange *)sFile;
+    auto *pStream = new CStream();
     if (pStream == nullptr)
         throw new CRainmanException(__FILE__, __LINE__, "Failed to allocate memory");
     pStream->m_pBegin = Range->p;
@@ -72,7 +72,7 @@ CMemoryStore::CStream *CMemoryStore::OpenStreamExt(char *pBegin, unsigned long i
 {
     if (pBegin == nullptr)
         throw new CRainmanException(__FILE__, __LINE__, "No memory input");
-    CStream *pStream = new CStream();
+    auto *pStream = new CStream();
     if (pStream == nullptr)
         throw new CRainmanException(__FILE__, __LINE__, "Failed to allocate memory");
     pStream->m_pBegin = pBegin;

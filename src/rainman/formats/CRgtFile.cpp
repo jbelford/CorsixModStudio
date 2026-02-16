@@ -204,8 +204,8 @@ void CRgtFile::_MakeDxtcData(CMemoryStore::COutStream *pTMAN, CMemoryStore::COut
     size_t iDataSizeUncompressed;
     iDataSizeUncompressed = std::max((size_t)1, (size_t)(iWidth / 4)) * std::max((size_t)1, (size_t)(iHeight / 4)) *
                             (size_t)(iDxtN == 1 ? 8 : 16);
-    unsigned char *pData = new unsigned char[iDataSizeUncompressed + 16];
-    unsigned long *iData = (unsigned long *)pData;
+    auto *pData = new unsigned char[iDataSizeUncompressed + 16];
+    auto *iData = (unsigned long *)pData;
     iData[0] = iThisMipLevel;
     iData[1] = iWidth;
     iData[2] = iHeight;
@@ -243,7 +243,7 @@ void CRgtFile::_MakeDxtcData(CMemoryStore::COutStream *pTMAN, CMemoryStore::COut
 
     // Try compressing ourselves
     unsigned long iCompressedSize = compressBound((uLong)iDataSizeUncompressed);
-    unsigned char *pCompressedData = new unsigned char[iCompressedSize];
+    auto *pCompressedData = new unsigned char[iCompressedSize];
     if (compress2((Bytef *)pCompressedData, &iCompressedSize, (const Bytef *)pData, (uLong)iDataSizeUncompressed,
                   Z_BEST_COMPRESSION) != Z_OK)
     {
@@ -373,7 +373,7 @@ void CRgtFile::LoadTGA(IFileStore::IStream *pFile, bool bMakeMips, bool *pIs32Bi
     pChunkData->SetVersion(1);
     std::unique_ptr<IFileStore::IOutputStream> pOutData(CMemoryStore::OpenOutputStreamExt());
 
-    unsigned char *pDatIn = new unsigned char[(iTga_BPP >> 3) * iTga_W * iTga_H];
+    auto *pDatIn = new unsigned char[(iTga_BPP >> 3) * iTga_W * iTga_H];
     pFile->VRead(iTga_W * iTga_H, iTga_BPP / 8, pDatIn);
 
     if (iTga_BPP == 32)
@@ -785,7 +785,7 @@ void CRgtFile::SaveDDS(IFileStore::IOutputStream *pFile, int iCompression, bool 
     }
     else
     {
-        unsigned char *pDXTC = new unsigned char[iPrimarySize];
+        auto *pDXTC = new unsigned char[iPrimarySize];
         m_fnCompress(pRGBATop, (int)iW, (int)iH, pDXTC, (1 << (iCompression >> 1)));
         pFile->VWrite(iPrimarySize, 1, pDXTC);
         delete[] pDXTC;
@@ -804,7 +804,7 @@ void CRgtFile::SaveDDS(IFileStore::IOutputStream *pFile, int iCompression, bool 
                 iPrimarySize *= 8;
             else
                 iPrimarySize *= 16;
-            unsigned char *pDXTC = new unsigned char[iPrimarySize];
+            auto *pDXTC = new unsigned char[iPrimarySize];
             m_fnCompress(pRGBATop, (int)iW, (int)iH, pDXTC, (1 << (iCompression >> 1)));
             pFile->VWrite(iPrimarySize, 1, pDXTC);
             delete[] pDXTC;
@@ -877,7 +877,7 @@ void CRgtFile::_Save_Dxtc(IFileStore::IOutputStream *pFile)
     _Save_Dxtc_Header(pFile, pLevel->m_iWidth, pLevel->m_iHeight, m_iDxtCompression, pLevel->m_iDataLength,
                       m_pMipLevels.size());
 
-    for (std::map<long, _MipLevel *>::iterator itr = m_pMipLevels.begin(); itr != m_pMipLevels.end(); ++itr)
+    for (auto itr = m_pMipLevels.begin(); itr != m_pMipLevels.end(); ++itr)
     {
         pFile->VWrite(itr->second->m_iDataLength, 1, itr->second->m_pData + 16);
     }
@@ -1073,7 +1073,7 @@ void CRgtFile::_Load_Dxtc()
     pStr->VRead(1, sizeof(uint32_t), &m_iMipCount);
     for (long iMipLevel = 0; iMipLevel < m_iMipCount; ++iMipLevel)
     {
-        _MipLevel *pCurrentLevel = new _MipLevel;
+        auto *pCurrentLevel = new _MipLevel;
         long iDataLengthCompressed;
 
         pStr->VRead(1, sizeof(uint32_t), &pCurrentLevel->m_iDataLength);
@@ -1085,7 +1085,7 @@ void CRgtFile::_Load_Dxtc()
 
         if (iDataLengthCompressed != pCurrentLevel->m_iDataLength)
         {
-            unsigned char *pUncompressed = new unsigned char[pCurrentLevel->m_iDataLength];
+            auto *pUncompressed = new unsigned char[pCurrentLevel->m_iDataLength];
             if (uncompress((Bytef *)pUncompressed, (uLongf *)&pCurrentLevel->m_iDataLength,
                            (Bytef *)pCurrentLevel->m_pData, iDataLengthCompressed) != Z_OK)
             {
@@ -1144,7 +1144,7 @@ void CRgtFile::_Load_Tga()
                 if (!pDataChunk)
                     throw new CRainmanException(__FILE__, __LINE__, "Cannot find DATAATTR");
 
-                _MipLevel *pCurrentLevel = new _MipLevel;
+                auto *pCurrentLevel = new _MipLevel;
 
                 pStr = std::unique_ptr<IFileStore::IStream>(pDataChunk->GetData());
                 pStr->VSeek(4, IFileStore::IStream::SL_Current);
@@ -1188,7 +1188,7 @@ void CRgtFile::_Clean()
     m_iMipCurrent = 0;
     m_iDxtCompression = 0;
 
-    for (std::map<long, _MipLevel *>::iterator itr = m_pMipLevels.begin(); itr != m_pMipLevels.end(); ++itr)
+    for (auto itr = m_pMipLevels.begin(); itr != m_pMipLevels.end(); ++itr)
     {
         if (itr->second->m_pData)
             delete[] itr->second->m_pData;

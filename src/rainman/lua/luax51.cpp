@@ -84,8 +84,8 @@ int luax51_string_split(lua_State *L)
     while (lua51_type(L, kRetStart) != LUA_TNIL)
     {
         const char *sArgString = lua51_tostring(L, kArgString);
-        size_t iStart = (size_t)lua51_tonumber(L, kRetStart);
-        size_t iEnd = (size_t)lua51_tonumber(L, kRetStart);
+        auto iStart = (size_t)lua51_tonumber(L, kRetStart);
+        auto iEnd = (size_t)lua51_tonumber(L, kRetStart);
 
         lua51_pushlstring(L, lua51_tostring(L, kArgString) + iInitPos - 1,
                           ((size_t)lua51_tonumber(L, kRetStart)) - iInitPos);
@@ -255,7 +255,7 @@ int luax51_string_after(lua_State *L)
         return 1;
     }
 
-    size_t iEndPos = (size_t)lua51_tonumber(L, kEndPos);
+    auto iEndPos = (size_t)lua51_tonumber(L, kEndPos);
 
     lua51_pushlstring(L, sArgString + iEndPos, iArgStringLen - iEndPos);
     return 1;
@@ -301,7 +301,7 @@ int luax51_string_before(lua_State *L)
         return 1;
     }
 
-    size_t iStartPos = (size_t)lua51_tonumber(L, kStartPos);
+    auto iStartPos = (size_t)lua51_tonumber(L, kStartPos);
 
     lua51_pushlstring(L, sArgString, iStartPos - 1);
     return 1;

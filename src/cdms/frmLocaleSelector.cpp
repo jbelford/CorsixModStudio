@@ -33,7 +33,7 @@ frmLocaleSelector::frmLocaleSelector(const wxString &sTitle, ConstructFrame::eLo
                wxFRAME_FLOAT_ON_PARENT | wxFRAME_TOOL_WINDOW | wxCAPTION)
 {
     CentreOnParent();
-    wxBoxSizer *pTopSizer = new wxBoxSizer(wxVERTICAL);
+    auto *pTopSizer = new wxBoxSizer(wxVERTICAL);
 
     wxArrayString aLocales;
     switch (eGame)
@@ -83,7 +83,7 @@ frmLocaleSelector::frmLocaleSelector(const wxString &sTitle, ConstructFrame::eLo
     pTopSizer->Add(m_pCheckbox = new wxCheckBox(this, IDC_Remember, AppStr(localeselect_remember)), 0,
                    wxALIGN_LEFT | wxALL, 3);
 
-    wxBoxSizer *pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
+    auto *pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
 
     pButtonSizer->Add(new wxButton(this, wxID_OPEN, AppStr(localeselect_use)), 0, wxEXPAND | wxALL, 3);
 
@@ -117,7 +117,7 @@ void frmLocaleSelector::OnNewClick(wxCommandEvent &event)
 
         // Flush immediately so locale preference persists even if the
         // application exits before OnExit's Flush() is reached.
-        wxFileConfig *pCfg = dynamic_cast<wxFileConfig *>(wxConfigBase::Get());
+        auto *pCfg = dynamic_cast<wxFileConfig *>(wxConfigBase::Get());
         if (pCfg)
             pCfg->Flush();
 

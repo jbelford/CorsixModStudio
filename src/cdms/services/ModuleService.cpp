@@ -32,7 +32,7 @@ Result<CModuleFile *> ModuleService::LoadModuleFile(const wxString &sPath, pfnSt
     if (!sFile)
         return Result<CModuleFile *>::Err(wxT("Memory allocation error"));
 
-    CModuleFile *pMod = new CModuleFile;
+    auto *pMod = new CModuleFile;
     if (!pMod)
     {
         return Result<CModuleFile *>::Err(wxT("Memory allocation error"));
@@ -58,7 +58,7 @@ Result<CModuleFile *> ModuleService::LoadSgaAsMod(const wxString &sPath, pfnStat
     if (!sFile)
         return Result<CModuleFile *>::Err(wxT("Memory allocation error"));
 
-    CModuleFile *pMod = new CModuleFile;
+    auto *pMod = new CModuleFile;
     if (!pMod)
     {
         return Result<CModuleFile *>::Err(wxT("Memory allocation error"));
