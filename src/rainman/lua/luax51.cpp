@@ -83,10 +83,6 @@ int luax51_string_split(lua_State *L)
 
     while (lua51_type(L, kRetStart) != LUA_TNIL)
     {
-        const char *sArgString = lua51_tostring(L, kArgString);
-        auto iStart = (size_t)lua51_tonumber(L, kRetStart);
-        auto iEnd = (size_t)lua51_tonumber(L, kRetStart);
-
         lua51_pushlstring(L, lua51_tostring(L, kArgString) + iInitPos - 1,
                           ((size_t)lua51_tonumber(L, kRetStart)) - iInitPos);
         lua51_rawseti(L, kResultTable, ++iTableSize);

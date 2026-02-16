@@ -111,7 +111,7 @@ frmUCSEditor::frmUCSEditor(wxWindow *parent, wxWindowID id, bool bReadOnly, cons
                    1, wxEXPAND | wxALL, 0);
 
     auto *pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
-    wxWindow *pBgTemp, *pButton2;
+    wxWindow *pBgTemp;
 
     pButtonSizer->Add(m_pLoadButton = new wxButton(this, wxID_OPEN, AppStr(ucsedit_load_title)), 0, wxEXPAND | wxALL,
                       3);
@@ -121,7 +121,7 @@ frmUCSEditor::frmUCSEditor(wxWindow *parent, wxWindowID id, bool bReadOnly, cons
         pButtonSizer->Add(new wxButton(this, wxID_CANCEL, AppStr(ucsedit_rgdcancel)), 0, wxEXPAND | wxALL, 3);
     }
     pButtonSizer->Add(pBgTemp = new wxButton(this, wxID_NEW, AppStr(ucsedit_newentry)), 0, wxEXPAND | wxALL, 3);
-    pButtonSizer->Add(pButton2 = new wxButton(this, wxID_SAVE, AppStr(ucsedit_save)), 0, wxEXPAND | wxALL, 3);
+    pButtonSizer->Add(new wxButton(this, wxID_SAVE, AppStr(ucsedit_save)), 0, wxEXPAND | wxALL, 3);
 
     pTopSizer->Add(pButtonSizer, 0, wxALIGN_RIGHT);
 

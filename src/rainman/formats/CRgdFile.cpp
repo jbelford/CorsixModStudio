@@ -706,7 +706,6 @@ void CRgdFile::Load(IFileStore::IStream *pStream)
 
         try
         {
-            long iPos = pStream->VTell();
             pStream->VRead(pChunk->iDataLength, 1, (void *)pChunk->pData);
         }
         catch (CRainmanException *pE)

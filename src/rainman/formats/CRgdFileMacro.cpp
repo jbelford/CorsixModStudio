@@ -398,8 +398,6 @@ CRgdFileMacro::_tCRgdFile *CRgdFileMacro::_tCRgdFile::construct(lua_State *L, CR
 {
     auto *pThis = lua51x_newuserdata<_tCRgdFile>(L);
 
-    int iTop = lua51_gettop(L);
-
     pThis->construct(_pMacro, _sFile, _pStore);
     lua51_newtable(L);
     lua51_pushstring(L, "__gc");
@@ -483,8 +481,6 @@ CRgdFileMacro::_tCRgdFile *CRgdFileMacro::_tCRgdFile::construct(lua_State *L, CR
 
     // Register userdata metatable
     lua51_setmetatable(L, -2); // RGDF
-
-    int iTopNow = lua51_gettop(L);
 
     lua51_pushlightuserdata(L, (void *)pThis); // RGDF pUD
     lua51_newtable(L);                         // RGDF pUD TRGD
@@ -978,8 +974,6 @@ CRgdFileMacro::_tCRgdTable *CRgdFileMacro::_tCRgdTable::construct(lua_State *L, 
         auto *pThis = lua51x_newuserdata<_tCRgdTable>(L); // O
         pThis->construct(pRgdFile, pRgdData);
 
-        int iTop = lua51_gettop(L);
-
         lua51_pushlightuserdata(L, (void *)pRgdFile); // O P
         lua51_gettable(L, LUA_REGISTRYINDEX);         // O T
         lua51_pushlightuserdata(L, (void *)pRgdData); // O T K
@@ -1050,8 +1044,6 @@ CRgdFileMacro::_tCRgdTable *CRgdFileMacro::_tCRgdTable::construct(lua_State *L, 
 
         // Register userdata metatable
         lua51_setmetatable(L, -2);
-
-        int iTop2 = lua51_gettop(L);
 
         return pThis;
     }
@@ -1432,8 +1424,6 @@ void CRgdFileMacro::loadMacro(const char *sCode)
         _cleanLua();
     m_pL = CHECK_MEM(lua51_open());
 
-    int iTop = lua51_gettop(m_pL);
-
     lua51_pushcfunction(m_pL, lua51open_base);
     lua51_call(m_pL, 0, 0);
     lua51_pushcfunction(m_pL, lua51open_table);
@@ -1458,8 +1448,6 @@ void CRgdFileMacro::loadMacro(const char *sCode)
     lua51_pushvalue(m_pL, -2);           /* math library... */
     lua51_setfield(m_pL, -2, "__index"); /* ...is the __index metamethod */
     lua51_pop(m_pL, 2);                  /* pop metatable */
-
-    int iTop2 = lua51_gettop(m_pL);
 
     lua51_pushstring(m_pL, "print");
     lua51_pushlightuserdata(m_pL, (void *)this);
@@ -1600,8 +1588,6 @@ void CRgdFileMacro::loadMacro(const char *sCode)
     lua51_pushcclosure(m_pL, luax51_math_clamp, 0);
     lua51_settable(m_pL, -3);
     lua51_pop(m_pL, 1);
-
-    int iTop3 = lua51_gettop(m_pL);
 
     int iLoadErr = lua51L_loadbuffer(m_pL, sCode, strlen(sCode), "macro");
     if (iLoadErr == LUA_ERRSYNTAX)

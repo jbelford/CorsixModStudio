@@ -227,6 +227,10 @@ static void luaEnquiry(lua_State *L, int i)
         sType = "thread";
     if (iType == LUA_TLIGHTUSERDATA)
         sType = "ptr";
+
+    // Suppress dead-store warnings — this function exists for debugger inspection
+    (void)sType;
+    (void)sVal;
 }
 
 int CLuaFile2::_luaIndexEvent(lua_State *L)

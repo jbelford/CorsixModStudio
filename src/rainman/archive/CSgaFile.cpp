@@ -679,7 +679,8 @@ gotfile:
                                     sIdentifier);
     }
 
-    unsigned long iRawCRC = crc32(crc32(0L, Z_NULL, 0), (const Bytef *)pData, iDataLengthCompressed);
+    // CRC computed for potential future verification
+    (void)crc32(crc32(0L, Z_NULL, 0), (const Bytef *)pData, iDataLengthCompressed);
 
     if (iDataLengthCompressed != iDataLength)
     {
@@ -703,7 +704,8 @@ gotfile:
         pData = pDecompressedData;
     }
 
-    unsigned long iUncompressedCRC = crc32(crc32(0L, Z_NULL, 0), (const Bytef *)pData, iDataLength);
+    // CRC computed for potential future verification
+    (void)crc32(crc32(0L, Z_NULL, 0), (const Bytef *)pData, iDataLength);
 
     CMemoryStore CMS;
     CMS.VInit();

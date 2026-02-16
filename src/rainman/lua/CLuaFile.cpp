@@ -273,10 +273,6 @@ int CLuaFile::_Inherit(lua_State *L)
     }
 
     auto *pFiles = (IFileStore *)lua_touserdata(L, lua_upvalueindex(1));
-    lua_pushstring(L, "m_pRefQueue");
-    lua_gettable(L, LUA_REGISTRYINDEX);
-    auto *pRefQueue = (std::deque<const char *> *)lua_touserdata(L, -1);
-    lua_pop(L, 1);
     lua_pushstring(L, "m_pCache");
     lua_gettable(L, LUA_REGISTRYINDEX);
     auto *pCache = (CLuaFileCache *)lua_touserdata(L, -1);
@@ -310,6 +306,11 @@ int CLuaFile::_Inherit(lua_State *L)
         return 1;
     }
     IGNORE_EXCEPTIONS
+
+    lua_pushstring(L, "m_pRefQueue");
+    lua_gettable(L, LUA_REGISTRYINDEX);
+    auto *pRefQueue = (std::deque<const char *> *)lua_touserdata(L, -1);
+    lua_pop(L, 1);
 
     char *sFullPathFile = new char[strlen(sFile) + 32];
     if (!sFullPathFile)
@@ -424,10 +425,6 @@ int CLuaFile::_InheritMeta(lua_State *L)
     }
 
     auto *pFiles = (IFileStore *)lua_touserdata(L, lua_upvalueindex(1));
-    lua_pushstring(L, "m_pRefQueue");
-    lua_gettable(L, LUA_REGISTRYINDEX);
-    auto *pRefQueue = (std::deque<const char *> *)lua_touserdata(L, -1);
-    lua_pop(L, 1);
     lua_pushstring(L, "m_pCache");
     lua_gettable(L, LUA_REGISTRYINDEX);
     auto *pCache = (CLuaFileCache *)lua_touserdata(L, -1);
@@ -459,6 +456,11 @@ int CLuaFile::_InheritMeta(lua_State *L)
         return 1;
     }
     IGNORE_EXCEPTIONS
+
+    lua_pushstring(L, "m_pRefQueue");
+    lua_gettable(L, LUA_REGISTRYINDEX);
+    auto *pRefQueue = (std::deque<const char *> *)lua_touserdata(L, -1);
+    lua_pop(L, 1);
 
     char *sFullPathFile = new char[strlen(sFile) + 32];
     if (!sFullPathFile)
@@ -585,10 +587,6 @@ int CLuaFile::_Reference(lua_State *L)
     }
 
     auto *pFiles = (IFileStore *)lua_touserdata(L, lua_upvalueindex(1));
-    lua_pushstring(L, "m_pRefQueue");
-    lua_gettable(L, LUA_REGISTRYINDEX);
-    auto *pRefQueue = (std::deque<const char *> *)lua_touserdata(L, -1);
-    lua_pop(L, 1);
     lua_pushstring(L, "m_pCache");
     lua_gettable(L, LUA_REGISTRYINDEX);
     auto *pCache = (CLuaFileCache *)lua_touserdata(L, -1);
@@ -620,6 +618,11 @@ int CLuaFile::_Reference(lua_State *L)
         return 1;
     }
     IGNORE_EXCEPTIONS
+
+    lua_pushstring(L, "m_pRefQueue");
+    lua_gettable(L, LUA_REGISTRYINDEX);
+    auto *pRefQueue = (std::deque<const char *> *)lua_touserdata(L, -1);
+    lua_pop(L, 1);
 
     char *sFullPathFile = new char[strlen(sFile) + 32];
     if (!sFullPathFile)
@@ -735,7 +738,6 @@ int CLuaFile::_Debug(lua_State *L)
 // table[key] = value
 int CLuaFile::_meta_index(lua_State *L)
 {
-    bool bIsNew = lua_toboolean(L, lua_upvalueindex(1)) ? true : false;
     lua_pushstring(L, "m_pRefQueue");
     lua_gettable(L, LUA_REGISTRYINDEX);
     auto *pRefQueue = (std::deque<const char *> *)lua_touserdata(L, -1);
@@ -747,8 +749,7 @@ int CLuaFile::_meta_index(lua_State *L)
     lua_pushstring(L, "Set");   // push 1: +1
     luax_GetOrMakeTable(L, -2); // pop 1, push 1: 0
     // Set $dow_mod_studio.Set.key
-    lua_pushvalue(L, -4); // push 1: +1
-    const char *sSetIn = *pRefQueue->rbegin();
+    lua_pushvalue(L, -4);                      // push 1: +1
     lua_pushstring(L, (*pRefQueue->rbegin())); // push 1: +1
     lua_settable(L, -3);                       // pop 2: -2
     lua_pop(L, 2);

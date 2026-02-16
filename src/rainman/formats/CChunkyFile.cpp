@@ -396,8 +396,6 @@ CChunkyFile::CChunk *CChunkyFile::GetChildByName(const char *sName, CChunkyFile:
 {
     for (auto itr = m_vChunks.begin(); itr != m_vChunks.end(); ++itr)
     {
-        CChunkyFile::CChunk::eTypes eT = (**itr).m_eType;
-        const char *s = (**itr).m_sName;
         if ((**itr).m_eType == eType && strcmp(sName, (**itr).m_sName) == 0)
             return *itr;
     }
