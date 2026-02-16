@@ -132,6 +132,7 @@ frmSgaMake::frmSgaMake()
 void frmSgaMake::OnFileOutUpdated(wxCommandEvent &event)
 {
     UNUSED(event);
+    // NOLINT(bugprone-branch-clone): first and last branches intentionally both default to "Data"
     if (m_pOutFile->GetValue().Lower().Find(wxT("data")) != wxNOT_FOUND)
     {
         m_pTocName->SetValue(wxT("Data"));
@@ -143,7 +144,7 @@ void frmSgaMake::OnFileOutUpdated(wxCommandEvent &event)
     }
     else
     {
-        m_pTocName->SetValue(wxT("Data"));
+        m_pTocName->SetValue(wxT("Data")); // NOLINT(bugprone-branch-clone)
     }
 }
 

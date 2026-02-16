@@ -513,6 +513,7 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
             LoadCohEngine(module, "Engine", "(Engine)", iReloadWhatEngines, 30001, THE_CALLBACK);
             LoadCohEngine(module, "RelicOnline", "(Relic Online)", iReloadWhatEngines, 30000, THE_CALLBACK);
         }
+        // NOLINTNEXTLINE(bugprone-branch-clone) distinct module type, same engine loading
         else if (module.m_eModuleType == CModuleFile::MT_CompanyOfHeroes)
         {
             LoadCohEngine(module, "Engine", "(Engine)", iReloadWhatEngines, 30001, THE_CALLBACK);
@@ -667,7 +668,7 @@ void CResourceLoader::DoLoadArchive(CModuleFile &module, const char *sFullPath, 
             module.m_pNewFileMap->MapSga(pSrc, pSga);
         }
         delete pDirItr;
-        inputStream.release();
+        (void)inputStream.release();
     }
     catch (CRainmanException *pE)
     {

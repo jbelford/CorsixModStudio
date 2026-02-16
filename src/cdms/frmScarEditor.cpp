@@ -412,7 +412,7 @@ void frmScarEditor::Load(IFileStore::IStream *pFile)
     m_pSTC->SetSavePoint();
 
     m_pFunctionDropdown->Clear();
-    _FillFunctionDrop(wxString());
+    FillFunctionDrop(wxString());
 }
 
 void frmScarEditor::OnStyleNeeded(wxStyledTextEvent &event)
@@ -483,7 +483,7 @@ void frmScarEditor::OnCheckLua(wxCommandEvent &event)
     pfn_lua_close(L);
 
     m_pFunctionDropdown->Clear();
-    _FillFunctionDrop(wxString());
+    FillFunctionDrop(wxString());
 }
 
 char *frmScarEditor::_ReadNiceString(FILE *f)
@@ -506,7 +506,7 @@ void frmScarEditor::OnFuncListChoose(wxCommandEvent &event)
     if (event.GetSelection())
     {
         m_pFunctionDropdown->Clear();
-        int iPosNew = _FillFunctionDrop(event.GetString());
+        int iPosNew = FillFunctionDrop(event.GetString());
         if (iPosNew != -1)
         {
             m_pSTC->GotoPos(iPosNew);
@@ -517,7 +517,7 @@ void frmScarEditor::OnFuncListChoose(wxCommandEvent &event)
     }
 }
 
-int frmScarEditor::_FillFunctionDrop(wxString sNameTarget)
+int frmScarEditor::FillFunctionDrop(wxString sNameTarget)
 {
     int iRet = -1;
     m_pFunctionDropdown->Append(AppStr(scar_funcdrop), (void *)0);
@@ -644,7 +644,7 @@ frmScarEditor::frmScarEditor(wxTreeItemId &oFileParent, wxString sFilename, wxWi
     pToolbar->Realize();
 
     pTopSizer->Add(m_pSTC = new wxStyledTextCtrl(this, IDC_Text), 1, wxEXPAND | wxALL, 0);
-    _FillFunctionDrop(wxString());
+    FillFunctionDrop(wxString());
 
     m_pSTC->StyleClearAll();
     // default font for all styles

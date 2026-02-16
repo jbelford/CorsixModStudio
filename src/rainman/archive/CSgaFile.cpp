@@ -886,7 +886,7 @@ CSgaFile::CIterator::CIterator(long iDir, CSgaFile *pSga)
     }
 
     long iToC = -1;
-    for (short i = 0; i < m_pSga->m_pDataHeaderInfo->iToCCount; ++i)
+    for (unsigned short i = 0; i < m_pSga->m_pDataHeaderInfo->iToCCount; ++i)
     {
         if (m_pSga->m_pSgaToCs[i].iStartDir <= iDir && m_pSga->m_pSgaToCs[i].iEndDir > iDir)
         {

@@ -240,8 +240,10 @@ void CUcsFile::LoadDat(IFileStore::IStream *pStream)
                 iNumber += (sLine[i] - '0');
                 ++i;
             }
-            if (i != 0 && sLine[i] && sLine[++i] && m_mapValues[iNumber] == nullptr) // silenty ignore duplicate values
+            if (i != 0 && sLine[i] && sLine[i + 1] &&
+                m_mapValues[iNumber] == nullptr) // silenty ignore duplicate values
             {
+                ++i;
                 wchar_t *sString = mywcsdup(sLine + i);
                 if (sString)
                 {
@@ -290,8 +292,9 @@ void CUcsFile::Load(IFileStore::IStream *pStream)
             iNumber += (sLine[i] - '0');
             ++i;
         }
-        if (i != 0 && sLine[i] && sLine[++i] && m_mapValues[iNumber] == nullptr) // silenty ignore duplicate values
+        if (i != 0 && sLine[i] && sLine[i + 1] && m_mapValues[iNumber] == nullptr) // silenty ignore duplicate values
         {
+            ++i;
             wchar_t *sString = mywcsdup(sLine + i);
             if (sString)
             {

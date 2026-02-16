@@ -128,7 +128,7 @@ void CRgmFile::Save(IFileStore::IOutputStream *pStream)
                     ++sVal;
                     if ((*sVal >= 'a' && *sVal <= 'z') || (*sVal >= 'A' && *sVal <= 'Z') ||
                         (*sVal >= '0' && *sVal <= '9') || *sVal == '_' || *sVal == ' ')
-                        ;
+                        ; // NOLINT(bugprone-branch-clone) valid char, continue loop
                     else if (*sVal == '\\' && sVal[-1] != '\\')
                         ;
                     else if (*sVal == 0 && sVal[-1] != '\\')

@@ -373,7 +373,7 @@ void CRgtFile::LoadTGA(IFileStore::IStream *pFile, bool bMakeMips, bool *pIs32Bi
     pChunkData->SetVersion(1);
     std::unique_ptr<IFileStore::IOutputStream> pOutData(CMemoryStore::OpenOutputStreamExt());
 
-    auto *pDatIn = new unsigned char[(iTga_BPP >> 3) * iTga_W * iTga_H];
+    auto *pDatIn = new unsigned char[static_cast<size_t>(iTga_BPP >> 3) * iTga_W * iTga_H];
     pFile->VRead(iTga_W * iTga_H, iTga_BPP / 8, pDatIn);
 
     if (iTga_BPP == 32)
@@ -410,10 +410,10 @@ unsigned char *CRgtFile::DownsizeData(unsigned char *pRGBAData, unsigned long &i
     if ((iWidth * iHeight) < 4)
         return nullptr;
 
-    unsigned char *pMippedData = new unsigned char[iWidth * iHeight], *pMipOut, *pInA, *pInB;
+    unsigned char *pMippedData = new unsigned char[static_cast<size_t>(iWidth) * iHeight], *pMipOut, *pInA, *pInB;
     pMipOut = pMippedData;
     pInA = pRGBAData;
-    pInB = pRGBAData + (iWidth * 4) + iRowSkip;
+    pInB = pRGBAData + (static_cast<size_t>(iWidth) * 4) + iRowSkip;
     for (unsigned long iY = 0; iY < iHeight; iY += 2)
     {
         for (unsigned long iX = 0; iX < iWidth; iX += 2)
@@ -742,7 +742,7 @@ void CRgtFile::SaveDDS(IFileStore::IOutputStream *pFile, int iCompression, bool 
 
     if (m_iDxtCompression != iCompression || bMipLevels)
     {
-        pRGBATop = new unsigned char[iW * iH * 4];
+        pRGBATop = new unsigned char[static_cast<size_t>(iW) * iH * 4];
         if (m_eFormat == IF_Tga)
         {
             memcpy(pRGBATop, m_pMipLevels[m_iMipCurrent]->m_pData, m_pMipLevels[m_iMipCurrent]->m_iDataLength);

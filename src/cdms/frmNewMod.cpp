@@ -550,6 +550,8 @@ void frmNewMod::OnNewClick(wxCommandEvent &event)
         case g_kWinterAssault:
             fprintf(f, "DllName = WXPMod\xD\n");
             break;
+        default:
+            break;
         };
         fprintf(f, "ModFolder = %s\xD\nModVersion = 1.0\xD\nTextureFE = \xD\nTextureIcon = \xD\n\xD\n", sTmpDir);
         free(sTmpDir);
@@ -571,6 +573,8 @@ void frmNewMod::OnNewClick(wxCommandEvent &event)
         case g_kSoulstorm:
             fprintf(f, "RequiredMod.1 = DXP2\xD\n");
             fprintf(f, "RequiredMod.2 = W40k\xD\n");
+            break;
+        default:
             break;
         };
     }

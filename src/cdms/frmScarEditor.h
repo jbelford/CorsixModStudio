@@ -68,7 +68,7 @@ class frmScarEditor : public wxWindow
     static char *_ReadNiceString(FILE *f);
     void _RestorePreviousCalltip();
     void _PushThisCalltip();
-    int _FillFunctionDrop(const wxString &sNameTarget);
+    int FillFunctionDrop(const wxString &sNameTarget);
 
   public:
     frmScarEditor(wxTreeItemId &oFileParent, wxString sFilename, wxWindow *parent, wxWindowID id,

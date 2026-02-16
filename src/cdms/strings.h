@@ -16,8 +16,8 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _STRINGS_H_
-#define _STRINGS_H_
+#ifndef STRINGS_H_
+#define STRINGS_H_
 // For compilers that support precompilation, includes "wx/wx.h".
 #include "wx/wxprec.h"
 
@@ -33,7 +33,7 @@
 // ----------------------------
 #define AppStr(name) g_sAppStr_AutoDef_##name
 #define AppStrS(name, S) wxString(wxT("")).Append(AppStr(name##_pre)).Append(S).Append(AppStr(name##_post))
-#ifndef _S_CPP_
+#ifndef S_CPP_
 #define S(name, val) extern wxString AppStr(name);
 #define SE(name, val) extern wxString AppStr(name);
 #else

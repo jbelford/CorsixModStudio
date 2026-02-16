@@ -253,7 +253,7 @@ long CModuleFile::GetSgaOutputVersion()
     {
         return 4;
     }
-    else if (m_eModuleType == MT_CompanyOfHeroes)
+    else if (m_eModuleType == MT_CompanyOfHeroes) // NOLINT(bugprone-branch-clone) distinct type, same version
     {
         return 4;
     }

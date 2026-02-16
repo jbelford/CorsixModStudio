@@ -734,8 +734,8 @@ void ConstructFrame::DoLoadMod(wxString sPath, eLoadModGames eGame)
         MD5Final(sModConfigKey, &md5ModName);
         for (int i = 0; i < 16; ++i)
         {
-            sModConfigKeyHex[i * 2] = "0123456789ABCDEF"[sModConfigKey[i] >> 4];
-            sModConfigKeyHex[(i * 2) + 1] = "0123456789ABCDEF"[sModConfigKey[i] & 15];
+            sModConfigKeyHex[static_cast<size_t>(i) * 2] = "0123456789ABCDEF"[sModConfigKey[i] >> 4];
+            sModConfigKeyHex[(static_cast<size_t>(i) * 2) + 1] = "0123456789ABCDEF"[sModConfigKey[i] & 15];
         }
         TheConfig->SetPath(wxString(wxT("/")).Append(sModConfigKeyHex));
 

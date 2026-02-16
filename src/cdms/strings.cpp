@@ -15,8 +15,8 @@
     along with Corsix's Mod Studio; if not, write to the Free Software
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
-#define _STRINGS_H_
+#define STRINGS_H_
 #include "Common.h"
-#undef _STRINGS_H_
-#define _S_CPP_
+#undef STRINGS_H_
+#define S_CPP_
 #include "strings.h"
