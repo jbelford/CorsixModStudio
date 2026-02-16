@@ -527,6 +527,8 @@ void CModuleFile::LoadSgaAsMod(const char *sFileName, CALLBACK_ARG)
     case 4:
         m_eModuleType = MT_CompanyOfHeroes;
         break;
+    default:
+        break;
     };
 
     m_metadata.m_sModFolder = strdup("");
@@ -739,19 +741,21 @@ const wchar_t *CModuleFile::ResolveUCS(unsigned long iStringID)
 
     for (auto itr = m_vLocaleTexts.begin(); itr != m_vLocaleTexts.end(); ++itr)
     {
-        if ((*itr) && (**itr).m_pHandle && (t = (**itr).m_pHandle->ResolveStringID(iStringID)))
+        if ((*itr) && (**itr).m_pHandle &&
+            (t = (**itr).m_pHandle->ResolveStringID(iStringID))) // NOLINT(bugprone-assignment-in-if-condition)
             return t;
     }
 
     for (auto itr = m_vRequireds.begin(); itr != m_vRequireds.end(); ++itr)
     {
-        if ((*itr) && (**itr).m_pHandle && (t = (**itr).m_pHandle->ResolveUCS(iStringID)))
+        if ((*itr) && (**itr).m_pHandle &&
+            (t = (**itr).m_pHandle->ResolveUCS(iStringID))) // NOLINT(bugprone-assignment-in-if-condition)
             return t;
     }
 
     for (auto itr = m_vEngines.begin(); itr != m_vEngines.end(); ++itr)
     {
-        if ((*itr) && (t = (*itr)->ResolveUCS(iStringID)))
+        if ((*itr) && (t = (*itr)->ResolveUCS(iStringID))) // NOLINT(bugprone-assignment-in-if-condition)
             return t;
     }
 

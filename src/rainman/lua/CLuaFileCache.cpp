@@ -58,7 +58,7 @@ void CLuaFileCache::FreeState(lua_State *L)
         {
             if (pItr->bUseful)
                 throw new CRainmanException(__FILE__, __LINE__, "Cannot delete state as it is useful");
-            if ((pPrev->pNext = pItr->pNext) == nullptr)
+            if ((pPrev->pNext = pItr->pNext) == nullptr) // NOLINT(bugprone-assignment-in-if-condition)
                 m_pEntriesEnd = pPrev;
             break;
         }

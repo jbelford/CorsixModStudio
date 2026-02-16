@@ -297,7 +297,7 @@ int CLuaFile2::_luaParent(const char *sFnName, const char *sTableToGrab)
 
         // Load parented file
         CLuaFile2 oParentFile;
-        if ((oParentFile.L = m_pCache->Fetch(sFileName)) == nullptr)
+        if ((oParentFile.L = m_pCache->Fetch(sFileName)) == nullptr) // NOLINT(bugprone-assignment-in-if-condition)
         {
             if (sFileName[0] == 0)
             {
@@ -456,6 +456,8 @@ IMetaNode::eDataTypes CLuaStateNode::VGetType()
 
     case LUA_TTABLE:
         eRet = DT_Table;
+        break;
+    default:
         break;
     };
     lua_pop(L, 1);
@@ -942,6 +944,8 @@ CLuaFile2::CNode::eDataTypes CLuaFile2::CNode::VGetType()
     case LUA_TTABLE:
         eRet = DT_Table;
         break;
+    default:
+        break;
     };
     return eRet;
 }
@@ -1347,6 +1351,8 @@ void CLuaFile2::_saveTable(const char *sPrefix, IFileStore::IOutputStream *pStre
             break;
         case 3:
             lua_pushboolean(L, (**itr).b);
+            break;
+        default:
             break;
         }
         lua_pushvalue(L, -1); // K K T

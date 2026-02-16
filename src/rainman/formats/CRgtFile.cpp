@@ -797,7 +797,7 @@ void CRgtFile::SaveDDS(IFileStore::IOutputStream *pFile, int iCompression, bool 
         {
             unsigned char *pReduced = DownsizeData(pRGBATop, iW, iH);
             delete[] pRGBATop;
-            if ((pRGBATop = pReduced) == nullptr)
+            if ((pRGBATop = pReduced) == nullptr) // NOLINT(bugprone-assignment-in-if-condition)
                 break;
             iPrimarySize = ((iW + 3) / 4) * ((iH + 3) / 4);
             if (iCompression == 1)

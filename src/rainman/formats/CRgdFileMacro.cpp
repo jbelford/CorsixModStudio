@@ -1687,7 +1687,7 @@ void CRgdFileMacro::runAtEnd()
     }
 
     int iErr;
-    if (iErr = lua51_pcall(m_pL, 0, 0, 0))
+    if (iErr = lua51_pcall(m_pL, 0, 0, 0)) // NOLINT(bugprone-assignment-in-if-condition)
     {
         if (lua51_type(m_pL, -1) == LUA_TLIGHTUSERDATA)
         {
@@ -1741,7 +1741,7 @@ void CRgdFileMacro::runMacro(const char *sFile, IFileStore *pStore)
     }
 
     int iErr;
-    if (iErr = lua51_pcall(m_pL, 1, 0, 0))
+    if (iErr = lua51_pcall(m_pL, 1, 0, 0)) // NOLINT(bugprone-assignment-in-if-condition)
     {
         if (lua51_type(m_pL, -1) == LUA_TLIGHTUSERDATA)
         {

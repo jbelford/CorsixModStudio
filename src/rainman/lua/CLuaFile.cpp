@@ -1204,6 +1204,8 @@ CLuaFile::_NodeLocator::_NodeLocator(lua_State *L, int iIndex,
     case LUA_TTHREAD:
         throw new CRainmanException(__FILE__, __LINE__, "Invalid type");
         break;
+    default:
+        break;
     }
 }
 
@@ -1457,7 +1459,10 @@ CLuaFile::CMetaNode::eDataTypes CLuaFile::CMetaNode::VGetType()
         auto *pExisting = (tLuaTableProtector *)lua_touserdata(m_pLua, -1);
         if (pExisting->iMagic == 0x7291BEEF)
             eRet = DT_Table;
+        break;
     }
+    default:
+        break;
     };
     lua_pop(m_pLua, 1);
     return eRet;

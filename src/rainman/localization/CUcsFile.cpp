@@ -280,7 +280,7 @@ void CUcsFile::Load(IFileStore::IStream *pStream)
     }
 
     wchar_t *sLine = nullptr;
-    while (sLine = readwideline(pStream))
+    while (sLine = readwideline(pStream)) // NOLINT(bugprone-assignment-in-if-condition)
     {
         unsigned long iNumber = 0;
         unsigned long i = 0;
@@ -296,9 +296,9 @@ void CUcsFile::Load(IFileStore::IStream *pStream)
             if (sString)
             {
                 wchar_t *sTmp;
-                if (sTmp = wcschr(sString, 0x0D))
+                if (sTmp = wcschr(sString, 0x0D)) // NOLINT(bugprone-assignment-in-if-condition)
                     *sTmp = 0;
-                if (sTmp = wcschr(sString, 0x0A))
+                if (sTmp = wcschr(sString, 0x0A)) // NOLINT(bugprone-assignment-in-if-condition)
                     *sTmp = 0;
 
                 m_mapValues[iNumber] = sString;

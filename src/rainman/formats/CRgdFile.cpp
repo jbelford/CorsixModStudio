@@ -565,6 +565,8 @@ void CRgdFile::_LoadLua(lua_State *L, _RgdEntry *pDest, bool bSkipThisLevelRef)
     case LUA_TFUNCTION:
     case LUA_TTHREAD:
         throw new CRainmanException(nullptr, __FILE__, __LINE__, "Data type %i not supported", lua_type(L, -1));
+    default:
+        break;
     };
 }
 

@@ -729,7 +729,7 @@ void CDoWFileView::_RawMapFolder(unsigned long iModID, unsigned long iSourceID,
                 auto *pNewFile = new _VirtFile;
                 if (pNewFile == nullptr)
                     throw new CRainmanException(__FILE__, __LINE__, "Memory allocation error");
-                if (pNewFile->bInReqMod = bIsReqMod)
+                if (pNewFile->bInReqMod = bIsReqMod) // NOLINT(bugprone-assignment-in-if-condition)
                 {
                     //! \todo Establish if anything was meant to go here
                 }

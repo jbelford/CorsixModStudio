@@ -123,6 +123,8 @@ void luax_PrintGlobals(lua_State *L, const char *sFile, unsigned long iLevel, bo
             case LUA_TTHREAD:
                 fputs("(thread)", f);
                 break;
+            default:
+                break;
             }
             fputs(" = ", f);
             switch (lua_type(L, -1))
@@ -169,6 +171,8 @@ void luax_PrintGlobals(lua_State *L, const char *sFile, unsigned long iLevel, bo
 
             case LUA_TTHREAD:
                 fputs("(thread)", f);
+                break;
+            default:
                 break;
             }
             fputs("\n", f);

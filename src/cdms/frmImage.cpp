@@ -124,6 +124,8 @@ frmImageViewer::frmImageViewer(wxTreeItemId &oFileParent, wxString sFilename, wx
         case 5:
             pRadioBox->SetSelection(4);
             break;
+        default:
+            break;
         }
         break;
     }
@@ -258,6 +260,8 @@ void frmImageViewer::OnRadioButtonSaveExt(wxCommandEvent &event)
             m_pSaveFileCompression->SetSelection(1);
         m_pSaveFileMips->Enable(false);
         m_pSaveFileMips->SetValue(false);
+        break;
+    default:
         break;
     }
 }
