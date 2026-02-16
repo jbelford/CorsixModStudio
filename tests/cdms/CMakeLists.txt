@@ -16,6 +16,9 @@ add_executable(cdms_tests
     moduleservice_test.cpp
     formatservice_test.cpp
     hashservice_test.cpp
+    cancellationtoken_test.cpp
+    progresschannel_test.cpp
+    taskrunner_test.cpp
     ${CDMS_SRC_DIR}/strconv.cpp
     ${CDMS_SRC_DIR}/strings.cpp
     ${CDMS_SRC_DIR}/Utility.cpp
@@ -24,6 +27,9 @@ add_executable(cdms_tests
     ${CDMS_SRC_DIR}/services/FileService.cpp
     ${CDMS_SRC_DIR}/services/FormatService.cpp
     ${CDMS_SRC_DIR}/services/HashService.cpp
+    ${CDMS_SRC_DIR}/async/CProgressChannel.cpp
+    ${CDMS_SRC_DIR}/async/CTaskRunner.cpp
+    ${CDMS_SRC_DIR}/async/CWxTaskRunner.cpp
 )
 
 target_include_directories(cdms_tests PRIVATE
