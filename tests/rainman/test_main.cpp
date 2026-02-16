@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <core/RainmanLog.h>
+#include <rainman/core/RainmanLog.h>
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/sink.h>
 

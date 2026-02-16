@@ -20,13 +20,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef _C_UCS_TRANSACTION_H_
 #define _C_UCS_TRANSACTION_H_
 
-#include "core/gnuc_defines.h"
+#include "rainman/core/gnuc_defines.h"
 // UCS = unicode character string ?
-#include "io/IFileStore.h"
+#include "rainman/io/IFileStore.h"
 #include <wchar.h>
 #include <map>
-#include "core/Api.h"
-#include "CUcsFile.h"
+#include "rainman/core/Api.h"
+#include "rainman/localization/CUcsFile.h"
 
 class RAINMAN_API CUcsTransaction : public CUcsFile
 {

@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef _MEM_DEBUG_H_
 #define _MEM_DEBUG_H_
 
-#include "gnuc_defines.h"
+#include "rainman/core/gnuc_defines.h"
 
 #ifndef RAINMAN_GNUC
 #ifdef _DEBUG

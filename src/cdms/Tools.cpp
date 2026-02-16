@@ -31,10 +31,10 @@
 #include "frmMassExtract.h"
 #include <memory>
 // Rainman_RGDDump.h removed; RgdDump usage is commented-out dead code
-#include <util/Util.h>
-#include <io/CFileSystemStore.h>
+#include <rainman/util/Util.h>
+#include <rainman/io/CFileSystemStore.h>
 #include "Common.h"
-#include "core/RainmanLog.h"
+#include "rainman/core/RainmanLog.h"
 
 wxString CLocaleTool::GetName() { return AppStr(locale); }
 wxString CLocaleTool::GetHelpString() { return wxT(""); }

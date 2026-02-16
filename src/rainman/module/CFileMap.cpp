@@ -17,12 +17,12 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "CFileMap.h"
-#include "archive/CSgaFile.h"
-#include "core/Exception.h"
+#include "rainman/module/CFileMap.h"
+#include "rainman/archive/CSgaFile.h"
+#include "rainman/core/Exception.h"
 #include <algorithm>
 #include <string>
-#include "core/memdebug.h"
+#include "rainman/core/memdebug.h"
 
 CFileMap::CFileMap()
 {

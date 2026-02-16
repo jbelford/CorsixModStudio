@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
-#include "localization/CUcsFile.h"
-#include "io/CMemoryStore.h"
-#include "core/Exception.h"
+#include "rainman/localization/CUcsFile.h"
+#include "rainman/io/CMemoryStore.h"
+#include "rainman/core/Exception.h"
 #include <cstring>
 #include <string>
 

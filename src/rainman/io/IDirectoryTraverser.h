@@ -20,10 +20,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef _I_DIRECTRY_TRAVERSER_H_
 #define _I_DIRECTRY_TRAVERSER_H_
 
-#include "core/gnuc_defines.h"
-#include "IFileStore.h"
-#include "core/WriteTime.h"
-#include "core/Api.h"
+#include "rainman/core/gnuc_defines.h"
+#include "rainman/io/IFileStore.h"
+#include "rainman/core/WriteTime.h"
+#include "rainman/core/Api.h"
 
 //! Directory traversiong interface
 /*!

@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "formats/CRgdHashTable.h"
+#include "rainman/formats/CRgdHashTable.h"
 #include <vector>
 #include <cstring>
 

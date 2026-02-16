@@ -20,9 +20,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef _INTERNAL_UTIL_H_
 #define _INTERNAL_UTIL_H_
 
-#include "gnuc_defines.h"
+#include "rainman/core/gnuc_defines.h"
 #include <stdio.h>
-#include "io/IDirectoryTraverser.h"
+#include "rainman/io/IDirectoryTraverser.h"
 
 char *Util_fgetline(FILE *f, unsigned int iInitSize = 32);
 void Util_TrimWhitespace(char **pStringPointer);

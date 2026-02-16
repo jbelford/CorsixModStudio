@@ -17,8 +17,8 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "Internal_Util.h"
-#include "Exception.h"
+#include "rainman/core/Internal_Util.h"
+#include "rainman/core/Exception.h"
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>

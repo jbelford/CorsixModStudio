@@ -17,20 +17,20 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "CSgaFile.h"
+#include "rainman/archive/CSgaFile.h"
 
 #include <memory.h>
 #include <string.h>
 #include <zlib.h>
-#include "util/crc32_case_idt.h"
+#include "rainman/util/crc32_case_idt.h"
 extern "C"
 {
-#include "util/md5.h"
+#include "rainman/util/md5.h"
 }
-#include "core/memdebug.h"
+#include "rainman/core/memdebug.h"
 #include <stdlib.h>
 #include <search.h>
-#include "core/Exception.h"
+#include "rainman/core/Exception.h"
 
 CSgaFile::CSgaFile(void)
 {

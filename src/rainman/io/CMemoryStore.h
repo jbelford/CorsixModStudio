@@ -20,8 +20,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef _C_MEMORY_STORE_H_
 #define _C_MEMORY_STORE_H_
 
-#include "core/gnuc_defines.h"
-#include "IFileStore.h"
+#include "rainman/core/gnuc_defines.h"
+#include "rainman/io/IFileStore.h"
 #include <memory.h>
 
 class RAINMAN_API CMemoryStore : public IFileStore

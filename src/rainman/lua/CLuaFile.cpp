@@ -17,7 +17,7 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "CLuaFile.h"
+#include "rainman/lua/CLuaFile.h"
 
 #ifdef _MSC_VER
 #include <intrin.h>
@@ -28,14 +28,14 @@ extern "C"
 #include <lauxlib.h>
 #include <lualib.h>
 };
-#include "luax.h"
+#include "rainman/lua/luax.h"
 #include <string.h>
 #include <stdlib.h>
 #include <algorithm>
-#include "module/CModuleFile.h"
-#include "module/CFileMap.h"
-#include "core/Exception.h"
-#include "core/memdebug.h"
+#include "rainman/module/CModuleFile.h"
+#include "rainman/module/CFileMap.h"
+#include "rainman/core/Exception.h"
+#include "rainman/core/memdebug.h"
 
 extern "C"
 {

@@ -3,7 +3,7 @@
 #ifndef MD5_H
 #define MD5_H
 
-#include "core/Api.h"
+#include "rainman/core/Api.h"
 
 #ifdef __alpha
 typedef unsigned int uint32;

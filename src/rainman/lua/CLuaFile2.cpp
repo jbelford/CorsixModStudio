@@ -1,4 +1,4 @@
-#include "CLuaFile2.h"
+#include "rainman/lua/CLuaFile2.h"
 extern "C"
 {
 #include <lauxlib.h>
@@ -6,12 +6,12 @@ extern "C"
 };
 #include <string.h>
 #include <stdlib.h>
-#include "luax.h"
-#include "core/memdebug.h"
-#include "core/Exception.h"
-#include "core/Internal_Util.h"
+#include "rainman/lua/luax.h"
+#include "rainman/core/memdebug.h"
+#include "rainman/core/Exception.h"
+#include "rainman/core/Internal_Util.h"
 #include <zlib.h>
-#include "util/crc32_case_idt.h"
+#include "rainman/util/crc32_case_idt.h"
 extern "C"
 {
 	typedef unsigned long int ub4; /* unsigned 4-byte quantities */

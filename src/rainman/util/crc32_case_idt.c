@@ -8,7 +8,7 @@
  * letters to lowercase (and doesn't affect digits/most punctuation).
  */
 
-#include "crc32_case_idt.h"
+#include "rainman/util/crc32_case_idt.h"
 
 /* Standard CRC32 polynomial (same as zlib) */
 static unsigned long crc_table[256];

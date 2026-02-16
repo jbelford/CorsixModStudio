@@ -1,9 +1,9 @@
-#include "CRgdFileMacro.h"
-#include "module/CModuleFile.h"
-#include "lua/luax.h"
-#include "core/Exception.h"
-#include "core/Internal_Util.h"
-#include "core/memdebug.h"
+#include "rainman/formats/CRgdFileMacro.h"
+#include "rainman/module/CModuleFile.h"
+#include "rainman/lua/luax.h"
+#include "rainman/core/Exception.h"
+#include "rainman/core/Internal_Util.h"
+#include "rainman/core/memdebug.h"
 
 #define LuaArgMsg(type, fn, line_)                                                                                     \
 	"Expected " type " as first argument to " fn ". Did you do obj." fn " instead of obj:" fn " ?"

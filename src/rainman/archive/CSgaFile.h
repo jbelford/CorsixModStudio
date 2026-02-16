@@ -20,11 +20,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef _C_SGA_FILE_H_
 #define _C_SGA_FILE_H_
 
-#include "core/gnuc_defines.h"
-#include "io/IFileStore.h"
-#include "io/IDirectoryTraverser.h"
-#include "io/CMemoryStore.h"
-#include "core/Api.h"
+#include "rainman/core/gnuc_defines.h"
+#include "rainman/io/IFileStore.h"
+#include "rainman/io/IDirectoryTraverser.h"
+#include "rainman/io/CMemoryStore.h"
+#include "rainman/core/Api.h"
 #include <wchar.h>
 #include <vector>
 

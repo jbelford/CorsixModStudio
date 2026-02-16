@@ -17,15 +17,15 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "luax.h"
+#include "rainman/lua/luax.h"
 extern "C"
 {
 #include <lauxlib.h>
 #include <lualib.h>
 };
 #include <string.h>
-#include "core/memdebug.h"
-#include "core/Exception.h"
+#include "rainman/core/memdebug.h"
+#include "rainman/core/Exception.h"
 
 // Moves the GameData table to the top of the stack
 void luax_GetGameData(lua_State *L)

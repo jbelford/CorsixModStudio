@@ -20,10 +20,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef _I_META_TABLE_H_
 #define _I_META_TABLE_H_
 
-#include "core/gnuc_defines.h"
+#include "rainman/core/gnuc_defines.h"
 #include <wchar.h>
-#include "core/Api.h"
-#include "io/CMemoryStore.h"
+#include "rainman/core/Api.h"
+#include "rainman/io/CMemoryStore.h"
 
 //! A Lua/Rgd variable
 /*!

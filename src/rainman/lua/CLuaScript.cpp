@@ -17,8 +17,8 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "CLuaScript.h"
-#include "module/CDoWModule.h"
+#include "rainman/lua/CLuaScript.h"
+#include "rainman/module/CDoWModule.h"
 
 extern "C"
 {
@@ -26,8 +26,8 @@ extern "C"
 #include <lualib.h>
 };
 
-#include "core/memdebug.h"
-#include "core/Exception.h"
+#include "rainman/core/memdebug.h"
+#include "rainman/core/Exception.h"
 #include "string.h"
 #include "stdlib.h"
 

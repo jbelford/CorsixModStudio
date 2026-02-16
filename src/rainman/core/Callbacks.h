@@ -20,8 +20,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef _CALLBACKS_H_
 #define _CALLBACKS_H_
 
-#include "gnuc_defines.h"
-#include "Api.h"
+#include "rainman/core/gnuc_defines.h"
+#include "rainman/core/Api.h"
 
 //! A callback function
 /*!

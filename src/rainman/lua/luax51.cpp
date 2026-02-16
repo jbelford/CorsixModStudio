@@ -17,11 +17,11 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "Lua51.h"
+#include "rainman/lua/Lua51.h"
 #include <lua.h>
 #include <string.h>
-#include "core/memdebug.h"
-#include "core/Exception.h"
+#include "rainman/core/memdebug.h"
+#include "rainman/core/Exception.h"
 
 // string.split(s [, delimiter [, plain]])
 int luax51_string_split(lua_State *L)

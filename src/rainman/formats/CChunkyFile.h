@@ -20,9 +20,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef _CHUNKY_FILE_H_
 #define _CHUNKY_FILE_H_
 
-#include "core/gnuc_defines.h"
-#include "io/CMemoryStore.h"
-#include "core/Exception.h"
+#include "rainman/core/gnuc_defines.h"
+#include "rainman/io/CMemoryStore.h"
+#include "rainman/core/Exception.h"
 #include <vector>
 
 class RAINMAN_API CChunkyFile

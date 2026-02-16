@@ -27,7 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 ** callers that still reference it.
 */
 
-#include "core/Api.h"
+#include "rainman/core/Api.h"
 
 RAINMAN_API bool Lua51_Load(const wchar_t *sDll)
 {

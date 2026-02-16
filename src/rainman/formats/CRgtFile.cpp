@@ -17,10 +17,10 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "CRgtFile.h"
+#include "rainman/formats/CRgtFile.h"
 #include <zlib.h>
-#include "core/Exception.h"
-#include "core/memdebug.h"
+#include "rainman/core/Exception.h"
+#include "rainman/core/memdebug.h"
 #include <time.h>
 #include <squish.h>
 

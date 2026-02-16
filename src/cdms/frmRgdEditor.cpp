@@ -32,7 +32,7 @@
 #include <wx/tbarbase.h>
 #include "Common.h"
 #include <cstdint>
-#include <core/RainmanLog.h>
+#include <rainman/core/RainmanLog.h>
 
 extern "C"
 {

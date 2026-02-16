@@ -19,10 +19,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 #ifdef _DO_INCLUDE_C_DOW_MODULE_H_
 
-#include "CDoWModule.h"
+#include "rainman/module/CDoWModule.h"
 #include <time.h>
-#include "core/memdebug.h"
-#include "core/Exception.h"
+#include "rainman/core/memdebug.h"
+#include "rainman/core/Exception.h"
 
 static char *mystrdup(const char *sStr)
 {

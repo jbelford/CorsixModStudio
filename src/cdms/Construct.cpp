@@ -27,14 +27,14 @@
 #include "frmRgdEditor.h"
 #include "strconv.h"
 #include <memory>
-#include <io/CFileSystemStore.h>
-#include <module/CFileMap.h>
-#include <archive/CSgaCreator.h>
-#include <lua/CLuaFromRgd.h>
+#include <rainman/io/CFileSystemStore.h>
+#include <rainman/module/CFileMap.h>
+#include <rainman/archive/CSgaCreator.h>
+#include <rainman/lua/CLuaFromRgd.h>
 #include "Tools.h"
 extern "C"
 {
-#include "util/md5.h"
+#include "rainman/util/md5.h"
 }
 #include <wx/filedlg.h>
 #include "Utility.h"

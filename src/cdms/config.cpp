@@ -19,8 +19,8 @@
 #include "config.h"
 #include "strings.h"
 #include "strconv.h"
-#include <util/Util.h>
-#include <core/Exception.h>
+#include <rainman/util/Util.h>
+#include <rainman/core/Exception.h>
 #include "Common.h"
 
 wxColour ConfGetColour(wxString keyname, int def_r, int def_g, int def_b)

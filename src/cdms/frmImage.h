@@ -31,7 +31,7 @@
 #include "wx/wx.h"
 #endif
 // ----------------------------
-#include <formats/CRgtFile.h>
+#include <rainman/formats/CRgtFile.h>
 #include <wx/treectrl.h>
 #include <wx/propgrid/propgrid.h>
 

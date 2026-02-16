@@ -17,16 +17,16 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "CModuleFile.h"
-#include "archive/CSgaFile.h"
-#include "localization/CUcsFile.h"
-#include "CDoWFileView.h"
-#include "CFileMap.h"
-#include "io/CFileSystemStore.h"
-#include "core/Internal_Util.h"
-#include "core/Exception.h"
+#include "rainman/module/CModuleFile.h"
+#include "rainman/archive/CSgaFile.h"
+#include "rainman/localization/CUcsFile.h"
+#include "rainman/module/CDoWFileView.h"
+#include "rainman/module/CFileMap.h"
+#include "rainman/io/CFileSystemStore.h"
+#include "rainman/core/Internal_Util.h"
+#include "rainman/core/Exception.h"
 #include <new>
-#include "core/memdebug.h"
+#include "rainman/core/memdebug.h"
 
 CModuleFile::CModuleFile()
 {

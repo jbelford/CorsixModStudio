@@ -11,7 +11,7 @@ You can use this free for any purpose.  It has no warranty.
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
-#include "core/Api.h"
+#include "rainman/core/Api.h"
 typedef unsigned long int ub4; /* unsigned 4-byte quantities */
 typedef unsigned char ub1;
 

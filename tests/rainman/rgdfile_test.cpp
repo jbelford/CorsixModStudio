@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
-#include "formats/CRgdFile.h"
-#include "io/CMemoryStore.h"
-#include "formats/CRgdHashTable.h"
-#include "core/Exception.h"
+#include "rainman/formats/CRgdFile.h"
+#include "rainman/io/CMemoryStore.h"
+#include "rainman/formats/CRgdHashTable.h"
+#include "rainman/core/Exception.h"
 #include <cstring>
 
 class RgdFileTest : public ::testing::Test {

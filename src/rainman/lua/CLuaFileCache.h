@@ -19,12 +19,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 #ifndef _C_LUAFILE_CACHE_H_
 #define _C_LUAFILE_CACHE_H_
-#include "core/gnuc_defines.h"
+#include "rainman/core/gnuc_defines.h"
 extern "C"
 {
 #include <lua.h>
 };
-#include "core/Api.h"
+#include "rainman/core/Api.h"
 
 //! Cache for lua_State objects
 /*!

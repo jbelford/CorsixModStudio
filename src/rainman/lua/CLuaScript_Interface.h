@@ -23,7 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 extern "C" {
 #include <lua.h>
 };
-#include "module/CDoWModule.h"
+#include "rainman/module/CDoWModule.h"
 
 void LuaBind_Globals(lua_State *L);
 void LuaBind_Istream(lua_State *L, IFileStore::IStream* pObj, bool bOwn = true);

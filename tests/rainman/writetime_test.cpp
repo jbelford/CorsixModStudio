@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "core/WriteTime.h"
+#include "rainman/core/WriteTime.h"
 
 TEST(WriteTimeTest, GetInvalidWriteTimeReturnsZero) {
     EXPECT_EQ(GetInvalidWriteTime(), 0ULL);

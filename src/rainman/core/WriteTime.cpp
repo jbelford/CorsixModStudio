@@ -17,7 +17,7 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "WriteTime.h"
+#include "rainman/core/WriteTime.h"
 #ifndef RAINMAN_GNUC
 #include <io.h>
 #else
@@ -29,7 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include "Exception.h"
+#include "rainman/core/Exception.h"
 
 tLastWriteTime GetLastWriteTime(const char *sFile)
 {

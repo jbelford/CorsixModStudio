@@ -20,9 +20,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef _C_DOW_FILE_VIEW_H_
 #define _C_DOW_FILE_VIEW_H_
 
-#include "core/gnuc_defines.h"
-#include "io/IDirectoryTraverser.h"
-#include "core/Api.h"
+#include "rainman/core/gnuc_defines.h"
+#include "rainman/io/IDirectoryTraverser.h"
+#include "rainman/core/Api.h"
 
 #include <vector>
 #include <map>

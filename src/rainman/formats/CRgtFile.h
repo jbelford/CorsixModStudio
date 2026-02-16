@@ -20,8 +20,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef _C_RGT_FILE_H_
 #define _C_RGT_FILE_H_
 
-#include "core/gnuc_defines.h"
-#include "CChunkyFile.h"
+#include "rainman/core/gnuc_defines.h"
+#include "rainman/formats/CChunkyFile.h"
 #include <map>
 
 class RAINMAN_API CRgtFile

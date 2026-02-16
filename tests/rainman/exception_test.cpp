@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "core/Exception.h"
+#include "rainman/core/Exception.h"
 
 TEST(CRainmanException, BasicCreation) {
     auto* ex = new CRainmanException("test.cpp", 42, "test error");

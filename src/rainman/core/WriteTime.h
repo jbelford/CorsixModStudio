@@ -20,7 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef _WRITETIME_H_
 #define _WRITETIME_H_
 
-#include "gnuc_defines.h"
+#include "rainman/core/gnuc_defines.h"
 
 //! A typemapping for write time
 /*!

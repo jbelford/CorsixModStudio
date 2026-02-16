@@ -20,7 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef _RAINMAN_LOG_H_
 #define _RAINMAN_LOG_H_
 
-#include "Api.h"
+#include "rainman/core/Api.h"
 
 #include <spdlog/spdlog.h>
 #include <memory>

@@ -17,9 +17,9 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "CRgmFile.h"
-#include "core/Internal_Util.h"
-#include "core/memdebug.h"
+#include "rainman/formats/CRgmFile.h"
+#include "rainman/core/Internal_Util.h"
+#include "rainman/core/memdebug.h"
 
 CRgmFile::CRgmFile() { m_pChunky = 0; }
 

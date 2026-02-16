@@ -22,13 +22,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef _C_FILESYSTEM_STORE_H_
 #define _C_FILESYSTEM_STORE_H_
 
-#include "core/gnuc_defines.h"
+#include "rainman/core/gnuc_defines.h"
 
 #define EXTEND_FILESTORE_WITH_TRAVERSE
 
-#include "IFileStore.h"
+#include "rainman/io/IFileStore.h"
 #ifdef EXTEND_FILESTORE_WITH_TRAVERSE
-#include "IDirectoryTraverser.h"
+#include "rainman/io/IDirectoryTraverser.h"
 #ifdef RAINMAN_GNUC
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -38,7 +38,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include <shlwapi.h>
 #endif
 #endif
-#include "core/Api.h"
+#include "rainman/core/Api.h"
 #include <stdio.h>
 #include <memory.h>
 

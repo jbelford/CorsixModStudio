@@ -20,13 +20,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef _C_LUA_SCRIPT_H_
 #define _C_LUA_SCRIPT_H_
 
-#include "core/gnuc_defines.h"
+#include "rainman/core/gnuc_defines.h"
 extern "C"
 {
 #include <lua.h>
 };
-#include "CLuaScript_Interface.h"
-#include "core/Api.h"
+#include "rainman/lua/CLuaScript_Interface.h"
+#include "rainman/core/Api.h"
 
 class RAINMAN_API CLuaScript
 {

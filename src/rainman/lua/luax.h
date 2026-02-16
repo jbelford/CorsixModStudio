@@ -19,7 +19,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 #ifndef _LUA_X_H_
 #define _LUA_X_H_
-#include "core/gnuc_defines.h"
+#include "rainman/core/gnuc_defines.h"
 extern "C"
 {
 #include <lua.h>

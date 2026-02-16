@@ -17,14 +17,14 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "Exception.h"
-#include "RainmanLog.h"
+#include "rainman/core/Exception.h"
+#include "rainman/core/RainmanLog.h"
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
 #include <memory.h>
 #include <stdlib.h>
-#include "memdebug.h"
+#include "rainman/core/memdebug.h"
 
 CRainmanException::CRainmanException() {}
 

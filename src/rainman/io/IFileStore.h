@@ -20,8 +20,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef _I_FILE_STORE_H_
 #define _I_FILE_STORE_H_
 
-#include "core/gnuc_defines.h"
-#include "core/Api.h"
+#include "rainman/core/gnuc_defines.h"
+#include "rainman/core/Api.h"
 
 //! Input/output interface
 /*!

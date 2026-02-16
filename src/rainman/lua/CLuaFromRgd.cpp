@@ -17,16 +17,16 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "CLuaFromRgd.h"
-#include "CLuaFile.h"
-#include "formats/CRgdFile.h"
-#include "module/CModuleFile.h"
+#include "rainman/lua/CLuaFromRgd.h"
+#include "rainman/lua/CLuaFile.h"
+#include "rainman/formats/CRgdFile.h"
+#include "rainman/module/CModuleFile.h"
 #ifdef _MSC_VER
 #include <intrin.h>
 #endif
-#include "core/memdebug.h"
-#include "core/Exception.h"
-#include "core/Internal_Util.h"
+#include "rainman/core/memdebug.h"
+#include "rainman/core/Exception.h"
+#include "rainman/core/Internal_Util.h"
 #include <vector>
 
 extern "C"

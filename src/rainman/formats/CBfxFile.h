@@ -20,7 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef _BFX_FILE_H_
 #define _BFX_FILE_H_
 
-#include "CRgdFile.h"
+#include "rainman/formats/CRgdFile.h"
 #include <lua.h>
 
 class RAINMAN_API CBfxFile : public CRgdFile

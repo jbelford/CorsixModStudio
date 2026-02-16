@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
-#include "archive/CSgaFile.h"
-#include "io/CMemoryStore.h"
-#include "core/Exception.h"
+#include "rainman/archive/CSgaFile.h"
+#include "rainman/io/CMemoryStore.h"
+#include "rainman/core/Exception.h"
 #include <cstring>
 #include <filesystem>
 #include <fstream>

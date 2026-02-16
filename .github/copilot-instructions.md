@@ -47,7 +47,7 @@ This is a modernization of a ~2006 C++ modding IDE for Dawn of War / Company of 
 - `module/` — `CModuleFile`, `CDoWModule`, `CDoWFileView`, `CFileMap`
 - `util/` — `Util`, `crc32_case_idt`, `hash`, `md5`
 
-All includes use directory-qualified paths (e.g., `#include "core/Exception.h"`, `#include <io/IFileStore.h>`).
+All includes use fully-qualified paths with the `rainman/` prefix (e.g., `#include "rainman/core/Exception.h"`, `#include <rainman/io/IFileStore.h>`).
 
 **CDMS** (`src/cdms/`) — wxWidgets GUI application built on Rainman. Not yet ported (Phase 4, blocked on wxWidgets 3.2 migration).
 
@@ -67,7 +67,7 @@ pException->destroy();  // NOT delete
 Use the macros: `QUICK_THROW("msg")`, `CATCH_THROW("msg")`, `IGNORE_EXCEPTIONS`, `CHECK_MEM(new Foo)`.
 
 ### API export macro
-All public Rainman classes use `RAINMAN_API` (defined in `core/Api.h`). It expands to nothing in the current static-lib build (`RAINMAN_NO_EXPORTS` is defined), but must remain on class declarations for future DLL compatibility.
+All public Rainman classes use `RAINMAN_API` (defined in `rainman/core/Api.h`). It expands to nothing in the current static-lib build (`RAINMAN_NO_EXPORTS` is defined), but must remain on class declarations for future DLL compatibility.
 
 ### Naming
 - Classes: `C` prefix for concrete (`CSgaFile`), `I` prefix for interfaces (`IFileStore`)

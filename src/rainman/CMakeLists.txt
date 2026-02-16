@@ -104,7 +104,7 @@ add_library(rainman STATIC ${RAINMAN_SOURCES})
 
 target_include_directories(rainman
     PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/..
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/vendor/lua502
 )

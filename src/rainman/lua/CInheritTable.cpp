@@ -1,6 +1,6 @@
-#include "CInheritTable.h"
+#include "rainman/lua/CInheritTable.h"
 #include <zlib.h>
-#include "util/crc32_case_idt.h"
+#include "rainman/util/crc32_case_idt.h"
 #include <algorithm>
 
 extern "C"

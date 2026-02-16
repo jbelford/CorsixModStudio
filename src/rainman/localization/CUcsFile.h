@@ -20,12 +20,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef _C_UCS_FILE_H_
 #define _C_UCS_FILE_H_
 
-#include "core/gnuc_defines.h"
+#include "rainman/core/gnuc_defines.h"
 // UCS = unicode character string ?
-#include "io/IFileStore.h"
+#include "rainman/io/IFileStore.h"
 #include <wchar.h>
 #include <map>
-#include "core/Api.h"
+#include "rainman/core/Api.h"
 
 //! A UCS (DoW locilization) file
 /*!

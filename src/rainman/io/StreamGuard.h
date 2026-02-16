@@ -20,7 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef _STREAM_GUARD_H_
 #define _STREAM_GUARD_H_
 
-#include "IFileStore.h"
+#include "rainman/io/IFileStore.h"
 
 namespace rainman
 {

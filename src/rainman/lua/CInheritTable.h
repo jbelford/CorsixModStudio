@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <map>
-#include "io/IFileStore.h"
+#include "rainman/io/IFileStore.h"
 
 class RAINMAN_API CInheritTable
 {

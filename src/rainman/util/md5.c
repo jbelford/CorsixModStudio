@@ -22,7 +22,7 @@
 #include <memory.h> /* for memcpy() */
 #include <string.h> /* for strlen() */
 #define wchar_t void
-#include "md5.h"
+#include "rainman/util/md5.h"
 
 #ifdef sgi
 #define HIGHFIRST

@@ -20,12 +20,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef _C_RGD_HASH_TABLE_H_
 #define _C_RGD_HASH_TABLE_H_
 
-#include "core/gnuc_defines.h"
+#include "rainman/core/gnuc_defines.h"
 #include <stdio.h>
 #include <map>
 #include <vector>
-#include "core/Api.h"
-// #include "io/IFileStore.h"
+#include "rainman/core/Api.h"
+// #include "rainman/io/IFileStore.h"
 
 class RAINMAN_API CRgdHashTable
 {

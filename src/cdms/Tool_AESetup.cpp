@@ -23,9 +23,9 @@
 #include "frmMessage.h"
 #include "Tool_AESetup.h"
 #include <vector>
-#include <localization/CUcsFile.h>
+#include <rainman/localization/CUcsFile.h>
 #include "Common.h"
-#include "core/RainmanLog.h"
+#include "rainman/core/RainmanLog.h"
 
 BEGIN_EVENT_TABLE(frmUCSToDAT, wxDialog)
 EVT_BUTTON(IDC_BrowseOut, frmUCSToDAT::OnBrowseOutClick)

@@ -17,15 +17,15 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "Util.h"
-#include "core/Internal_Util.h"
-#include "io/CFileSystemStore.h"
+#include "rainman/util/Util.h"
+#include "rainman/core/Internal_Util.h"
+#include "rainman/io/CFileSystemStore.h"
 #ifndef RAINMAN_GNUC
 #include <windows.h>
 #endif
 #include <string.h>
-#include "core/memdebug.h"
-#include "core/Exception.h"
+#include "rainman/core/memdebug.h"
+#include "rainman/core/Exception.h"
 
 RAINMAN_API char *Rainman_GetDoWPath()
 {

@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "lua/CInheritTable.h"
+#include "rainman/lua/CInheritTable.h"
 #include <cstring>
 
 class InheritTableTest : public ::testing::Test {

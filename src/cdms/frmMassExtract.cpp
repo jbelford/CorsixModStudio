@@ -22,8 +22,8 @@
 #include "strconv.h"
 #include "Utility.h"
 #include <memory>
-#include <module/CFileMap.h>
-#include <io/CFileSystemStore.h>
+#include <rainman/module/CFileMap.h>
+#include <rainman/io/CFileSystemStore.h>
 #include "Common.h"
 
 BEGIN_EVENT_TABLE(frmMassExtract, wxDialog)

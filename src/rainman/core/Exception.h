@@ -20,8 +20,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef _RAINMAN_EXCEPTION_H_
 #define _RAINMAN_EXCEPTION_H_
 
-#include "gnuc_defines.h"
-#include "Api.h"
+#include "rainman/core/gnuc_defines.h"
+#include "rainman/core/Api.h"
 
 class RAINMAN_API CRainmanException
 {

@@ -17,9 +17,9 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "CUcsTransaction.h"
-#include "core/memdebug.h"
-#include "core/Exception.h"
+#include "rainman/localization/CUcsTransaction.h"
+#include "rainman/core/memdebug.h"
+#include "rainman/core/Exception.h"
 
 CUcsTransaction::CUcsTransaction(CUcsFile *pUcsObject) { m_pRawFile = pUcsObject; }
 

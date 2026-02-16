@@ -17,19 +17,19 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "CSgaCreator.h"
-#include "core/Internal_Util.h"
-#include "io/CMemoryStore.h"
+#include "rainman/archive/CSgaCreator.h"
+#include "rainman/core/Internal_Util.h"
+#include "rainman/io/CMemoryStore.h"
 #include <zlib.h>
 #include "time.h"
 extern "C"
 {
-#include "util/md5.h"
+#include "rainman/util/md5.h"
 }
 #include <queue>
 #include <algorithm>
-#include "core/Exception.h"
-#include "core/memdebug.h"
+#include "rainman/core/Exception.h"
+#include "rainman/core/memdebug.h"
 
 bool CSgaCreator::CInputFile::OpLT(CSgaCreator::CInputFile *oA, CSgaCreator::CInputFile *oB)
 {

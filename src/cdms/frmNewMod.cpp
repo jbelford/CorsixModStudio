@@ -25,7 +25,7 @@
 #include <errno.h>
 #include <wx/textdlg.h>
 #include "Common.h"
-#include "core/RainmanLog.h"
+#include "rainman/core/RainmanLog.h"
 
 BEGIN_EVENT_TABLE(frmNewMod, wxDialog)
 EVT_BUTTON(IDC_New, frmNewMod::OnNewClick)

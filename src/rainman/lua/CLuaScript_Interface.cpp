@@ -17,7 +17,7 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "CLuaScript_Interface.h"
+#include "rainman/lua/CLuaScript_Interface.h"
 
 // This entire module is currently unused (all call sites commented out).
 // Kept for potential future re-enablement.

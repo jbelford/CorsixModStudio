@@ -17,18 +17,18 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "CRgdFile.h"
-#include "io/CMemoryStore.h"
+#include "rainman/formats/CRgdFile.h"
+#include "rainman/io/CMemoryStore.h"
 #include <zlib.h>
 #include <algorithm>
-#include "core/memdebug.h"
+#include "rainman/core/memdebug.h"
 extern "C"
 {
 #include <lauxlib.h>
 #include <lualib.h>
 };
-#include "lua/luax.h"
-#include "core/Exception.h"
+#include "rainman/lua/luax.h"
+#include "rainman/core/Exception.h"
 
 struct tLuaTableProtector
 {

@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
-#include "lua/CLuaFile2.h"
-#include "io/CMemoryStore.h"
-#include "lua/CLuaFileCache.h"
-#include "io/StreamGuard.h"
-#include "core/Exception.h"
+#include "rainman/lua/CLuaFile2.h"
+#include "rainman/io/CMemoryStore.h"
+#include "rainman/lua/CLuaFileCache.h"
+#include "rainman/io/StreamGuard.h"
+#include "rainman/core/Exception.h"
 #include <cstring>
 #include <string>
 

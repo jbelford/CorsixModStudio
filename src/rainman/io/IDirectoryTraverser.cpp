@@ -17,9 +17,9 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "IDirectoryTraverser.h"
-#include "core/memdebug.h"
-#include "core/Exception.h"
+#include "rainman/io/IDirectoryTraverser.h"
+#include "rainman/core/memdebug.h"
+#include "rainman/core/Exception.h"
 
 IDirectoryTraverser::IDirectoryTraverser(void) {}
 

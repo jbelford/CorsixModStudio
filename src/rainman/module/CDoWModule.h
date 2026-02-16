@@ -24,14 +24,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include <vector>
 #include <map>
 
-#include "core/gnuc_defines.h"
-#include "io/CFileSystemStore.h" // MODULEs are only in file system, not in SGAs
-#include "CDoWFileView.h"
-#include "archive/CSgaFile.h"
-#include "localization/CUcsFile.h"
+#include "rainman/core/gnuc_defines.h"
+#include "rainman/io/CFileSystemStore.h" // MODULEs are only in file system, not in SGAs
+#include "rainman/module/CDoWFileView.h"
+#include "rainman/archive/CSgaFile.h"
+#include "rainman/localization/CUcsFile.h"
 #include <zlib.h>
-#include "core/Callbacks.h"
-#include "core/Api.h"
+#include "rainman/core/Callbacks.h"
+#include "rainman/core/Api.h"
 
 //! Represents a Dawn of War modification (.module file)
 /*!

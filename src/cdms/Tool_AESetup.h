@@ -18,7 +18,7 @@
 #ifndef _TOOL_AE_SETUP_H_
 #define _TOOL_AE_SETUP_H_
 
-#include <module/CModuleFile.h>
+#include <rainman/module/CModuleFile.h>
 // For compilers that support precompilation, includes "wx/wx.h".
 #include <wx/wxprec.h>
 

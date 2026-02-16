@@ -20,10 +20,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef _C_LUA_FILE_2_H_
 #define _C_LUA_FILE_2_H_
 
-#include "core/gnuc_defines.h"
-#include "formats/IMetaTable.h"
-#include "io/IFileStore.h"
-#include "CLuaFileCache.h"
+#include "rainman/core/gnuc_defines.h"
+#include "rainman/formats/IMetaTable.h"
+#include "rainman/io/IFileStore.h"
+#include "rainman/lua/CLuaFileCache.h"
 extern "C"
 {
 #include <lua.h>
