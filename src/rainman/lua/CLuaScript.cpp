@@ -33,93 +33,95 @@ extern "C"
 
 CLuaScript::CLuaScript(void)
 {
-	m_pLua = 0;
-	m_sLuaError = 0;
+    m_pLua = 0;
+    m_sLuaError = 0;
 }
 
 CLuaScript::~CLuaScript(void) { _Clean(); }
 
 void CLuaScript::Load(const char *sFile)
 {
-	_Clean();
-	m_pLua = lua_open();
-	if (!m_pLua)
-	{
-		m_sLuaError = strdup("Unable to create lua state");
-		throw new CRainmanException(__FILE__, __LINE__, "Unable to create Lua state");
-	}
+    _Clean();
+    m_pLua = lua_open();
+    if (!m_pLua)
+    {
+        m_sLuaError = strdup("Unable to create lua state");
+        throw new CRainmanException(__FILE__, __LINE__, "Unable to create Lua state");
+    }
 
-	if (luaL_loadfile(m_pLua, sFile))
-	{
-		char *sLuaError = strdup(lua_tostring(m_pLua, -1));
-		_Clean();
-		m_sLuaError = sLuaError;
-		throw new CRainmanException(0, __FILE__, __LINE__, "Lua error: %s", sLuaError);
-	}
+    if (luaL_loadfile(m_pLua, sFile))
+    {
+        char *sLuaError = strdup(lua_tostring(m_pLua, -1));
+        _Clean();
+        m_sLuaError = sLuaError;
+        throw new CRainmanException(0, __FILE__, __LINE__, "Lua error: %s", sLuaError);
+    }
 
-	// LuaBind_Globals(m_pLua);
+    // LuaBind_Globals(m_pLua);
 }
 
 void CLuaScript::Execute()
 {
-	RAINMAN_LOG_DEBUG("CLuaScript::Execute() — running Lua script");
-	if (!m_pLua)
-	{
-		m_sLuaError = strdup("No lua state");
-		throw new CRainmanException(__FILE__, __LINE__, "No state");
-	}
+    RAINMAN_LOG_DEBUG("CLuaScript::Execute() — running Lua script");
+    if (!m_pLua)
+    {
+        m_sLuaError = strdup("No lua state");
+        throw new CRainmanException(__FILE__, __LINE__, "No state");
+    }
 
-	// Lua standard libraries
-	luaopen_base(m_pLua);
-	luaopen_table(m_pLua);
-	luaopen_string(m_pLua);
-	luaopen_math(m_pLua);
+    // Lua standard libraries (each luaopen pushes a table; restore stack after)
+    int iTop = lua_gettop(m_pLua);
+    luaopen_base(m_pLua);
+    luaopen_table(m_pLua);
+    luaopen_string(m_pLua);
+    luaopen_math(m_pLua);
+    lua_settop(m_pLua, iTop);
 
-	// Run the code
-	if (lua_pcall(m_pLua, 0, 0, 0))
-	{
-		switch (lua_type(m_pLua, -1))
-		{
-		case LUA_TSTRING:
-		{
-			char *sLuaError = strdup(lua_tostring(m_pLua, -1));
-			_Clean();
-			m_sLuaError = sLuaError;
-			throw new CRainmanException(0, __FILE__, __LINE__, "Lua error: %s", sLuaError);
-		}
-		case LUA_TLIGHTUSERDATA:
-		{
-			CRainmanException *pE = (CRainmanException *)lua_touserdata(m_pLua, -1);
-			char *sLuaError = strdup(pE->getMessage());
-			_Clean();
-			m_sLuaError = sLuaError;
-			throw new CRainmanException(pE, __FILE__, __LINE__, "Lua error");
-		}
-		default:
-		{
-			char *sLuaError = strdup("Unknown error");
-			_Clean();
-			m_sLuaError = sLuaError;
-			throw new CRainmanException(0, __FILE__, __LINE__, "Lua unknown error");
-		}
-		};
-	}
+    // Run the code
+    if (lua_pcall(m_pLua, 0, 0, 0))
+    {
+        switch (lua_type(m_pLua, -1))
+        {
+        case LUA_TSTRING:
+        {
+            char *sLuaError = strdup(lua_tostring(m_pLua, -1));
+            _Clean();
+            m_sLuaError = sLuaError;
+            throw new CRainmanException(0, __FILE__, __LINE__, "Lua error: %s", sLuaError);
+        }
+        case LUA_TLIGHTUSERDATA:
+        {
+            CRainmanException *pE = (CRainmanException *)lua_touserdata(m_pLua, -1);
+            char *sLuaError = strdup(pE->getMessage());
+            _Clean();
+            m_sLuaError = sLuaError;
+            throw new CRainmanException(pE, __FILE__, __LINE__, "Lua error");
+        }
+        default:
+        {
+            char *sLuaError = strdup("Unknown error");
+            _Clean();
+            m_sLuaError = sLuaError;
+            throw new CRainmanException(0, __FILE__, __LINE__, "Lua unknown error");
+        }
+        };
+    }
 
-	// End
+    // End
 }
 
 const char *CLuaScript::GetLuaError() { return m_sLuaError; }
 
 void CLuaScript::_Clean()
 {
-	if (m_sLuaError)
-	{
-		free(m_sLuaError);
-		m_sLuaError = 0;
-	}
-	if (m_pLua)
-	{
-		lua_close(m_pLua);
-		m_pLua = 0;
-	}
+    if (m_sLuaError)
+    {
+        free(m_sLuaError);
+        m_sLuaError = 0;
+    }
+    if (m_pLua)
+    {
+        lua_close(m_pLua);
+        m_pLua = 0;
+    }
 }

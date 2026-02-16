@@ -23,6 +23,10 @@ add_executable(rainman_tests
     cbfxfile_test.cpp
     sgacreator_test.cpp
     luafile2_test.cpp
+    luascript_test.cpp
+    luafile_test.cpp
+    luafromrgd_test.cpp
+    rgtfile_test.cpp
 )
 
 target_link_libraries(rainman_tests
