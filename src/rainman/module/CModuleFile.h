@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "rainman/io/IDirectoryTraverser.h"
 #include "rainman/core/Api.h"
 #include "rainman/core/Callbacks.h"
+#include "rainman/module/CModuleMetadata.h"
 #include <vector>
 
 class CSgaFile;
@@ -320,20 +321,8 @@ class RAINMAN_API CModuleFile : public IFileStore, public IDirectoryTraverser
     char *m_saScenarioPackRootFolder;
     bool m_bIsFauxModule;
 
-    // Simple fields in .module files
-    char *m_sUiName;                   // MT_DawnOfWar & MT_CompanyOfHeroes
-    char *m_sName;                     // MT_CompanyOfHeroesEarly & MT_CompanyOfHeroes
-    char *m_sDescription;              // MT_DawnOfWar & MT_CompanyOfHeroes & MT_CompanyOfHeroesEarly
-    char *m_sDllName;                  // MT_DawnOfWar & MT_CompanyOfHeroes & MT_CompanyOfHeroesEarly
-    char *m_sModFolder;                // MT_DawnOfWar & MT_CompanyOfHeroes & MT_CompanyOfHeroesEarly
-    signed long m_iModVersionMajor;    // MT_DawnOfWar & MT_CompanyOfHeroes & MT_CompanyOfHeroesEarly
-    signed long m_iModVersionMinor;    // MT_DawnOfWar & MT_CompanyOfHeroes & MT_CompanyOfHeroesEarly (Optional)
-    signed long m_iModVersionRevision; // MT_DawnOfWar & MT_CompanyOfHeroes & MT_CompanyOfHeroesEarly (Optional)
-    char *m_sTextureFe;                // MT_DawnOfWar
-    char *m_sTextureIcon;              // MT_DawnOfWar
-    char *m_sPatcherUrl;               // MT_CompanyOfHeroesEarly
-    char *m_sLocFolder;                // MT_CompanyOfHeroes
-    char *m_sScenarioPackFolder;       // MT_CompanyOfHeroes
+    // Parsed directive fields from .module file
+    CModuleMetadata m_metadata;
 
     // Object collections for MT_DawnOfWar & MT_CompanyOfHeroesEarly
     std::vector<CFolderHandler *> m_vFolders;

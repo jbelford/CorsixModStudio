@@ -39,20 +39,7 @@ CModuleFile::CModuleFile()
     m_sScenarioPackRootFolder = 0;
     m_saScenarioPackRootFolder = 0;
 
-    m_sUiName = 0;
     m_sFileMapName = 0;
-    m_sName = 0;
-    m_sDescription = 0;
-    m_sDllName = 0;
-    m_sModFolder = 0;
-    m_iModVersionMajor = 0;
-    m_iModVersionMinor = 0;
-    m_iModVersionRevision = 0;
-    m_sTextureFe = 0;
-    m_sTextureIcon = 0;
-    m_sPatcherUrl = 0;
-    m_sLocFolder = 0;
-    m_sScenarioPackFolder = 0;
 
     m_pFSS = 0;
     m_sCohThisModFolder = 0;
@@ -115,23 +102,23 @@ const wchar_t *CModuleFile::GetMapPackRootFolder() const { return m_sScenarioPac
         int_name = strdup(value);                                                                                      \
     }
 
-GET_SET_DIRECTIVE(Name, m_sName)
-GET_SET_DIRECTIVE(ModFolder, m_sModFolder)
-GET_SET_DIRECTIVE(LocaleFolder, m_sLocFolder)
-GET_SET_DIRECTIVE(Description, m_sDescription)
-GET_SET_DIRECTIVE(TextureFe, m_sTextureFe)
-GET_SET_DIRECTIVE(TextureIcon, m_sTextureIcon)
-GET_SET_DIRECTIVE(UiName, m_sUiName)
-GET_SET_DIRECTIVE(DllName, m_sDllName)
+GET_SET_DIRECTIVE(Name, m_metadata.m_sName)
+GET_SET_DIRECTIVE(ModFolder, m_metadata.m_sModFolder)
+GET_SET_DIRECTIVE(LocaleFolder, m_metadata.m_sLocFolder)
+GET_SET_DIRECTIVE(Description, m_metadata.m_sDescription)
+GET_SET_DIRECTIVE(TextureFe, m_metadata.m_sTextureFe)
+GET_SET_DIRECTIVE(TextureIcon, m_metadata.m_sTextureIcon)
+GET_SET_DIRECTIVE(UiName, m_metadata.m_sUiName)
+GET_SET_DIRECTIVE(DllName, m_metadata.m_sDllName)
 
 #undef GET_SET_DIRECTIVE
 #define GET_SET_DIRECTIVE(name, int_name)                                                                              \
     long CModuleFile::Get##name() const { return int_name; }                                                           \
     void CModuleFile::Set##name(long value) { int_name = value; }
 
-GET_SET_DIRECTIVE(VersionMajor, m_iModVersionMajor)
-GET_SET_DIRECTIVE(VersionMinor, m_iModVersionMinor)
-GET_SET_DIRECTIVE(VersionRevision, m_iModVersionRevision)
+GET_SET_DIRECTIVE(VersionMajor, m_metadata.m_iModVersionMajor)
+GET_SET_DIRECTIVE(VersionMinor, m_metadata.m_iModVersionMinor)
+GET_SET_DIRECTIVE(VersionRevision, m_metadata.m_iModVersionRevision)
 
 #undef GET_SET_DIRECTIVE
 
@@ -375,39 +362,7 @@ void CModuleFile::_Clean()
     if (m_sFileMapName)
         free(m_sFileMapName);
     m_sFileMapName = 0;
-    if (m_sUiName)
-        free(m_sUiName);
-    m_sUiName = 0;
-    if (m_sName)
-        free(m_sName);
-    m_sName = 0;
-    if (m_sDescription)
-        free(m_sDescription);
-    m_sDescription = 0;
-    if (m_sDllName)
-        free(m_sDllName);
-    m_sDllName = 0;
-    if (m_sModFolder)
-        free(m_sModFolder);
-    m_sModFolder = 0;
-    m_iModVersionMajor = 0;
-    m_iModVersionMinor = 0;
-    m_iModVersionRevision = 0;
-    if (m_sTextureFe)
-        free(m_sTextureFe);
-    m_sTextureFe = 0;
-    if (m_sTextureIcon)
-        free(m_sTextureIcon);
-    m_sTextureIcon = 0;
-    if (m_sPatcherUrl)
-        free(m_sPatcherUrl);
-    m_sPatcherUrl = 0;
-    if (m_sLocFolder)
-        free(m_sLocFolder);
-    m_sLocFolder = 0;
-    if (m_sScenarioPackFolder)
-        free(m_sScenarioPackFolder);
-    m_sScenarioPackFolder = 0;
+    m_metadata.Reset();
 
     if (m_sCohThisModFolder)
         delete[] m_sCohThisModFolder;
@@ -574,7 +529,7 @@ void CModuleFile::LoadSgaAsMod(const char *sFileName, CALLBACK_ARG)
         break;
     };
 
-    m_sModFolder = strdup("");
+    m_metadata.m_sModFolder = strdup("");
 
     CArchiveHandler *pHandler = new CArchiveHandler;
     pHandler->m_iNumber = 0;
@@ -636,81 +591,81 @@ void CModuleFile::LoadModuleFile(const char *sFileName, CALLBACK_ARG)
                 {
                     if (stricmp(sKey, "UIName") == 0)
                     {
-                        if (m_sUiName)
-                            free(m_sUiName);
-                        m_sUiName = CHECK_MEM(strdup(sValue));
+                        if (m_metadata.m_sUiName)
+                            free(m_metadata.m_sUiName);
+                        m_metadata.m_sUiName = CHECK_MEM(strdup(sValue));
                     }
                     else if (stricmp(sKey, "Name") == 0)
                     {
-                        if (m_sName)
-                            free(m_sName);
-                        m_sName = CHECK_MEM(strdup(sValue));
+                        if (m_metadata.m_sName)
+                            free(m_metadata.m_sName);
+                        m_metadata.m_sName = CHECK_MEM(strdup(sValue));
                     }
                     else if (stricmp(sKey, "Description") == 0)
                     {
-                        if (m_sDescription)
-                            free(m_sDescription);
-                        m_sDescription = CHECK_MEM(strdup(sValue));
+                        if (m_metadata.m_sDescription)
+                            free(m_metadata.m_sDescription);
+                        m_metadata.m_sDescription = CHECK_MEM(strdup(sValue));
                     }
                     else if (stricmp(sKey, "DllName") == 0)
                     {
-                        if (m_sDllName)
-                            free(m_sDllName);
-                        m_sDllName = CHECK_MEM(strdup(sValue));
+                        if (m_metadata.m_sDllName)
+                            free(m_metadata.m_sDllName);
+                        m_metadata.m_sDllName = CHECK_MEM(strdup(sValue));
                     }
                     else if (stricmp(sKey, "ModFolder") == 0)
                     {
-                        if (m_sModFolder)
-                            free(m_sModFolder);
-                        m_sModFolder = CHECK_MEM(strdup(sValue));
+                        if (m_metadata.m_sModFolder)
+                            free(m_metadata.m_sModFolder);
+                        m_metadata.m_sModFolder = CHECK_MEM(strdup(sValue));
                     }
                     else if (stricmp(sKey, "TextureFE") == 0)
                     {
-                        if (m_sTextureFe)
-                            free(m_sTextureFe);
-                        m_sTextureFe = CHECK_MEM(strdup(sValue));
+                        if (m_metadata.m_sTextureFe)
+                            free(m_metadata.m_sTextureFe);
+                        m_metadata.m_sTextureFe = CHECK_MEM(strdup(sValue));
                     }
                     else if (stricmp(sKey, "TextureIcon") == 0)
                     {
-                        if (m_sTextureIcon)
-                            free(m_sTextureIcon);
-                        m_sTextureIcon = CHECK_MEM(strdup(sValue));
+                        if (m_metadata.m_sTextureIcon)
+                            free(m_metadata.m_sTextureIcon);
+                        m_metadata.m_sTextureIcon = CHECK_MEM(strdup(sValue));
                     }
                     else if (stricmp(sKey, "PatcherUrl") == 0)
                     {
-                        if (m_sPatcherUrl)
-                            free(m_sPatcherUrl);
-                        m_sPatcherUrl = CHECK_MEM(strdup(sValue));
+                        if (m_metadata.m_sPatcherUrl)
+                            free(m_metadata.m_sPatcherUrl);
+                        m_metadata.m_sPatcherUrl = CHECK_MEM(strdup(sValue));
                     }
                     else if (stricmp(sKey, "LocFolder") == 0)
                     {
-                        if (m_sLocFolder)
-                            free(m_sLocFolder);
-                        m_sLocFolder = CHECK_MEM(strdup(sValue));
+                        if (m_metadata.m_sLocFolder)
+                            free(m_metadata.m_sLocFolder);
+                        m_metadata.m_sLocFolder = CHECK_MEM(strdup(sValue));
                     }
                     else if (stricmp(sKey, "ScenarioPackFolder") == 0)
                     {
-                        if (m_sScenarioPackFolder)
-                            free(m_sScenarioPackFolder);
-                        m_sScenarioPackFolder = CHECK_MEM(strdup(sValue));
+                        if (m_metadata.m_sScenarioPackFolder)
+                            free(m_metadata.m_sScenarioPackFolder);
+                        m_metadata.m_sScenarioPackFolder = CHECK_MEM(strdup(sValue));
                     }
                     else if (stricmp(sKey, "ModVersion") == 0)
                     {
                         char *sDotChar = strchr(sValue, '.');
                         if (sDotChar)
                             *sDotChar = 0;
-                        m_iModVersionMajor = atol(sValue);
+                        m_metadata.m_iModVersionMajor = atol(sValue);
                         if (sDotChar)
                         {
                             sValue = sDotChar + 1;
                             sDotChar = strchr(sValue, '.');
                             if (sDotChar)
                                 *sDotChar = 0;
-                            m_iModVersionMinor = atol(sValue);
+                            m_metadata.m_iModVersionMinor = atol(sValue);
                             if (sDotChar)
                             {
                                 sValue = sDotChar + 1;
-                                m_iModVersionRevision = atol(sValue);
+                                m_metadata.m_iModVersionRevision = atol(sValue);
                             }
                         }
                     }
@@ -828,25 +783,25 @@ void CModuleFile::LoadModuleFile(const char *sFileName, CALLBACK_ARG)
 
     // Decide what kind of module file it is
     size_t iHeuristicDow = 0, iHeuristicCoh = 0, iHeuristicCohEarly = 0;
-    if (m_sUiName && *m_sUiName)
+    if (m_metadata.m_sUiName && *m_metadata.m_sUiName)
         iHeuristicDow += 3;
-    if (m_sName && *m_sName)
+    if (m_metadata.m_sName && *m_metadata.m_sName)
         iHeuristicCoh += 1, iHeuristicCohEarly += 1;
-    if (m_sDescription && *m_sDescription)
+    if (m_metadata.m_sDescription && *m_metadata.m_sDescription)
         iHeuristicCoh += 1, iHeuristicCohEarly += 1, iHeuristicDow += 1;
-    if (m_sDllName && *m_sDllName)
+    if (m_metadata.m_sDllName && *m_metadata.m_sDllName)
         iHeuristicCoh += 1, iHeuristicCohEarly += 1, iHeuristicDow += 1;
-    if (m_sModFolder && *m_sModFolder)
+    if (m_metadata.m_sModFolder && *m_metadata.m_sModFolder)
         iHeuristicCoh += 1, iHeuristicCohEarly += 1, iHeuristicDow += 1;
-    if (m_sTextureFe && *m_sTextureFe)
+    if (m_metadata.m_sTextureFe && *m_metadata.m_sTextureFe)
         iHeuristicDow += 3;
-    if (m_sTextureIcon && *m_sTextureIcon)
+    if (m_metadata.m_sTextureIcon && *m_metadata.m_sTextureIcon)
         iHeuristicDow += 3;
-    if (m_sPatcherUrl && *m_sPatcherUrl)
+    if (m_metadata.m_sPatcherUrl && *m_metadata.m_sPatcherUrl)
         iHeuristicCohEarly += 3;
-    if (m_sLocFolder && *m_sLocFolder)
+    if (m_metadata.m_sLocFolder && *m_metadata.m_sLocFolder)
         iHeuristicCoh += 3;
-    if (m_sScenarioPackFolder && *m_sScenarioPackFolder)
+    if (m_metadata.m_sScenarioPackFolder && *m_metadata.m_sScenarioPackFolder)
         iHeuristicCoh += 3;
     iHeuristicDow += (m_vFolders.size() * 3);
     iHeuristicDow += (m_vArchives.size() * 3);
@@ -878,8 +833,8 @@ void CModuleFile::LoadModuleFile(const char *sFileName, CALLBACK_ARG)
 
     if (m_eModuleType == MT_CompanyOfHeroes)
     {
-        m_sCohThisModFolder = new char[strlen(m_sApplicationPath) + strlen(m_sModFolder) + 1];
-        sprintf(m_sCohThisModFolder, "%s%s", m_sApplicationPath, m_sModFolder);
+        m_sCohThisModFolder = new char[strlen(m_sApplicationPath) + strlen(m_metadata.m_sModFolder) + 1];
+        sprintf(m_sCohThisModFolder, "%s%s", m_sApplicationPath, m_metadata.m_sModFolder);
         char *sSlashLoc = strrchr(m_sCohThisModFolder, '\\');
         ++sSlashLoc;
         *sSlashLoc = 0;
@@ -967,8 +922,8 @@ void CModuleFile::_DoLoadDataGeneric(CALLBACK_ARG)
     CallCallback(THE_CALLBACK, "Parsing file \'pipeline.ini\'");
     delete[] sPipelineFile;
 
-    char *sSectionName = new char[16 + strlen(m_sModFolder)];
-    sprintf(sSectionName, "project:%s", m_sModFolder);
+    char *sSectionName = new char[16 + strlen(m_metadata.m_sModFolder)];
+    sprintf(sSectionName, "project:%s", m_metadata.m_sModFolder);
 
     bool bInSection; // Are we in the "project:xxx" section
     while (!feof(fModule))
@@ -1293,15 +1248,15 @@ void CModuleFile::ReloadResources(unsigned long iReloadWhat, unsigned long iRelo
     {
         // m_sLocFolder
         char *sUcsPath;
-        if (m_sLocFolder && *m_sLocFolder)
+        if (m_metadata.m_sLocFolder && *m_metadata.m_sLocFolder)
         {
-            sUcsPath = new char[strlen(m_sApplicationPath) + strlen(m_sLocFolder) + strlen(m_sLocale) + 2];
-            sprintf(sUcsPath, "%s%s\\%s", m_sApplicationPath, m_sLocFolder, m_sLocale);
+            sUcsPath = new char[strlen(m_sApplicationPath) + strlen(m_metadata.m_sLocFolder) + strlen(m_sLocale) + 2];
+            sprintf(sUcsPath, "%s%s\\%s", m_sApplicationPath, m_metadata.m_sLocFolder, m_sLocale);
         }
         else
         {
-            sUcsPath = new char[strlen(m_sApplicationPath) + strlen(m_sModFolder) + strlen(m_sLocale) + 10];
-            sprintf(sUcsPath, "%s%s\\Locale\\%s", m_sApplicationPath, m_sModFolder, m_sLocale);
+            sUcsPath = new char[strlen(m_sApplicationPath) + strlen(m_metadata.m_sModFolder) + strlen(m_sLocale) + 10];
+            sprintf(sUcsPath, "%s%s\\Locale\\%s", m_sApplicationPath, m_metadata.m_sModFolder, m_sLocale);
         }
 
         IDirectoryTraverser::IIterator *pItr = 0;
@@ -1357,9 +1312,9 @@ void CModuleFile::ReloadResources(unsigned long iReloadWhat, unsigned long iRelo
             for (std::vector<CFolderHandler *>::iterator itr = m_vFolders.begin(); itr != m_vFolders.end(); ++itr)
             {
                 char *sWithoutDynamics = _DawnOfWarRemoveDynamics((**itr).m_sName);
-                char *sFolderPath =
-                    new char[strlen(m_sApplicationPath) + strlen(m_sModFolder) + strlen(sWithoutDynamics) + 2];
-                sprintf(sFolderPath, "%s%s\\%s", m_sApplicationPath, m_sModFolder, sWithoutDynamics);
+                char *sFolderPath = new char[strlen(m_sApplicationPath) + strlen(m_metadata.m_sModFolder) +
+                                             strlen(sWithoutDynamics) + 2];
+                sprintf(sFolderPath, "%s%s\\%s", m_sApplicationPath, m_metadata.m_sModFolder, sWithoutDynamics);
                 _DoLoadFolder(sFolderPath, (sOutFolder == (**itr).m_sName), 15000 + (**itr).m_iNumber, "Data",
                               sWithoutDynamics, THE_CALLBACK);
                 delete[] sFolderPath;
@@ -1368,10 +1323,10 @@ void CModuleFile::ReloadResources(unsigned long iReloadWhat, unsigned long iRelo
         }
         else if (m_eModuleType == MT_CompanyOfHeroesEarly)
         {
-            char *sFolderPath = new char[strlen(m_sApplicationPath) + strlen(m_sModFolder) + 10];
-            sprintf(sFolderPath, "%s%s\\Data", m_sApplicationPath, m_sModFolder);
+            char *sFolderPath = new char[strlen(m_sApplicationPath) + strlen(m_metadata.m_sModFolder) + 10];
+            sprintf(sFolderPath, "%s%s\\Data", m_sApplicationPath, m_metadata.m_sModFolder);
             _DoLoadFolder(sFolderPath, true, 15000, "Data", 0, THE_CALLBACK);
-            sprintf(sFolderPath, "%s%s\\Movies", m_sApplicationPath, m_sModFolder);
+            sprintf(sFolderPath, "%s%s\\Movies", m_sApplicationPath, m_metadata.m_sModFolder);
             _DoLoadFolder(sFolderPath, true, 15000, "Movies", 0, THE_CALLBACK);
             delete[] sFolderPath;
         }
@@ -1401,9 +1356,9 @@ void CModuleFile::ReloadResources(unsigned long iReloadWhat, unsigned long iRelo
             for (std::vector<CArchiveHandler *>::iterator itr = m_vArchives.begin(); itr != m_vArchives.end(); ++itr)
             {
                 char *sWithoutDynamics = _DawnOfWarRemoveDynamics((**itr).m_sName);
-                char *sArchivePath =
-                    new char[strlen(m_sApplicationPath) + strlen(m_sModFolder) + strlen(sWithoutDynamics) + 2];
-                sprintf(sArchivePath, "%s%s\\%s", m_sApplicationPath, m_sModFolder, sWithoutDynamics);
+                char *sArchivePath = new char[strlen(m_sApplicationPath) + strlen(m_metadata.m_sModFolder) +
+                                              strlen(sWithoutDynamics) + 2];
+                sprintf(sArchivePath, "%s%s\\%s", m_sApplicationPath, m_metadata.m_sModFolder, sWithoutDynamics);
                 _DoLoadArchive(sArchivePath, &(**itr).m_pHandle, 15000 + (**itr).m_iNumber, (**itr).m_sName,
                                THE_CALLBACK);
                 delete[] sArchivePath;
@@ -1412,8 +1367,8 @@ void CModuleFile::ReloadResources(unsigned long iReloadWhat, unsigned long iRelo
         }
         else if (m_eModuleType == MT_CompanyOfHeroesEarly)
         {
-            char *sArchivesPath = new char[strlen(m_sApplicationPath) + strlen(m_sModFolder) + 10];
-            sprintf(sArchivesPath, "%s%s\\Archives", m_sApplicationPath, m_sModFolder);
+            char *sArchivesPath = new char[strlen(m_sApplicationPath) + strlen(m_metadata.m_sModFolder) + 10];
+            sprintf(sArchivesPath, "%s%s\\Archives", m_sApplicationPath, m_metadata.m_sModFolder);
             IDirectoryTraverser::IIterator *pItr = 0;
             try
             {
@@ -1455,10 +1410,12 @@ void CModuleFile::ReloadResources(unsigned long iReloadWhat, unsigned long iRelo
     }
     if (iReloadWhat & RR_MapArchives)
     {
-        if (m_sScenarioPackRootFolder && *m_sScenarioPackRootFolder && m_sScenarioPackFolder && *m_sScenarioPackFolder)
+        if (m_sScenarioPackRootFolder && *m_sScenarioPackRootFolder && m_metadata.m_sScenarioPackFolder &&
+            *m_metadata.m_sScenarioPackFolder)
         {
-            wchar_t *sArchivesPath = new wchar_t[wcslen(m_sScenarioPackRootFolder) + strlen(m_sScenarioPackFolder) + 2];
-            swprintf(sArchivesPath, L"%s\\%S", m_sScenarioPackRootFolder, m_sScenarioPackFolder);
+            wchar_t *sArchivesPath =
+                new wchar_t[wcslen(m_sScenarioPackRootFolder) + strlen(m_metadata.m_sScenarioPackFolder) + 2];
+            swprintf(sArchivesPath, L"%s\\%S", m_sScenarioPackRootFolder, m_metadata.m_sScenarioPackFolder);
             IDirectoryTraverser::IIterator *pItr = 0;
             try
             {
@@ -1524,10 +1481,10 @@ void CModuleFile::ReloadResources(unsigned long iReloadWhat, unsigned long iRelo
             CModuleFile *pEngine = CHECK_MEM(new CModuleFile);
 
             pEngine->m_eModuleType = MT_DawnOfWar;
-            pEngine->m_sUiName = strdup("(Engine)");
+            pEngine->m_metadata.m_sUiName = strdup("(Engine)");
             pEngine->m_sFileMapName = strdup("(Engine)");
-            pEngine->m_sDescription = strdup("(Engine)");
-            pEngine->m_sModFolder = strdup("Engine");
+            pEngine->m_metadata.m_sDescription = strdup("(Engine)");
+            pEngine->m_metadata.m_sModFolder = strdup("Engine");
 
             free(pEngine->m_sLocale);
             pEngine->m_sLocale = m_sLocale;
@@ -1579,10 +1536,10 @@ void CModuleFile::_DoLoadCohEngine(const char *sFolder, const char *sUiName, uns
     CModuleFile *pEngine = CHECK_MEM(new CModuleFile);
 
     pEngine->m_eModuleType = MT_CompanyOfHeroesEarly;
-    pEngine->m_sUiName = strdup(sUiName);
-    pEngine->m_sDescription = strdup(sUiName);
+    pEngine->m_metadata.m_sUiName = strdup(sUiName);
+    pEngine->m_metadata.m_sDescription = strdup(sUiName);
     pEngine->m_sFileMapName = strdup(sUiName);
-    pEngine->m_sModFolder = strdup(sFolder);
+    pEngine->m_metadata.m_sModFolder = strdup(sFolder);
 
     free(pEngine->m_sLocale);
     pEngine->m_sLocale = m_sLocale;
@@ -1728,16 +1685,16 @@ size_t CModuleFile::GetArchiveFullPath(size_t iId, char *sOutput)
     if (m_eModuleType == MT_DawnOfWar)
     {
         char *sWithoutDynamics = _DawnOfWarRemoveDynamics(pHandler->m_sName);
-        iLen = strlen(m_sApplicationPath) + strlen(m_sModFolder) + strlen(sWithoutDynamics) + 2;
+        iLen = strlen(m_sApplicationPath) + strlen(m_metadata.m_sModFolder) + strlen(sWithoutDynamics) + 2;
         if (sOutput)
-            sprintf(sOutput, "%s%s\\%s", m_sApplicationPath, m_sModFolder, sWithoutDynamics);
+            sprintf(sOutput, "%s%s\\%s", m_sApplicationPath, m_metadata.m_sModFolder, sWithoutDynamics);
         delete[] sWithoutDynamics;
     }
     else if (m_eModuleType == MT_CompanyOfHeroesEarly)
     {
-        iLen = strlen(m_sApplicationPath) + strlen(m_sModFolder) + strlen(pHandler->m_sName) + 11;
+        iLen = strlen(m_sApplicationPath) + strlen(m_metadata.m_sModFolder) + strlen(pHandler->m_sName) + 11;
         if (sOutput)
-            sprintf(sOutput, "%s%s\\Archives\\%s", m_sApplicationPath, m_sModFolder, pHandler->m_sName);
+            sprintf(sOutput, "%s%s\\Archives\\%s", m_sApplicationPath, m_metadata.m_sModFolder, pHandler->m_sName);
     }
     else if (m_eModuleType == MT_CompanyOfHeroes)
     {
