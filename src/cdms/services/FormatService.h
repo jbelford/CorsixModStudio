@@ -31,6 +31,7 @@ class CBfxFile;
 class CLuaFile;
 class CLuaFile2;
 class CUcsFile;
+struct lua_State;
 
 //! Service adapter wrapping Rainman format parser load/save operations.
 /*!
@@ -48,9 +49,14 @@ class FormatService
 
     // --- Chunky ---
     static Result<void> LoadChunky(CChunkyFile *pChunky, IFileStore::IStream *pStream);
+    static Result<void> SaveChunky(CChunkyFile *pChunky, IFileStore::IOutputStream *pStream);
 
     // --- RGT (texture) ---
     static Result<void> LoadRgt(CRgtFile *pRgt, IFileStore::IStream *pStream);
+    static Result<void> SaveRgtAsGeneric(CRgtFile *pRgt, IFileStore::IOutputStream *pStream);
+    static Result<void> SaveRgtAsTga(CRgtFile *pRgt, IFileStore::IOutputStream *pStream, bool bIncludeAlpha = true);
+    static Result<void> SaveRgtAsDds(CRgtFile *pRgt, IFileStore::IOutputStream *pStream, int iCompression,
+                                     bool bMipLevels);
 
     // --- RGM (material) ---
     static Result<void> LoadRgm(CRgmFile *pRgm, IFileStore::IStream *pStream);
@@ -58,10 +64,12 @@ class FormatService
 
     // --- BFX (effects) ---
     static Result<void> LoadBfx(CBfxFile *pBfx, IFileStore::IStream *pStream);
+    static Result<void> SaveBfxAsLua(CBfxFile *pBfx, IFileStore::IOutputStream *pStream, lua_State *pLmap = nullptr);
 
     // --- UCS ---
     static Result<void> LoadUcs(CUcsFile *pUcs, IFileStore::IStream *pStream);
     static Result<void> SaveUcs(CUcsFile *pUcs, const char *sFile);
+    static Result<void> SaveUcs(CUcsFile *pUcs, const wxString &sFile);
 };
 
 #endif

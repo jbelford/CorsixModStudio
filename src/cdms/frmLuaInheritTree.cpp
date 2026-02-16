@@ -32,180 +32,178 @@ END_EVENT_TABLE()
 class CLuaTreeItemData : public wxTreeItemData
 {
   public:
-	CInheritTable::CNode *pNode;
-	bool bNeedsFilling;
+    CInheritTable::CNode *pNode;
+    bool bNeedsFilling;
 
-	CLuaTreeItemData(CInheritTable::CNode *pp, bool b = false)
-	{
-		pNode = pp;
-		bNeedsFilling = b;
-	}
-	~CLuaTreeItemData() {}
+    CLuaTreeItemData(CInheritTable::CNode *pp, bool b = false)
+    {
+        pNode = pp;
+        bNeedsFilling = b;
+    }
+    ~CLuaTreeItemData() {}
 };
 
 void frmLuaInheritTree::OnActivated()
 {
-	if (bFirstActivate)
-	{
-		if (m_pInheritTable)
-		{
-			frmLoading *pLoadingForm = new frmLoading(AppStr(mod_loading));
-			pLoadingForm->Show(true);
-			pLoadingForm->SetMessage(wxString(wxT("Generating LUA inheritance tree")));
-			wxSafeYield(pLoadingForm);
+    if (bFirstActivate)
+    {
+        if (m_pInheritTable)
+        {
+            frmLoading *pLoadingForm = new frmLoading(AppStr(mod_loading));
+            pLoadingForm->Show(true);
+            pLoadingForm->SetMessage(wxString(wxT("Generating LUA inheritance tree")));
+            wxSafeYield(pLoadingForm);
 
-			CMakeLuaInheritTree *pTool = new CMakeLuaInheritTree;
-			pTool->pTable = m_pInheritTable;
-			try
-			{
-				pTool->Do("Generic\\Attrib\\");
-			}
-			catch (CRainmanException *pE)
-			{
-				delete pTool;
-				ErrorBoxE(pE);
-			}
-			delete pTool;
+            CMakeLuaInheritTree *pTool = new CMakeLuaInheritTree;
+            pTool->pTable = m_pInheritTable;
+            try
+            {
+                pTool->Do("Generic\\Attrib\\");
+            }
+            catch (CRainmanException *pE)
+            {
+                delete pTool;
+                ErrorBoxE(pE);
+            }
+            delete pTool;
 
-			pLoadingForm->SetMessage(wxString(wxT("Updating GUI")));
-			wxSafeYield(pLoadingForm);
+            pLoadingForm->SetMessage(wxString(wxT("Updating GUI")));
+            wxSafeYield(pLoadingForm);
 
-			m_pTree->Freeze();
-			_AddChildren(m_pTree->GetRootItem(), m_pInheritTable->getRoot());
-			m_pTree->Thaw();
-			m_pTree->Expand(m_pTree->GetRootItem());
+            m_pTree->Freeze();
+            _AddChildren(m_pTree->GetRootItem(), m_pInheritTable->getRoot());
+            m_pTree->Thaw();
+            m_pTree->Expand(m_pTree->GetRootItem());
 
-			pLoadingForm->Close(true);
-			delete pLoadingForm;
-		}
+            pLoadingForm->Close(true);
+            delete pLoadingForm;
+        }
 
-		bFirstActivate = false;
-	}
+        bFirstActivate = false;
+    }
 }
 
 void frmLuaInheritTree::_AddChildren(wxTreeItemId &oParent, CInheritTable::CNode *pParent)
 {
-	size_t iL = pParent->getChildCount();
-	for (size_t i = 0; i < iL; ++i)
-	{
-		CInheritTable::CNode *pChild = pParent->getChild(i);
-		int iImg = pChild->getIsNil() ? 1 : 0;
-		wxTreeItemId oChild = m_pTree->AppendItem(oParent, AsciiTowxString(pChild->getMiniName()), iImg, iImg,
-		                                          new CLuaTreeItemData(pChild, true));
-		// m_pTree->SetItemImage(oChild, iImg, wxTreeItemIcon_Expanded);
-		// m_pTree->SetItemImage(oChild, iImg, wxTreeItemIcon_SelectedExpanded);
-		//_AddChildren(oChild, pChild);
-		m_pTree->SetItemHasChildren(oChild, pChild->getChildCount() > 0);
-	}
-	if (iL > 0)
-		m_pTree->SortChildren(oParent);
+    size_t iL = pParent->getChildCount();
+    for (size_t i = 0; i < iL; ++i)
+    {
+        CInheritTable::CNode *pChild = pParent->getChild(i);
+        int iImg = pChild->getIsNil() ? 1 : 0;
+        wxTreeItemId oChild = m_pTree->AppendItem(oParent, AsciiTowxString(pChild->getMiniName()), iImg, iImg,
+                                                  new CLuaTreeItemData(pChild, true));
+        // m_pTree->SetItemImage(oChild, iImg, wxTreeItemIcon_Expanded);
+        // m_pTree->SetItemImage(oChild, iImg, wxTreeItemIcon_SelectedExpanded);
+        //_AddChildren(oChild, pChild);
+        m_pTree->SetItemHasChildren(oChild, pChild->getChildCount() > 0);
+    }
+    if (iL > 0)
+        m_pTree->SortChildren(oParent);
 }
 
 frmLuaInheritTree::frmLuaInheritTree(wxWindow *parent, wxWindowID id, const wxPoint &pos, const wxSize &size)
     : wxWindow(parent, id, pos, size)
 {
-	bFirstActivate = true;
-	m_pInheritTable = 0;
+    bFirstActivate = true;
+    m_pInheritTable = 0;
 
-	if (CMakeLuaInheritTree::_DoesExist("Generic\\attrib\\"))
-	{
-		wxBoxSizer *pTopSizer = new wxBoxSizer(wxVERTICAL);
+    if (CMakeLuaInheritTree::_DoesExist("Generic\\attrib\\"))
+    {
+        wxBoxSizer *pTopSizer = new wxBoxSizer(wxVERTICAL);
 
-		m_pInheritTable = new CInheritTable;
-		m_pTree = new wxTreeCtrl(this, IDC_LuaTree, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS);
+        m_pInheritTable = new CInheritTable;
+        m_pTree = new wxTreeCtrl(this, IDC_LuaTree, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS);
 
-		wxImageList *pFileTypes = new wxImageList(16, 16);
-		pFileTypes->Add(wxBitmap(wxT("IDB_FILELUA"), wxBITMAP_TYPE_BMP_RESOURCE)); // ( 0) LUA
-		pFileTypes->Add(wxBitmap(wxT("IDB_FILENIL"), wxBITMAP_TYPE_BMP_RESOURCE)); // ( 1) NIL
-		pFileTypes->Add(wxBitmap(wxT("IDB_TOC"), wxBITMAP_TYPE_BMP_RESOURCE));     // ( 2) ToC
-		m_pTree->AssignImageList(pFileTypes);
+        wxImageList *pFileTypes = new wxImageList(16, 16);
+        pFileTypes->Add(wxBitmap(wxT("IDB_FILELUA"), wxBITMAP_TYPE_BMP_RESOURCE)); // ( 0) LUA
+        pFileTypes->Add(wxBitmap(wxT("IDB_FILENIL"), wxBITMAP_TYPE_BMP_RESOURCE)); // ( 1) NIL
+        pFileTypes->Add(wxBitmap(wxT("IDB_TOC"), wxBITMAP_TYPE_BMP_RESOURCE));     // ( 2) ToC
+        m_pTree->AssignImageList(pFileTypes);
 
-		wxTreeItemId oRoot = m_pTree->AddRoot(wxT("Generic"), 2, 2);
-		m_pTree->SetItemImage(oRoot, 2, wxTreeItemIcon_Expanded);
-		m_pTree->SetItemImage(oRoot, 2, wxTreeItemIcon_SelectedExpanded);
+        wxTreeItemId oRoot = m_pTree->AddRoot(wxT("Generic"), 2, 2);
+        m_pTree->SetItemImage(oRoot, 2, wxTreeItemIcon_Expanded);
+        m_pTree->SetItemImage(oRoot, 2, wxTreeItemIcon_SelectedExpanded);
 
-		pTopSizer->Add(m_pTree, 1, wxEXPAND | wxALL, 0);
+        pTopSizer->Add(m_pTree, 1, wxEXPAND | wxALL, 0);
 
-		SetSizer(pTopSizer);
-		pTopSizer->SetSizeHints(this);
-	}
-	else
-	{
-	}
+        SetSizer(pTopSizer);
+        pTopSizer->SetSizeHints(this);
+    }
+    else
+    {
+    }
 }
 frmLuaInheritTree::~frmLuaInheritTree()
 {
-	if (m_pInheritTable)
-		delete m_pInheritTable;
+    if (m_pInheritTable)
+        delete m_pInheritTable;
 }
 void frmLuaInheritTree::OnSize(wxSizeEvent &event)
 {
-	UNUSED(event);
-	Layout();
+    UNUSED(event);
+    Layout();
 }
 
 static wxString OnlyFilename(wxString sName) { return sName.AfterLast('\\'); }
 
 void frmLuaInheritTree::OnTreeActivate(wxTreeEvent &event)
 {
-	CLuaTreeItemData *pData = (CLuaTreeItemData *)m_pTree->GetItemData(event.GetItem());
-	if (pData)
-	{
-		/*
-		wxString sTooltip;
-		sTooltip = AsciiTowxString(pData->pNode->getFullName());
-		TheConstruct->GetStatusBar()->SetStatusText(sTooltip);
-		*/
-		wxString sFile(wxT("Generic\\attrib\\"));
-		sFile += AsciiTowxString(pData->pNode->getFullName());
-		char *saFile = wxStringToAscii(sFile);
-		IFileStore::IStream *pStream = TheConstruct->GetModule()->VOpenStream(saFile);
-		if (!pStream)
-		{
-			delete[] saFile;
-			ErrorBox("Cannot open file");
-			return;
-		}
-		CLuaFile2 *pLua = CLuaAction::DoLoad2(pStream, saFile);
-		delete[] saFile;
-		delete pStream;
-		if (pLua)
-		{
-			frmRGDEditor *pForm;
-			TheConstruct->GetTabs()->AddPage(
-			    pForm = new frmRGDEditor(TheConstruct->GetFilesList()->FindFile(sFile, true), sFile,
-			                             TheConstruct->GetTabs(), -1),
-			    wxString().Append(wxT("LUA")).Append(wxT(" [")).Append(OnlyFilename(sFile)).Append(wxT("]")), true);
-			if (!pForm->FillFromLua2(pLua))
-			{
-				ErrorBox("Cannot load file");
-				delete pLua;
-				return;
-			}
-		}
-	}
+    CLuaTreeItemData *pData = (CLuaTreeItemData *)m_pTree->GetItemData(event.GetItem());
+    if (pData)
+    {
+        /*
+        wxString sTooltip;
+        sTooltip = AsciiTowxString(pData->pNode->getFullName());
+        TheConstruct->GetStatusBar()->SetStatusText(sTooltip);
+        */
+        wxString sFile(wxT("Generic\\attrib\\"));
+        sFile += AsciiTowxString(pData->pNode->getFullName());
+        auto streamResult = TheConstruct->GetFileService().OpenStream(sFile);
+        if (!streamResult)
+        {
+            ErrorBoxS(streamResult.error());
+            return;
+        }
+        char *saFile = wxStringToAscii(sFile);
+        CLuaFile2 *pLua = CLuaAction::DoLoad2(streamResult.value().get(), saFile);
+        delete[] saFile;
+        if (pLua)
+        {
+            frmRGDEditor *pForm;
+            TheConstruct->GetTabs()->AddPage(
+                pForm = new frmRGDEditor(TheConstruct->GetFilesList()->FindFile(sFile, true), sFile,
+                                         TheConstruct->GetTabs(), -1),
+                wxString().Append(wxT("LUA")).Append(wxT(" [")).Append(OnlyFilename(sFile)).Append(wxT("]")), true);
+            if (!pForm->FillFromLua2(pLua))
+            {
+                ErrorBox("Cannot load file");
+                delete pLua;
+                return;
+            }
+        }
+    }
 }
 void frmLuaInheritTree::OnTreeTooltip(wxTreeEvent &event)
 {
-	CLuaTreeItemData *pData = (CLuaTreeItemData *)m_pTree->GetItemData(event.GetItem());
-	if (pData)
-	{
-		wxString sTooltip;
-		sTooltip = AsciiTowxString(pData->pNode->getFullName());
-		TheConstruct->GetStatusBar()->SetStatusText(sTooltip);
-	}
+    CLuaTreeItemData *pData = (CLuaTreeItemData *)m_pTree->GetItemData(event.GetItem());
+    if (pData)
+    {
+        wxString sTooltip;
+        sTooltip = AsciiTowxString(pData->pNode->getFullName());
+        TheConstruct->GetStatusBar()->SetStatusText(sTooltip);
+    }
 }
 void frmLuaInheritTree::OnTreeExpanding(wxTreeEvent &event)
 {
-	CLuaTreeItemData *pData = (CLuaTreeItemData *)m_pTree->GetItemData(event.GetItem());
-	if (pData && pData->bNeedsFilling)
-	{
-		_AddChildren(event.GetItem(), pData->pNode);
-		pData->bNeedsFilling = false;
-	}
+    CLuaTreeItemData *pData = (CLuaTreeItemData *)m_pTree->GetItemData(event.GetItem());
+    if (pData && pData->bNeedsFilling)
+    {
+        _AddChildren(event.GetItem(), pData->pNode);
+        pData->bNeedsFilling = false;
+    }
 }
 void frmLuaInheritTree::OnTreeRightClick(wxTreeEvent &event)
 {
-	UNUSED(event);
-	// TODO
+    UNUSED(event);
+    // TODO
 }

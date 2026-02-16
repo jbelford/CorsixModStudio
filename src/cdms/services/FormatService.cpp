@@ -17,6 +17,7 @@
 */
 
 #include "FormatService.h"
+#include "../strconv.h"
 #include <rainman/core/Exception.h>
 #include <rainman/formats/CRgdFile.h>
 #include <rainman/formats/CChunkyFile.h>
@@ -68,6 +69,19 @@ Result<void> FormatService::LoadChunky(CChunkyFile *pChunky, IFileStore::IStream
     return Result<void>::Ok();
 }
 
+Result<void> FormatService::SaveChunky(CChunkyFile *pChunky, IFileStore::IOutputStream *pStream)
+{
+    try
+    {
+        pChunky->Save(pStream);
+    }
+    catch (CRainmanException *pE)
+    {
+        return ResultFromException(pE);
+    }
+    return Result<void>::Ok();
+}
+
 // --- RGT ---
 
 Result<void> FormatService::LoadRgt(CRgtFile *pRgt, IFileStore::IStream *pStream)
@@ -75,6 +89,46 @@ Result<void> FormatService::LoadRgt(CRgtFile *pRgt, IFileStore::IStream *pStream
     try
     {
         pRgt->Load(pStream);
+    }
+    catch (CRainmanException *pE)
+    {
+        return ResultFromException(pE);
+    }
+    return Result<void>::Ok();
+}
+
+Result<void> FormatService::SaveRgtAsGeneric(CRgtFile *pRgt, IFileStore::IOutputStream *pStream)
+{
+    try
+    {
+        pRgt->SaveGeneric(pStream);
+    }
+    catch (CRainmanException *pE)
+    {
+        return ResultFromException(pE);
+    }
+    return Result<void>::Ok();
+}
+
+Result<void> FormatService::SaveRgtAsTga(CRgtFile *pRgt, IFileStore::IOutputStream *pStream, bool bIncludeAlpha)
+{
+    try
+    {
+        pRgt->SaveTGA(pStream, bIncludeAlpha);
+    }
+    catch (CRainmanException *pE)
+    {
+        return ResultFromException(pE);
+    }
+    return Result<void>::Ok();
+}
+
+Result<void> FormatService::SaveRgtAsDds(CRgtFile *pRgt, IFileStore::IOutputStream *pStream, int iCompression,
+                                         bool bMipLevels)
+{
+    try
+    {
+        pRgt->SaveDDS(pStream, iCompression, bMipLevels);
     }
     catch (CRainmanException *pE)
     {
@@ -126,6 +180,19 @@ Result<void> FormatService::LoadBfx(CBfxFile *pBfx, IFileStore::IStream *pStream
     return Result<void>::Ok();
 }
 
+Result<void> FormatService::SaveBfxAsLua(CBfxFile *pBfx, IFileStore::IOutputStream *pStream, lua_State *pLmap)
+{
+    try
+    {
+        pBfx->SaveAsBfxLua(pStream, pLmap);
+    }
+    catch (CRainmanException *pE)
+    {
+        return ResultFromException(pE);
+    }
+    return Result<void>::Ok();
+}
+
 // --- UCS ---
 
 Result<void> FormatService::LoadUcs(CUcsFile *pUcs, IFileStore::IStream *pStream)
@@ -152,4 +219,15 @@ Result<void> FormatService::SaveUcs(CUcsFile *pUcs, const char *sFile)
         return ResultFromException(pE);
     }
     return Result<void>::Ok();
+}
+
+Result<void> FormatService::SaveUcs(CUcsFile *pUcs, const wxString &sFile)
+{
+    char *s = wxStringToAscii(sFile);
+    if (!s)
+        return Result<void>::Err(wxT("Memory allocation error"));
+
+    auto result = SaveUcs(pUcs, s);
+    delete[] s;
+    return result;
 }

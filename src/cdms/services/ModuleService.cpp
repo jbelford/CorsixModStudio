@@ -21,6 +21,7 @@
 #include <rainman/core/Exception.h>
 #include <rainman/module/CFileMap.h>
 #include <rainman/io/CFileSystemStore.h>
+#include <rainman/localization/CUcsFile.h>
 
 // --- Lifecycle (static) ---
 
@@ -229,6 +230,37 @@ Result<void> ModuleService::NewUCS(const wxString &sName)
 
     delete[] s;
     return Result<void>::Ok();
+}
+
+Result<void> ModuleService::NewUCS(const wxString &sName, CUcsFile *pUcs)
+{
+    char *s = wxStringToAscii(sName);
+    if (!s)
+        return Result<void>::Err(wxT("Memory allocation error"));
+
+    try
+    {
+        m_pModule->NewUCS(s, pUcs);
+    }
+    catch (CRainmanException *pE)
+    {
+        delete[] s;
+        return ResultFromException(pE);
+    }
+
+    delete[] s;
+    return Result<void>::Ok();
+}
+
+Result<bool> ModuleService::DirectoryExists(const wxString &sPath)
+{
+    char *s = wxStringToAscii(sPath);
+    if (!s)
+        return Result<bool>::Err(wxT("Memory allocation error"));
+
+    bool bExists = m_pModule->VDirectoryExists(s);
+    delete[] s;
+    return Result<bool>::Ok(bExists);
 }
 
 // --- Required/Engine accessors ---

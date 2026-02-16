@@ -106,6 +106,14 @@ class FileService
     //! Get the last-write time of a path.
     Result<tLastWriteTime> GetLastWriteTime(const wxString &sPath);
 
+    // --- Static utilities ---
+
+    //! Iterate a local filesystem directory (not the module's virtual FS).
+    static Result<IteratorGuard> IterateFileSystem(const wxString &sPath);
+
+    //! Copy all data from an input stream to an output stream.
+    static Result<void> CopyStream(IFileStore::IStream *pIn, IFileStore::IOutputStream *pOut);
+
   private:
     IFileStore *m_pStore;
     IDirectoryTraverser *m_pTraverser;

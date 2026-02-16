@@ -14,6 +14,8 @@ add_executable(cdms_tests
     result_test.cpp
     fileservice_test.cpp
     moduleservice_test.cpp
+    formatservice_test.cpp
+    hashservice_test.cpp
     ${CDMS_SRC_DIR}/strconv.cpp
     ${CDMS_SRC_DIR}/strings.cpp
     ${CDMS_SRC_DIR}/Utility.cpp

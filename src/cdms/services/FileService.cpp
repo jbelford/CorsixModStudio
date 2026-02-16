@@ -19,6 +19,8 @@
 #include "FileService.h"
 #include "../strconv.h"
 #include <rainman/core/Exception.h>
+#include <rainman/io/CFileSystemStore.h>
+#include <memory>
 
 // --- Stream operations ---
 
@@ -141,4 +143,55 @@ Result<tLastWriteTime> FileService::GetLastWriteTime(const wxString &sPath)
 
     delete[] sFile;
     return Result<tLastWriteTime>::Ok(t);
+}
+
+// --- Static utilities ---
+
+Result<IteratorGuard> FileService::IterateFileSystem(const wxString &sPath)
+{
+    char *sDir = wxStringToAscii(sPath);
+    if (!sDir)
+        return Result<IteratorGuard>::Err(wxT("Memory allocation error"));
+
+    CFileSystemStore oStore;
+    IDirectoryTraverser::IIterator *pItr = nullptr;
+    try
+    {
+        pItr = oStore.VIterate(sDir);
+    }
+    catch (CRainmanException *pE)
+    {
+        delete[] sDir;
+        return ResultFromExceptionT<IteratorGuard>(pE);
+    }
+
+    delete[] sDir;
+    return Result<IteratorGuard>::Ok(IteratorGuard(pItr));
+}
+
+Result<void> FileService::CopyStream(IFileStore::IStream *pIn, IFileStore::IOutputStream *pOut)
+{
+    constexpr long kBufSize = 4194304; // 4 MB, matches existing extract pattern
+    auto pBuffer = std::make_unique<char[]>(kBufSize);
+
+    try
+    {
+        pIn->VSeek(0, IFileStore::IStream::SL_End);
+        long iLen = pIn->VTell();
+        pIn->VSeek(0, IFileStore::IStream::SL_Root);
+
+        while (iLen > 0)
+        {
+            long iChunk = (iLen > kBufSize) ? kBufSize : iLen;
+            pIn->VRead(iChunk, 1, pBuffer.get());
+            pOut->VWrite(iChunk, 1, pBuffer.get());
+            iLen -= iChunk;
+        }
+    }
+    catch (CRainmanException *pE)
+    {
+        return ResultFromException(pE);
+    }
+
+    return Result<void>::Ok();
 }

@@ -24,6 +24,7 @@
 #include <rainman/module/CModuleFile.h>
 
 class CFileMap;
+class CUcsFile;
 
 //! Service adapter wrapping CModuleFile for the CDMS GUI layer.
 /*!
@@ -108,6 +109,12 @@ class ModuleService
     CModuleFile::CUcsHandler *GetUcs(size_t iId) const;
     const wchar_t *ResolveUCS(unsigned long iStringID) const;
     Result<void> NewUCS(const wxString &sName);
+
+    //! Create a new UCS entry with an existing CUcsFile object.
+    Result<void> NewUCS(const wxString &sName, CUcsFile *pUcs);
+
+    //! Check whether a directory exists in the module's virtual filesystem.
+    Result<bool> DirectoryExists(const wxString &sPath);
 
     // --- Required/Engine accessors ---
 

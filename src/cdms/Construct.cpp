@@ -29,8 +29,6 @@
 #include <memory>
 #include <rainman/io/CFileSystemStore.h>
 #include <rainman/module/CFileMap.h>
-#include <rainman/archive/CSgaCreator.h>
-#include <rainman/lua/CLuaFromRgd.h>
 #include "Tools.h"
 extern "C"
 {
@@ -432,7 +430,7 @@ void ConstructFrame::LaunchWarnings(wxCommandEvent &event)
 {
     UNUSED(event);
     wxString sCommand, sFolder;
-    if (GetModule() && GetModule()->GetModuleType() != CModuleFile::MT_DawnOfWar)
+    if (GetModule() && GetModuleService().GetModuleType() != CModuleFile::MT_DawnOfWar)
     {
         wchar_t sDocumentsFolder[MAX_PATH];
         SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, sDocumentsFolder);
@@ -814,7 +812,7 @@ IFileStore::IOutputStream *ConstructFrame::SaveFileCallback(const char *sFile, b
     if (sSavename.IsEmpty())
         return 0;
 
-    return pConstruct->GetModule()->GetFileSystem()->OpenOutputStreamW(sSavename, bEraseIfPresent);
+    return pConstruct->GetModuleService().GetModule()->GetFileSystem()->OpenOutputStreamW(sSavename, bEraseIfPresent);
 }
 
 void ConstructFrame::DoLoadSga()

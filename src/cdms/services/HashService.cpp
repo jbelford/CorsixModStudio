@@ -109,3 +109,27 @@ void HashService::Shutdown()
         m_sCustomOutPath = nullptr;
     }
 }
+
+Result<void> HashService::CrossRefWithStringList(const wxString &sFile)
+{
+    char *s = wxStringToAscii(sFile);
+    if (!s)
+        return Result<void>::Err(wxT("Memory allocation error"));
+
+    try
+    {
+        m_pHashTable->XRefWithStringList(s);
+    }
+    catch (CRainmanException *pE)
+    {
+        delete[] s;
+        return ResultFromException(pE);
+    }
+
+    delete[] s;
+    return Result<void>::Ok();
+}
+
+void HashService::FillUnknownList(std::vector<unsigned long> &oList) { m_pHashTable->FillUnknownList(oList); }
+
+unsigned long HashService::ValueToHash(const char *sValue) { return m_pHashTable->ValueToHash(sValue); }

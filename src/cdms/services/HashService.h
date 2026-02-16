@@ -21,6 +21,7 @@
 
 #include <wx/string.h>
 #include "Result.h"
+#include <vector>
 
 class CRgdHashTable;
 
@@ -62,6 +63,15 @@ class HashService
 
     //! Get the custom output path (for SaveCustomKeys).
     const char *GetCustomOutPath() const { return m_sCustomOutPath; }
+
+    //! Cross-reference hash table with a string list file.
+    Result<void> CrossRefWithStringList(const wxString &sFile);
+
+    //! Fill a vector with unknown (un-resolved) hash values.
+    void FillUnknownList(std::vector<unsigned long> &oList);
+
+    //! Hash a string value, registering it if not already known.
+    unsigned long ValueToHash(const char *sValue);
 
   private:
     CRgdHashTable *m_pHashTable;

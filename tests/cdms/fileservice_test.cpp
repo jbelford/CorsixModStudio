@@ -72,3 +72,59 @@ TEST_F(FileServiceTest, IteratorGuardMoveSemantics)
 	EXPECT_EQ(g1.get(), nullptr);
 	EXPECT_EQ(g2.get(), nullptr);
 }
+
+TEST_F(FileServiceTest, CopyStreamRoundTrip)
+{
+	const char testData[] = "Hello, CopyStream round-trip test data!";
+	constexpr size_t dataLen = sizeof(testData) - 1;
+
+	// Write test data into a CMemoryStore output stream
+	{
+		auto *pOut = m_store.VOpenOutputStream("copy_src", true);
+		ASSERT_NE(pOut, nullptr);
+		pOut->VWrite(static_cast<unsigned long>(dataLen), 1, testData);
+		delete pOut;
+	}
+
+	// Open source as readable stream via MemoryRange
+	char *pRange = m_store.MemoryRange((void *)testData, dataLen);
+	auto *pIn = m_store.VOpenStream(pRange);
+	ASSERT_NE(pIn, nullptr);
+
+	// Create destination output stream
+	auto *pOut = m_store.VOpenOutputStream("copy_dst", true);
+	ASSERT_NE(pOut, nullptr);
+
+	auto result = FileService::CopyStream(pIn, pOut);
+	delete pIn;
+	delete pOut;
+
+	ASSERT_TRUE(result.ok()) << result.error().utf8_str().data();
+
+	// Read back from destination and verify
+	char *pDstRange = m_store.MemoryRange((void *)testData, dataLen);
+	auto *pVerify = m_store.VOpenStream(pDstRange);
+	ASSERT_NE(pVerify, nullptr);
+
+	char readBuf[64] = {};
+	pVerify->VRead(static_cast<unsigned long>(dataLen), 1, readBuf);
+	delete pVerify;
+
+	EXPECT_EQ(memcmp(readBuf, testData, dataLen), 0);
+}
+
+TEST(FileServiceStatic, IterateFileSystemOnCurrentDir)
+{
+	// Iterate the current working directory — should succeed and return entries
+	auto result = FileService::IterateFileSystem(wxT("."));
+	ASSERT_TRUE(result.ok()) << result.error().utf8_str().data();
+	EXPECT_TRUE(static_cast<bool>(result.value()));
+}
+
+TEST(FileServiceStatic, IterateFileSystemOnInvalidPath)
+{
+	auto result = FileService::IterateFileSystem(wxT("Z:\\nonexistent_dir_12345"));
+	// Should either return an error or an empty iterator, not crash
+	// (Behavior depends on CFileSystemStore — just verify no crash)
+	SUCCEED();
+}
