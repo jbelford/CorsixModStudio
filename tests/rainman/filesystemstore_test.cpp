@@ -12,8 +12,6 @@ protected:
     std::filesystem::path tempDir;
 
     void SetUp() override {
-        tempDir = std::filesystem::temp_directory_path() / "cfs_test_XXXXXX";
-        // Create a unique directory name using the test address as seed
         tempDir = std::filesystem::temp_directory_path() /
             ("cfs_test_" + std::to_string(_getpid()) + "_" + std::to_string(reinterpret_cast<uintptr_t>(this)));
         std::filesystem::create_directories(tempDir);

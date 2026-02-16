@@ -40,5 +40,10 @@ jobs:
       - name: Build
         run: cmake --build --preset debug
 
+      - name: Disable crash dialogs
+        run: |
+          reg add "HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting" /v DontShowUI /t REG_DWORD /d 1 /f
+          reg add "HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting" /v Disabled /t REG_DWORD /d 1 /f
+
       - name: Test
         run: ctest --preset debug

@@ -8,6 +8,7 @@
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <process.h>
 #include <string>
 
 class SgaCreatorTest : public ::testing::Test {
@@ -17,7 +18,7 @@ protected:
 	void SetUp() override
 	{
 		tempDir = std::filesystem::temp_directory_path() /
-		          ("sgacreator_test_" + std::to_string(reinterpret_cast<uintptr_t>(this)));
+		          ("sgacreator_test_" + std::to_string(_getpid()) + "_" + std::to_string(reinterpret_cast<uintptr_t>(this)));
 		std::filesystem::create_directories(tempDir);
 	}
 
