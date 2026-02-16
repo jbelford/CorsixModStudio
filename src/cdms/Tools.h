@@ -19,6 +19,9 @@
 #pragma once
 #include "Construct.h"
 #include "frmUCSSelector.h"
+#include "presenters/CDpsCalculatorPresenter.h"
+#include "views/IDpsCalculatorView.h"
+#include <memory>
 
 class CLocaleTool : public ConstructFrame::ITool
 {
@@ -82,7 +85,7 @@ class CExtractAllTool : public ConstructFrame::ITool
     virtual void DoAction();
 };
 
-class CDpsCalculatorTool : public ConstructFrame::ITool
+class CDpsCalculatorTool : public ConstructFrame::ITool, private IDpsCalculatorView
 {
   public:
     virtual wxString GetName();
@@ -90,6 +93,17 @@ class CDpsCalculatorTool : public ConstructFrame::ITool
     virtual wxString GetBitmapName();
 
     virtual void DoAction();
+
+  private:
+    // IDpsCalculatorView implementation
+    void ShowProgress(const wxString &sMessage) override;
+    void HideProgress() override;
+    void ShowError(const wxString &sMessage) override;
+    void OnDpsComplete() override;
+    void DisableControls() override;
+    void EnableControls() override;
+
+    std::unique_ptr<CDpsCalculatorPresenter> m_pPresenter;
 };
 
 class CRedButtonTool : public ConstructFrame::ITool

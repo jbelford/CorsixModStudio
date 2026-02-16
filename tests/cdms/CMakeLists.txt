@@ -20,6 +20,9 @@ add_executable(cdms_tests
     progresschannel_test.cpp
     taskrunner_test.cpp
     moduleloadpresenter_test.cpp
+    sgamakepresenter_test.cpp
+    ucstodatpresenter_test.cpp
+    dpscalculatorpresenter_test.cpp
     ${CDMS_SRC_DIR}/strconv.cpp
     ${CDMS_SRC_DIR}/strings.cpp
     ${CDMS_SRC_DIR}/Utility.cpp
@@ -32,6 +35,12 @@ add_executable(cdms_tests
     ${CDMS_SRC_DIR}/async/CTaskRunner.cpp
     ${CDMS_SRC_DIR}/async/CWxTaskRunner.cpp
     ${CDMS_SRC_DIR}/presenters/CModuleLoadPresenter.cpp
+    ${CDMS_SRC_DIR}/presenters/CSgaMakePresenter.cpp
+    ${CDMS_SRC_DIR}/presenters/CUcsToDatPresenter.cpp
+    ${CDMS_SRC_DIR}/presenters/CDpsCalculatorPresenter.cpp
+    ${CDMS_SRC_DIR}/Tool_AutoDPS.cpp
+    ${CDMS_SRC_DIR}/Tool_AESetup.cpp
+    ${CDMS_SRC_DIR}/CtrlStatusText.cpp
 )
 
 target_include_directories(cdms_tests PRIVATE

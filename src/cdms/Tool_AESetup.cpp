@@ -68,8 +68,8 @@ frmUCSToDAT::frmUCSToDAT()
     pTopSizer->AddSpacer(0);
 
     auto *pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
-    pButtonSizer->Add(new wxButton(this, IDC_Cancel, AppStr(newmod_cancel)), 0, wxEXPAND | wxALL, 3);
-    pButtonSizer->Add(new wxButton(this, IDC_Go, AppStr(newmod_create)), 0, wxEXPAND | wxALL, 3);
+    pButtonSizer->Add(m_pCancelBtn = new wxButton(this, IDC_Cancel, AppStr(newmod_cancel)), 0, wxEXPAND | wxALL, 3);
+    pButtonSizer->Add(m_pGoBtn = new wxButton(this, IDC_Go, AppStr(newmod_create)), 0, wxEXPAND | wxALL, 3);
 
     pTopSizer->AddSpacer(0);
     pTopSizer->Add(pButtonSizer, 0, wxALIGN_CENTER);
@@ -78,6 +78,8 @@ frmUCSToDAT::frmUCSToDAT()
     SetSizer(pTopSizer);
     pTopSizer->SetSizeHints(this);
     SetBackgroundColour(pBgTemp->GetBackgroundColour());
+
+    m_pPresenter = std::make_unique<CUcsToDatPresenter>(*this, this);
 }
 
 void frmUCSToDAT::OnCancelClick(wxCommandEvent &event)
@@ -111,34 +113,60 @@ void frmUCSToDAT::OnGoClick(wxCommandEvent &event)
         return;
     }
 
-    auto *pMsg = new frmMessage(wxT("IDB_TOOL_AESETUP"), AppStr(aesetup_message));
-    pMsg->Show(true);
-    wxSafeYield(pMsg);
+    m_pPresenter->Convert(m_pOutFile->GetValue(), iRangeStart, iRangeEnd, TheConstruct->GetModuleService().GetModule());
+}
 
-    UCSToDATConvertor oConvertor;
+// --- IUcsToDatView implementation ---
 
-    bool bGood = true;
-    auto sFilename = wxStringToAscii(m_pOutFile->GetValue());
-    try
-    {
-        oConvertor.setOutputFilename(sFilename.get());
-        oConvertor.setRange(iRangeStart, iRangeEnd);
-        oConvertor.setModule(TheConstruct->GetModuleService().GetModule());
-        oConvertor.doConvertion();
-    }
-    catch (CRainmanException *pE)
-    {
-        ErrorBoxE(pE);
-        bGood = false;
-    }
+void frmUCSToDAT::ShowProgress(const wxString &sMessage)
+{
+    if (m_pGoBtn)
+        m_pGoBtn->SetLabel(sMessage);
+}
 
-    delete pMsg;
+void frmUCSToDAT::HideProgress()
+{
+    if (m_pGoBtn)
+        m_pGoBtn->SetLabel(AppStr(newmod_create));
+}
 
-    if (bGood)
-    {
-        wxMessageBox(AppStr(aesetup_done), AppStr(aesetup_name), wxICON_INFORMATION, TheConstruct);
-        EndModal(wxID_OK);
-    }
+void frmUCSToDAT::ShowError(const wxString &sMessage)
+{
+    ::wxMessageBox(sMessage, AppStr(aesetup_name), wxICON_ERROR, this);
+}
+
+void frmUCSToDAT::OnConversionComplete()
+{
+    wxMessageBox(AppStr(aesetup_done), AppStr(aesetup_name), wxICON_INFORMATION, TheConstruct);
+    EndModal(wxID_OK);
+}
+
+void frmUCSToDAT::DisableControls()
+{
+    if (m_pGoBtn)
+        m_pGoBtn->Enable(false);
+    if (m_pCancelBtn)
+        m_pCancelBtn->Enable(false);
+    if (m_pOutFile)
+        m_pOutFile->Enable(false);
+    if (m_pRangeStart)
+        m_pRangeStart->Enable(false);
+    if (m_pRangeEnd)
+        m_pRangeEnd->Enable(false);
+}
+
+void frmUCSToDAT::EnableControls()
+{
+    if (m_pGoBtn)
+        m_pGoBtn->Enable(true);
+    if (m_pCancelBtn)
+        m_pCancelBtn->Enable(true);
+    if (m_pOutFile)
+        m_pOutFile->Enable(true);
+    if (m_pRangeStart)
+        m_pRangeStart->Enable(true);
+    if (m_pRangeEnd)
+        m_pRangeEnd->Enable(true);
 }
 
 UCSToDATConvertor::UCSToDATConvertor()

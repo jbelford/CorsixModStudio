@@ -26,7 +26,7 @@
 #include "frmSgaMake.h"
 #include "Tool_AESetup.h"
 #include "Tool_AutoDPS.h"
-#include "frmMessage.h"
+#include "presenters/CDpsCalculatorPresenter.h"
 #include "Utility.h"
 #include "frmMassExtract.h"
 #include <memory>
@@ -231,73 +231,38 @@ void CDpsCalculatorTool::DoAction()
     if (sOutFile.Len() == 0)
         return;
 
-    auto sOut = wxStringToAscii(sOutFile);
-
-    frmMessage *pMsg = new frmMessage(wxT("IDB_TOOL_CALCULATOR"), AppStr(dpscalculator_message));
-    pMsg->Show(true);
-    wxSafeYield(pMsg);
-
-    IDirectoryTraverser::IIterator *pItr = 0;
-    AutoDPS_Internal::tAutoDPS_Package *pPack = 0;
-
-    try
+    auto itrResult = TheConstruct->GetFileService().Iterate(wxT("data\\attrib\\weapon"));
+    if (!itrResult)
     {
-        {
-            auto itrResult = TheConstruct->GetFileService().Iterate(wxT("data\\attrib\\weapon"));
-            if (!itrResult)
-                throw new CModStudioException(__FILE__, __LINE__, "Cannot iterate over weapon files");
-            pItr = itrResult.value().release();
-        }
-
-        try
-        {
-            pPack = AutoDPS::AutoDPS_Scan(pItr);
-        }
-        catch (CRainmanException *pE)
-        {
-            throw new CModStudioException(__FILE__, __LINE__, "Error scanning weapon files", pE);
-        }
-
-        try
-        {
-            AutoDPS::AutoDPS_Analyse(pPack);
-        }
-        catch (CRainmanException *pE)
-        {
-            throw new CModStudioException(__FILE__, __LINE__, "Error calculating DPS values", pE);
-        }
-
-        try
-        {
-            AutoDPS::AutoDPS_AddUnitList(pPack, TheConstruct->GetModuleService().GetModule());
-        }
-        catch (CRainmanException *pE)
-        {
-            throw new CModStudioException(__FILE__, __LINE__, "Error getting unit list", pE);
-        }
-
-        try
-        {
-            AutoDPS::AutoDPS_OutputHTML(pPack, sOut.get());
-        }
-        catch (CRainmanException *pE)
-        {
-            throw new CModStudioException(pE, __FILE__, __LINE__, "Error saving output to \'%s\'", sOut.get());
-        }
-
-        wxMessageBox(AppStr(dpscalculator_done), AppStr(dpscalculator_title), wxICON_INFORMATION, TheConstruct);
+        ErrorBoxE(new CModStudioException(__FILE__, __LINE__, "Cannot iterate over weapon files"));
+        return;
     }
-    catch (CRainmanException *pE)
+    auto *pItr = itrResult.value().release();
+
+    if (!m_pPresenter)
+        m_pPresenter =
+            std::make_unique<CDpsCalculatorPresenter>(static_cast<IDpsCalculatorView &>(*this), TheConstruct);
+
+    if (!m_pPresenter->CalculateDps(sOutFile, pItr, TheConstruct->GetModuleService().GetModule()))
     {
-        ErrorBoxE(pE);
-    }
-
-    if (pPack)
-        delete pPack;
-    if (pItr)
         delete pItr;
-    delete pMsg;
+        wxMessageBox(wxT("DPS calculation is already running."), AppStr(dpscalculator_title), wxICON_WARNING,
+                     TheConstruct);
+    }
 }
+
+void CDpsCalculatorTool::ShowProgress(const wxString & /*sMessage*/) {}
+void CDpsCalculatorTool::HideProgress() {}
+void CDpsCalculatorTool::ShowError(const wxString &sMessage)
+{
+    wxMessageBox(sMessage, AppStr(dpscalculator_title), wxICON_ERROR, TheConstruct);
+}
+void CDpsCalculatorTool::OnDpsComplete()
+{
+    wxMessageBox(AppStr(dpscalculator_done), AppStr(dpscalculator_title), wxICON_INFORMATION, TheConstruct);
+}
+void CDpsCalculatorTool::DisableControls() {}
+void CDpsCalculatorTool::EnableControls() {}
 
 wxString CMakeLuaInheritTree::GetName() { return wxT("Make Lua Inheritance Tree"); }
 wxString CMakeLuaInheritTree::GetHelpString() { return wxT(""); }

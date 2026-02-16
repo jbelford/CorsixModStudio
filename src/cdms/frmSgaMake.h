@@ -31,11 +31,18 @@
 #endif
 // ----------------------------
 
-class frmSgaMake : public wxDialog
+#include "presenters/CSgaMakePresenter.h"
+#include "views/ISgaMakeView.h"
+#include <memory>
+
+class frmSgaMake : public wxDialog, public ISgaMakeView
 {
   protected:
     wxTextCtrl *m_pInDir;
     wxComboBox *m_pOutFile, *m_pTocName;
+    wxButton *m_pGoBtn = nullptr;
+    wxButton *m_pCancelBtn = nullptr;
+    std::unique_ptr<CSgaMakePresenter> m_pPresenter;
 
   public:
     frmSgaMake();
@@ -45,6 +52,14 @@ class frmSgaMake : public wxDialog
     void OnGoClick(wxCommandEvent &event);
     void OnCancelClick(wxCommandEvent &event);
     void OnFileOutUpdated(wxCommandEvent &event);
+
+    // ISgaMakeView implementation
+    void ShowProgress(const wxString &sMessage) override;
+    void HideProgress() override;
+    void ShowError(const wxString &sMessage) override;
+    void OnSgaCreated() override;
+    void DisableControls() override;
+    void EnableControls() override;
 
     enum
     {

@@ -117,8 +117,8 @@ frmSgaMake::frmSgaMake()
     pTopSizer->AddSpacer(0);
 
     auto *pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
-    pButtonSizer->Add(new wxButton(this, IDC_Cancel, AppStr(newmod_cancel)), 0, wxEXPAND | wxALL, 3);
-    pButtonSizer->Add(new wxButton(this, IDC_Go, AppStr(newmod_create)), 0, wxEXPAND | wxALL, 3);
+    pButtonSizer->Add(m_pCancelBtn = new wxButton(this, IDC_Cancel, AppStr(newmod_cancel)), 0, wxEXPAND | wxALL, 3);
+    pButtonSizer->Add(m_pGoBtn = new wxButton(this, IDC_Go, AppStr(newmod_create)), 0, wxEXPAND | wxALL, 3);
 
     pTopSizer->AddSpacer(0);
     pTopSizer->Add(pButtonSizer, 0, wxALIGN_CENTER);
@@ -127,6 +127,8 @@ frmSgaMake::frmSgaMake()
     SetSizer(pTopSizer);
     pTopSizer->SetSizeHints(this);
     SetBackgroundColour(pBgTemp->GetBackgroundColour());
+
+    m_pPresenter = std::make_unique<CSgaMakePresenter>(*this, this);
 }
 
 void frmSgaMake::OnFileOutUpdated(wxCommandEvent &event)
@@ -216,44 +218,61 @@ void frmSgaMake::OnGoClick(wxCommandEvent &event)
                 return;
         }
 
-        // Make the SGA
-        auto *pMsg = new frmMessage(wxT("IDB_SGAPACK"), AppStr(sgapack_message));
-        pMsg->Show(true);
-        wxSafeYield(pMsg);
-
-        CFileSystemStore oFSO;
-        oFSO.VInit();
-        auto itrResult = FileService::IterateFileSystem(m_pInDir->GetValue());
-        if (!itrResult)
-        {
-            ErrorBoxS(itrResult.error());
-            delete pMsg;
-            return;
-        }
-        IDirectoryTraverser::IIterator *pItr = itrResult.value().release();
-        auto saDir = wxStringToAscii(m_pOutFile->GetValue());
-        auto saToc = wxStringToAscii(m_pTocName->GetValue());
-
-        bool bGood = true;
-        try
-        {
-            CSgaCreator::CreateSga(pItr, &oFSO, saToc.get(), saDir.get(),
-                                   TheConstruct->GetModuleService().GetSgaOutputVersion());
-        }
-        catch (CRainmanException *pE)
-        {
-            ErrorBoxE(pE);
-            bGood = false;
-        }
-
-        delete pItr;
-
-        delete pMsg;
-
-        if (bGood)
-        {
-            wxMessageBox(AppStr(sgapack_done), AppStr(sgapack_title), wxICON_INFORMATION, TheConstruct);
-            EndModal(wxID_OK);
-        }
+        // Start async SGA creation
+        m_pPresenter->CreateSga(m_pInDir->GetValue(), m_pOutFile->GetValue(), m_pTocName->GetValue(),
+                                TheConstruct->GetModuleService().GetSgaOutputVersion());
     }
+}
+
+// --- ISgaMakeView implementation ---
+
+void frmSgaMake::ShowProgress(const wxString &sMessage)
+{
+    if (m_pGoBtn)
+        m_pGoBtn->SetLabel(sMessage);
+}
+
+void frmSgaMake::HideProgress()
+{
+    if (m_pGoBtn)
+        m_pGoBtn->SetLabel(AppStr(newmod_create));
+}
+
+void frmSgaMake::ShowError(const wxString &sMessage)
+{
+    ::wxMessageBox(sMessage, AppStr(sgapack_title), wxICON_ERROR, this);
+}
+
+void frmSgaMake::OnSgaCreated()
+{
+    wxMessageBox(AppStr(sgapack_done), AppStr(sgapack_title), wxICON_INFORMATION, TheConstruct);
+    EndModal(wxID_OK);
+}
+
+void frmSgaMake::DisableControls()
+{
+    if (m_pGoBtn)
+        m_pGoBtn->Enable(false);
+    if (m_pCancelBtn)
+        m_pCancelBtn->Enable(false);
+    if (m_pInDir)
+        m_pInDir->Enable(false);
+    if (m_pOutFile)
+        m_pOutFile->Enable(false);
+    if (m_pTocName)
+        m_pTocName->Enable(false);
+}
+
+void frmSgaMake::EnableControls()
+{
+    if (m_pGoBtn)
+        m_pGoBtn->Enable(true);
+    if (m_pCancelBtn)
+        m_pCancelBtn->Enable(true);
+    if (m_pInDir)
+        m_pInDir->Enable(true);
+    if (m_pOutFile)
+        m_pOutFile->Enable(true);
+    if (m_pTocName)
+        m_pTocName->Enable(true);
 }

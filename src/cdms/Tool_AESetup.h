@@ -18,6 +18,7 @@
 #pragma once
 
 #include <rainman/module/CModuleFile.h>
+#include <map>
 // For compilers that support precompilation, includes "wx/wx.h".
 #include <wx/wxprec.h>
 
@@ -32,10 +33,17 @@
 #endif
 // ----------------------------
 
-class frmUCSToDAT : public wxDialog
+#include "presenters/CUcsToDatPresenter.h"
+#include "views/IUcsToDatView.h"
+#include <memory>
+
+class frmUCSToDAT : public wxDialog, public IUcsToDatView
 {
   protected:
     wxTextCtrl *m_pOutFile, *m_pRangeStart, *m_pRangeEnd;
+    wxButton *m_pGoBtn = nullptr;
+    wxButton *m_pCancelBtn = nullptr;
+    std::unique_ptr<CUcsToDatPresenter> m_pPresenter;
 
   public:
     frmUCSToDAT();
@@ -43,6 +51,14 @@ class frmUCSToDAT : public wxDialog
     void OnBrowseOutClick(wxCommandEvent &event);
     void OnGoClick(wxCommandEvent &event);
     void OnCancelClick(wxCommandEvent &event);
+
+    // IUcsToDatView implementation
+    void ShowProgress(const wxString &sMessage) override;
+    void HideProgress() override;
+    void ShowError(const wxString &sMessage) override;
+    void OnConversionComplete() override;
+    void DisableControls() override;
+    void EnableControls() override;
 
     enum
     {
