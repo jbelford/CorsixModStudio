@@ -23,6 +23,7 @@ add_executable(cdms_tests
     sgamakepresenter_test.cpp
     ucstodatpresenter_test.cpp
     dpscalculatorpresenter_test.cpp
+    luainherittreepresenter_test.cpp
     ${CDMS_SRC_DIR}/strconv.cpp
     ${CDMS_SRC_DIR}/strings.cpp
     ${CDMS_SRC_DIR}/Utility.cpp

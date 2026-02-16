@@ -12,15 +12,19 @@
 #include "wx/wx.h"
 #endif
 // ----------------------------
+#include "presenters/CLuaInheritTreePresenter.h"
+#include "views/ILuaInheritTreeView.h"
 #include <rainman/lua/CInheritTable.h>
 #include <wx/treectrl.h>
+#include <memory>
 
-class frmLuaInheritTree : public wxWindow
+class frmLuaInheritTree : public wxWindow, public ILuaInheritTreeView
 {
   protected:
     wxTreeCtrl *m_pTree;
     CInheritTable *m_pInheritTable;
     bool bFirstActivate;
+    std::unique_ptr<CLuaInheritTreePresenter> m_pPresenter;
 
     void _AddChildren(const wxTreeItemId &oParent, CInheritTable::CNode *pParent);
 
@@ -36,6 +40,14 @@ class frmLuaInheritTree : public wxWindow
     void OnTreeRightClick(wxTreeEvent &event);
 
     void OnActivated();
+
+    // ILuaInheritTreeView overrides
+    void ShowLoading(const wxString &sMessage) override;
+    void HideLoading() override;
+    void ShowError(const wxString &sMessage) override;
+    void OnTreeDataReady() override;
+    void DisableControls() override;
+    void EnableControls() override;
 
     enum
     {

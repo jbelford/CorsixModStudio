@@ -17,7 +17,6 @@
 */
 #include "frmLuaInheritTree.h"
 #include "Tools.h"
-#include "frmLoading.h"
 #include "frmRgdEditor.h"
 #include "Common.h"
 
@@ -49,38 +48,44 @@ void frmLuaInheritTree::OnActivated()
     {
         if (m_pInheritTable)
         {
-            frmLoading *pLoadingForm = new frmLoading(AppStr(mod_loading));
-            pLoadingForm->Show(true);
-            pLoadingForm->SetMessage(wxString(wxT("Generating LUA inheritance tree")));
-            wxSafeYield(pLoadingForm);
-
-            CMakeLuaInheritTree *pTool = new CMakeLuaInheritTree;
-            pTool->pTable = m_pInheritTable;
-            try
-            {
-                pTool->Do("Generic\\Attrib\\");
-            }
-            catch (CRainmanException *pE)
-            {
-                delete pTool;
-                ErrorBoxE(pE);
-            }
-            delete pTool;
-
-            pLoadingForm->SetMessage(wxString(wxT("Updating GUI")));
-            wxSafeYield(pLoadingForm);
-
-            m_pTree->Freeze();
-            _AddChildren(m_pTree->GetRootItem(), m_pInheritTable->getRoot());
-            m_pTree->Thaw();
-            m_pTree->Expand(m_pTree->GetRootItem());
-
-            pLoadingForm->Close(true);
-            delete pLoadingForm;
+            m_pPresenter->BuildTree(m_pInheritTable, wxT("Generic\\Attrib\\"));
         }
 
         bFirstActivate = false;
     }
+}
+
+void frmLuaInheritTree::ShowLoading(const wxString &sMessage)
+{
+    if (GetParent())
+        GetParent()->SetLabel(sMessage);
+}
+
+void frmLuaInheritTree::HideLoading() {}
+
+void frmLuaInheritTree::ShowError(const wxString &sMessage)
+{
+    wxMessageBox(sMessage, wxT("Error"), wxOK | wxICON_ERROR, this);
+}
+
+void frmLuaInheritTree::OnTreeDataReady()
+{
+    m_pTree->Freeze();
+    _AddChildren(m_pTree->GetRootItem(), m_pInheritTable->getRoot());
+    m_pTree->Thaw();
+    m_pTree->Expand(m_pTree->GetRootItem());
+}
+
+void frmLuaInheritTree::DisableControls()
+{
+    if (m_pTree)
+        m_pTree->Disable();
+}
+
+void frmLuaInheritTree::EnableControls()
+{
+    if (m_pTree)
+        m_pTree->Enable();
 }
 
 void frmLuaInheritTree::_AddChildren(const wxTreeItemId &oParent, CInheritTable::CNode *pParent)
@@ -106,6 +111,7 @@ frmLuaInheritTree::frmLuaInheritTree(wxWindow *parent, wxWindowID id, const wxPo
 {
     bFirstActivate = true;
     m_pInheritTable = 0;
+    m_pPresenter = std::make_unique<CLuaInheritTreePresenter>(*this, this);
 
     if (CMakeLuaInheritTree::_DoesExist("Generic\\attrib\\"))
     {
