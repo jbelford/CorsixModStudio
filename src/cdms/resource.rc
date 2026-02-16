@@ -4,6 +4,13 @@
 // treat identifiers as string resource names, not numeric IDs.
 #include <winres.h>
 
+// Enable Per-Monitor V2 DPI awareness via the wxWidgets-provided manifest.
+// wxUSE_DPI_AWARE_MANIFEST=2 selects Per-Monitor V2 (Win10 1703+), with
+// automatic fallback to system-aware on older Windows.
+#define wxUSE_RC_MANIFEST 1
+#define wxUSE_DPI_AWARE_MANIFEST 2
+#include <wx/msw/wx.rc>
+
 /////////////////////////////////////////////////////////////////////////////
 // Neutral resources
 

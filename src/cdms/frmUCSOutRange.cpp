@@ -28,59 +28,60 @@ EVT_BUTTON(wxID_NO, frmUCSOutOfRange::OnNoClick)
 END_EVENT_TABLE()
 
 frmUCSOutOfRange::frmUCSOutOfRange(const wxString &sTitle, unsigned long iID)
-    : wxDialog(wxTheApp->GetTopWindow(), -1, sTitle, wxPoint(0, 0), wxSize(320, 480),
+    : wxDialog(wxTheApp->GetTopWindow(), -1, sTitle, wxPoint(0, 0),
+               wxWindow::FromDIP(wxSize(320, 480), wxTheApp->GetTopWindow()),
                wxFRAME_FLOAT_ON_PARENT | wxFRAME_TOOL_WINDOW | wxCAPTION)
 {
-	CentreOnParent();
-	wxBoxSizer *pTopSizer = new wxBoxSizer(wxVERTICAL);
+    CentreOnParent();
+    wxBoxSizer *pTopSizer = new wxBoxSizer(wxVERTICAL);
 
-	wxString sCaption;
-	sCaption.Printf(AppStr(ucsrange_caption), iID);
+    wxString sCaption;
+    sCaption.Printf(AppStr(ucsrange_caption), iID);
 
-	wxWindow *pBgTemp;
-	pTopSizer->Add(pBgTemp = new wxStaticText(this, -1, sCaption), 0, wxALIGN_LEFT | wxALL, 3);
+    wxWindow *pBgTemp;
+    pTopSizer->Add(pBgTemp = new wxStaticText(this, -1, sCaption), 0, wxALIGN_LEFT | wxALL, 3);
 
-	wxBoxSizer *pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
+    wxBoxSizer *pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
 
-	pButtonSizer->Add(new wxButton(this, wxID_YES, AppStr(ucsrange_yes)), 0, wxEXPAND | wxALL, 3);
-	pButtonSizer->Add(new wxButton(this, wxID_NO, AppStr(ucsrange_no)), 0, wxEXPAND | wxALL, 3);
+    pButtonSizer->Add(new wxButton(this, wxID_YES, AppStr(ucsrange_yes)), 0, wxEXPAND | wxALL, 3);
+    pButtonSizer->Add(new wxButton(this, wxID_NO, AppStr(ucsrange_no)), 0, wxEXPAND | wxALL, 3);
 
-	pTopSizer->Add(pButtonSizer, 0, wxALIGN_LEFT);
-	pTopSizer->Add(m_pCheckbox = new wxCheckBox(this, -1, AppStr(ucsrange_remember)), 0, wxALIGN_LEFT | wxALL, 3);
+    pTopSizer->Add(pButtonSizer, 0, wxALIGN_LEFT);
+    pTopSizer->Add(m_pCheckbox = new wxCheckBox(this, -1, AppStr(ucsrange_remember)), 0, wxALIGN_LEFT | wxALL, 3);
 
-	bool bTicked;
-	TheConfig->Read(AppStr(config_mod_ucsrangeremember), &bTicked, false);
-	m_pCheckbox->SetValue(bTicked);
+    bool bTicked;
+    TheConfig->Read(AppStr(config_mod_ucsrangeremember), &bTicked, false);
+    m_pCheckbox->SetValue(bTicked);
 
-	SetSizer(pTopSizer);
-	pTopSizer->SetSizeHints(this);
-	SetBackgroundColour(pBgTemp->GetBackgroundColour());
+    SetSizer(pTopSizer);
+    pTopSizer->SetSizeHints(this);
+    SetBackgroundColour(pBgTemp->GetBackgroundColour());
 }
 
 void frmUCSOutOfRange::OnSize(wxSizeEvent &event)
 {
-	UNUSED(event);
-	Layout();
+    UNUSED(event);
+    Layout();
 }
 
 void frmUCSOutOfRange::OnYesClick(wxCommandEvent &event)
 {
-	UNUSED(event);
-	TheConfig->Write(AppStr(config_mod_ucsrangeremember), m_pCheckbox->GetValue());
-	// Flush immediately so preference persists even if the
-	// application exits before OnExit's Flush() is reached.
-	wxFileConfig *pCfg = dynamic_cast<wxFileConfig *>(wxConfigBase::Get());
-	if (pCfg)
-		pCfg->Flush();
-	EndModal(wxID_YES);
+    UNUSED(event);
+    TheConfig->Write(AppStr(config_mod_ucsrangeremember), m_pCheckbox->GetValue());
+    // Flush immediately so preference persists even if the
+    // application exits before OnExit's Flush() is reached.
+    wxFileConfig *pCfg = dynamic_cast<wxFileConfig *>(wxConfigBase::Get());
+    if (pCfg)
+        pCfg->Flush();
+    EndModal(wxID_YES);
 }
 
 void frmUCSOutOfRange::OnNoClick(wxCommandEvent &event)
 {
-	UNUSED(event);
-	TheConfig->Write(AppStr(config_mod_ucsrangeremember), m_pCheckbox->GetValue());
-	wxFileConfig *pCfg = dynamic_cast<wxFileConfig *>(wxConfigBase::Get());
-	if (pCfg)
-		pCfg->Flush();
-	EndModal(wxID_NO);
+    UNUSED(event);
+    TheConfig->Write(AppStr(config_mod_ucsrangeremember), m_pCheckbox->GetValue());
+    wxFileConfig *pCfg = dynamic_cast<wxFileConfig *>(wxConfigBase::Get());
+    if (pCfg)
+        pCfg->Flush();
+    EndModal(wxID_NO);
 }

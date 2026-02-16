@@ -63,7 +63,8 @@ void frmUCSSelector::_AddReadOnlyModToList(CModuleFile *pMod, wxArrayString &aLi
 }
 
 frmUCSSelector::frmUCSSelector(const wxString &sTitle)
-    : wxDialog(wxTheApp->GetTopWindow(), -1, sTitle, wxPoint(0, 0), wxSize(320, 480),
+    : wxDialog(wxTheApp->GetTopWindow(), -1, sTitle, wxPoint(0, 0),
+               wxWindow::FromDIP(wxSize(320, 480), wxTheApp->GetTopWindow()),
                wxFRAME_FLOAT_ON_PARENT | wxFRAME_TOOL_WINDOW | wxCAPTION)
 {
     m_bGotAnswer = false;

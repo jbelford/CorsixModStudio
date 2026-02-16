@@ -25,34 +25,41 @@ EVT_PAINT(frmMessage::OnPaint)
 END_EVENT_TABLE()
 
 frmMessage::frmMessage(const wxString &sImage, const wxString &sTitle)
-    : wxFrame(wxTheApp->GetTopWindow(), -1, sTitle, wxPoint(0, 0), wxSize(200, 132),
+    : wxFrame(wxTheApp->GetTopWindow(), -1, sTitle, wxPoint(0, 0),
+              wxWindow::FromDIP(wxSize(200, 132), wxTheApp->GetTopWindow()),
               wxFRAME_FLOAT_ON_PARENT | wxFRAME_TOOL_WINDOW)
 {
-	CentreOnParent();
-	m_pImage = 0;
-	m_pText = 0;
+    CentreOnParent();
+    m_pImage = 0;
+    m_pText = 0;
 
-	m_pImage = new wxBitmap(sImage, wxBITMAP_TYPE_BMP_RESOURCE);
-	m_pText = new wxStaticText(this, -1, sTitle, wxPoint(0, 50), wxSize(200, 82), wxST_NO_AUTORESIZE | wxALIGN_CENTER);
-	m_pText->Wrap(200);
-	m_pText->SetBackgroundStyle(wxBG_STYLE_COLOUR);
-	m_pText->SetBackgroundColour(wxColour(255, 255, 255));
-	this->SetBackgroundColour(wxColour(255, 255, 255));
+    m_pImage = new wxBitmap(sImage, wxBITMAP_TYPE_BMP_RESOURCE);
+    m_pText = new wxStaticText(this, -1, sTitle, FromDIP(wxPoint(0, 50)), FromDIP(wxSize(200, 82)),
+                               wxST_NO_AUTORESIZE | wxALIGN_CENTER);
+    m_pText->Wrap(FromDIP(200));
+    m_pText->SetBackgroundStyle(wxBG_STYLE_COLOUR);
+    m_pText->SetBackgroundColour(wxColour(255, 255, 255));
+    this->SetBackgroundColour(wxColour(255, 255, 255));
 }
 
-void frmMessage::OnQuit(wxCloseEvent &event)
+frmMessage::~frmMessage()
 {
-	UNUSED(event);
-	delete m_pImage;
+    delete m_pImage;
+    m_pImage = nullptr;
 }
+
+void frmMessage::OnQuit(wxCloseEvent &event) { UNUSED(event); }
 
 void frmMessage::OnPaint(wxPaintEvent &event)
 {
-	UNUSED(event);
-	wxPaintDC dc(this);
-	wxMemoryDC temp_dc;
-	temp_dc.SelectObject(*m_pImage);
-	dc.Blit(76, 0, 48, 48, &temp_dc, 0, 0);
+    UNUSED(event);
+    wxPaintDC dc(this);
+    if (m_pImage)
+    {
+        wxMemoryDC temp_dc;
+        temp_dc.SelectObject(*m_pImage);
+        dc.Blit(FromDIP(76), 0, m_pImage->GetWidth(), m_pImage->GetHeight(), &temp_dc, 0, 0);
+    }
 }
 
 void frmMessage::SetMessage(wxString &sMsg) { m_pText->SetLabel(sMsg); }

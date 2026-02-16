@@ -240,14 +240,15 @@ bool myUcsRefPropertyClass::OnButtonClick(wxPropertyGrid *propgrid, wxString &va
     else
     {
         frmUCSEditor *pForm;
-        pNewTabs->GetTabs()->AddPage(pForm = new frmUCSEditor(pNewTabs->GetTabs(), -1, pSelector->IsAnswerUcsReadOnly(),
-                                                              wxDefaultPosition, wxSize(620, 750), &iVal2),
-                                     wxString()
-                                         .Append(AppStr(ucsedit_tabname))
-                                         .Append(wxT(" ["))
-                                         .Append(pSelector->GetAnswer())
-                                         .Append(wxT("]")),
-                                     true);
+        pNewTabs->GetTabs()->AddPage(
+            pForm = new frmUCSEditor(pNewTabs->GetTabs(), -1, pSelector->IsAnswerUcsReadOnly(), wxDefaultPosition,
+                                     wxWindow::FromDIP(wxSize(620, 750), pNewTabs->GetTabs()), &iVal2),
+            wxString()
+                .Append(AppStr(ucsedit_tabname))
+                .Append(wxT(" ["))
+                .Append(pSelector->GetAnswer())
+                .Append(wxT("]")),
+            true);
         pNewTabs->Show(true);
         pForm->FillFromCUcsFile(pSelector->GetAnswerUcs(), iVal);
         pForm->SetTabStripForLoad(pNewTabs->GetTabs());

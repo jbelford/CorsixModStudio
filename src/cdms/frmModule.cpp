@@ -127,8 +127,9 @@ frmModule::pgMain::pgMain(wxWindow *parent, wxWindowID id, const wxPoint &pos, c
     _ltow(modSvc.GetVersionRevision(), sNumBuffer, 10);
     pVersionSizer->Add(SBT(new wxTextCtrl(this, IDC_VersionRevision, sNumBuffer), AppStr(mod_version_help)), 1,
                        wxALL | wxEXPAND, 3);
-    pVersionSizer->Add(new wxButton(this, IDC_VersionHelp, AppStr(question_mark), wxDefaultPosition, wxSize(24, -1)), 0,
-                       wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL | wxFIXED_MINSIZE | wxALL, 3);
+    pVersionSizer->Add(
+        new wxButton(this, IDC_VersionHelp, AppStr(question_mark), wxDefaultPosition, FromDIP(wxSize(24, -1))), 0,
+        wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL | wxFIXED_MINSIZE | wxALL, 3);
 
     pTopSizer->Add(SBT(new wxStaticText(this, -1, AppStr(mod_version)), AppStr(mod_version_help)), 0,
                    wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL | wxFIXED_MINSIZE | wxALL, 3);

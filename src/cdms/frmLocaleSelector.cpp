@@ -28,98 +28,99 @@ EVT_BUTTON(wxID_OPEN, frmLocaleSelector::OnNewClick)
 END_EVENT_TABLE()
 
 frmLocaleSelector::frmLocaleSelector(const wxString &sTitle, ConstructFrame::eLoadModGames eGame)
-    : wxDialog(wxTheApp->GetTopWindow(), -1, sTitle, wxPoint(0, 0), wxSize(320, 480),
+    : wxDialog(wxTheApp->GetTopWindow(), -1, sTitle, wxPoint(0, 0),
+               wxWindow::FromDIP(wxSize(320, 480), wxTheApp->GetTopWindow()),
                wxFRAME_FLOAT_ON_PARENT | wxFRAME_TOOL_WINDOW | wxCAPTION)
 {
-	CentreOnParent();
-	wxBoxSizer *pTopSizer = new wxBoxSizer(wxVERTICAL);
+    CentreOnParent();
+    wxBoxSizer *pTopSizer = new wxBoxSizer(wxVERTICAL);
 
-	wxArrayString aLocales;
-	switch (eGame)
-	{
-	default:
-	case ConstructFrame::LM_Any:
-	case ConstructFrame::LM_DoW_WA:
-	case ConstructFrame::LM_DC:
-	case ConstructFrame::LM_SS:
-		aLocales.Add(wxT("Chinese"));
-		aLocales.Add(wxT("Czech"));
-		aLocales.Add(wxT("English"));
-		aLocales.Add(wxT("English_Chinese"));
-		aLocales.Add(wxT("French"));
-		aLocales.Add(wxT("German"));
-		aLocales.Add(wxT("Italian"));
-		aLocales.Add(wxT("Japanese"));
-		aLocales.Add(wxT("Korean"));
-		aLocales.Add(wxT("Korean adult"));
-		aLocales.Add(wxT("Polish"));
-		aLocales.Add(wxT("Russian"));
-		aLocales.Add(wxT("Slovak"));
-		aLocales.Add(wxT("Spanish"));
-		break;
+    wxArrayString aLocales;
+    switch (eGame)
+    {
+    default:
+    case ConstructFrame::LM_Any:
+    case ConstructFrame::LM_DoW_WA:
+    case ConstructFrame::LM_DC:
+    case ConstructFrame::LM_SS:
+        aLocales.Add(wxT("Chinese"));
+        aLocales.Add(wxT("Czech"));
+        aLocales.Add(wxT("English"));
+        aLocales.Add(wxT("English_Chinese"));
+        aLocales.Add(wxT("French"));
+        aLocales.Add(wxT("German"));
+        aLocales.Add(wxT("Italian"));
+        aLocales.Add(wxT("Japanese"));
+        aLocales.Add(wxT("Korean"));
+        aLocales.Add(wxT("Korean adult"));
+        aLocales.Add(wxT("Polish"));
+        aLocales.Add(wxT("Russian"));
+        aLocales.Add(wxT("Slovak"));
+        aLocales.Add(wxT("Spanish"));
+        break;
 
-	case ConstructFrame::LM_CoH_OF:
-		aLocales.Add(wxT("Chineseenglish"));
-		aLocales.Add(wxT("Chinesetrad"));
-		aLocales.Add(wxT("Chinesesimp"));
-		aLocales.Add(wxT("Czech"));
-		aLocales.Add(wxT("English"));
-		aLocales.Add(wxT("French"));
-		aLocales.Add(wxT("German"));
-		aLocales.Add(wxT("Italian"));
-		aLocales.Add(wxT("Japanese"));
-		aLocales.Add(wxT("Korean"));
-		aLocales.Add(wxT("Polish"));
-		aLocales.Add(wxT("Russian"));
-		aLocales.Add(wxT("Spanish"));
-		break;
-	};
+    case ConstructFrame::LM_CoH_OF:
+        aLocales.Add(wxT("Chineseenglish"));
+        aLocales.Add(wxT("Chinesetrad"));
+        aLocales.Add(wxT("Chinesesimp"));
+        aLocales.Add(wxT("Czech"));
+        aLocales.Add(wxT("English"));
+        aLocales.Add(wxT("French"));
+        aLocales.Add(wxT("German"));
+        aLocales.Add(wxT("Italian"));
+        aLocales.Add(wxT("Japanese"));
+        aLocales.Add(wxT("Korean"));
+        aLocales.Add(wxT("Polish"));
+        aLocales.Add(wxT("Russian"));
+        aLocales.Add(wxT("Spanish"));
+        break;
+    };
 
-	wxWindow *pBgTemp;
-	pTopSizer->Add(pBgTemp = new wxStaticText(this, -1, AppStr(localeselect_caption)), 0, wxALIGN_LEFT | wxALL, 3);
-	pTopSizer->Add(m_pList = new wxListBox(this, IDC_LocaleList, wxDefaultPosition, wxDefaultSize, aLocales), 1,
-	               wxALL | wxEXPAND, 3);
-	pTopSizer->Add(m_pCheckbox = new wxCheckBox(this, IDC_Remember, AppStr(localeselect_remember)), 0,
-	               wxALIGN_LEFT | wxALL, 3);
+    wxWindow *pBgTemp;
+    pTopSizer->Add(pBgTemp = new wxStaticText(this, -1, AppStr(localeselect_caption)), 0, wxALIGN_LEFT | wxALL, 3);
+    pTopSizer->Add(m_pList = new wxListBox(this, IDC_LocaleList, wxDefaultPosition, wxDefaultSize, aLocales), 1,
+                   wxALL | wxEXPAND, 3);
+    pTopSizer->Add(m_pCheckbox = new wxCheckBox(this, IDC_Remember, AppStr(localeselect_remember)), 0,
+                   wxALIGN_LEFT | wxALL, 3);
 
-	wxBoxSizer *pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
+    wxBoxSizer *pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
 
-	pButtonSizer->Add(new wxButton(this, wxID_OPEN, AppStr(localeselect_use)), 0, wxEXPAND | wxALL, 3);
+    pButtonSizer->Add(new wxButton(this, wxID_OPEN, AppStr(localeselect_use)), 0, wxEXPAND | wxALL, 3);
 
-	pTopSizer->Add(pButtonSizer, 0, wxALIGN_RIGHT);
+    pTopSizer->Add(pButtonSizer, 0, wxALIGN_RIGHT);
 
-	m_pList->SetStringSelection(TheConfig->Read(AppStr(config_mod_locale), AppStr(localeselect_default)));
+    m_pList->SetStringSelection(TheConfig->Read(AppStr(config_mod_locale), AppStr(localeselect_default)));
 
-	bool bTicked;
-	TheConfig->Read(AppStr(config_mod_localeremember), &bTicked, false);
-	m_pCheckbox->SetValue(bTicked);
+    bool bTicked;
+    TheConfig->Read(AppStr(config_mod_localeremember), &bTicked, false);
+    m_pCheckbox->SetValue(bTicked);
 
-	SetSizer(pTopSizer);
-	pTopSizer->SetSizeHints(this);
-	SetBackgroundColour(pBgTemp->GetBackgroundColour());
+    SetSizer(pTopSizer);
+    pTopSizer->SetSizeHints(this);
+    SetBackgroundColour(pBgTemp->GetBackgroundColour());
 }
 
 void frmLocaleSelector::OnSize(wxSizeEvent &event)
 {
-	UNUSED(event);
-	Layout();
+    UNUSED(event);
+    Layout();
 }
 
 void frmLocaleSelector::OnNewClick(wxCommandEvent &event)
 {
-	UNUSED(event);
-	wxString sSel = m_pList->GetStringSelection();
-	if (!sSel.IsEmpty())
-	{
-		TheConfig->Write(AppStr(config_mod_locale), sSel);
-		TheConfig->Write(AppStr(config_mod_localeremember), m_pCheckbox->GetValue());
+    UNUSED(event);
+    wxString sSel = m_pList->GetStringSelection();
+    if (!sSel.IsEmpty())
+    {
+        TheConfig->Write(AppStr(config_mod_locale), sSel);
+        TheConfig->Write(AppStr(config_mod_localeremember), m_pCheckbox->GetValue());
 
-		// Flush immediately so locale preference persists even if the
-		// application exits before OnExit's Flush() is reached.
-		wxFileConfig *pCfg = dynamic_cast<wxFileConfig *>(wxConfigBase::Get());
-		if (pCfg)
-			pCfg->Flush();
+        // Flush immediately so locale preference persists even if the
+        // application exits before OnExit's Flush() is reached.
+        wxFileConfig *pCfg = dynamic_cast<wxFileConfig *>(wxConfigBase::Get());
+        if (pCfg)
+            pCfg->Flush();
 
-		EndModal(wxID_OK);
-	}
+        EndModal(wxID_OK);
+    }
 }

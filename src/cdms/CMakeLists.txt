@@ -37,6 +37,9 @@ if(MSVC)
         /wd4267
         /wd4244
     )
+    # Disable MSVC auto-generated manifest — wx.rc embeds its own with
+    # Per-Monitor V2 DPI awareness (wxUSE_DPI_AWARE_MANIFEST=2).
+    target_link_options(CorsixModStudio PRIVATE /MANIFEST:NO)
 endif()
 
 # Copy Mod_Studio_Files (config, dictionaries, docs, etc.) next to the exe

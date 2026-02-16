@@ -37,18 +37,19 @@
 class frmLoading : public wxFrame
 {
   protected:
-	wxBitmap *m_pLoadingImage;
-	wxStaticText *m_pText;
+    wxBitmap *m_pLoadingImage;
+    wxStaticText *m_pText;
 
   public:
-	frmLoading(const wxString &sTitle);
+    frmLoading(const wxString &sTitle);
+    ~frmLoading();
 
-	void OnQuit(wxCloseEvent &event);
-	void OnPaint(wxPaintEvent &event);
+    void OnQuit(wxCloseEvent &event);
+    void OnPaint(wxPaintEvent &event);
 
-	void SetMessage(wxString &sMsg);
+    void SetMessage(wxString &sMsg);
 
-	DECLARE_EVENT_TABLE()
+    DECLARE_EVENT_TABLE()
 };
 
 #endif

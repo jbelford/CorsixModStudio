@@ -77,7 +77,8 @@ frmFileSelector::~frmFileSelector()
 }
 
 frmFileSelector::frmFileSelector(wxString sBaseFolder, wxString sExistingSelection, bool bRgdMode)
-    : wxDialog(wxTheApp->GetTopWindow(), -1, wxT("File Selector"), wxPoint(0, 0), wxSize(320, 480),
+    : wxDialog(wxTheApp->GetTopWindow(), -1, wxT("File Selector"), wxPoint(0, 0),
+               wxWindow::FromDIP(wxSize(320, 480), wxTheApp->GetTopWindow()),
                wxFRAME_FLOAT_ON_PARENT | wxFRAME_TOOL_WINDOW | wxCAPTION),
       m_sBaseFolder(sBaseFolder), m_bRgdMode(bRgdMode)
 {
@@ -89,7 +90,7 @@ frmFileSelector::frmFileSelector(wxString sBaseFolder, wxString sExistingSelecti
     CentreOnParent();
     wxBoxSizer *pTopSizer = new wxBoxSizer(wxVERTICAL);
 
-    pTopSizer->Add(m_pTree = new wxTreeCtrl(this, IDC_FilesTable, wxDefaultPosition, wxSize(260, 320),
+    pTopSizer->Add(m_pTree = new wxTreeCtrl(this, IDC_FilesTable, wxDefaultPosition, FromDIP(wxSize(260, 320)),
                                             wxTR_HAS_BUTTONS | wxTR_HIDE_ROOT | wxTR_SINGLE | wxTR_LINES_AT_ROOT),
                    1, wxALL | wxEXPAND, 3);
 

@@ -114,9 +114,10 @@ frmNewMod::frmNewMod()
 
     pTopSizer->Add(SBT(pBgTemp = new wxStaticText(this, -1, AppStr(newmod_name)), AppStr(newmod_namehelp)), 0,
                    wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL | wxFIXED_MINSIZE | wxALL, 3);
-    pTopSizer->Add(SBT(m_pName = new wxTextCtrl(this, IDC_Name, wxT("My Mod"), wxDefaultPosition, wxSize(300, -1)),
-                       AppStr(newmod_namehelp)),
-                   1, wxALL | wxEXPAND, 3);
+    pTopSizer->Add(
+        SBT(m_pName = new wxTextCtrl(this, IDC_Name, wxT("My Mod"), wxDefaultPosition, FromDIP(wxSize(300, -1))),
+            AppStr(newmod_namehelp)),
+        1, wxALL | wxEXPAND, 3);
 
     pTopSizer->Add(SBT(new wxStaticText(this, -1, AppStr(newmod_base)), AppStr(newmod_basehelp)), 0,
                    wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL | wxFIXED_MINSIZE | wxALL, 3);

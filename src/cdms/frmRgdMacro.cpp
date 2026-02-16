@@ -157,7 +157,8 @@ void frmRgdMacro::OnStyleNeeded(wxStyledTextEvent &event)
 
 frmRgdMacro::frmRgdMacro(wxString sFile, wxTreeItemId &oFolder)
     : m_oFolder(oFolder), m_sPath(sFile),
-      wxDialog(wxTheApp->GetTopWindow(), -1, AppStr(rgdmacro_title), wxPoint(0, 0), wxSize(400, 600),
+      wxDialog(wxTheApp->GetTopWindow(), -1, AppStr(rgdmacro_title), wxPoint(0, 0),
+               wxWindow::FromDIP(wxSize(400, 600), wxTheApp->GetTopWindow()),
                wxFRAME_FLOAT_ON_PARENT | wxSYSTEM_MENU | wxCAPTION | wxRESIZE_BORDER | wxCLOSE_BOX)
 {
     m_bShowingOutput = false;

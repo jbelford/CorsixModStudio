@@ -26,36 +26,43 @@ EVT_PAINT(frmLoading::OnPaint)
 END_EVENT_TABLE()
 
 frmLoading::frmLoading(const wxString &sTitle)
-    : wxFrame(wxTheApp->GetTopWindow(), -1, sTitle, wxPoint(0, 0), wxSize(384, 384),
+    : wxFrame(wxTheApp->GetTopWindow(), -1, sTitle, wxPoint(0, 0),
+              wxWindow::FromDIP(wxSize(384, 384), wxTheApp->GetTopWindow()),
               wxFRAME_FLOAT_ON_PARENT | wxFRAME_TOOL_WINDOW)
 {
-	CentreOnParent();
-	m_pLoadingImage = 0;
-	m_pText = 0;
+    CentreOnParent();
+    m_pLoadingImage = 0;
+    m_pText = 0;
 
-	m_pLoadingImage = new wxBitmap(wxT("RIDB_LOADING"), wxBITMAP_TYPE_BMP_RESOURCE);
-	m_pText = new wxStaticText(this, -1, sTitle, wxPoint(0, 317), wxSize(384, 33), wxST_NO_AUTORESIZE | wxALIGN_CENTER);
-	m_pText->Wrap(380);
-	m_pText->SetBackgroundStyle(wxBG_STYLE_COLOUR);
-	m_pText->SetBackgroundColour(wxColour(255, 255, 255));
-	wxFont f = m_pText->GetFont();
-	f.SetWeight(wxFONTWEIGHT_BOLD);
-	m_pText->SetFont(f);
+    m_pLoadingImage = new wxBitmap(wxT("RIDB_LOADING"), wxBITMAP_TYPE_BMP_RESOURCE);
+    m_pText = new wxStaticText(this, -1, sTitle, FromDIP(wxPoint(0, 317)), FromDIP(wxSize(384, 33)),
+                               wxST_NO_AUTORESIZE | wxALIGN_CENTER);
+    m_pText->Wrap(FromDIP(380));
+    m_pText->SetBackgroundStyle(wxBG_STYLE_COLOUR);
+    m_pText->SetBackgroundColour(wxColour(255, 255, 255));
+    wxFont f = m_pText->GetFont();
+    f.SetWeight(wxFONTWEIGHT_BOLD);
+    m_pText->SetFont(f);
 }
 
-void frmLoading::OnQuit(wxCloseEvent &event)
+frmLoading::~frmLoading()
 {
-	UNUSED(event);
-	delete m_pLoadingImage;
+    delete m_pLoadingImage;
+    m_pLoadingImage = nullptr;
 }
+
+void frmLoading::OnQuit(wxCloseEvent &event) { UNUSED(event); }
 
 void frmLoading::OnPaint(wxPaintEvent &event)
 {
-	UNUSED(event);
-	wxPaintDC dc(this);
-	wxMemoryDC temp_dc;
-	temp_dc.SelectObject(*m_pLoadingImage);
-	dc.Blit(0, 0, 384, 384, &temp_dc, 0, 0);
+    UNUSED(event);
+    wxPaintDC dc(this);
+    if (m_pLoadingImage)
+    {
+        wxMemoryDC temp_dc;
+        temp_dc.SelectObject(*m_pLoadingImage);
+        dc.Blit(0, 0, m_pLoadingImage->GetWidth(), m_pLoadingImage->GetHeight(), &temp_dc, 0, 0);
+    }
 }
 
 void frmLoading::SetMessage(wxString &sMsg) { m_pText->SetLabel(sMsg); }

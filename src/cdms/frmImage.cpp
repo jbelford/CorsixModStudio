@@ -208,6 +208,8 @@ void frmImageViewer::SetIsDds()
 
 frmImageViewer::~frmImageViewer()
 {
+    delete m_pImageBitmap;
+    m_pImageBitmap = nullptr;
     if (m_bOwnRgt && m_pRgtFile)
         delete m_pRgtFile;
 }

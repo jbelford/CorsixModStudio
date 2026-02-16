@@ -37,18 +37,19 @@
 class frmMessage : public wxFrame
 {
   protected:
-	wxBitmap *m_pImage;
-	wxStaticText *m_pText;
+    wxBitmap *m_pImage;
+    wxStaticText *m_pText;
 
   public:
-	frmMessage(const wxString &sImage, const wxString &sTitle);
+    frmMessage(const wxString &sImage, const wxString &sTitle);
+    ~frmMessage();
 
-	void OnQuit(wxCloseEvent &event);
-	void OnPaint(wxPaintEvent &event);
+    void OnQuit(wxCloseEvent &event);
+    void OnPaint(wxPaintEvent &event);
 
-	void SetMessage(wxString &sMsg);
+    void SetMessage(wxString &sMsg);
 
-	DECLARE_EVENT_TABLE()
+    DECLARE_EVENT_TABLE()
 };
 
 #endif

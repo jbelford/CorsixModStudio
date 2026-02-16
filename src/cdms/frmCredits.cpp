@@ -25,44 +25,45 @@ EVT_PAINT(frmCredits::OnPaint)
 END_EVENT_TABLE()
 
 frmCredits::frmCredits()
-    : wxDialog(wxTheApp->GetTopWindow(), -1, wxT("Credits"), wxPoint(0, 0), wxSize(384, 474),
+    : wxDialog(wxTheApp->GetTopWindow(), -1, wxT("Credits"), wxPoint(0, 0),
+               wxWindow::FromDIP(wxSize(384, 474), wxTheApp->GetTopWindow()),
                wxFRAME_FLOAT_ON_PARENT | wxDEFAULT_DIALOG_STYLE)
 {
-	CentreOnParent();
-	m_pLoadingImage = 0;
-	m_pText = 0;
+    CentreOnParent();
+    m_pLoadingImage = 0;
+    m_pText = 0;
 
-	wxString sCredits;
+    wxString sCredits;
 
-	sCredits.Append(wxT("Programming: Corsix, uses squish library (C) 2006 Simon Brown\n"));
-	sCredits.Append(wxT("Artwork: Silvestre Herrera (Nuovo iconset), Corsix, GPL-ed artwork\n"));
-	sCredits.Append(wxT("Beta testing: Compiler, davisbe, Delphy, Excedrin, Finaldeath, kjon, Kresjah, "
-	                    "irc.hwcommunity.com #dowmods channel\n"));
-	sCredits.Append(wxT("Donators: snake_risken, Delphy, Mannerheim, KoGar, Julian Harris, CrizeCaldron, Kutter, "
-	                    "MasterofOblivion, Rick Funk\n"));
-	sCredits.Append(
-	    wxT("\nThis program is free software licensed under the GNU GPL. Email modstudio@corsix.org for details"));
+    sCredits.Append(wxT("Programming: Corsix, uses squish library (C) 2006 Simon Brown\n"));
+    sCredits.Append(wxT("Artwork: Silvestre Herrera (Nuovo iconset), Corsix, GPL-ed artwork\n"));
+    sCredits.Append(wxT("Beta testing: Compiler, davisbe, Delphy, Excedrin, Finaldeath, kjon, Kresjah, "
+                        "irc.hwcommunity.com #dowmods channel\n"));
+    sCredits.Append(wxT("Donators: snake_risken, Delphy, Mannerheim, KoGar, Julian Harris, CrizeCaldron, Kutter, "
+                        "MasterofOblivion, Rick Funk\n"));
+    sCredits.Append(
+        wxT("\nThis program is free software licensed under the GNU GPL. Email modstudio@corsix.org for details"));
 
-	m_pLoadingImage = new wxBitmap(wxT("RIDB_LOADING"), wxBITMAP_TYPE_BMP_RESOURCE);
-	m_pText =
-	    new wxStaticText(this, -1, sCredits, wxPoint(0, 317), wxSize(384, 167), wxST_NO_AUTORESIZE | wxALIGN_LEFT);
-	// m_pText->Wrap(384);
-	m_pText->SetBackgroundStyle(wxBG_STYLE_COLOUR);
-	m_pText->SetBackgroundColour(wxColour(255, 255, 255));
-	wxFont f = m_pText->GetFont();
-	f.SetWeight(wxFONTWEIGHT_BOLD);
-	m_pText->SetFont(f);
+    m_pLoadingImage = new wxBitmap(wxT("RIDB_LOADING"), wxBITMAP_TYPE_BMP_RESOURCE);
+    m_pText = new wxStaticText(this, -1, sCredits, FromDIP(wxPoint(0, 317)), FromDIP(wxSize(384, 167)),
+                               wxST_NO_AUTORESIZE | wxALIGN_LEFT);
+    // m_pText->Wrap(384);
+    m_pText->SetBackgroundStyle(wxBG_STYLE_COLOUR);
+    m_pText->SetBackgroundColour(wxColour(255, 255, 255));
+    wxFont f = m_pText->GetFont();
+    f.SetWeight(wxFONTWEIGHT_BOLD);
+    m_pText->SetFont(f);
 }
 
 frmCredits::~frmCredits() { delete m_pLoadingImage; }
 
 void frmCredits::OnPaint(wxPaintEvent &event)
 {
-	UNUSED(event);
-	wxPaintDC dc(this);
-	wxMemoryDC temp_dc;
-	temp_dc.SelectObject(*m_pLoadingImage);
-	dc.Blit(0, 0, 384, 384, &temp_dc, 0, 0);
+    UNUSED(event);
+    wxPaintDC dc(this);
+    wxMemoryDC temp_dc;
+    temp_dc.SelectObject(*m_pLoadingImage);
+    dc.Blit(0, 0, 384, 384, &temp_dc, 0, 0);
 }
 
 void frmCredits::SetMessage(wxString &sMsg) { m_pText->SetLabel(sMsg); }
