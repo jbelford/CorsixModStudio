@@ -19,6 +19,7 @@
 #include "Tools.h"
 #include "frmRgdEditor.h"
 #include "Common.h"
+#include <rainman/core/RainmanLog.h>
 
 BEGIN_EVENT_TABLE(frmLuaInheritTree, wxWindow)
 EVT_SIZE(frmLuaInheritTree::OnSize)
@@ -48,7 +49,12 @@ void frmLuaInheritTree::OnActivated()
     {
         if (m_pInheritTable)
         {
+            CDMS_LOG_INFO("Lua inherit tree: building tree from 'Generic\\Attrib\\'");
             m_pPresenter->BuildTree(m_pInheritTable, wxT("Generic\\Attrib\\"));
+        }
+        else
+        {
+            CDMS_LOG_DEBUG("Lua inherit tree: no inherit table available — skipping build");
         }
 
         bFirstActivate = false;
@@ -65,11 +71,13 @@ void frmLuaInheritTree::HideLoading() {}
 
 void frmLuaInheritTree::ShowError(const wxString &sMessage)
 {
+    CDMS_LOG_ERROR("Lua inherit tree: {}", sMessage.mb_str().data());
     wxMessageBox(sMessage, wxT("Error"), wxOK | wxICON_ERROR, this);
 }
 
 void frmLuaInheritTree::OnTreeDataReady()
 {
+    CDMS_LOG_INFO("Lua inherit tree: tree data ready, populating UI");
     m_pTree->Freeze();
     _AddChildren(m_pTree->GetRootItem(), m_pInheritTable->getRoot());
     m_pTree->Thaw();
@@ -115,6 +123,7 @@ frmLuaInheritTree::frmLuaInheritTree(wxWindow *parent, wxWindowID id, const wxPo
 
     if (CMakeLuaInheritTree::_DoesExist("Generic\\attrib\\"))
     {
+        CDMS_LOG_INFO("Lua inherit tree: 'Generic\\attrib\\' folder found, creating tree widget");
         wxBoxSizer *pTopSizer = new wxBoxSizer(wxVERTICAL);
 
         m_pInheritTable = new CInheritTable;
@@ -137,6 +146,7 @@ frmLuaInheritTree::frmLuaInheritTree(wxWindow *parent, wxWindowID id, const wxPo
     }
     else
     {
+        CDMS_LOG_INFO("Lua inherit tree: 'Generic\\attrib\\' folder not found in module — tab will be empty");
     }
 }
 frmLuaInheritTree::~frmLuaInheritTree()
