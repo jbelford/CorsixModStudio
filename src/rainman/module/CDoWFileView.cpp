@@ -25,8 +25,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 CDoWFileView::CDoWFileView(void)
 {
     _Clean();
-    m_RootFolder.sFullName = ""; // dont worry - it wont try and delete it
-    m_RootFolder.sName = "";
+    m_RootFolder.sFullName = const_cast<char *>(""); // dont worry - it wont try and delete it
+    m_RootFolder.sName = const_cast<char *>("");
 }
 
 void CDoWFileView::Reset() { _Clean(); }

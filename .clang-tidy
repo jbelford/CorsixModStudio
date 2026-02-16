@@ -2,7 +2,7 @@
 # CorsixModStudio — clang-tidy configuration
 # =============================================================================
 #
-# This is a legacy ~2006 C++ codebase being incrementally modernized to C++17.
+# This is a legacy ~2006 C++ codebase being incrementally modernized to C++20.
 # Checks are curated to find real bugs and encourage gradual modernization
 # without drowning in noise from intentional legacy patterns (raw pointers,
 # Hungarian notation, C-style arrays, etc.).
