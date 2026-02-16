@@ -337,7 +337,7 @@ void CMakeLuaInheritTree::_DoLua(IDirectoryTraverser::IIterator *pItr)
     }
     catch (CRainmanException *pE)
     {
-        pE->destroy();
+        auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
         sRef = 0;
     }
 

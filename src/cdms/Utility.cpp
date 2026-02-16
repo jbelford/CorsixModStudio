@@ -25,129 +25,129 @@
 CModStudioException::CModStudioException(const char *sFile, unsigned long iLine, const char *sMessage,
                                          CRainmanException *pPrecursor)
 {
-	m_sFile = sFile;
-	m_iLine = iLine;
-	m_pPrecursor = pPrecursor;
-	m_sMessage = strdup(sMessage);
+    m_sFile = sFile;
+    m_iLine = iLine;
+    m_pPrecursor = pPrecursor;
+    m_sMessage = strdup(sMessage);
 }
 CModStudioException::CModStudioException(CRainmanException *pPrecursor, const char *sFile, unsigned long iLine,
                                          const char *sFormat, ...)
 {
-	m_sFile = sFile;
-	m_iLine = iLine;
-	m_pPrecursor = pPrecursor;
+    m_sFile = sFile;
+    m_iLine = iLine;
+    m_pPrecursor = pPrecursor;
 
-	size_t iL = 128;
-	va_list marker;
-	while (1)
-	{
-		char *sBuf = (char *)malloc(iL);
-		va_start(marker, sFormat);
-		if (_vsnprintf(sBuf, iL - 1, sFormat, marker) == -1)
-		{
-			va_end(marker);
-			free(sBuf);
-			iL <<= 1;
-		}
-		else
-		{
-			va_end(marker);
-			m_sMessage = sBuf;
-			return;
-		}
-	}
+    size_t iL = 128;
+    va_list marker;
+    while (1)
+    {
+        char *sBuf = (char *)malloc(iL);
+        va_start(marker, sFormat);
+        if (_vsnprintf(sBuf, iL - 1, sFormat, marker) == -1)
+        {
+            va_end(marker);
+            free(sBuf);
+            iL <<= 1;
+        }
+        else
+        {
+            va_end(marker);
+            m_sMessage = sBuf;
+            return;
+        }
+    }
 }
 
 void CModStudioException::destroy()
 {
-	free(m_sMessage);
-	if (m_pPrecursor)
-		m_pPrecursor->destroy();
-	delete this;
+    free(m_sMessage);
+    if (m_pPrecursor)
+        m_pPrecursor->destroy();
+    delete this;
 }
 
 bool _ErrorBox(wxString sError, const char *sFile, long iLine, bool bUnhandled, bool bAllowCancel)
 {
-	wchar_t *pFile = AsciiToUnicode(sFile);
-	wchar_t pLine[33];
-	_ltow(iLine, &pLine[0], 10);
-	wxString sErr = wxString(wxT("Error: "))
-	                    .Append(sError)
-	                    .Append(wxT("\nSource: "))
-	                    .Append(pFile)
-	                    .Append(wxT(" line "))
-	                    .Append(pLine)
-	                    .Append(wxT("\nPlease contact Corsix@gmail.com for help, with details of what you did and the "
-	                                "source file and line above"));
-	int iAnswer = wxOK;
-	if (bUnhandled)
-	{
-		::MessageBox(0, sErr.c_str(), _T("Error"), MB_ICONERROR);
-	}
-	else
-	{
-		iAnswer = ::wxMessageBox(sErr, wxT("Error"), wxICON_ERROR | wxOK | (bAllowCancel ? wxCANCEL : 0),
-		                         wxTheApp->GetTopWindow());
-	}
-	delete[] pFile;
-	return iAnswer == wxOK;
+    wchar_t *pFile = AsciiToUnicode(sFile);
+    wchar_t pLine[33];
+    _ltow(iLine, &pLine[0], 10);
+    wxString sErr = wxString(wxT("Error: "))
+                        .Append(sError)
+                        .Append(wxT("\nSource: "))
+                        .Append(pFile)
+                        .Append(wxT(" line "))
+                        .Append(pLine)
+                        .Append(wxT("\nPlease contact Corsix@gmail.com for help, with details of what you did and the "
+                                    "source file and line above"));
+    int iAnswer = wxOK;
+    if (bUnhandled)
+    {
+        ::MessageBox(0, sErr.c_str(), _T("Error"), MB_ICONERROR);
+    }
+    else
+    {
+        iAnswer = ::wxMessageBox(sErr, wxT("Error"), wxICON_ERROR | wxOK | (bAllowCancel ? wxCANCEL : 0),
+                                 wxTheApp->GetTopWindow());
+    }
+    delete[] pFile;
+    return iAnswer == wxOK;
 }
 
 bool _ErrorBox(CRainmanException *pE, const char *sFile, long iLine, bool bUnhandled, bool bAllowCancel)
 {
-	wchar_t *pFile = AsciiToUnicode(sFile);
-	wchar_t pLine[33];
-	_ltow(iLine, &pLine[0], 10);
-	wxString sError;
-	if (bUnhandled)
-	{
-		sError = wxT("An unhandled exception was caught and the application must terminate. Please report this to a "
-		             "programmer:");
-	}
-	else
-	{
-		sError = wxT("Error raised at ");
-		sError.Append(pFile).Append(wxT(" line ")).Append(pLine).Append(wxT(":"));
-	}
-	delete[] pFile;
-	const CRainmanException *pError = pE;
-	while (pError)
-	{
-		pFile = AsciiToUnicode(pError->getFile());
-		_ltow(pError->getLine(), &pLine[0], 10);
-		sError.Append(wxT("\n")).Append(pFile).Append(wxT(" line ")).Append(pLine).Append(wxT(": "));
-		delete[] pFile;
-		pFile = AsciiToUnicode(pError->getMessage());
-		sError.Append(pFile);
-		delete[] pFile;
-		pError = pError->getPrecursor();
-	}
-	int iAnswer = wxOK;
-	if (bUnhandled)
-	{
-		::MessageBox(0, sError.c_str(), _T("Error"), MB_ICONERROR);
-	}
-	else
-	{
-		iAnswer = ::wxMessageBox(sError, wxT("Error"), wxICON_ERROR | wxOK | (bAllowCancel ? wxCANCEL : 0),
-		                         wxTheApp->GetTopWindow());
-	}
-	pE->destroy();
-	return iAnswer == wxOK;
+    auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
+    wchar_t *pFile = AsciiToUnicode(sFile);
+    wchar_t pLine[33];
+    _ltow(iLine, &pLine[0], 10);
+    wxString sError;
+    if (bUnhandled)
+    {
+        sError = wxT("An unhandled exception was caught and the application must terminate. Please report this to a "
+                     "programmer:");
+    }
+    else
+    {
+        sError = wxT("Error raised at ");
+        sError.Append(pFile).Append(wxT(" line ")).Append(pLine).Append(wxT(":"));
+    }
+    delete[] pFile;
+    const CRainmanException *pError = pE;
+    while (pError)
+    {
+        pFile = AsciiToUnicode(pError->getFile());
+        _ltow(pError->getLine(), &pLine[0], 10);
+        sError.Append(wxT("\n")).Append(pFile).Append(wxT(" line ")).Append(pLine).Append(wxT(": "));
+        delete[] pFile;
+        pFile = AsciiToUnicode(pError->getMessage());
+        sError.Append(pFile);
+        delete[] pFile;
+        pError = pError->getPrecursor();
+    }
+    int iAnswer = wxOK;
+    if (bUnhandled)
+    {
+        ::MessageBox(0, sError.c_str(), _T("Error"), MB_ICONERROR);
+    }
+    else
+    {
+        iAnswer = ::wxMessageBox(sError, wxT("Error"), wxICON_ERROR | wxOK | (bAllowCancel ? wxCANCEL : 0),
+                                 wxTheApp->GetTopWindow());
+    }
+    return iAnswer == wxOK;
 }
 
 void BackupFile(wxString &sFile)
 {
-	UNUSED(sFile);
-	SKIP_BACKUP
-	/*
-	wxString sBakFile = sFile;
-	sBakFile.Append(wxT(".bak"));
-	if(!wxCopyFile(sFile, sBakFile))
-	{
-	    ::wxMessageBox(AppStr(app_backuperror), AppStr(app_backuperror_title) , wxICON_ERROR, wxTheApp->GetTopWindow());
-	}
-	*/
+    UNUSED(sFile);
+    SKIP_BACKUP
+    /*
+    wxString sBakFile = sFile;
+    sBakFile.Append(wxT(".bak"));
+    if(!wxCopyFile(sFile, sBakFile))
+    {
+        ::wxMessageBox(AppStr(app_backuperror), AppStr(app_backuperror_title) , wxICON_ERROR, wxTheApp->GetTopWindow());
+    }
+    */
 }
 
 /*
@@ -193,48 +193,48 @@ static bool fsCopyFile(IFileStore* pStore, wxString& sSrc, wxString& sDest)
 
 void BackupFile(IFileStore *pStore, wxString &sFile)
 {
-	UNUSED(pStore);
-	UNUSED(sFile);
-	SKIP_BACKUP
-	/*
-	wxString sBakFile = sFile;
-	sBakFile.Append(wxT(".bak"));
-	if(!fsCopyFile(pStore, sFile, sBakFile))
-	{
-	    ::wxMessageBox(AppStr(app_backuperror), AppStr(app_backuperror_title) , wxICON_ERROR, wxTheApp->GetTopWindow());
-	}
-	*/
+    UNUSED(pStore);
+    UNUSED(sFile);
+    SKIP_BACKUP
+    /*
+    wxString sBakFile = sFile;
+    sBakFile.Append(wxT(".bak"));
+    if(!fsCopyFile(pStore, sFile, sBakFile))
+    {
+        ::wxMessageBox(AppStr(app_backuperror), AppStr(app_backuperror_title) , wxICON_ERROR, wxTheApp->GetTopWindow());
+    }
+    */
 }
 
 void RestoreBackupFile(wxString &sFile)
 {
-	UNUSED(sFile);
-	SKIP_BACKUP
-	/*
-	wxString sBakFile = sFile;
-	sBakFile.Append(wxT(".bak"));
-	if(!wxCopyFile(sBakFile, sFile))
-	{
-	    wxString sMsg = AppStr(app_backupcannotrestore);
-	    sMsg.Append(sBakFile);
-	    ::wxMessageBox(sMsg, AppStr(app_backuperror_title) , wxICON_ERROR, wxTheApp->GetTopWindow());
-	}
-	*/
+    UNUSED(sFile);
+    SKIP_BACKUP
+    /*
+    wxString sBakFile = sFile;
+    sBakFile.Append(wxT(".bak"));
+    if(!wxCopyFile(sBakFile, sFile))
+    {
+        wxString sMsg = AppStr(app_backupcannotrestore);
+        sMsg.Append(sBakFile);
+        ::wxMessageBox(sMsg, AppStr(app_backuperror_title) , wxICON_ERROR, wxTheApp->GetTopWindow());
+    }
+    */
 }
 
 void RestoreBackupFile(IFileStore *pStore, wxString &sFile)
 {
-	UNUSED(pStore);
-	UNUSED(sFile);
-	SKIP_BACKUP
-	/*
-	wxString sBakFile = sFile;
-	sBakFile.Append(wxT(".bak"));
-	if(!fsCopyFile(pStore, sBakFile, sFile))
-	{
-	    wxString sMsg = AppStr(app_backupcannotrestore);
-	    sMsg.Append(sBakFile);
-	    ::wxMessageBox(sMsg, AppStr(app_backuperror_title) , wxICON_ERROR, wxTheApp->GetTopWindow());
-	}
-	*/
+    UNUSED(pStore);
+    UNUSED(sFile);
+    SKIP_BACKUP
+    /*
+    wxString sBakFile = sFile;
+    sBakFile.Append(wxT(".bak"));
+    if(!fsCopyFile(pStore, sBakFile, sFile))
+    {
+        wxString sMsg = AppStr(app_backupcannotrestore);
+        sMsg.Append(sBakFile);
+        ::wxMessageBox(sMsg, AppStr(app_backuperror_title) , wxICON_ERROR, wxTheApp->GetTopWindow());
+    }
+    */
 }

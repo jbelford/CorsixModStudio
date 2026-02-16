@@ -75,18 +75,12 @@ CFilesTreeItemData::CFilesTreeItemData(IDirectoryTraverser::IIterator *pItr)
         {
             sMod = (const char *)pItr->VGetTag(0);
         }
-        catch (CRainmanException *pE)
-        {
-            pE->destroy();
-        }
+        IGNORE_EXCEPTIONS
         try
         {
             sSource = (const char *)pItr->VGetTag(1);
         }
-        catch (CRainmanException *pE)
-        {
-            pE->destroy();
-        }
+        IGNORE_EXCEPTIONS
     }
 }
 

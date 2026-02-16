@@ -384,10 +384,7 @@ IMetaNode::IMetaTable *MakeLuaFromRgdAndNil_LoadTable(IMetaNode::IMetaTable *pSr
                     pInStream = std::unique_ptr<IFileStore::IStream>(pStore->VOpenStream(sFullpath));
                     goto got_input_stream;
                 }
-                catch (CRainmanException *pE)
-                {
-                    pE->destroy();
-                }
+                IGNORE_EXCEPTIONS
             }
 
             sprintf(sFullpath, "attrib\\attrib\\%s.rgd", sFilename);
@@ -397,10 +394,7 @@ IMetaNode::IMetaTable *MakeLuaFromRgdAndNil_LoadTable(IMetaNode::IMetaTable *pSr
                 bIsLuaStream = false;
                 goto got_input_stream;
             }
-            catch (CRainmanException *pE)
-            {
-                pE->destroy();
-            }
+            IGNORE_EXCEPTIONS
 
             if (bAllowLua)
             {
@@ -413,10 +407,7 @@ IMetaNode::IMetaTable *MakeLuaFromRgdAndNil_LoadTable(IMetaNode::IMetaTable *pSr
                     pInStream = std::unique_ptr<IFileStore::IStream>(pStore->VOpenStream(sFullpath));
                     goto got_input_stream;
                 }
-                catch (CRainmanException *pE)
-                {
-                    pE->destroy();
-                }
+                IGNORE_EXCEPTIONS
             }
 
             sprintf(sFullpath, "data\\attrib\\%s.rgd", sFilename);
@@ -426,10 +417,7 @@ IMetaNode::IMetaTable *MakeLuaFromRgdAndNil_LoadTable(IMetaNode::IMetaTable *pSr
                 bIsLuaStream = false;
                 goto got_input_stream;
             }
-            catch (CRainmanException *pE)
-            {
-                pE->destroy();
-            }
+            IGNORE_EXCEPTIONS
 
         got_input_stream:
             if (pInStream)
@@ -1007,10 +995,7 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
                     pLuaOut->VWrite(strlen(sAsc), 1, sAsc);
                 }
             }
-            catch (CRainmanException *pE)
-            {
-                pE->destroy();
-            }
+            IGNORE_EXCEPTIONS
             if (sAsc)
                 delete[] sAsc;
             break;
@@ -1080,10 +1065,7 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
                     pLuaOut->VWrite(strlen(sAsc), 1, sAsc);
                 }
             }
-            catch (CRainmanException *pE)
-            {
-                pE->destroy();
-            }
+            IGNORE_EXCEPTIONS
             if (sAsc)
                 delete[] sAsc;
             break;

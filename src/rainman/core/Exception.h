@@ -22,30 +22,41 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "rainman/core/gnuc_defines.h"
 #include "rainman/core/Api.h"
+#include <memory>
 
 class RAINMAN_API CRainmanException
 {
   public:
-	CRainmanException(const char *sFile, unsigned long iLine, const char *sMessage, CRainmanException *pPrecursor = 0);
-	CRainmanException(CRainmanException *pPrecursor, const char *sFile, unsigned long iLine, const char *sFormat, ...);
+    CRainmanException(const char *sFile, unsigned long iLine, const char *sMessage, CRainmanException *pPrecursor = 0);
+    CRainmanException(CRainmanException *pPrecursor, const char *sFile, unsigned long iLine, const char *sFormat, ...);
 
-	virtual void destroy();
+    virtual void destroy();
 
-	inline const char *getFile() const { return m_sFile; }
-	inline unsigned long getLine() const { return m_iLine; }
-	inline const char *getMessage() const { return m_sMessage; }
+    inline const char *getFile() const { return m_sFile; }
+    inline unsigned long getLine() const { return m_iLine; }
+    inline const char *getMessage() const { return m_sMessage; }
 
-	inline const CRainmanException *getPrecursor() const { return m_pPrecursor; }
+    inline const CRainmanException *getPrecursor() const { return m_pPrecursor; }
 
   protected:
-	CRainmanException();
-	~CRainmanException(); //!< DO NOT CALL THIS, use destroy() instead.
+    CRainmanException();
+    ~CRainmanException(); //!< DO NOT CALL THIS, use destroy() instead.
 
-	char *m_sMessage;
-	unsigned long m_iLine;
-	const char *m_sFile;
+    char *m_sMessage;
+    unsigned long m_iLine;
+    const char *m_sFile;
 
-	CRainmanException *m_pPrecursor;
+    CRainmanException *m_pPrecursor;
+};
+
+//! Custom deleter for use with std::unique_ptr<CRainmanException, ExceptionDeleter>.
+struct ExceptionDeleter
+{
+    void operator()(CRainmanException *p) const noexcept
+    {
+        if (p)
+            p->destroy();
+    }
 };
 
 #ifndef EXCEPTION_CLASS
@@ -54,29 +65,29 @@ class RAINMAN_API CRainmanException
 
 //! Macro for easy CRainmanException re-throwing
 #define CATCH_THROW(msg)                                                                                               \
-	catch (CRainmanException * pE) { throw new EXCEPTION_CLASS(__FILE__, __LINE__, msg, pE); }
+    catch (CRainmanException * pE) { throw new EXCEPTION_CLASS(__FILE__, __LINE__, msg, pE); }
 
 //! Macro for easily throwing a simple error
 #define QUICK_THROW(msg) throw new EXCEPTION_CLASS(__FILE__, __LINE__, msg);
 
 //! Macro for ignoring all RainmanExceptions from a try{} block
 #define IGNORE_EXCEPTIONS                                                                                              \
-	catch (CRainmanException * pE) { pE->destroy(); }
+    catch (CRainmanException * pE) { std::unique_ptr<CRainmanException, ExceptionDeleter> _ignored(pE); }
 
 //! Will throw an exception if pointer is invalid, returns the value passed otherwise
 template <class T> __inline T CheckMem(T pObj, const char *sFile, unsigned long iLine)
 {
-	if (pObj == 0)
-		throw new EXCEPTION_CLASS(sFile, iLine, "Memory allocation error");
-	return pObj;
+    if (pObj == 0)
+        throw new EXCEPTION_CLASS(sFile, iLine, "Memory allocation error");
+    return pObj;
 }
 
 //! Will throw an exception if pointer is invalid, returns the value passed otherwise
 template <class T> __inline T CheckString(T pObj, const char *sFile, unsigned long iLine)
 {
-	if (pObj == 0)
-		throw new EXCEPTION_CLASS(sFile, iLine, "No string");
-	return pObj;
+    if (pObj == 0)
+        throw new EXCEPTION_CLASS(sFile, iLine, "No string");
+    return pObj;
 }
 
 //! Macro for quick checking of memory allocation errors

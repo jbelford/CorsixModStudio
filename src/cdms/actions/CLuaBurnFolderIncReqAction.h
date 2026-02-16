@@ -101,10 +101,7 @@ class CLuaBurnFolderIncReqAction : public frmFiles::IHandler
                                         }
                                     }
                                 }
-                                catch (CRainmanException *pE)
-                                {
-                                    pE->destroy();
-                                }
+                                IGNORE_EXCEPTIONS
                             }
                         }
 

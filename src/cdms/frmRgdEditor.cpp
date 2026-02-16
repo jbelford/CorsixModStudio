@@ -630,7 +630,7 @@ wxPGProperty *frmRGDEditor::GetMetaNodeEditor(IMetaNode *pNode, wxString sName, 
     }
     catch (CRainmanException *pE)
     {
-        pE->destroy();
+        auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
         return 0;
     }
     wxPGProperty *pTmp = new wxStringProperty(sName, sNameId, wxT(""));
@@ -678,10 +678,7 @@ wxString frmRGDEditor::GetMetaNodeHelp(IMetaNode *pNode)
             }
         }
     }
-    catch (CRainmanException *pE)
-    {
-        pE->destroy();
-    }
+    IGNORE_EXCEPTIONS
 
     // Short Desc
     if (m_pNodeHelp == 0)
@@ -821,7 +818,7 @@ wxString frmRGDEditor::GetMetaNodeName(IMetaNode *pNode)
     }
     catch (CRainmanException *pE)
     {
-        pE->destroy();
+        auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
         return wxT("[unknown name]");
     }
     for (int iNibble = 7; iNibble >= 0; --iNibble)
@@ -851,7 +848,7 @@ wxString frmRGDEditor::GetMetaTableValue(IMetaNode::IMetaTable *pTable, IMetaNod
     }
     catch (CRainmanException *pE)
     {
-        pE->destroy();
+        auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
         return wxT("-- unknown name");
     }
     if (pNode && GetMetaNodeName(pNode) == wxT("GameData"))

@@ -1103,10 +1103,7 @@ void CModuleFile::_DoLoadFolder(const char *sFullPath, bool bIsDefaultWrite, uns
             m_pNewFileMap->MapIterator(pSrc, sTOC, pDirItr);
         }
     }
-    catch (CRainmanException *pE)
-    {
-        pE->destroy();
-    }
+    IGNORE_EXCEPTIONS
     if (pDirItr)
         delete pDirItr;
     if (sActualModName)
@@ -1312,10 +1309,7 @@ void CModuleFile::ReloadResources(unsigned long iReloadWhat, unsigned long iRelo
         {
             pItr = m_pFSS->VIterate(sUcsPath);
         }
-        catch (CRainmanException *pE)
-        {
-            pE->destroy();
-        }
+        IGNORE_EXCEPTIONS
         if (pItr != 0)
         {
             try

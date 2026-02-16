@@ -157,7 +157,7 @@ wxPGProperty *frmRgmMaterialEditor::GetVariableEditor(CRgmFile::CMaterial::CVari
     }
     catch (CRainmanException *pE)
     {
-        pE->destroy();
+        auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
         return 0;
     }
     wxPGProperty *pTmp = new wxStringProperty(sName, sName, wxT("This property cannot be edited"));

@@ -56,18 +56,12 @@ CFileSelectorTreeItemData::CFileSelectorTreeItemData(IDirectoryTraverser::IItera
             {
                 sMod = (const char *)pItr->VGetTag(0);
             }
-            catch (CRainmanException *pE)
-            {
-                pE->destroy();
-            }
+            IGNORE_EXCEPTIONS
             try
             {
                 sSource = (const char *)pItr->VGetTag(1);
             }
-            catch (CRainmanException *pE)
-            {
-                pE->destroy();
-            }
+            IGNORE_EXCEPTIONS
         }
     }
 }
@@ -330,7 +324,7 @@ void frmFileSelector::MakeChildren(const wxTreeItemId &parent)
             }
             catch (CRainmanException *pE)
             {
-                pE->destroy();
+                auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
                 pChildren = 0;
             }
             wxTreeItemId oChild = m_pTree->AppendItem(parent, AsciiTowxString(pData->pToFillWith->VGetName()), 4, 4,
@@ -347,7 +341,7 @@ void frmFileSelector::MakeChildren(const wxTreeItemId &parent)
         }
         catch (CRainmanException *pE)
         {
-            pE->destroy();
+            auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
             break;
         }
     }
