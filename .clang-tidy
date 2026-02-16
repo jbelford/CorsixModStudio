@@ -7,8 +7,10 @@
 # without drowning in noise from intentional legacy patterns (raw pointers,
 # Hungarian notation, C-style arrays, etc.).
 #
-# Run manually:
-#   clang-tidy -p build src/rainman/CSgaFile.cpp
+# Run via command line:
+#   .\tools\run-clang-tidy.ps1
+#   .\tools\run-clang-tidy.ps1 src/rainman/core/Exception.cpp
+#   .\tools\run-clang-tidy.ps1 -Fix
 #
 # Run via Visual Studio (uses CMakePresets.json vendor settings):
 #   cmake --preset tidy && cmake --build --preset tidy-debug
@@ -27,10 +29,17 @@ Checks: >
   clang-analyzer-*,
   misc-redundant-expression,
   misc-unused-using-decls,
+  modernize-concat-nested-namespaces,
+  modernize-deprecated-headers,
+  modernize-loop-convert,
+  modernize-redundant-void-arg,
+  modernize-return-braced-init-list,
+  modernize-use-auto,
+  modernize-use-default-member-init,
+  modernize-use-emplace,
   modernize-use-nullptr,
   modernize-use-override,
-  modernize-deprecated-headers,
-  modernize-redundant-void-arg,
+  modernize-use-using,
   performance-for-range-declaration,
   performance-implicit-conversion-in-loop,
   performance-unnecessary-copy-initialization,
@@ -44,10 +53,15 @@ Checks: >
 # Treat clang-tidy warnings as warnings, not errors
 WarningsAsErrors: ''
 
-# Only show diagnostics from our own headers, not system/vendored headers
-HeaderFilterRegex: 'src/(rainman|cdms)/[^/]*\.h$'
+# Show diagnostics from our own headers (all subdirectories), not system/vendored
+HeaderFilterRegex: 'src/(rainman|cdms)/.*\.h$'
 
-# modernize-use-override: use C++11 override keyword on virtual overrides
 CheckOptions:
   - key:   modernize-use-override.AllowOverrideAndFinal
     value: false
+  - key:   modernize-use-auto.MinTypeNameLength
+    value: 5
+  - key:   modernize-loop-convert.MinConfidence
+    value: reasonable
+  - key:   modernize-use-default-member-init.UseAssignment
+    value: true
