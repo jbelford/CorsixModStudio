@@ -151,7 +151,7 @@ public:
 3. Use `#include "rainman/core/Api.h"` and any needed headers with fully-qualified `rainman/` prefix.
 4. Apply `RAINMAN_API` to the class declaration.
 5. Use `_C_NEW_CLASS_H_` style include guard.
-6. **Default to modern C++17**: use `std::unique_ptr`, `std::string`, `std::vector`, `auto`,
+6. **Default to modern C++20**: use `std::unique_ptr`, `std::string`, `std::vector`, `auto`,
    `override`, `nullptr`, range-for, etc. Only use legacy patterns at API boundaries
    that must match existing virtual signatures.
 7. Files are auto-discovered by `file(GLOB)` — just rebuild.

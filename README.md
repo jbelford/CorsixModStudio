@@ -18,9 +18,9 @@ The original codebase targets technology from 2006:
 
 | Component | Original | Modern Target |
 |-----------|----------|---------------|
-| C++ Standard | Pre-C++11 (VS 2003/2005 era) | C++17 |
+| C++ Standard | Pre-C++11 (VS 2003/2005 era) | C++20 |
 | wxWidgets | 2.8.0 | 3.2+ |
-| Lua | 5.0.2 + 5.1.2 | Vendored 5.0.2 (game compat) + runtime-loaded 5.1 |
+| Lua | 5.0.2 + 5.1.2 | Vendored 5.0.2 + vendored 5.1.2 (renamed symbols) |
 | zLib | Bundled ancient copy | vcpkg 1.3.1 |
 | Build System | Manual VS project (COMPILE.txt) | CMake 4.1 + vcpkg |
 | Compiler | MSVC 2003/2005 | MSVC 2026 (v19.50) |
@@ -30,10 +30,10 @@ The software no longer compiles on modern compilers and exhibits bugs on current
 
 ## Architecture
 
-The codebase has two major components totaling ~40,000 lines of C/C++:
+The codebase has three layers totaling ~40,000 lines of C/C++:
 
 ### Rainman Library (~25,700 lines)
-The core I/O library for Relic game file formats. No UI dependencies — pure data parsing and manipulation.
+The core I/O library for Relic game file formats. No UI dependencies — pure data parsing and manipulation. Organized into subdirectories: `core/`, `io/`, `archive/`, `formats/`, `lua/`, `localization/`, `module/`, `util/`.
 
 **Key classes:**
 - `CSgaFile` — SGA archive reader (v2, v4) with zLib decompression
@@ -46,8 +46,13 @@ The core I/O library for Relic game file formats. No UI dependencies — pure da
 - `IFileStore` / `CMemoryStore` / `CFileSystemStore` — Polymorphic I/O abstraction
 - `CInheritTable` — Lua-based data inheritance resolution
 
-### CDMS Application (~14,200 lines)
-The wxWidgets GUI application built on top of Rainman.
+### CDMS Service Layer
+An intermediate layer between Rainman and the GUI, providing error-safe wrappers and concurrency:
+- `services/` — `ModuleService`, `FileService`, `FormatService`, `HashService` wrap Rainman calls with `Result<T>` error handling
+- `async/` — `CTaskRunner` / `CWxTaskRunner` for background work, `CCancellationToken`, `CProgressChannel`
+
+### CDMS GUI Application (~14,200 lines)
+The wxWidgets 3.2 GUI application built on top of Rainman via the service layer.
 
 **Key frames:**
 - `ConstructFrame` — Main window with splitter, AUI notebook tabs, and file tree
@@ -68,22 +73,29 @@ CorsixModStudio/
 │   ├── rainman/                    # Rainman library (static lib)
 │   │   ├── CMakeLists.txt
 │   │   ├── include/rainman/        # Public umbrella header
-│   │   ├── lua502/                 # Vendored Lua 5.0.2 (game compatibility)
-│   │   ├── lua512/                 # Lua 5.1.2 type headers (runtime-loading path)
-│   │   ├── lua512src/              # Vendored Lua 5.1.2 (statically linked, symbols renamed)
-│   │   ├── crc32_case_idt.c/.h     # Case-insensitive CRC32 (extracted from old zlib patch)
-│   │   └── *.cpp, *.h              # Rainman sources
-│   └── cdms/                       # CDMS GUI application (wxWidgets)
+│   │   ├── core/                   # Exceptions, logging (spdlog), callbacks, API macros
+│   │   ├── io/                     # IFileStore, CMemoryStore, CFileSystemStore
+│   │   ├── archive/                # CSgaFile, CSgaCreator
+│   │   ├── formats/                # CRgdFile, CChunkyFile, CRgtFile, CRgmFile, CBfxFile
+│   │   ├── lua/                    # CLuaFile, CInheritTable, CLuaScript
+│   │   ├── localization/           # CUcsFile, CCohUcsFile
+│   │   ├── module/                 # CModuleFile, CDoWModule, CDoWFileView
+│   │   ├── util/                   # CRC32, hash, MD5
+│   │   └── vendor/                 # Vendored Lua 5.0.2 + 5.1.2 (do not modify)
+│   └── cdms/                       # CDMS GUI application (wxWidgets 3.2)
 │       ├── CMakeLists.txt
+│       ├── services/               # Result<T>, ModuleService, FileService, etc.
+│       ├── async/                  # CTaskRunner, CWxTaskRunner, CCancellationToken
+│       ├── actions/                # File-type action handlers
 │       ├── res/                    # Icons and bitmaps
-│       └── *.cpp, *.h              # CDMS sources
+│       └── *.cpp, *.h              # GUI frames, tabs, menus
 ├── tests/
 │   ├── rainman/                    # Rainman unit tests (Google Test)
 │   │   ├── CMakeLists.txt
-│   │   └── *_test.cpp              # 15 test files
+│   │   └── *_test.cpp
 │   └── cdms/                       # CDMS unit tests (Google Test)
 │       ├── CMakeLists.txt
-│       └── *_test.cpp              # 5 test files
+│       └── *_test.cpp
 ├── Mod_Studio_Files/               # Runtime data files (game definitions, templates)
 └── CDMSSrc_055/                    # Original source archives (reference)
 ```
@@ -118,16 +130,17 @@ cmake --build --preset tidy-debug
 - **Google Test 1.17** — unit testing framework
 - **libsquish** — DXT texture compression (for CRgtFile)
 - **wxWidgets 3.x** — GUI framework
+- **spdlog** — structured logging
 
 ## Progress
 
 ### ✅ Phase 1: Project Scaffolding — COMPLETE
-- CMake build system with C++17, vcpkg integration
+- CMake build system with C++20, vcpkg integration
 - vcpkg manifest for dependency management
 - Modern directory layout (`src/`, `tests/`)
 
 ### ✅ Phase 2: Rainman Library Compilation — COMPLETE
-- All 39 source files ported to compile on MSVC 2026 / C++17
+- All 39 source files ported to compile on MSVC 2026 / C++20
 - Key fixes applied:
   - Replaced `__asm nop` (x86 only) with `__nop()` intrinsic (x64 compatible)
   - Extracted `crc32_case_idt()` from bundled zlib into standalone implementation
@@ -148,12 +161,12 @@ cmake --build --preset tidy-debug
 ### ✅ Phase 4: CDMS GUI Compilation — COMPLETE
 - All 65+ CDMS source files copied and building under CMake
 - Ported wxWidgets 2.8 → 3.2 (`wxPGId` → `wxPGProperty*`, `wxFileConfig` constructor, `TRUE` → `true`)
-- Fixed C++17 issues, Windows resource file (`resource.rc`) with application icon
-- Added wxWidgets and libsquish to vcpkg dependencies
+- Fixed C++20 issues, Windows resource file (`resource.rc`) with application icon
+- Added wxWidgets, libsquish, and spdlog to vcpkg dependencies
 
 ### ✅ Phase 5: CDMS GUI Tests — COMPLETE
 - Google Test infrastructure for CDMS non-UI logic
-- Test suites covering: `strconv` (string conversions), `config` (colour settings), `strings` (UI string constants), `Utility` (helper functions)
+- Test suites covering: `strconv`, `config`, `strings`, `Utility`, `Result<T>`, `ModuleService`, `FileService`, `FormatService`, `HashService`, `CCancellationToken`, `CProgressChannel`, `CTaskRunner`
 
 ### ⬜ Phase 6: Integration Testing — NOT STARTED
 - Full end-to-end build, app launch verification, .module file loading
@@ -172,6 +185,20 @@ The original bundled a modified zlib with a custom `crc32_case_idt()` function f
 
 ### Static vs Dynamic Library
 Rainman was originally a DLL (`__declspec(dllexport/import)`). We build it as a **static library** for simplicity — the only consumer is the CDMS executable. The `RAINMAN_NO_EXPORTS` define makes `RAINMAN_API` expand to nothing.
+
+## Contributing
+
+### Modern C++ — Boy-Scout Rule
+
+This codebase follows a **boy-scout modernization** approach: when touching existing code, improve it toward modern C++20 if the change is safe and localized. Examples:
+- `NULL` → `nullptr`
+- Add `override` to virtual method overrides
+- Replace raw `new[]`/`delete[]` with `std::vector` or `std::unique_ptr` (internal code only)
+- C-style casts → `static_cast`/`reinterpret_cast`
+- Index-based loops → range-based `for`
+- Add `const` to parameters and methods that don't mutate
+
+**Preserve** at API boundaries: `unsigned long` in existing virtual signatures, heap-allocated exceptions (`throw new CRainmanException`), `RAINMAN_API` macro, `C`/`I`/`V`/`m_` naming conventions, include guards, LGPL headers, and vendored Lua code.
 
 ## License
 - **CDMS Application**: GNU General Public License v2.0

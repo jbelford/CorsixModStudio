@@ -50,6 +50,7 @@ Consult [references/test-patterns.md](references/test-patterns.md) for conventio
 - Use `ASSERT_NE(ptr, nullptr)` before dereferencing any pointer.
 - Follow existing naming: `TEST(ClassName, BehaviorDescription)` or `TEST_F(ClassNameTest, BehaviorDescription)`.
 - Preserve existing file headers with LGPL v2.1 copyright notices.
+- **Boy-scout rule**: When writing tests that exercise existing code, apply localized modern C++ improvements to the code under test if safe (e.g., add `override`, replace `NULL` with `nullptr`, add `const`). Keep such improvements within the scope of touched files.
 
 ## Improving Existing Tests
 

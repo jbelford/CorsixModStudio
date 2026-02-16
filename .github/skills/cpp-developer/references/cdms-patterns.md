@@ -100,8 +100,38 @@ CDMS uses a slightly different naming style than Rainman:
 
 ## Adding a New CDMS Source File
 
-1. Create the `.h` and `.cpp` in `src/cdms/`.
+1. Create the `.h` and `.cpp` in `src/cdms/` (or the appropriate subdirectory: `services/`, `async/`, `actions/`).
 2. Include `Common.h` first in the `.cpp`.
 3. Use the LGPL file header.
 4. Files are auto-discovered by `file(GLOB)` — just rebuild.
 5. If adding a new window, register it in the appropriate menu handler in `Construct.cpp`.
+6. **Boy-scout rule**: When modifying existing CDMS code, apply localized modern C++ improvements
+   (e.g., `NULL` → `nullptr`, add `override`, use range-for, add `const`).
+
+## Service Layer (`src/cdms/services/`)
+
+Services wrap Rainman calls with `Result<T>` error handling, insulating the GUI from raw exceptions:
+
+```cpp
+#include "services/Result.h"
+
+Result<wxString> MyService::DoSomething()
+{
+    try {
+        // Rainman operation...
+        return Result<wxString>::Ok(wxT("success"));
+    }
+    catch (CRainmanException* pE) {
+        return ResultFromExceptionT<wxString>(pE);
+    }
+}
+```
+
+Access services via `GetModuleService()`, `GetFileService()`, `GetFormatService()`, `GetHashService()` on the `ConstructFrame`.
+
+## Async Infrastructure (`src/cdms/async/`)
+
+- `CCancellationToken` — cooperative cancellation (header-only)
+- `CProgressChannel` — thread-safe progress reporting with RainmanCallback bridge
+- `CTaskRunner` — runs work on `std::thread`, returns results via callback
+- `CWxTaskRunner` — extends `CTaskRunner`, posts results to the main thread via `CallAfter()`

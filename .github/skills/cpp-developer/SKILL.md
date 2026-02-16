@@ -6,7 +6,12 @@ description: Write new C++ code that follows CorsixModStudio codebase convention
 # C++ Developer
 
 Write new C++ code that follows CorsixModStudio codebase conventions across all layers,
-**preferring modern C++17 practices** wherever it is safe to do so.
+**preferring modern C++20 practices** wherever it is safe to do so.
+
+**Boy-scout rule**: When touching existing code, improve it toward modern C++ if the change
+is safe and localized (e.g., `NULL` → `nullptr`, add `override`, use range-for, add `const`,
+replace raw arrays with `std::vector`). Keep modernization changes within the scope of the
+files you're already modifying — don't refactor unrelated code.
 
 ## Workflow
 
@@ -17,8 +22,9 @@ Write new C++ code that follows CorsixModStudio codebase conventions across all 
    **Vendored Lua** (`src/rainman/lua502/`) → Consult [references/lua-rules.md](references/lua-rules.md)
 
 2. Apply the common conventions below to all new code.
-3. **Default to modern C++17** — see the Modern C++ Practices section. Fall back to legacy
-   style only at existing API boundaries or when modifying existing code to keep diffs small.
+3. **Default to modern C++20** — see the Modern C++ Practices section. Fall back to legacy
+   style only at existing API boundaries. When modifying existing code, apply boy-scout
+   improvements (add `override`, `nullptr`, `const`, range-for, etc.) within the touched scope.
 4. After writing code, add new files to the appropriate `CMakeLists.txt`.
 5. Build and verify: `cmake --build --preset debug`
 
@@ -145,8 +151,9 @@ public:
 
 ## Modern C++ Practices
 
-**Default to modern C++17** in all new code. Only fall back to legacy style at existing API
-boundaries or when editing existing code where consistency matters more.
+**Default to modern C++20** in all new code. When editing existing code, apply boy-scout
+improvements within the scope of your change. Only preserve legacy style at existing API
+boundaries where changing would cascade.
 
 ### Smart pointers & RAII
 - Prefer `std::unique_ptr` / `std::make_unique` for owned heap objects.
