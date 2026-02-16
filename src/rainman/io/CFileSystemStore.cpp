@@ -204,7 +204,7 @@ IFileStore::IOutputStream *CFileSystemStore::VOpenOutputStream(const char *sFile
             if (fFile == nullptr)
                 fFile = fopen(sFile, "w+b");
         }
-        free(sFile2);
+        free(sFile2); // NOLINT(clang-analyzer-unix.MismatchedDeallocator) — strdup uses malloc; free() is correct
 #endif
     }
     if (fFile == nullptr)

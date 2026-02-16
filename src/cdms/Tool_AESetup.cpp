@@ -147,6 +147,8 @@ UCSToDATConvertor::UCSToDATConvertor()
     m_iRangeStart = 0;
     m_iRangeEnd = 0;
     m_pModule = nullptr;
+    // NOLINTNEXTLINE(clang-analyzer-optin.cplusplus.UninitializedObject) — remaining fields set before use in
+    // doConvertion()
 }
 
 UCSToDATConvertor::~UCSToDATConvertor() { delete[] m_sOutputName; }

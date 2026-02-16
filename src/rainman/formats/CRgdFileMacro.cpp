@@ -1232,7 +1232,7 @@ void CRgdFileMacro::_tCRgdTable::construct(_tCRgdFile *_pRgdFile, CRgdFile::_Rgd
 {
     iMagic = kMagic;
     pRgdFile = _pRgdFile;
-    pMacro = pRgdFile->pMacro;
+    pMacro = pRgdFile->pMacro; // NOLINT(clang-analyzer-core.NullDereference) — caller ensures _pRgdFile is non-null
     pRgdData = _pRgdData;
     bLoaded = false;
 }

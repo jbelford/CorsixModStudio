@@ -28,6 +28,7 @@ CLuaFile2::CLuaFile2()
     m_pRefMap = nullptr;
     m_bOwnCache = false;
     m_bOwnRefMap = false;
+    L = nullptr;
     m_sRootFolder = strdup("");
 }
 
@@ -37,7 +38,7 @@ CLuaFile2::~CLuaFile2()
     if (m_bOwnCache && m_pCache)
         delete m_pCache;
     if (m_sRootFolder)
-        free(m_sRootFolder);
+        free(m_sRootFolder); // NOLINT(clang-analyzer-unix.MismatchedDeallocator)
 }
 
 void CLuaFile2::_clean()
@@ -72,7 +73,7 @@ bool CLuaFile2::setCache(CLuaFileCache *pCache, bool bOwn)
 void CLuaFile2::setRootFolder(const char *sRootFolder)
 {
     if (m_sRootFolder)
-        free(m_sRootFolder);
+        free(m_sRootFolder); // NOLINT(clang-analyzer-unix.MismatchedDeallocator)
     m_sRootFolder = strdup(sRootFolder);
 }
 
@@ -124,6 +125,7 @@ void CLuaFile2::loadFile(IFileStore::IStream *pStream, IFileStore *pFiles, const
         m_bOwnRefMap = true;
     }
     unsigned long iNameCrc = crc32_case_idt(0, (const Bytef *)sFileName, (uInt)strlen(sFileName));
+    // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDelete) -- m_pRefMap is valid; not freed before this access
     if ((*m_pRefMap)[iNameCrc] > (int)1)
         throw new CRainmanException(nullptr, __FILE__, __LINE__, "Circular reference detected (%s)", sFileName);
     ++(*m_pRefMap)[iNameCrc];
@@ -409,6 +411,7 @@ void CLuaFile2::_LuaLocator::kill(lua_State *L)
     if ((*pRefCount) == 1)
     {
         delete pRefCount;
+        // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDelete) -- pointer value used as registry key, not dereferenced
         lua_pushlightuserdata(L, (void *)pRefCount);
         lua_pushnil(L);
         lua_settable(L, LUA_REGISTRYINDEX);

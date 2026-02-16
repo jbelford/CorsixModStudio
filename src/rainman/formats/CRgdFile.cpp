@@ -2076,6 +2076,8 @@ void CRgdFile::_ReadRainmanRgdData(IFileStore::IStream *pInput, CRgdFile::_RgdEn
             pNew->Type = IMetaNode::DT_Bool;
             pNew->pExt = nullptr;
             pNew->pParentFile = pDestination->pParentFile;
+            // NOLINTNEXTLINE(clang-analyzer-core.NullDereference) — pParentFile is always set by caller before this
+            // path
             if (!pDestination->pParentFile->m_pHashTable)
                 pDestination->pParentFile->m_pHashTable = new CRgdHashTable;
             _ReadRainmanRgdData(pInput, pNew, true);

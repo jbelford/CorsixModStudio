@@ -125,7 +125,7 @@ void CResourceLoader::LoadDataGeneric(CModuleFile &module, CALLBACK_ARG)
     char *sSectionName = new char[16 + strlen(module.m_metadata.m_sModFolder)];
     sprintf(sSectionName, "project:%s", module.m_metadata.m_sModFolder);
 
-    bool bInSection;
+    bool bInSection = false;
     while (!feof(fModule))
     {
         char *sLine = Util_fgetline(fModule);
@@ -197,6 +197,7 @@ void CResourceLoader::LoadDataGeneric(CModuleFile &module, CALLBACK_ARG)
         CResourceLoader::DoLoadFolder(module, sDataGenericFullPath, (module.m_pParentModule == nullptr), 99, "Generic",
                                       "DataGeneric", THE_CALLBACK);
         delete[] sDataGenericFullPath;
+        // NOLINTNEXTLINE(clang-analyzer-unix.MismatchedDeallocator) -- strdup uses malloc; free() is correct
         free(sDataGenericValue);
     }
 }
@@ -586,7 +587,8 @@ void CResourceLoader::DoLoadFolder(CModuleFile &module, const char *sFullPath, b
     if (pDirItr)
         delete pDirItr;
     if (sActualModName)
-        free(sActualModName);
+        free(sActualModName); // NOLINT(clang-analyzer-unix.MismatchedDeallocator) -- strdup uses malloc; free() is
+                              // correct
 }
 
 void CResourceLoader::DoLoadArchive(CModuleFile &module, const char *sFullPath, CSgaFile **ppSga, unsigned short iNum,
@@ -676,10 +678,10 @@ void CResourceLoader::DoLoadArchive(CModuleFile &module, const char *sFullPath, 
         delete pDirItr;
         delete pSga;
         if (sActualModName)
-            free(sActualModName);
+            free(sActualModName); // NOLINT(clang-analyzer-unix.MismatchedDeallocator) -- strdup uses malloc
         throw pE;
     }
     *ppSga = pSga;
     if (sActualModName)
-        free(sActualModName);
+        free(sActualModName); // NOLINT(clang-analyzer-unix.MismatchedDeallocator) -- strdup uses malloc
 }

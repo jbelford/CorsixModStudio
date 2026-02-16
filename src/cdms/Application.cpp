@@ -41,7 +41,8 @@ bool CDMSApplication::OnInit()
     wxConfigBase::Set(
         new wxFileConfig(wxEmptyString, wxEmptyString, sAbsConfigPath, wxEmptyString, wxCONFIG_USE_LOCAL_FILE));
 
-    wxConfigBase::Get()->SetRecordDefaults(true);
+    wxConfigBase::Get()->SetRecordDefaults(
+        true); // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks) — wxConfigBase::Set() takes ownership
     wxConfigBase::Get()->SetExpandEnvVars(false);
     wxConfigBase::Get()->SetPath(AppStr(config_initialpath));
 

@@ -222,7 +222,8 @@ bool CChunkyFile::CChunk::_Load(IFileStore::IStream *pStream, long iChunkyVersio
     if (m_sDescriptor)
         delete[] m_sDescriptor;
     m_sDescriptor = nullptr;
-    m_sDescriptor = CHECK_MEM(new char[iDescriptorLength + 1]);
+    m_sDescriptor =
+        CHECK_MEM(new char[iDescriptorLength + 1]); // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks) — owned by this
     m_sDescriptor[iDescriptorLength] = 0;
 
     try
@@ -258,6 +259,7 @@ bool CChunkyFile::CChunk::_Load(IFileStore::IStream *pStream, long iChunkyVersio
                 throw new CRainmanException(__FILE__, __LINE__, "Cannot get position from stream", pE);
             }
 
+            // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDeleteLeaks) — ownership transferred to m_vChildren
             CChunk *pChunk = CHECK_MEM(new CChunk);
 
             try
@@ -281,7 +283,7 @@ bool CChunkyFile::CChunk::_Load(IFileStore::IStream *pStream, long iChunkyVersio
         if (m_pData)
             delete[] m_pData;
         m_pData = nullptr;
-        m_pData = CHECK_MEM(new char[m_iDataLength]);
+        m_pData = CHECK_MEM(new char[m_iDataLength]); // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks) — owned by this
         try
         {
             pStream->VRead(m_iDataLength, 1, (void *)m_pData);

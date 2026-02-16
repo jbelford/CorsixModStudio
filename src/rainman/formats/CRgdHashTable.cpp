@@ -267,6 +267,7 @@ void CRgdHashTable::XRefWithStringList(const char *sFile)
 
         delete[] sLine;
     }
+    fclose(fFile);
 }
 
 void CRgdHashTable::SaveCustomKeys(const char *sFile)

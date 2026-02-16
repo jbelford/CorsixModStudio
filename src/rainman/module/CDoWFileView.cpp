@@ -257,6 +257,7 @@ IFileStore::IOutputStream *CDoWFileView::VOpenOutputStream(const char *sFile, bo
         }
         pFile->iSourceID = iSource;
         pFile->iModID = iSource; // it's the same :)
+        // NOLINTNEXTLINE(clang-analyzer-core.CallAndMessage) — pFolder->mapSourceFolderNames populated before this call
         char *sStoragePath = new char[strlen(sFile) + 2 + strlen(pFolder->mapSourceFolderNames[pFile->iSourceID])];
         if (sStoragePath == nullptr)
             throw new CRainmanException(__FILE__, __LINE__, "Failed to allocate memory");

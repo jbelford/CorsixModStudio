@@ -281,6 +281,7 @@ void frmNewMod::_MakeCOH(char *sNiceName, char *sDirectoryFullPath, char *sDirec
     strcpy(saDirExt, sDirectoryFullPath);
     strcat(saDirExt, "\\DataArtHigh");
     _mkdir(saDirExt);
+    delete[] saDirExt;
 
     // Write module file
     fprintf(fModule, "[global]\xD\n");

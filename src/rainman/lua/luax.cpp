@@ -66,6 +66,11 @@ void luax_PrintGlobals(lua_State *L, const char *sFile, unsigned long iLevel, bo
         lua_pushstring(L, "_G");
         lua_gettable(L, LUA_GLOBALSINDEX);
         f = fopen(sFile, "wb");
+        if (!f)
+        {
+            lua_pop(L, 1);
+            return;
+        }
     }
     else
     {

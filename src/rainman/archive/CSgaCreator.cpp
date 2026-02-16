@@ -80,6 +80,7 @@ CSgaCreator::CInputDirectory *CSgaCreator::_ScanDirectory(IDirectoryTraverser::I
     if (pStore == nullptr)
         QUICK_THROW("No input file store")
 
+    // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDeleteLeaks) — ownership transferred to caller; cleaned up in catch
     CSgaCreator::CInputDirectory *pUs = CHECK_MEM(new CSgaCreator::CInputDirectory);
     const char *sDirectory;
 
@@ -145,6 +146,7 @@ CSgaCreator::CInputDirectory *CSgaCreator::_ScanDirectory(IDirectoryTraverser::I
             }
             else
             {
+                // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDeleteLeaks) — ownership transferred to vFilesList
                 CSgaCreator::CInputFile *pFile = CHECK_MEM(new CSgaCreator::CInputFile);
                 try
                 {

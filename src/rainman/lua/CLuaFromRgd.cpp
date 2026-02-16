@@ -561,7 +561,8 @@ struct MakeLuaFromRgdAndNil_Nil_Value
         case IMetaNode::DT_Table:
         {
             t = new MakeLuaFromRgdAndNil_Nil_Table;
-            t->ref_type = pTable->VGetReferenceType();
+            t->ref_type =
+                pTable->VGetReferenceType(); // NOLINT(clang-analyzer-core.CallAndMessage) — pTable validated by caller
             switch (t->ref_type)
             {
             case IMetaNode::DT_String:
@@ -901,6 +902,7 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
             {
                 try
                 {
+                    // NOLINTNEXTLINE(clang-analyzer-core.CallAndMessage) — pTableRgd/pTableNil validated before switch
                     if (pTableRgd->VGetReferenceType() != pTableNil->VGetReferenceType())
                     {
                         bEchoVal = true;
@@ -1073,6 +1075,7 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
 
         case IMetaNode::DT_Table:
         {
+            // NOLINTNEXTLINE(clang-analyzer-core.CallAndMessage) — pTableRgd validated before switch
             switch (pTableRgd->VGetReferenceType())
             {
             case IMetaNode::DT_String:
@@ -1180,6 +1183,7 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
         }
         std::vector<MakeLuaFromRgdAndNil_TableEntry *>
             m_vTableEntries; // the nodes present in the resulting child table
+        // NOLINTNEXTLINE(clang-analyzer-core.CallAndMessage) — pTableRgd validated before this block
         unsigned long iNRgd = pTableRgd->VGetChildCount(),
                       iNInh =
                           pInhTable ? pInhTable->VGetChildCount() : 0; // the number of children in both source tables
@@ -1300,6 +1304,7 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
         }
         if (pDelLua)
         {
+            // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDelete) — pDelRgd and pDelLua are mutually exclusive
             delete pInhTable;
             delete pDelLua;
         }
