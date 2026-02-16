@@ -24,6 +24,19 @@
                     "enableMicrosoftCodeAnalysis": false
                 }
             }
+        },
+        {
+            "name": "tidy-ninja",
+            "displayName": "Ninja (clang-tidy CLI analysis)",
+            "generator": "Ninja",
+            "architecture": {"value": "x64", "strategy": "external"},
+            "binaryDir": "${sourceDir}/build/tidy-ninja",
+            "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+            "cacheVariables": {
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "VCPKG_INSTALLED_DIR": "${sourceDir}/build/vcpkg_installed",
+                "VCPKG_MANIFEST_INSTALL": "OFF"
+            }
         }
     ],
     "buildPresets": [
