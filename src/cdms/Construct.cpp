@@ -422,7 +422,8 @@ void ConstructFrame::LaunchWarnings(wxCommandEvent &event)
 }
 
 ConstructFrame::ConstructFrame(const wxString &sTitle, const wxPoint &oPos, const wxSize &oSize)
-    : wxFrame((wxFrame *)NULL, -1, sTitle, oPos, oSize, wxDEFAULT_FRAME_STYLE | wxMAXIMIZE)
+    : wxFrame((wxFrame *)NULL, -1, sTitle, oPos, oSize, wxDEFAULT_FRAME_STYLE | wxMAXIMIZE),
+      m_moduleLoadPresenter(*this, this)
 {
     // Initiate tools
     m_toolRegistry.Register(new CLocaleTool);
@@ -566,6 +567,71 @@ void ConstructFrame::SetLoadingForm(frmLoading *pLoading) { m_pLoadingForm = pLo
 
 frmLoading *ConstructFrame::GetLoadingForm() { return m_pLoadingForm; }
 
+// --- IMainFrameView implementation ---
+
+void ConstructFrame::ShowLoadingDialog(const wxString &sMessage)
+{
+    m_pLoadingForm = new frmLoading(AppStr(mod_loading));
+    m_pLoadingForm->SetCancelCallback([this]() { m_moduleLoadPresenter.Cancel(); });
+    m_pLoadingForm->SetMessage(sMessage);
+    m_pLoadingForm->Show(true);
+}
+
+void ConstructFrame::HideLoadingDialog()
+{
+    if (m_pLoadingForm)
+    {
+        m_pLoadingForm->Close(true);
+        delete m_pLoadingForm;
+        m_pLoadingForm = nullptr;
+    }
+}
+
+void ConstructFrame::UpdateLoadingProgress(const wxString &sMessage)
+{
+    if (m_pLoadingForm)
+        m_pLoadingForm->SetMessage(sMessage);
+}
+
+void ConstructFrame::ShowError(const wxString &sMessage) { ErrorBoxS(sMessage); }
+
+void ConstructFrame::OnModuleLoaded(CModuleFile *pMod, const wxString &sPath, bool bIsSga)
+{
+    if (bIsSga)
+        pMod->GetFileMap()->SetAuxOutputSupply(SaveFileCallback, (void *)this);
+
+    SetModule(pMod, sPath);
+
+    if (bIsSga)
+        GetMenuBar()->EnableTop(3, false);
+
+    Refresh();
+}
+
+void ConstructFrame::DisableLoadMenuItems()
+{
+    GetMenuBar()->GetMenu(0)->Enable(IDM_LoadModDoWWA, false);
+    GetMenuBar()->GetMenu(0)->Enable(IDM_LoadModDC, false);
+    GetMenuBar()->GetMenu(0)->Enable(IDM_LoadModSS, false);
+    GetMenuBar()->GetMenu(0)->Enable(IDM_LoadModCoH, false);
+    GetMenuBar()->GetMenu(0)->Enable(IDM_LoadSga, false);
+    GetMenuBar()->GetMenu(0)->Enable(wxID_NEW, false);
+}
+
+void ConstructFrame::EnableLoadMenuItems()
+{
+    // Only re-enable if no module is loaded (SetModule disables them when a mod is loaded)
+    if (!GetModule())
+    {
+        GetMenuBar()->GetMenu(0)->Enable(IDM_LoadModDoWWA, true);
+        GetMenuBar()->GetMenu(0)->Enable(IDM_LoadModDC, true);
+        GetMenuBar()->GetMenu(0)->Enable(IDM_LoadModSS, true);
+        GetMenuBar()->GetMenu(0)->Enable(IDM_LoadModCoH, true);
+        GetMenuBar()->GetMenu(0)->Enable(IDM_LoadSga, true);
+        GetMenuBar()->GetMenu(0)->Enable(wxID_NEW, true);
+    }
+}
+
 void ConstructFrame::OnOpenModDoW(wxCommandEvent &event)
 {
     UNUSED(event);
@@ -616,43 +682,23 @@ IFileStore::IOutputStream *ConstructFrame::SaveFileCallback(const char *sFile, b
 
 void ConstructFrame::DoLoadSga()
 {
+    if (m_moduleLoadPresenter.IsLoading())
+        return;
+
     std::unique_ptr<wxFileDialog> pFileDialog(
         new wxFileDialog(this, AppStr(mod_select_sga), wxT(""), wxT(""), AppStr(mod_sga_filter), wxFD_OPEN));
 
     if (pFileDialog->ShowModal() == wxID_OK)
     {
-        m_pLoadingForm = new frmLoading(AppStr(mod_loading));
-        m_pLoadingForm->Show(true);
-        m_pLoadingForm->SetMessage(wxString(wxT("Initializing")));
-        wxSafeYield(m_pLoadingForm);
-
-        auto result = ModuleService::LoadSgaAsMod(pFileDialog->GetPath(), LoadModCallback);
-        if (!result.ok())
-        {
-            ErrorBoxS(result.error());
-            m_pLoadingForm->Close(true);
-            delete m_pLoadingForm;
-            m_pLoadingForm = 0;
-            return;
-        }
-        CModuleFile *pMod = result.value();
-        pMod->GetFileMap()->SetAuxOutputSupply(SaveFileCallback, (void *)this);
-
-        m_pLoadingForm->SetMessage(wxString(wxT("Initializing GUI")));
-        wxSafeYield(m_pLoadingForm);
-        SetModule(pMod, pFileDialog->GetPath());
-
-        GetMenuBar()->EnableTop(3, false);
-
-        m_pLoadingForm->Close(true);
-        delete m_pLoadingForm;
-        m_pLoadingForm = 0;
-        Refresh();
+        m_moduleLoadPresenter.LoadSga(pFileDialog->GetPath());
     }
 }
 
 void ConstructFrame::DoLoadMod(wxString sPath, eLoadModGames eGame)
 {
+    if (m_moduleLoadPresenter.IsLoading())
+        return;
+
     wxFileDialog *pFileDialog = 0;
     if (sPath == wxT(""))
     {
@@ -682,10 +728,11 @@ void ConstructFrame::DoLoadMod(wxString sPath, eLoadModGames eGame)
     }
     if (sPath != wxT("") || pFileDialog->ShowModal() == wxID_OK)
     {
+        wxString sFilePath = pFileDialog ? pFileDialog->GetPath() : sPath;
+
         if (sPath == wxT(""))
         {
-            wxString sAppFolder = pFileDialog->GetPath();
-            sAppFolder = sAppFolder.BeforeLast('\\');
+            wxString sAppFolder = sFilePath.BeforeLast('\\');
             sAppFolder.Append(wxT("\\"));
             if (eGame == LM_CoH_OF)
                 TheConfig->Write(AppStr(config_cohfolder), sAppFolder);
@@ -697,36 +744,17 @@ void ConstructFrame::DoLoadMod(wxString sPath, eLoadModGames eGame)
                 TheConfig->Write(AppStr(config_dowfolder), sAppFolder);
         }
 
-        m_pLoadingForm = new frmLoading(AppStr(mod_loading));
-        m_pLoadingForm->Show(true);
-        m_pLoadingForm->SetMessage(wxString(wxT("Initializing")));
-        wxSafeYield(m_pLoadingForm);
-
-        char *sFile = UnicodeToAscii(pFileDialog ? pFileDialog->GetPath() : sPath);
-        if (!sFile)
+        // Compute MD5-based config key for per-mod settings
+        auto sFileAscii = wxStringToAscii(sFilePath);
+        if (!sFileAscii)
         {
             ErrorBox("Memory allocation error");
             delete pFileDialog;
-            m_pLoadingForm->Close(true);
-            delete m_pLoadingForm;
-            m_pLoadingForm = 0;
-            return;
-        }
-
-        CModuleFile *pMod = new CModuleFile;
-        if (!pMod)
-        {
-            ErrorBox("Memory allocation error");
-            delete[] sFile;
-            delete pFileDialog;
-            m_pLoadingForm->Close(true);
-            delete m_pLoadingForm;
-            m_pLoadingForm = 0;
             return;
         }
 
         MD5Context md5ModName;
-        MD5InitKey(&md5ModName, sFile);
+        MD5InitKey(&md5ModName, sFileAscii.get());
         unsigned char sModConfigKey[17];
         wchar_t sModConfigKeyHex[33];
         sModConfigKey[16] = 0;
@@ -739,6 +767,7 @@ void ConstructFrame::DoLoadMod(wxString sPath, eLoadModGames eGame)
         }
         TheConfig->SetPath(wxString(wxT("/")).Append(sModConfigKeyHex));
 
+        // Locale selection (main thread — shows UI dialog)
         bool bSkipLocale;
         TheConfig->Read(AppStr(config_mod_localeremember), &bSkipLocale, false);
         if (!bSkipLocale)
@@ -748,57 +777,21 @@ void ConstructFrame::DoLoadMod(wxString sPath, eLoadModGames eGame)
             delete pLocaleSelect;
         }
 
-        auto sLocale = wxStringToAscii(TheConfig->Read(AppStr(config_mod_locale), AppStr(localeselect_default)));
+        wxString sLocale = TheConfig->Read(AppStr(config_mod_locale), AppStr(localeselect_default));
+
+        // Resolve CoH My Documents path on the main thread
+        bool bIsCoH = (eGame == LM_CoH_OF);
+        wxString sMyDocumentsPath;
+        if (bIsCoH)
         {
-            ModuleService tmpSvc(pMod);
-            auto locResult = tmpSvc.SetLocale(wxString::FromUTF8(sLocale.get()));
-            if (!locResult.ok())
-            {
-                ErrorBoxS(locResult.error());
-                delete pMod;
-                delete[] sFile;
-                delete pFileDialog;
-                m_pLoadingForm->Close(true);
-                delete m_pLoadingForm;
-                m_pLoadingForm = 0;
-                return;
-            }
+            wchar_t sMapPackDir[MAX_PATH];
+            SHGetFolderPathW(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, sMapPackDir);
+            wcscat(sMapPackDir, L"\\My Games\\Company of Heroes");
+            sMyDocumentsPath = sMapPackDir;
         }
 
-        try
-        {
-            pMod->LoadModuleFile(sFile, LoadModCallback);
-
-            if (pMod->GetModuleType() == CModuleFile::MT_CompanyOfHeroes)
-            {
-                wchar_t sMapPackDir[MAX_PATH];
-                SHGetFolderPathW(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, sMapPackDir);
-                wcscat(sMapPackDir, L"\\My Games\\Company of Heroes");
-                pMod->SetMapPackRootFolder(sMapPackDir);
-            }
-
-            pMod->ReloadResources(CModuleFile::RR_All, CModuleFile::RR_All, CModuleFile::RR_All, LoadModCallback);
-        }
-        catch (CRainmanException *pE)
-        {
-            ErrorBoxE(pE);
-            delete pMod;
-            delete[] sFile;
-            delete pFileDialog;
-            m_pLoadingForm->Close(true);
-            delete m_pLoadingForm;
-            m_pLoadingForm = 0;
-            return;
-        }
-        m_pLoadingForm->SetMessage(wxString(wxT("Initializing GUI")));
-        wxSafeYield(m_pLoadingForm);
-        SetModule(pMod, pFileDialog ? pFileDialog->GetPath() : sPath);
-
-        delete[] sFile;
-        m_pLoadingForm->Close(true);
-        delete m_pLoadingForm;
-        m_pLoadingForm = 0;
-        Refresh();
+        // Hand off to presenter for async background loading
+        m_moduleLoadPresenter.LoadMod(sFilePath, sLocale, bIsCoH, sMyDocumentsPath);
     }
     delete pFileDialog;
 }

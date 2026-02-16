@@ -23,16 +23,18 @@
 BEGIN_EVENT_TABLE(frmLoading, wxFrame)
 EVT_CLOSE(frmLoading::OnQuit)
 EVT_PAINT(frmLoading::OnPaint)
+EVT_BUTTON(wxID_CANCEL, frmLoading::OnCancel)
 END_EVENT_TABLE()
 
 frmLoading::frmLoading(const wxString &sTitle)
     : wxFrame(wxTheApp->GetTopWindow(), -1, sTitle, wxPoint(0, 0),
-              wxWindow::FromDIP(wxSize(384, 384), wxTheApp->GetTopWindow()),
+              wxWindow::FromDIP(wxSize(384, 420), wxTheApp->GetTopWindow()),
               wxFRAME_FLOAT_ON_PARENT | wxFRAME_TOOL_WINDOW)
 {
     CentreOnParent();
     m_pLoadingImage = nullptr;
     m_pText = nullptr;
+    m_pCancelButton = nullptr;
 
     m_pLoadingImage = new wxBitmap(wxT("RIDB_LOADING"), wxBITMAP_TYPE_BMP_RESOURCE);
     m_pText = new wxStaticText(this, -1, sTitle, FromDIP(wxPoint(0, 317)), FromDIP(wxSize(384, 33)),
@@ -43,6 +45,10 @@ frmLoading::frmLoading(const wxString &sTitle)
     wxFont f = m_pText->GetFont();
     f.SetWeight(wxFONTWEIGHT_BOLD);
     m_pText->SetFont(f);
+
+    m_pCancelButton =
+        new wxButton(this, wxID_CANCEL, wxT("Cancel"), FromDIP(wxPoint(142, 358)), FromDIP(wxSize(100, 28)));
+    m_pCancelButton->Hide();
 }
 
 frmLoading::~frmLoading()
@@ -66,3 +72,20 @@ void frmLoading::OnPaint(wxPaintEvent &event)
 }
 
 void frmLoading::SetMessage(const wxString &sMsg) { m_pText->SetLabel(sMsg); }
+
+void frmLoading::SetCancelCallback(std::function<void()> fnOnCancel)
+{
+    m_fnOnCancel = std::move(fnOnCancel);
+    if (m_pCancelButton)
+        m_pCancelButton->Show(m_fnOnCancel != nullptr);
+}
+
+void frmLoading::OnCancel(wxCommandEvent &event)
+{
+    UNUSED(event);
+    if (m_fnOnCancel)
+    {
+        m_pCancelButton->Disable();
+        m_fnOnCancel();
+    }
+}

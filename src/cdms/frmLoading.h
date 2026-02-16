@@ -32,12 +32,15 @@
 #endif
 // ----------------------------
 #include <wx/bitmap.h>
+#include <functional>
 
 class frmLoading : public wxFrame
 {
   protected:
     wxBitmap *m_pLoadingImage;
     wxStaticText *m_pText;
+    wxButton *m_pCancelButton;
+    std::function<void()> m_fnOnCancel;
 
   public:
     frmLoading(const wxString &sTitle);
@@ -45,8 +48,15 @@ class frmLoading : public wxFrame
 
     void OnQuit(wxCloseEvent &event);
     void OnPaint(wxPaintEvent &event);
+    void OnCancel(wxCommandEvent &event);
 
     void SetMessage(const wxString &sMsg);
+
+    //! Set a callback invoked when the user clicks Cancel.
+    /*!
+        If no callback is set, the cancel button is hidden.
+    */
+    void SetCancelCallback(std::function<void()> fnOnCancel);
 
     DECLARE_EVENT_TABLE()
 };

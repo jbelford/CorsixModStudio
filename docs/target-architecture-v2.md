@@ -729,7 +729,9 @@ Files are moved incrementally — one directory at a time. The GLOB pattern auto
 
 Each phase is a standalone unit of work. Complete one before starting the next. Every phase ends with all tests passing.
 
-### Phase G: Async Infrastructure
+### Phase G: Async Infrastructure ✅
+
+> **Status**: Complete — 23 tests, `CTaskRunner`, `CWxTaskRunner`, `CProgressChannel`, `CCancellationToken` in `src/cdms/async/`.
 
 Create the `TaskRunner`, `ProgressChannel`, `CancellationToken`, and `WxTaskRunner` classes. No existing code changes — purely additive.
 
@@ -741,7 +743,11 @@ Create the `TaskRunner`, `ProgressChannel`, `CancellationToken`, and `WxTaskRunn
 6. Write unit tests for `TaskRunner` (using mock callbacks)
 7. Write integration test proving background work + main-thread delivery
 
-### Phase H: Module Loading Async
+### Phase H: Module Loading Async ✅
+
+> **Status**: Complete — 366 total tests (5 new presenter tests). `DoLoadMod()` and `DoLoadSga()` now use `CModuleLoadPresenter` with `CWxTaskRunner` for async background loading. `frmLoading` enhanced with cancel button. `IMainFrameView` interface and `CModuleLoadPresenter` in `src/cdms/views/` and `src/cdms/presenters/`.
+>
+> **Key decisions**: Enhanced `frmLoading` (not `wxProgressDialog`); minimal `IMainFrameView` with loading-related methods only; menu items disabled during load; `LoadModCallback` retained for `Tools.cpp` usage; `CModuleFile` leak-safe via `catch (...) { delete pMod; throw; }` pattern.
 
 Move module loading off the UI thread using the `TaskRunner`. This is the highest-impact change.
 

@@ -38,8 +38,10 @@
 #include "ITool.h"
 #include "ToolRegistry.h"
 #include "MenuController.h"
+#include "views/IMainFrameView.h"
+#include "presenters/CModuleLoadPresenter.h"
 
-class ConstructFrame : public wxFrame
+class ConstructFrame : public wxFrame, public IMainFrameView
 {
   protected:
     TabManager m_tabManager;
@@ -53,6 +55,7 @@ class ConstructFrame : public wxFrame
   protected:
     ToolRegistry m_toolRegistry;
     MenuController m_menuController;
+    CModuleLoadPresenter m_moduleLoadPresenter;
 
   public:
     ConstructFrame(const wxString &sTitle, const wxPoint &oPos, const wxSize &oSize);
@@ -132,6 +135,15 @@ class ConstructFrame : public wxFrame
 
     static void __cdecl LoadModCallback(const char *sMsg, void *pTag);
     static IFileStore::IOutputStream *SaveFileCallback(const char *sFile, bool bEraseIfPresent, void *pTag);
+
+    // --- IMainFrameView overrides ---
+    void ShowLoadingDialog(const wxString &sMessage) override;
+    void HideLoadingDialog() override;
+    void UpdateLoadingProgress(const wxString &sMessage) override;
+    void ShowError(const wxString &sMessage) override;
+    void OnModuleLoaded(CModuleFile *pMod, const wxString &sPath, bool bIsSga) override;
+    void DisableLoadMenuItems() override;
+    void EnableLoadMenuItems() override;
 
     /*!
         may throw a CRainmanException
