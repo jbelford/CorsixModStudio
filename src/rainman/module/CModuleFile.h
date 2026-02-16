@@ -33,6 +33,7 @@ class CUcsFile;
 class CDoWFileView;
 class CFileMap;
 class CFileSystemStore;
+class CResourceLoader;
 
 class RAINMAN_API CModuleFile : public IFileStore, public IDirectoryTraverser
 {
@@ -129,6 +130,7 @@ class RAINMAN_API CModuleFile : public IFileStore, public IDirectoryTraverser
         ~CFolderHandler();
 
         friend class CModuleFile;
+        friend class CResourceLoader;
         signed long m_iNumber;
         char *m_sName;
     };
@@ -138,6 +140,7 @@ class RAINMAN_API CModuleFile : public IFileStore, public IDirectoryTraverser
 
     friend void CModuleFile_ArchiveForEach(IDirectoryTraverser::IIterator *, void *);
     friend void CModuleFile_ArchiveForEachNoErrors(IDirectoryTraverser::IIterator *, void *);
+    friend class CResourceLoader;
     class RAINMAN_API CArchiveHandler
     {
       public:
@@ -150,6 +153,7 @@ class RAINMAN_API CModuleFile : public IFileStore, public IDirectoryTraverser
         ~CArchiveHandler();
 
         friend class CModuleFile;
+        friend class CResourceLoader;
         friend void CModuleFile_ArchiveForEach(IDirectoryTraverser::IIterator *, void *);
         friend void CModuleFile_ArchiveForEachNoErrors(IDirectoryTraverser::IIterator *, void *);
         signed long m_iNumber;
@@ -180,6 +184,7 @@ class RAINMAN_API CModuleFile : public IFileStore, public IDirectoryTraverser
         ~CRequiredHandler();
 
         friend class CModuleFile;
+        friend class CResourceLoader;
         signed long m_iNumber;
         char *m_sName;
         CModuleFile *m_pHandle; //!< This is a "resource"
@@ -234,6 +239,7 @@ class RAINMAN_API CModuleFile : public IFileStore, public IDirectoryTraverser
         ~CCohDataSource();
 
         friend class CModuleFile;
+        friend class CResourceLoader;
         signed long m_iNumber;
         char *m_sToc;
         char *m_sOption;
@@ -300,14 +306,6 @@ class RAINMAN_API CModuleFile : public IFileStore, public IDirectoryTraverser
         \return Returns a valid string, or 0 on error
     */
     char *_DawnOfWarRemoveDynamics(const char *sStr, const char *sAlsoAppend = 0);
-    void _DoLoadFolder(const char *sFullPath, bool bIsDefaultWrite, unsigned short iNum, const char *sTOC,
-                       const char *sUiName = 0, CALLBACK_ARG_OPT, bool *bIsWritable = 0);
-    void _DoLoadDataGeneric(CALLBACK_ARG_OPT);
-    void _DoLoadArchive(const char *sFullPath, CSgaFile **pSga, unsigned short iNum, const char *sUiName,
-                        CALLBACK_ARG_OPT);
-    void _DoLoadCohEngine(const char *sFolder, const char *sUiName, unsigned long iLoadWhat, unsigned short iNum,
-                          CALLBACK_ARG_OPT);
-    bool _IsToBeLoaded(CCohDataSource *pDataSource);
 
     // Module settings
     eModuleType m_eModuleType;
