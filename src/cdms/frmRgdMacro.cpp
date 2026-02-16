@@ -47,10 +47,10 @@ END_EVENT_TABLE()
 
 struct StyleInfo
 {
-    wxChar *name;
-    wxChar *foreground;
-    wxChar *background;
-    wxChar *fontname;
+    const wxChar *name;
+    const wxChar *foreground;
+    const wxChar *background;
+    const wxChar *fontname;
     int fontsize;
     int fontstyle;
     int lettercase;
@@ -306,7 +306,7 @@ void frmRgdMacro::_callback_print(void *pTag, const char *sMsg)
     pThis->m_pTextbox->AppendText(AsciiTowxString(sMsg));
 }
 
-bool frmRgdMacro::_request_Permission(wxString sAction)
+bool frmRgdMacro::_request_Permission(const wxString &sAction)
 {
     wxString sQuestion = wxT("The macro is requesting permission for the ability ");
     sQuestion.Append(sAction);

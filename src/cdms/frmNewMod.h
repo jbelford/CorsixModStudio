@@ -41,7 +41,8 @@ class frmNewMod : public wxDialog
     wxString _UpdatePath(wxString sName);
 
     void _MakeCOH(char *sNiceName, char *sDirectoryFullPath, char *sDirectoryName, FILE *fModule);
-    void _MakeCOH_Language(char *sToc, char *sName1, char *sName2, char *sDirectoryName, FILE *fModule);
+    void _MakeCOH_Language(const char *sToc, const char *sName1, const char *sName2, const char *sDirectoryName,
+                           FILE *fModule);
 
   public:
     /*!

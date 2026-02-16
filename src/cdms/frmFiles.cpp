@@ -272,7 +272,7 @@ void frmFiles::OnPageChange(wxAuiNotebookEvent &event)
     }
 }
 
-bool frmFiles::UpdateDirectoryChildren(wxTreeItemId &oDirectory, IDirectoryTraverser::IIterator *pChildren)
+bool frmFiles::UpdateDirectoryChildren(const wxTreeItemId &oDirectory, IDirectoryTraverser::IIterator *pChildren)
 {
     std::unique_ptr<char[]> sTreeItem;
     const char *sDirItem;

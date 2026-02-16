@@ -204,7 +204,8 @@ void frmNewMod::OnBrowseClick(wxCommandEvent &event)
     }
 }
 
-void frmNewMod::_MakeCOH_Language(char *sToc, char *sName1, char *sName2, char *sDirectoryName, FILE *fModule)
+void frmNewMod::_MakeCOH_Language(const char *sToc, const char *sName1, const char *sName2, const char *sDirectoryName,
+                                  FILE *fModule)
 {
     fprintf(fModule, "[data:%s:01]\xD\n", sToc);
     fprintf(fModule, "folder = %s\\Locale\\%s\\Data\xD\n", sDirectoryName, sName1);

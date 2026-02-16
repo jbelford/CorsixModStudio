@@ -192,7 +192,7 @@ size_t frmMassExtract::_DoExtract(wxTreeCtrl *pTree, wxTreeItemId &oFolder, cons
     return iCount;
 }
 
-frmMassExtract::frmMassExtract(wxString sFile, wxTreeItemId &oFolder, bool bForceUpdate)
+frmMassExtract::frmMassExtract(wxString sFile, const wxTreeItemId &oFolder, bool bForceUpdate)
     : m_oFolder(oFolder), m_sPath(std::move(sFile)),
       wxDialog(wxTheApp->GetTopWindow(), -1, AppStr(massext_title), wxPoint(0, 0), wxDefaultSize,
                wxFRAME_FLOAT_ON_PARENT | wxFRAME_TOOL_WINDOW | wxCAPTION)

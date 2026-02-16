@@ -136,7 +136,7 @@ bool _ErrorBox(CRainmanException *pE, const char *sFile, long iLine, bool bUnhan
     return iAnswer == wxOK;
 }
 
-void BackupFile(wxString &sFile)
+void BackupFile(const wxString &sFile)
 {
     UNUSED(sFile);
     SKIP_BACKUP
@@ -191,7 +191,7 @@ static bool fsCopyFile(IFileStore* pStore, wxString& sSrc, wxString& sDest)
 }
 */
 
-void BackupFile(IFileStore *pStore, wxString &sFile)
+void BackupFile(IFileStore *pStore, const wxString &sFile)
 {
     UNUSED(pStore);
     UNUSED(sFile);
@@ -206,7 +206,7 @@ void BackupFile(IFileStore *pStore, wxString &sFile)
     */
 }
 
-void RestoreBackupFile(wxString &sFile)
+void RestoreBackupFile(const wxString &sFile)
 {
     UNUSED(sFile);
     SKIP_BACKUP
@@ -222,7 +222,7 @@ void RestoreBackupFile(wxString &sFile)
     */
 }
 
-void RestoreBackupFile(IFileStore *pStore, wxString &sFile)
+void RestoreBackupFile(IFileStore *pStore, const wxString &sFile)
 {
     UNUSED(pStore);
     UNUSED(sFile);

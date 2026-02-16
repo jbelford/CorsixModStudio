@@ -83,7 +83,7 @@ void frmLuaInheritTree::OnActivated()
     }
 }
 
-void frmLuaInheritTree::_AddChildren(wxTreeItemId &oParent, CInheritTable::CNode *pParent)
+void frmLuaInheritTree::_AddChildren(const wxTreeItemId &oParent, CInheritTable::CNode *pParent)
 {
     size_t iL = pParent->getChildCount();
     for (size_t i = 0; i < iL; ++i)

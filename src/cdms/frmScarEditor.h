@@ -70,7 +70,7 @@ class frmScarEditor : public wxWindow
     int FillFunctionDrop(const wxString &sNameTarget);
 
   public:
-    frmScarEditor(wxTreeItemId &oFileParent, wxString sFilename, wxWindow *parent, wxWindowID id,
+    frmScarEditor(const wxTreeItemId &oFileParent, wxString sFilename, wxWindow *parent, wxWindowID id,
                   const wxPoint &pos = wxDefaultPosition, const wxSize &size = wxDefaultSize,
                   const wchar_t *pLangRef = AppStr(app_scarreffile));
     ~frmScarEditor();

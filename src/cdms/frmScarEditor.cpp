@@ -56,10 +56,10 @@ END_EVENT_TABLE()
 
 struct StyleInfo
 {
-    wxChar *name;
-    wxChar *foreground;
-    wxChar *background;
-    wxChar *fontname;
+    const wxChar *name;
+    const wxChar *foreground;
+    const wxChar *background;
+    const wxChar *fontname;
     int fontsize;
     int fontstyle;
     int lettercase;
@@ -517,7 +517,7 @@ void frmScarEditor::OnFuncListChoose(wxCommandEvent &event)
     }
 }
 
-int frmScarEditor::FillFunctionDrop(wxString sNameTarget)
+int frmScarEditor::FillFunctionDrop(const wxString &sNameTarget)
 {
     int iRet = -1;
     m_pFunctionDropdown->Append(AppStr(scar_funcdrop), (void *)0);
@@ -569,7 +569,7 @@ int frmScarEditor::FillFunctionDrop(wxString sNameTarget)
     return iRet;
 }
 
-frmScarEditor::frmScarEditor(wxTreeItemId &oFileParent, wxString sFilename, wxWindow *parent, wxWindowID id,
+frmScarEditor::frmScarEditor(const wxTreeItemId &oFileParent, wxString sFilename, wxWindow *parent, wxWindowID id,
                              const wxPoint &pos, const wxSize &size, const wchar_t *pLangRef)
     : m_oFileParent(oFileParent), m_sFilename(sFilename), wxWindow(parent, id, pos, size), m_bNeedsSaving(false)
 {
@@ -585,7 +585,7 @@ frmScarEditor::frmScarEditor(wxTreeItemId &oFileParent, wxString sFilename, wxWi
         if (!f)
         {
             CDMS_LOG_WARN("Could not open SCAR reference file");
-            pLangRef = false;
+            pLangRef = nullptr;
         }
         else
         {

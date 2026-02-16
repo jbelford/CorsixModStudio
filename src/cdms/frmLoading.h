@@ -46,7 +46,7 @@ class frmLoading : public wxFrame
     void OnQuit(wxCloseEvent &event);
     void OnPaint(wxPaintEvent &event);
 
-    void SetMessage(wxString &sMsg);
+    void SetMessage(const wxString &sMsg);
 
     DECLARE_EVENT_TABLE()
 };

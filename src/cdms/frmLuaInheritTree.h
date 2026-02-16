@@ -22,7 +22,7 @@ class frmLuaInheritTree : public wxWindow
     CInheritTable *m_pInheritTable;
     bool bFirstActivate;
 
-    void _AddChildren(wxTreeItemId &oParent, CInheritTable::CNode *pParent);
+    void _AddChildren(const wxTreeItemId &oParent, CInheritTable::CNode *pParent);
 
   public:
     frmLuaInheritTree(wxWindow *parent, wxWindowID id, const wxPoint &pos = wxDefaultPosition,

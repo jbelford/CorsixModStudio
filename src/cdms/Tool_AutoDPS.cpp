@@ -412,21 +412,23 @@ void AutoDPS::AutoDPS_Analyse(tAutoDPS_Package *pPackage)
                     goto found_ap_in_ap_list;
             }
 
-            auto *pNewAP = new tAutoDPS_AP;
-            pNewAP->sFilename = strdup(sAPFile);
-
-            pNewAP->sNicename = strrchr(sAPFile, '\\') + 4;
-            pNewAP->sNicename = strdup(pNewAP->sNicename);
-            char *sD = strrchr(pNewAP->sNicename, '.');
-            *sD = 0;
-            sD = pNewAP->sNicename;
-            while (*sD)
             {
-                if (*sD == '_')
-                    *sD = ' ';
-                ++sD;
+                auto *pNewAP = new tAutoDPS_AP;
+                pNewAP->sFilename = strdup(sAPFile);
+
+                pNewAP->sNicename = strrchr(sAPFile, '\\') + 4;
+                pNewAP->sNicename = strdup(pNewAP->sNicename);
+                char *sD = strrchr(pNewAP->sNicename, '.');
+                *sD = 0;
+                sD = pNewAP->sNicename;
+                while (*sD)
+                {
+                    if (*sD == '_')
+                        *sD = ' ';
+                    ++sD;
+                }
+                pPackage->pAPTypes.push_back(pNewAP);
             }
-            pPackage->pAPTypes.push_back(pNewAP);
 
         found_ap_in_ap_list:;
         }

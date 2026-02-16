@@ -89,7 +89,7 @@ class frmRGDEditor : public wxWindow
     bool m_bDeleteWhenDone;
     bool m_bDataNeedsSaving;
 
-    void _FillFromMetaTable(wxTreeItemId &oParent, IMetaNode::IMetaTable *pTable, bool bSkipLuaGlobals = false);
+    void _FillFromMetaTable(const wxTreeItemId &oParent, IMetaNode::IMetaTable *pTable, bool bSkipLuaGlobals = false);
     void _DoValueChange(wxTreeItemId oTreeItem, wxPropertyGridEvent &event, wxPGProperty *oPropItem, bool bIsChild);
 
     struct _NodeHelp
@@ -116,7 +116,7 @@ class frmRGDEditor : public wxWindow
     bool _SyncTreeView(IMetaNode *pNode, wxTreeItemId &oNode);
 
   public:
-    frmRGDEditor(wxTreeItemId &oFileParent, wxString sFilename, wxWindow *parent, wxWindowID id,
+    frmRGDEditor(const wxTreeItemId &oFileParent, wxString sFilename, wxWindow *parent, wxWindowID id,
                  const wxPoint &pos = wxDefaultPosition, const wxSize &size = wxDefaultSize);
     ~frmRGDEditor();
 

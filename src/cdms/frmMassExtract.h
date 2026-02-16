@@ -49,7 +49,7 @@ class frmMassExtract : public wxDialog
     wxStaticText *m_pCaption;
     wxButton *m_pSelectAllBtn, *m_pAdvancedBtn;
     wxString m_sPath;
-    wxTreeItemId &m_oFolder;
+    wxTreeItemId m_oFolder;
 
     char *m_p4mbBuffer;
     bool m_bForceUpdate;
@@ -61,7 +61,7 @@ class frmMassExtract : public wxDialog
     void _FillCheckList(CModuleFile *pMod, bool bIsRoot, wxArrayString &sList, std::vector<_tSrc> &vList);
 
   public:
-    frmMassExtract(wxString sFile, wxTreeItemId &oFolder, bool bForceUpdate = false);
+    frmMassExtract(wxString sFile, const wxTreeItemId &oFolder, bool bForceUpdate = false);
 
     void OnGoClick(wxCommandEvent &event);
     void OnSelectClick(wxCommandEvent &event);

@@ -56,7 +56,7 @@ bool _ErrorBox(CRainmanException *pE, const char *sFile, long iLine, bool bUnhan
                bool bAllowCancel = false);
 #define ErrorBoxE(pException) _ErrorBox(pException, __FILE__, __LINE__)
 
-void BackupFile(wxString &sFile);
-void BackupFile(IFileStore *pStore, wxString &sFile);
-void RestoreBackupFile(wxString &sFile);
-void RestoreBackupFile(IFileStore *pStore, wxString &sFile);
+void BackupFile(const wxString &sFile);
+void BackupFile(IFileStore *pStore, const wxString &sFile);
+void RestoreBackupFile(const wxString &sFile);
+void RestoreBackupFile(IFileStore *pStore, const wxString &sFile);

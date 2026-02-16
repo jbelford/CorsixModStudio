@@ -224,7 +224,7 @@ void frmFileSelector::OnTreeExpanding(wxTreeEvent &event) { MakeChildren(event.G
 
 void frmFileSelector::OnTreeSelect(wxTreeEvent &event)
 {
-    wxTreeItemId &oItem = event.GetItem(), &oRoot = m_pTree->GetRootItem();
+    wxTreeItemId oItem = event.GetItem(), oRoot = m_pTree->GetRootItem();
 
     CFileSelectorTreeItemData *pData = (CFileSelectorTreeItemData *)m_pTree->GetItemData(oItem);
 

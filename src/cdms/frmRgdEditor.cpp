@@ -471,7 +471,7 @@ void frmRGDEditor::OnSave(wxCommandEvent &event)
     DoSave();
 }
 
-frmRGDEditor::frmRGDEditor(wxTreeItemId &oFileParent, wxString sFilename, wxWindow *parent, wxWindowID id,
+frmRGDEditor::frmRGDEditor(const wxTreeItemId &oFileParent, wxString sFilename, wxWindow *parent, wxWindowID id,
                            const wxPoint &pos, const wxSize &size)
     : m_oFileParent(oFileParent), m_sFilename(sFilename), wxWindow(parent, id, pos, size)
 {
@@ -1070,7 +1070,7 @@ void frmRGDEditor::OnTreeExpanding(wxTreeEvent &event)
     }
 }
 
-void frmRGDEditor::_FillFromMetaTable(wxTreeItemId &oParent, IMetaNode::IMetaTable *pTable, bool bSkipLuaGlobals)
+void frmRGDEditor::_FillFromMetaTable(const wxTreeItemId &oParent, IMetaNode::IMetaTable *pTable, bool bSkipLuaGlobals)
 {
     unsigned long iChildren = pTable->VGetChildCount();
     for (unsigned long i = 0; i < iChildren; ++i)

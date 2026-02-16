@@ -65,4 +65,4 @@ void frmLoading::OnPaint(wxPaintEvent &event)
     }
 }
 
-void frmLoading::SetMessage(wxString &sMsg) { m_pText->SetLabel(sMsg); }
+void frmLoading::SetMessage(const wxString &sMsg) { m_pText->SetLabel(sMsg); }

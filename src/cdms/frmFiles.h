@@ -81,7 +81,7 @@ class frmFiles : public wxWindow
     void OnMenu(wxCommandEvent &event);
     void LaunchTool(wxListEvent &event);
     bool FillFromIDirectoryTraverser(IDirectoryTraverser *pTraverser);
-    bool UpdateDirectoryChildren(wxTreeItemId &oDirectory, IDirectoryTraverser::IIterator *pChildren);
+    bool UpdateDirectoryChildren(const wxTreeItemId &oDirectory, IDirectoryTraverser::IIterator *pChildren);
     wxTreeCtrl *GetTree();
     wxTreeItemId FindFile(wxString sFile, bool bParent);
 
