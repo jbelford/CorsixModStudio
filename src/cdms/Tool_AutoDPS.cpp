@@ -48,7 +48,7 @@ using namespace AutoDPS_Internal;
 using namespace AutoDPS;
 
 AutoDPS_Internal::tAutoDPS_WeaponInfo::tAutoDPS_WeaponInfo()
-    : sFileName(0), sUiName(0), iMinDamage(0.0), iMaxDamage(0.0), iAccuracy(0.0), iReloadTime(1.0),
+    : sFileName(nullptr), sUiName(nullptr), iMinDamage(0.0), iMaxDamage(0.0), iAccuracy(0.0), iReloadTime(1.0),
       iMinDamageValue(0.0), iDefaultAP(0.0)
 {
 }
@@ -58,34 +58,34 @@ AutoDPS_Internal::tAutoDPS_WeaponInfo::~tAutoDPS_WeaponInfo()
     free(sFileName);
     // wchar_t* sUiName; ??
 
-    for (std::map<char *, float>::iterator itr = mapAP.begin(); itr != mapAP.end(); ++itr)
+    for (auto itr = mapAP.begin(); itr != mapAP.end(); ++itr)
     {
         free(itr->first);
     }
 }
 
-AutoDPS_Internal::tAutoDPS_Package::tAutoDPS_Package() : pDirectories(0) {}
+AutoDPS_Internal::tAutoDPS_Package::tAutoDPS_Package() : pDirectories(nullptr) {}
 
 AutoDPS_Internal::tAutoDPS_Package::~tAutoDPS_Package()
 {
-    for (std::vector<tAutoDPS_WeaponInfo *>::iterator itr = pWeapons.begin(); itr != pWeapons.end(); ++itr)
+    for (auto itr = pWeapons.begin(); itr != pWeapons.end(); ++itr)
     {
         delete *itr;
     }
 
-    for (std::vector<tAutoDPS_AP *>::iterator itr = pAPTypes.begin(); itr != pAPTypes.end(); ++itr)
+    for (auto itr = pAPTypes.begin(); itr != pAPTypes.end(); ++itr)
     {
         delete *itr;
     }
 }
 
-AutoDPS_Internal::tAutoDPS_AP::tAutoDPS_AP() : sFilename(0), sNicename(0) {}
+AutoDPS_Internal::tAutoDPS_AP::tAutoDPS_AP() : sFilename(nullptr), sNicename(nullptr) {}
 AutoDPS_Internal::tAutoDPS_AP::~tAutoDPS_AP()
 {
     free(sFilename);
     free(sNicename);
 
-    for (std::vector<char *>::iterator itr = vUnitList.begin(); itr != vUnitList.end(); ++itr)
+    for (auto itr = vUnitList.begin(); itr != vUnitList.end(); ++itr)
     {
         free(*itr);
     }
@@ -94,11 +94,11 @@ AutoDPS_Internal::tAutoDPS_AP::~tAutoDPS_AP()
 IMetaNode *AutoDPS_Internal::AutoDPS_GetTableChild(IMetaNode::IMetaTable *pTable, const char *sChildName)
 {
     // Some useful variables
-    IMetaNode::IMetaTable *pTableToDelete = 0;
+    IMetaNode::IMetaTable *pTableToDelete = nullptr;
 
     // Identify the name part
     const char *sSeperator = strchr(sChildName, '\\');
-    if (sSeperator == 0)
+    if (sSeperator == nullptr)
         sSeperator = sChildName + strlen(sChildName);
 
     size_t iNamePartLen = sSeperator - sChildName;
@@ -108,7 +108,7 @@ IMetaNode *AutoDPS_Internal::AutoDPS_GetTableChild(IMetaNode::IMetaTable *pTable
     // Get table stats
 search_again:
     unsigned long iTableChildrenCount = pTable->VGetChildCount();
-    IMetaNode *pTableChild = 0;
+    IMetaNode *pTableChild = nullptr;
 
     // Begin looking
     for (unsigned long iTableChild = 0; iTableChild < iTableChildrenCount; ++iTableChild)
@@ -139,7 +139,7 @@ search_again:
 
     if (pTableToDelete)
         delete pTableToDelete;
-    return 0;
+    return nullptr;
 
     // Found child
 got_child:
@@ -154,7 +154,7 @@ got_child:
     // Find next seperator part
     ++sSeperator;
     const char *sNextSeperator = strchr(sSeperator, '\\');
-    if (sNextSeperator == 0)
+    if (sNextSeperator == nullptr)
         sNextSeperator = sSeperator + strlen(sSeperator);
 
     iNamePartLen = sNextSeperator - sSeperator;
@@ -261,7 +261,7 @@ void AutoDPS_Internal::AutoDPS_FileForEach(IDirectoryTraverser::IIterator *pFile
         CRgdFile oRgd;
         oRgd.Load(pIn.get());
 
-        tAutoDPS_WeaponInfo *pWeapon = new tAutoDPS_WeaponInfo;
+        auto *pWeapon = new tAutoDPS_WeaponInfo;
         pWeapon->sFileName = strdup(sFileName);
 
         AutoDPS_FileForEach_Rgd(&oRgd, (tAutoDPS_Package *)pTag, pWeapon);
@@ -349,7 +349,7 @@ void AutoDPS_Internal::AutoDPS_EbpsForEach_Rgd(CRgdFile *pRgd, tAutoDPS_Package 
     IMetaNode::IMetaTable *pTab = pNode->VGetValueMetatable();
     const char *sType = pTab->VGetReferenceString();
 
-    for (std::vector<tAutoDPS_AP *>::iterator itr = pPackage->pAPTypes.begin(); itr != pPackage->pAPTypes.end(); ++itr)
+    for (auto itr = pPackage->pAPTypes.begin(); itr != pPackage->pAPTypes.end(); ++itr)
     {
         if (strcmp((**itr).sFilename, sType) == 0)
         {
@@ -375,7 +375,7 @@ void AutoDPS_Internal::AutoDPS_EbpsForEach_Rgd(CRgdFile *pRgd, tAutoDPS_Package 
 
 tAutoDPS_Package *AutoDPS::AutoDPS_Scan(IDirectoryTraverser::IIterator *pDirectory)
 {
-    tAutoDPS_Package *pPackage = new tAutoDPS_Package;
+    auto *pPackage = new tAutoDPS_Package;
 
     Rainman_ForEach(pDirectory, AutoDPS_FileForEach, (void *)pPackage, true);
 
@@ -392,7 +392,7 @@ void AutoDPS::AutoDPS_AddUnitList(tAutoDPS_Package *pPackage, IDirectoryTraverse
 
     delete pItr;
 
-    pPackage->pDirectories = 0;
+    pPackage->pDirectories = nullptr;
 }
 
 static bool SortAPList(tAutoDPS_AP *p1, tAutoDPS_AP *p2) { return (strcmp(p1->sNicename, p2->sNicename) < 0); }
@@ -400,21 +400,19 @@ static bool SortAPList(tAutoDPS_AP *p1, tAutoDPS_AP *p2) { return (strcmp(p1->sN
 void AutoDPS::AutoDPS_Analyse(tAutoDPS_Package *pPackage)
 {
     // Find all of the different armour types
-    for (std::vector<tAutoDPS_WeaponInfo *>::iterator itr = pPackage->pWeapons.begin(); itr != pPackage->pWeapons.end();
-         ++itr)
+    for (auto itr = pPackage->pWeapons.begin(); itr != pPackage->pWeapons.end(); ++itr)
     {
-        for (std::map<char *, float>::iterator itr2 = (**itr).mapAP.begin(); itr2 != (**itr).mapAP.end(); ++itr2)
+        for (auto itr2 = (**itr).mapAP.begin(); itr2 != (**itr).mapAP.end(); ++itr2)
         {
             char *sAPFile = itr2->first;
 
-            for (std::vector<tAutoDPS_AP *>::iterator itr3 = pPackage->pAPTypes.begin();
-                 itr3 != pPackage->pAPTypes.end(); ++itr3)
+            for (auto itr3 = pPackage->pAPTypes.begin(); itr3 != pPackage->pAPTypes.end(); ++itr3)
             {
                 if (strcmp(sAPFile, (**itr3).sFilename) == 0)
                     goto found_ap_in_ap_list;
             }
 
-            tAutoDPS_AP *pNewAP = new tAutoDPS_AP;
+            auto *pNewAP = new tAutoDPS_AP;
             pNewAP->sFilename = strdup(sAPFile);
 
             pNewAP->sNicename = strrchr(sAPFile, '\\') + 4;
@@ -437,7 +435,7 @@ void AutoDPS::AutoDPS_Analyse(tAutoDPS_Package *pPackage)
 
     // Filter out unwanted armour types
 rekill:
-    for (std::vector<tAutoDPS_AP *>::iterator itr = pPackage->pAPTypes.begin(); itr != pPackage->pAPTypes.end(); ++itr)
+    for (auto itr = pPackage->pAPTypes.begin(); itr != pPackage->pAPTypes.end(); ++itr)
     {
         if (strcmp(((**itr).sNicename), "armour") == 0 || strcmp(((**itr).sNicename), "builder") == 0)
         {
@@ -447,16 +445,15 @@ rekill:
     }
 
     // For each AP type / weapon, calculate DPS
-    for (std::vector<tAutoDPS_AP *>::iterator itr = pPackage->pAPTypes.begin(); itr != pPackage->pAPTypes.end(); ++itr)
+    for (auto itr = pPackage->pAPTypes.begin(); itr != pPackage->pAPTypes.end(); ++itr)
     {
-        for (std::vector<tAutoDPS_WeaponInfo *>::iterator itr2 = pPackage->pWeapons.begin();
-             itr2 != pPackage->pWeapons.end(); ++itr2)
+        for (auto itr2 = pPackage->pWeapons.begin(); itr2 != pPackage->pWeapons.end(); ++itr2)
         {
             float fDPS = (((**itr2).iMinDamage + (**itr2).iMaxDamage) / 2.0f) * (**itr2).iAccuracy;
 
             float fDPSMinimum = ((**itr2).iMinDamageValue * (**itr2).iAccuracy) / (**itr2).iReloadTime;
 
-            for (std::map<char *, float>::iterator itr3 = (**itr2).mapAP.begin(); itr3 != (**itr2).mapAP.end(); ++itr3)
+            for (auto itr3 = (**itr2).mapAP.begin(); itr3 != (**itr2).mapAP.end(); ++itr3)
             {
                 if (strcmp(itr3->first, (**itr).sFilename) == 0)
                 {
@@ -471,9 +468,9 @@ rekill:
         got_dps_from_weap:
 
             if (fDPS > fDPSMinimum)
-                (**itr2).vAnalysisOutput.push_back(std::pair<bool, float>(true, fDPS));
+                (**itr2).vAnalysisOutput.emplace_back(true, fDPS);
             else
-                (**itr2).vAnalysisOutput.push_back(std::pair<bool, float>(true, fDPSMinimum));
+                (**itr2).vAnalysisOutput.emplace_back(true, fDPSMinimum);
         }
     }
 }
@@ -484,16 +481,16 @@ void AutoDPS::AutoDPS_OutputHTML(AutoDPS_Internal::tAutoDPS_Package *pPackage, c
 {
     FILE *f = fopen(sOutFile, "w");
 
-    if (f == 0)
-        throw new CModStudioException(0, __FILE__, __LINE__, "Unable to open file \'%s\' for writing", sOutFile);
+    if (f == nullptr)
+        throw new CModStudioException(nullptr, __FILE__, __LINE__, "Unable to open file \'%s\' for writing", sOutFile);
 
     fwrites(f, "<html><head><title>DoW DPS</title></head><body><table border=1>\n");
 
-    for (std::vector<tAutoDPS_AP *>::iterator itr = pPackage->pAPTypes.begin(); itr != pPackage->pAPTypes.end(); ++itr)
+    for (auto itr = pPackage->pAPTypes.begin(); itr != pPackage->pAPTypes.end(); ++itr)
     {
         fprintf(f, "\t<tr>\n\t<th>%s</th> <td>", (**itr).sNicename);
 
-        for (std::vector<char *>::iterator itr2 = (**itr).vUnitList.begin(); itr2 != (**itr).vUnitList.end(); ++itr2)
+        for (auto itr2 = (**itr).vUnitList.begin(); itr2 != (**itr).vUnitList.end(); ++itr2)
         {
             fprintf(f, "%s, ", *itr2);
         }
@@ -504,14 +501,12 @@ void AutoDPS::AutoDPS_OutputHTML(AutoDPS_Internal::tAutoDPS_Package *pPackage, c
     fwrites(f, "</table><br/><table border=1>\n");
 
     int n = 23;
-    for (std::vector<tAutoDPS_WeaponInfo *>::iterator itr = pPackage->pWeapons.begin(); itr != pPackage->pWeapons.end();
-         ++itr)
+    for (auto itr = pPackage->pWeapons.begin(); itr != pPackage->pWeapons.end(); ++itr)
     {
         if (++n == 24)
         {
             fwrites(f, "\t<tr>\n\t<th>File</th> ");
-            for (std::vector<tAutoDPS_AP *>::iterator itr = pPackage->pAPTypes.begin(); itr != pPackage->pAPTypes.end();
-                 ++itr)
+            for (auto itr = pPackage->pAPTypes.begin(); itr != pPackage->pAPTypes.end(); ++itr)
             {
                 fprintf(f, "<th>%s</th> ", (**itr).sNicename);
             }
@@ -522,8 +517,7 @@ void AutoDPS::AutoDPS_OutputHTML(AutoDPS_Internal::tAutoDPS_Package *pPackage, c
         const char *sBG = (n % 2 ? "bgcolor=\"#e0e0e0\"" : "bgcolor=\"#d0d0d0\"");
         fprintf(f, "\t<tr>\n\t<td %s>%s</td> ", sBG, (**itr).sFileName);
 
-        for (std::vector<std::pair<bool, float>>::iterator itr2 = (**itr).vAnalysisOutput.begin();
-             itr2 != (**itr).vAnalysisOutput.end(); ++itr2)
+        for (auto itr2 = (**itr).vAnalysisOutput.begin(); itr2 != (**itr).vAnalysisOutput.end(); ++itr2)
         {
             if (itr2->first)
                 fprintf(f, "<td %s>%.3f</td> ", sBG, itr2->second);
