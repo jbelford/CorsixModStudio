@@ -318,12 +318,12 @@ int CRgdFileMacro::_tCRgdFile::luae_delayload(lua_State *L)
 
     CRgdFile::_RgdEntry *pGameDataEntry = CRgdFileMacro::_getRootEntry(pThis->pRgd);
 
-    bool bIs__index = false;
+    bool bIs_index = false;
 
     if (lua51_gettop(L) == 2) // an index operation only has T and K on the stack
     {
         lua51_pushnil(L); // push a fake V to give the same stack indicies
-        bIs__index = true;
+        bIs_index = true;
     }
 
     // Push T's metatable
@@ -380,7 +380,7 @@ int CRgdFileMacro::_tCRgdFile::luae_delayload(lua_State *L)
     lua51_pop(L, 2);           // T K V
 
     // Run the table query again with the updated metatables and what not
-    if (bIs__index)
+    if (bIs_index)
     {
         lua51_pop(L, 1);       // T K
         lua51_gettable(L, -2); // T V
@@ -866,12 +866,12 @@ int CRgdFileMacro::_tCRgdTable::luae_delayload(lua_State *L)
     if (pThis->bLoaded == false)
         pThis->bLoaded = true;
 
-    bool bIs__index = false;
+    bool bIs_index = false;
 
     if (lua51_gettop(L) == 2) // an index operation only has T and K on the stack
     {
         lua51_pushnil(L); // push a fake V to give the same stack indicies
-        bIs__index = true;
+        bIs_index = true;
     }
 
     // Push T's metatable
@@ -957,7 +957,7 @@ int CRgdFileMacro::_tCRgdTable::luae_delayload(lua_State *L)
     lua51_pop(L, 3);           // T K V
 
     // Run the table query again with the updated metatables and what not
-    if (bIs__index)
+    if (bIs_index)
     {
         lua51_pop(L, 1);       // T K
         lua51_gettable(L, -2); // T V

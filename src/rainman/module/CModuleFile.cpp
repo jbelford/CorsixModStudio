@@ -101,7 +101,7 @@ const wchar_t *CModuleFile::GetMapPackRootFolder() const { return m_sScenarioPac
     {                                                                                                                  \
         if (int_name)                                                                                                  \
             free(int_name);                                                                                            \
-        int_name = strdup(value);                                                                                      \
+        (int_name) = strdup(value);                                                                                    \
     }
 
 GET_SET_DIRECTIVE(Name, m_metadata.m_sName)
@@ -116,7 +116,7 @@ GET_SET_DIRECTIVE(DllName, m_metadata.m_sDllName)
 #undef GET_SET_DIRECTIVE
 #define GET_SET_DIRECTIVE(name, int_name)                                                                              \
     long CModuleFile::Get##name() const { return int_name; }                                                           \
-    void CModuleFile::Set##name(long value) { int_name = value; }
+    void CModuleFile::Set##name(long value) { (int_name) = value; }
 
 GET_SET_DIRECTIVE(VersionMajor, m_metadata.m_iModVersionMajor)
 GET_SET_DIRECTIVE(VersionMinor, m_metadata.m_iModVersionMinor)
