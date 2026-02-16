@@ -21,13 +21,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef RAINMAN_GNUC
 #include <direct.h>
 #endif
-#include <string.h>
-#include <errno.h>
+#include <cstring>
+#include <cerrno>
 #include "rainman/core/Exception.h"
 #include "rainman/core/Internal_Util.h"
 #include "rainman/core/memdebug.h"
 
-CFileSystemStore::CFileSystemStore(void)
+CFileSystemStore::CFileSystemStore()
 {
 #ifdef EXTEND_FILESTORE_WITH_TRAVERSE
     for (int i = 0; i < 26; ++i)
@@ -35,9 +35,9 @@ CFileSystemStore::CFileSystemStore(void)
 #endif
 }
 
-CFileSystemStore::~CFileSystemStore(void) {}
+CFileSystemStore::~CFileSystemStore() {}
 
-CFileSystemStore::CStream::CStream(void)
+CFileSystemStore::CStream::CStream()
 {
     m_fFile = nullptr;
 #ifdef _DEBUG
@@ -45,7 +45,7 @@ CFileSystemStore::CStream::CStream(void)
 #endif
 }
 
-CFileSystemStore::CStream::~CStream(void)
+CFileSystemStore::CStream::~CStream()
 {
     if (m_fFile)
         fclose(m_fFile);
@@ -220,9 +220,9 @@ IFileStore::IOutputStream *CFileSystemStore::VOpenOutputStream(const char *sFile
     return pStream;
 }
 
-CFileSystemStore::COutputStream::COutputStream(void) { m_fFile = nullptr; }
+CFileSystemStore::COutputStream::COutputStream() { m_fFile = nullptr; }
 
-CFileSystemStore::COutputStream::~COutputStream(void)
+CFileSystemStore::COutputStream::~COutputStream()
 {
     if (m_fFile)
         fclose(m_fFile);

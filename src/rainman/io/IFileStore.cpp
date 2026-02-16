@@ -21,9 +21,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "rainman/core/memdebug.h"
 #include "rainman/core/Exception.h"
 
-IFileStore::IFileStore(void) { m_bInited = false; }
+IFileStore::IFileStore() { m_bInited = false; }
 
-IFileStore::~IFileStore(void) {}
+IFileStore::~IFileStore() {}
 
 void IFileStore::VInit(void *pInitData) { RAINMAN_LOG_DEBUG("IFileStore::VInit() base — no-op"); }
 
@@ -33,10 +33,10 @@ IFileStore::IOutputStream *IFileStore::VOpenOutputStream(const char *sIdentifier
     throw new CRainmanException(nullptr, __FILE__, __LINE__, "Cannot open file \'%s\'", sIdentifier);
 }
 
-IFileStore::IStream::IStream(void) {}
+IFileStore::IStream::IStream() {}
 
-IFileStore::IStream::~IStream(void) {}
+IFileStore::IStream::~IStream() {}
 
-IFileStore::IOutputStream::IOutputStream(void) {}
+IFileStore::IOutputStream::IOutputStream() {}
 
-IFileStore::IOutputStream::~IOutputStream(void) {}
+IFileStore::IOutputStream::~IOutputStream() {}

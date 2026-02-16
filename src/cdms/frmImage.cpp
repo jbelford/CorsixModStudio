@@ -45,9 +45,9 @@ class wxMyScrolledWindow : public wxScrolledWindow
         SetScrollRate(8, 8);
     }
 
-    ~wxMyScrolledWindow() { delete m_pDC; }
+    ~wxMyScrolledWindow() override { delete m_pDC; }
 
-    virtual void OnDraw(wxDC &dc) { dc.Blit(0, 0, m_pBitmap->GetWidth(), m_pBitmap->GetHeight(), m_pDC, 0, 0); }
+    void OnDraw(wxDC &dc) override { dc.Blit(0, 0, m_pBitmap->GetWidth(), m_pBitmap->GetHeight(), m_pDC, 0, 0); }
 
   protected:
     wxBitmap *m_pBitmap;

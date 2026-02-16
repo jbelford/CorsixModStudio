@@ -21,13 +21,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "rainman/core/memdebug.h"
 #include "rainman/core/Exception.h"
 
-CMemoryStore::CMemoryStore(void) {}
+CMemoryStore::CMemoryStore() {}
 
-CMemoryStore::~CMemoryStore(void) {}
+CMemoryStore::~CMemoryStore() {}
 
-CMemoryStore::CStream::CStream(void) { m_bDeleteWhenDone = false; }
+CMemoryStore::CStream::CStream() { m_bDeleteWhenDone = false; }
 
-CMemoryStore::CStream::~CStream(void)
+CMemoryStore::CStream::~CStream()
 {
     if (m_bDeleteWhenDone)
         delete[] m_pBegin;
@@ -124,7 +124,7 @@ CMemoryStore::COutStream::COutStream()
     m_iLength = m_iLengthLeft = 0;
 }
 
-CMemoryStore::COutStream::~COutStream(void) { delete[] m_pBegin; }
+CMemoryStore::COutStream::~COutStream() { delete[] m_pBegin; }
 
 void CMemoryStore::COutStream::VWrite(unsigned long iItemCount, unsigned long iItemSize, const void *_pSource)
 {

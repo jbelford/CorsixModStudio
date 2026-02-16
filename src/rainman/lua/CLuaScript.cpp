@@ -28,16 +28,16 @@ extern "C"
 
 #include "rainman/core/memdebug.h"
 #include "rainman/core/Exception.h"
-#include "string.h"
-#include "stdlib.h"
+#include <cstring>
+#include <cstdlib>
 
-CLuaScript::CLuaScript(void)
+CLuaScript::CLuaScript()
 {
     m_pLua = nullptr;
     m_sLuaError = nullptr;
 }
 
-CLuaScript::~CLuaScript(void) { _Clean(); }
+CLuaScript::~CLuaScript() { _Clean(); }
 
 void CLuaScript::Load(const char *sFile)
 {

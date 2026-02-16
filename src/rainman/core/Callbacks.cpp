@@ -18,8 +18,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 #include "rainman/core/Callbacks.h"
-#include <stdio.h>
-#include <stdarg.h>
+#include <cstdio>
+#include <cstdarg>
 #include "rainman/core/Exception.h"
 
 RAINMAN_API void CallCallback(CALLBACK_ARG, const char *sFormat, ...)

@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "rainman/core/memdebug.h"
 #include "rainman/core/Exception.h"
 
-CDoWFileView::CDoWFileView(void)
+CDoWFileView::CDoWFileView()
 {
     _Clean();
     m_RootFolder.sFullName = const_cast<char *>(""); // dont worry - it wont try and delete it
@@ -31,7 +31,7 @@ CDoWFileView::CDoWFileView(void)
 
 void CDoWFileView::Reset() { _Clean(); }
 
-CDoWFileView::~CDoWFileView(void) { _Clean(); }
+CDoWFileView::~CDoWFileView() { _Clean(); }
 
 void CDoWFileView::VInit(void *pUnused) { m_bInited = true; }
 

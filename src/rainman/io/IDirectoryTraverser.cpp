@@ -21,13 +21,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "rainman/core/memdebug.h"
 #include "rainman/core/Exception.h"
 
-IDirectoryTraverser::IDirectoryTraverser(void) {}
+IDirectoryTraverser::IDirectoryTraverser() {}
 
-IDirectoryTraverser::~IDirectoryTraverser(void) {}
+IDirectoryTraverser::~IDirectoryTraverser() {}
 
-IDirectoryTraverser::IIterator::IIterator(void) {}
+IDirectoryTraverser::IIterator::IIterator() {}
 
-IDirectoryTraverser::IIterator::~IIterator(void) {}
+IDirectoryTraverser::IIterator::~IIterator() {}
 
 void *IDirectoryTraverser::IIterator::VGetTag(long iTag)
 {

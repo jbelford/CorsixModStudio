@@ -29,8 +29,8 @@ extern "C"
 #include <lualib.h>
 };
 #include "rainman/lua/luax.h"
-#include <string.h>
-#include <stdlib.h>
+#include <cstring>
+#include <cstdlib>
 #include <algorithm>
 #include "rainman/module/CModuleFile.h"
 #include "rainman/module/CFileMap.h"
@@ -176,7 +176,7 @@ struct tLuaTableProtector
     unsigned char iOwnIt;
 };
 
-CLuaFile::CLuaFile(void)
+CLuaFile::CLuaFile()
 {
     m_pLua = nullptr;
     m_sLuaError = nullptr;
@@ -187,7 +187,7 @@ CLuaFile::CLuaFile(void)
     _Clean();
 }
 
-CLuaFile::~CLuaFile(void) { _Clean(); }
+CLuaFile::~CLuaFile() { _Clean(); }
 
 void CLuaFile::New()
 {

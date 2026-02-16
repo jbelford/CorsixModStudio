@@ -20,15 +20,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "rainman/lua/CLuaFileCache.h"
 #include "rainman/core/memdebug.h"
 #include "rainman/lua/luax.h"
-#include "stdlib.h"
-#include "string.h"
+#include <cstdlib>
+#include <cstring>
 #include "rainman/core/Exception.h"
 extern "C"
 {
 #include <lauxlib.h>
 };
 
-CLuaFileCache::CLuaFileCache(void) : m_oEntires(nullptr, nullptr)
+CLuaFileCache::CLuaFileCache() : m_oEntires(nullptr, nullptr)
 {
     m_pMother = lua_open();
     m_pEntriesEnd = &m_oEntires;
@@ -94,7 +94,7 @@ void CLuaFileCache::Clear()
     m_pMother = lua_open();
 }
 
-CLuaFileCache::~CLuaFileCache(void)
+CLuaFileCache::~CLuaFileCache()
 {
     Clear();
     lua_close(m_pMother);

@@ -23,7 +23,7 @@ extern "C"
 #include <lauxlib.h>
 #include <lualib.h>
 };
-#include <string.h>
+#include <cstring>
 #include "rainman/core/memdebug.h"
 #include "rainman/core/Exception.h"
 

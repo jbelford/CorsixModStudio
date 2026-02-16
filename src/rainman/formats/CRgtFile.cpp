@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "rainman/core/Exception.h"
 #include "rainman/core/memdebug.h"
 #include <memory>
-#include <time.h>
+#include <ctime>
 #include <squish.h>
 
 static void SquishCompress(unsigned char *rgba, int width, int height, void *blocks, int flags)

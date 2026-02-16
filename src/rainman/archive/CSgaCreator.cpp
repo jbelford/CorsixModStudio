@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "rainman/io/CMemoryStore.h"
 #include <memory>
 #include <zlib.h>
-#include "time.h"
+#include <ctime>
 extern "C"
 {
 #include "rainman/util/md5.h"

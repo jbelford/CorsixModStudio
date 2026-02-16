@@ -21,9 +21,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "rainman/core/memdebug.h"
 #include "rainman/core/Exception.h"
 
-CUcsFile::CUcsFile(void) {}
+CUcsFile::CUcsFile() {}
 
-CUcsFile::~CUcsFile(void) { _Clean(); }
+CUcsFile::~CUcsFile() { _Clean(); }
 
 bool CUcsFile::IsDollarString(const char *s)
 {

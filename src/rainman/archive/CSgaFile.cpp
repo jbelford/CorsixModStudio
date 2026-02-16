@@ -21,7 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include <memory>
 #include <memory.h>
-#include <string.h>
+#include <cstring>
 #include <zlib.h>
 #include "rainman/util/crc32_case_idt.h"
 extern "C"
@@ -29,11 +29,11 @@ extern "C"
 #include "rainman/util/md5.h"
 }
 #include "rainman/core/memdebug.h"
-#include <stdlib.h>
+#include <cstdlib>
 #include <search.h>
 #include "rainman/core/Exception.h"
 
-CSgaFile::CSgaFile(void)
+CSgaFile::CSgaFile()
 {
     /*
         Constructor sets everything to 0 so that if the destructor is called immediatly,
@@ -55,7 +55,7 @@ CSgaFile::CSgaFile(void)
     m_pFileStoreInputStream = nullptr;
 }
 
-CSgaFile::~CSgaFile(void) { _Clean(); }
+CSgaFile::~CSgaFile() { _Clean(); }
 
 void CSgaFile::VCreateFolderIn(const char *sPath, const char *sNewFolderName)
 {

@@ -19,11 +19,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "rainman/core/Exception.h"
 #include "rainman/core/RainmanLog.h"
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdarg>
+#include <cstring>
 #include <memory.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include "rainman/core/memdebug.h"
 
 CRainmanException::CRainmanException() {}
@@ -32,42 +32,42 @@ CRainmanException::CRainmanException(const char *sFile, unsigned long iLine, con
                                      CRainmanException *pPrecursor)
     : m_sFile(sFile), m_iLine(iLine), m_pPrecursor(pPrecursor)
 {
-	m_sMessage = strdup(sMessage);
-	RAINMAN_LOG_ERROR("Exception at {}:{} — {}", sFile ? sFile : "?", iLine, sMessage ? sMessage : "(null)");
+    m_sMessage = strdup(sMessage);
+    RAINMAN_LOG_ERROR("Exception at {}:{} — {}", sFile ? sFile : "?", iLine, sMessage ? sMessage : "(null)");
 }
 
 CRainmanException::CRainmanException(CRainmanException *pPrecursor, const char *sFile, unsigned long iLine,
                                      const char *sFormat, ...)
     : m_sFile(sFile), m_iLine(iLine), m_pPrecursor(pPrecursor)
 {
-	size_t iL = 128;
-	va_list marker;
-	while (1)
-	{
-		char *sBuf = (char *)malloc(iL);
-		va_start(marker, sFormat);
-		if (_vsnprintf(sBuf, iL - 1, sFormat, marker) == -1)
-		{
-			va_end(marker);
-			free(sBuf);
-			iL <<= 1;
-		}
-		else
-		{
-			va_end(marker);
-			m_sMessage = sBuf;
-			RAINMAN_LOG_ERROR("Exception at {}:{} — {}", sFile ? sFile : "?", iLine, m_sMessage);
-			return;
-		}
-	}
+    size_t iL = 128;
+    va_list marker;
+    while (1)
+    {
+        char *sBuf = (char *)malloc(iL);
+        va_start(marker, sFormat);
+        if (_vsnprintf(sBuf, iL - 1, sFormat, marker) == -1)
+        {
+            va_end(marker);
+            free(sBuf);
+            iL <<= 1;
+        }
+        else
+        {
+            va_end(marker);
+            m_sMessage = sBuf;
+            RAINMAN_LOG_ERROR("Exception at {}:{} — {}", sFile ? sFile : "?", iLine, m_sMessage);
+            return;
+        }
+    }
 }
 
 CRainmanException::~CRainmanException() {}
 
 void CRainmanException::destroy()
 {
-	free(m_sMessage);
-	if (m_pPrecursor)
-		m_pPrecursor->destroy();
-	delete this;
+    free(m_sMessage);
+    if (m_pPrecursor)
+        m_pPrecursor->destroy();
+    delete this;
 }

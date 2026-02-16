@@ -22,7 +22,7 @@
 #include "config.h"
 #include "Construct.h"
 #include "CtrlStatusText.h"
-#include <errno.h>
+#include <cerrno>
 #include <wx/textdlg.h>
 #include <wx/filename.h>
 #include <rainman/io/CFileSystemStore.h>

@@ -4,8 +4,8 @@ extern "C"
 #include <lauxlib.h>
 #include <lualib.h>
 };
-#include <string.h>
-#include <stdlib.h>
+#include <cstring>
+#include <cstdlib>
 #include "rainman/lua/luax.h"
 #include "rainman/core/memdebug.h"
 #include "rainman/core/Exception.h"

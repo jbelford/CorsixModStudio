@@ -85,7 +85,7 @@ static wchar_t *mywcsdup(const wchar_t *sStr)
     return s;
 }
 
-CRgdFile::CRgdFile(void)
+CRgdFile::CRgdFile()
 {
     m_RgdHeader.sHeader = nullptr;
     m_RgdHeader.iVersion = 0;
@@ -98,7 +98,7 @@ CRgdFile::CRgdFile(void)
     m_bConvertTableIntToTable = true;
 }
 
-CRgdFile::~CRgdFile(void) { _Clean(); }
+CRgdFile::~CRgdFile() { _Clean(); }
 
 CRgdHashTable *CRgdFile::GetHashTable() { return m_pHashTable; }
 

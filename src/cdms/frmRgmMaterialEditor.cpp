@@ -39,7 +39,7 @@ class CRgmMaterialTreeData : public wxTreeItemData
 
     CRgmMaterialTreeData(CRgmFile::CMaterial::CVariable *pVar) : pMaterial(nullptr), pVariable(pVar) {}
 
-    ~CRgmMaterialTreeData() {}
+    ~CRgmMaterialTreeData() override {}
 
   public:
     CRgmFile::CMaterial *pMaterial;

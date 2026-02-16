@@ -36,9 +36,9 @@ END_EVENT_TABLE()
 class CExtractAction : public frmFiles::IHandler
 {
   public:
-    virtual wxString VGetExt() const;
-    virtual wxString VGetAction() const;
-    virtual void VHandle(wxString sFile, wxTreeItemId &oParent, wxTreeItemId &oFile);
+    wxString VGetExt() const override;
+    wxString VGetAction() const override;
+    void VHandle(wxString sFile, wxTreeItemId &oParent, wxTreeItemId &oFile) override;
     static void DoExtract(char *saFile, char *pBuffer);
 };
 

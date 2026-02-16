@@ -25,8 +25,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include <unistd.h>
 #endif
 #include <fcntl.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include "rainman/core/Exception.h"

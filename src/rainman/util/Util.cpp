@@ -23,7 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef RAINMAN_GNUC
 #include <windows.h>
 #endif
-#include <string.h>
+#include <cstring>
 #include "rainman/core/memdebug.h"
 #include "rainman/core/Exception.h"
 

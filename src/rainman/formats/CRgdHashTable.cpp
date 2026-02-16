@@ -38,7 +38,7 @@ static char *mystrdup(const char *sStr)
     return s;
 }
 
-CRgdHashTable::CRgdHashTable(void)
+CRgdHashTable::CRgdHashTable()
 {
     for (int i = 1; i < 10000; ++i)
     {
@@ -50,7 +50,7 @@ CRgdHashTable::CRgdHashTable(void)
     }
 }
 
-CRgdHashTable::~CRgdHashTable(void) { _Clean(); }
+CRgdHashTable::~CRgdHashTable() { _Clean(); }
 
 void CRgdHashTable::New() { _Clean(); }
 
