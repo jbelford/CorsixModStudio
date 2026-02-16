@@ -37,7 +37,7 @@ RAINMAN_API char *Rainman_GetDoWPath()
        do its registry bit correctly) The Dawn of War BETA registry location is not checked becuase the DoW beta is very
        outdated.
     */
-    char *sDoWPath = 0;
+    char *sDoWPath = nullptr;
     DWORD dataLen = MAX_PATH + 1,
           t; // dataLen is copied into t for each call to RegQueryValueEx, as that function modifies the value passed
     sDoWPath = CHECK_MEM(new char[dataLen]);
@@ -52,7 +52,7 @@ RAINMAN_API char *Rainman_GetDoWPath()
     if (iReturnVal == ERROR_SUCCESS)
     {
         t = dataLen;
-        iReturnVal = RegQueryValueEx(hkey, "InstallLocation", NULL, NULL, (LPBYTE)sDoWPath, &t);
+        iReturnVal = RegQueryValueEx(hkey, "InstallLocation", nullptr, nullptr, (LPBYTE)sDoWPath, &t);
         RegCloseKey(hkey);
         if (iReturnVal == ERROR_SUCCESS)
             return sDoWPath;
@@ -63,7 +63,7 @@ RAINMAN_API char *Rainman_GetDoWPath()
     if (iReturnVal == ERROR_SUCCESS)
     {
         t = dataLen;
-        iReturnVal = RegQueryValueEx(hkey, "InstallLocation", NULL, NULL, (LPBYTE)sDoWPath, &t);
+        iReturnVal = RegQueryValueEx(hkey, "InstallLocation", nullptr, nullptr, (LPBYTE)sDoWPath, &t);
         RegCloseKey(hkey);
         if (iReturnVal == ERROR_SUCCESS)
             return sDoWPath;
@@ -83,7 +83,7 @@ RAINMAN_API char *Rainman_GetDCPath()
         If neither of these are found then the default DoW:DC installation path is returned (incase the DoW:DC install
        didn't do its registry bit correctly)
     */
-    char *sDoWPath = 0;
+    char *sDoWPath = nullptr;
     DWORD dataLen = MAX_PATH + 1,
           t; // dataLen is copied into t for each call to RegQueryValueEx, as that function modifies the value passed
     sDoWPath = CHECK_MEM(new char[dataLen]);
@@ -99,7 +99,7 @@ RAINMAN_API char *Rainman_GetDCPath()
     if (iReturnVal == ERROR_SUCCESS)
     {
         t = dataLen;
-        iReturnVal = RegQueryValueEx(hkey, "InstallLocation", NULL, NULL, (LPBYTE)sDoWPath, &t);
+        iReturnVal = RegQueryValueEx(hkey, "InstallLocation", nullptr, nullptr, (LPBYTE)sDoWPath, &t);
         RegCloseKey(hkey);
         if (iReturnVal == ERROR_SUCCESS)
             return sDoWPath;
@@ -119,7 +119,7 @@ RAINMAN_API char *Rainman_GetSSPath()
         If neither of these are found then the default DoW:SS installation path is returned (incase the DoW:SS install
        didn't do its registry bit correctly)
     */
-    char *sDoWPath = 0;
+    char *sDoWPath = nullptr;
     DWORD dataLen = MAX_PATH + 1,
           t; // dataLen is copied into t for each call to RegQueryValueEx, as that function modifies the value passed
     sDoWPath = CHECK_MEM(new char[dataLen]);
@@ -135,7 +135,7 @@ RAINMAN_API char *Rainman_GetSSPath()
     if (iReturnVal == ERROR_SUCCESS)
     {
         t = dataLen;
-        iReturnVal = RegQueryValueEx(hkey, "InstallLocation", NULL, NULL, (LPBYTE)sDoWPath, &t);
+        iReturnVal = RegQueryValueEx(hkey, "InstallLocation", nullptr, nullptr, (LPBYTE)sDoWPath, &t);
         RegCloseKey(hkey);
         if (iReturnVal == ERROR_SUCCESS)
             return sDoWPath;
@@ -165,7 +165,7 @@ RAINMAN_API char *Rainman_GetCoHPath()
         If neither of these are found then the default CoH installation path is returned (incase the CoH install didn't
        do its registry bit correctly)
     */
-    char *sCoHPath = 0;
+    char *sCoHPath = nullptr;
     DWORD dataLen = 1024,
           t; // dataLen is copied into t for each call to RegQueryValueEx, as that function modifies the value passed
     sCoHPath = CHECK_MEM(new char[dataLen]);
@@ -180,7 +180,7 @@ RAINMAN_API char *Rainman_GetCoHPath()
     if (iReturnVal == ERROR_SUCCESS)
     {
         t = dataLen;
-        iReturnVal = RegQueryValueEx(hkey, "InstallDir", NULL, NULL, (LPBYTE)sCoHPath, &t);
+        iReturnVal = RegQueryValueEx(hkey, "InstallDir", nullptr, nullptr, (LPBYTE)sCoHPath, &t);
         RegCloseKey(hkey);
         if (iReturnVal == ERROR_SUCCESS)
             return sCoHPath;
@@ -192,7 +192,7 @@ RAINMAN_API char *Rainman_GetCoHPath()
     if (iReturnVal == ERROR_SUCCESS)
     {
         t = dataLen;
-        iReturnVal = RegQueryValueEx(hkey, "InstallDir", NULL, NULL, (LPBYTE)sCoHPath, &t);
+        iReturnVal = RegQueryValueEx(hkey, "InstallDir", nullptr, nullptr, (LPBYTE)sCoHPath, &t);
         RegCloseKey(hkey);
         if (iReturnVal == ERROR_SUCCESS)
             return sCoHPath;
@@ -204,7 +204,7 @@ RAINMAN_API char *Rainman_GetCoHPath()
     if (iReturnVal == ERROR_SUCCESS)
     {
         t = dataLen;
-        iReturnVal = RegQueryValueEx(hkey, "InstallLocation", NULL, NULL, (LPBYTE)sCoHPath, &t);
+        iReturnVal = RegQueryValueEx(hkey, "InstallLocation", nullptr, nullptr, (LPBYTE)sCoHPath, &t);
         RegCloseKey(hkey);
         if (iReturnVal == ERROR_SUCCESS)
             return sCoHPath;
@@ -224,7 +224,7 @@ RAINMAN_API CRgdHashTable *Rainman_LoadDictionaries(const char *sPath, char **sC
     */
 
     // Check our input is valid (non-null, etc.)
-    if (sPath == 0)
+    if (sPath == nullptr)
         QUICK_THROW("No path");
 
     CFileSystemStore oFSO;

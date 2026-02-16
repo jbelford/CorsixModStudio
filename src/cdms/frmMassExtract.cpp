@@ -83,13 +83,13 @@ void frmMassExtract::_FillCheckList(CModuleFile *pMod, bool bIsRoot, wxArrayStri
             {
                 CModuleFile::CArchiveHandler *pArch = pSrc->GetArchive(i);
                 sList.Add(AsciiTowxString(pArch->GetFileName()));
-                vList.push_back(_tSrc(0, pArch->GetFileName()));
+                vList.push_back(_tSrc(nullptr, pArch->GetFileName()));
             }
 
             if ((pSrc->IsFolderWritable() == false) && pSrc->GetFolder() && *pSrc->GetFolder())
             {
                 sList.Add(AsciiTowxString(pSrc->GetFolder()) + wxT(" folder"));
-                vList.push_back(_tSrc(0, pSrc->GetFolder()));
+                vList.push_back(_tSrc(nullptr, pSrc->GetFolder()));
             }
         }
     }
@@ -131,7 +131,7 @@ size_t frmMassExtract::_DoExtract(wxTreeCtrl *pTree, wxTreeItemId &oFolder, wxSt
             bool bExtract = false;
             for (std::vector<_tSrc>::iterator itr = m_vActiveSrcs.begin(); itr != m_vActiveSrcs.end(); ++itr)
             {
-                if ((itr->sMod == 0 || (stricmp(pData->sMod, itr->sMod) == 0)) &&
+                if ((itr->sMod == nullptr || (stricmp(pData->sMod, itr->sMod) == 0)) &&
                     stricmp(pData->sSource, itr->sSrc) == 0)
                 {
                     bExtract = true;
@@ -237,7 +237,7 @@ frmMassExtract::frmMassExtract(wxString sFile, wxTreeItemId &oFolder, bool bForc
 void frmMassExtract::OnGoClick(wxCommandEvent &event)
 {
     UNUSED(event);
-    void *pSource = 0;
+    void *pSource = nullptr;
     if (TheConstruct->GetModuleService().IsFauxModule())
     {
         wxString sSaveDirectory = wxDirSelector(wxT("Choose where to extract folder"));

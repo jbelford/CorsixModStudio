@@ -40,11 +40,11 @@ extern "C"
 
 char *UnicodeToAscii(const wchar_t *pUnicode, int i = 0)
 {
-    if (pUnicode == 0)
+    if (pUnicode == nullptr)
     {
         char *sAscii = new char[1];
         if (!sAscii)
-            return 0;
+            return nullptr;
         sAscii[0] = 0;
         return sAscii;
     }
@@ -52,7 +52,7 @@ char *UnicodeToAscii(const wchar_t *pUnicode, int i = 0)
     size_t iLen = wcslen(pUnicode) + 1;
     char *sAscii = new char[iLen];
     if (!sAscii)
-        return 0;
+        return nullptr;
     for (size_t i = 0; i < iLen; ++i)
     {
         sAscii[i] = (char)pUnicode[i];
@@ -351,8 +351,8 @@ IMetaNode::IMetaTable *MakeLuaFromRgdAndNil_LoadTable(IMetaNode::IMetaTable *pSr
                                                       CRgdHashTable *pHashTable, CRgdFile **pRgdOut, CLuaFile **pLuaOut,
                                                       bool bAllowLua = true)
 {
-    char *sFilename = 0;
-    IMetaNode::IMetaTable *pRet = 0;
+    char *sFilename = nullptr;
+    IMetaNode::IMetaTable *pRet = nullptr;
     if (pSrc && pStore)
     {
         switch (pSrc->VGetReferenceType())
@@ -492,9 +492,9 @@ struct MakeLuaFromRgdAndNil_TableEntry
     MakeLuaFromRgdAndNil_TableEntry()
     {
         iHash = 0;
-        sName = 0;
-        pRgdNode = 0;
-        pInhNode = 0;
+        sName = nullptr;
+        pRgdNode = nullptr;
+        pInhNode = nullptr;
     }
 
     ~MakeLuaFromRgdAndNil_TableEntry()
@@ -700,15 +700,15 @@ struct MakeLuaFromRgdAndNil_Nil_Node
     MakeLuaFromRgdAndNil_Nil_Node()
     {
         iFilesWith = 0;
-        sName = 0;
+        sName = nullptr;
         iNameHash = 0;
     }
 };
 
 void MakeLuaFromRgdAndNil_MakeNil_OnFile_Recurse(IMetaNode *pNode, MakeLuaFromRgdAndNil_Nil_Node *pOurNode)
 {
-    IMetaNode::IMetaTable *pTable = 0;
-    MakeLuaFromRgdAndNil_Nil_Value *pVal = 0;
+    IMetaNode::IMetaTable *pTable = nullptr;
+    MakeLuaFromRgdAndNil_Nil_Value *pVal = nullptr;
     for (std::vector<MakeLuaFromRgdAndNil_Nil_Value *>::iterator itr = pOurNode->vValues.begin();
          itr != pOurNode->vValues.end(); ++itr)
     {
@@ -718,7 +718,7 @@ void MakeLuaFromRgdAndNil_MakeNil_OnFile_Recurse(IMetaNode *pNode, MakeLuaFromRg
             break;
         }
     }
-    if (pNode->VGetType() == IMetaNode::DT_Table && pTable == 0)
+    if (pNode->VGetType() == IMetaNode::DT_Table && pTable == nullptr)
         pTable = pNode->VGetValueMetatable();
     if (!pVal)
     {
@@ -771,9 +771,10 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
                                IFileStore::IOutputStream *pLuaOut, IFileStore *pStore, CRgdHashTable *pHashTable,
                                const char *sPrefix, bool bG = true)
 {
-    bool bEchoVal = false;                                // Will we echo the value of this node?
-    bool bLookChildren = true;                            // Will we look at the children of this node? (Tables only)
-    IMetaNode::IMetaTable *pTableRgd = 0, *pTableNil = 0; // Pointers to store the metatables of pRgdIn / pNilIn
+    bool bEchoVal = false;     // Will we echo the value of this node?
+    bool bLookChildren = true; // Will we look at the children of this node? (Tables only)
+    IMetaNode::IMetaTable *pTableRgd = nullptr,
+                          *pTableNil = nullptr; // Pointers to store the metatables of pRgdIn / pNilIn
 
     // Get the metatables of pRgdIn & pNilIn
     try
@@ -793,9 +794,9 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
     }
 
     // Determine if we need to print this node
-    if (pNilIn == 0 || pRgdIn == 0)
+    if (pNilIn == nullptr || pRgdIn == nullptr)
     {
-        if (pRgdIn == 0)
+        if (pRgdIn == nullptr)
         {
             // If there is a LUA/NIL node, and no matching RGD node, nullify the output and don't do any more echoing
             // and dont look at and children either.
@@ -803,7 +804,7 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
             pLuaOut->VWrite(strlen(" = nil\r\n"), 1, " = nil\r\n");
             bLookChildren = false;
         }
-        else if (pNilIn == 0)
+        else if (pNilIn == nullptr)
         {
             // If there is an RGD node, but no matching LUA/NIL node, we need to echo the value
             bEchoVal = true;
@@ -984,7 +985,7 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
                     delete pTableNil;
                 throw new CRainmanException(__FILE__, __LINE__, "Error printing integer value", pE);
             }
-            char *sAsc = 0;
+            char *sAsc = nullptr;
             try
             {
                 const wchar_t *sVal = pUcsResolver->ResolveUCS(pRgdIn->VGetValueInteger());
@@ -1054,7 +1055,7 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
                     delete pTableNil;
                 throw new CRainmanException(__FILE__, __LINE__, "Error printing w-string value", pE);
             }
-            sAsc = 0;
+            sAsc = nullptr;
             try
             {
                 const wchar_t *sVal = pUcsResolver->ResolveUCS(pRgdIn->VGetValueWString());
@@ -1154,9 +1155,9 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
 
     if (bLookChildren && pRgdIn && pRgdIn->VGetType() == IMetaNode::DT_Table)
     {
-        IMetaNode::IMetaTable *pInhTable = 0; // The table being inherited / referenced by the current node
-        CRgdFile *pDelRgd = 0;                // stores an RGD file that may have to be "delete"d sometime in the future
-        CLuaFile *pDelLua = 0;                // stores a LUA file that may have to be "delete"d sometime in the future
+        IMetaNode::IMetaTable *pInhTable = nullptr; // The table being inherited / referenced by the current node
+        CRgdFile *pDelRgd = nullptr; // stores an RGD file that may have to be "delete"d sometime in the future
+        CLuaFile *pDelLua = nullptr; // stores a LUA file that may have to be "delete"d sometime in the future
         if (bEchoVal)
         {
             // If a table node was echoed, that means the reference() was different to the NIL passed to
@@ -1212,7 +1213,7 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
         for (unsigned long i = 0; i < iNInh; ++i)
         {
             // Add all of the RGD's table's children to the node list if they are not already in it
-            IMetaNode *pNode = 0;
+            IMetaNode *pNode = nullptr;
             try
             {
                 pNode = pInhTable->VGetChild(i);
@@ -1230,7 +1231,7 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
                 throw new CRainmanException(pE, __FILE__, __LINE__, "Error fetching LUA/NIL child %lu", i);
             }
 
-            const char *sName = 0;
+            const char *sName = nullptr;
             unsigned long iHash = 0;
             if (pNode->VGetName())
             {
@@ -1335,5 +1336,5 @@ RAINMAN_API void MakeLuaFromRgdAndNil(CRgdFile *pRgdIn, CLuaFile *pNilIn, IFileS
         }
     }
     // If we have no NIL, or there is no GameData in it, run without a NIL
-    MakeLuaFromRgdAndNil_Node(pUcsResolver, pRgdIn, 0, pLuaOut, pStore, pRgdIn->GetHashTable(), "GameData", true);
+    MakeLuaFromRgdAndNil_Node(pUcsResolver, pRgdIn, nullptr, pLuaOut, pStore, pRgdIn->GetHashTable(), "GameData", true);
 }

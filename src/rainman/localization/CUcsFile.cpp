@@ -68,7 +68,7 @@ void CUcsFile::Save(const char *sFile)
     RAINMAN_LOG_INFO("CUcsFile::Save() — writing UCS file");
     FILE *f = fopen(sFile, "wb");
     if (!f)
-        throw new CRainmanException(0, __FILE__, __LINE__, "Cannot open file \'%s\' in mode \'wb\'", sFile);
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Cannot open file \'%s\' in mode \'wb\'", sFile);
     unsigned short iHeader = 0xFEFF;
     fwrite(&iHeader, 2, 1, f);
     for (std::map<unsigned long, wchar_t *>::iterator itr = m_mapValues.begin(); itr != m_mapValues.end(); ++itr)
@@ -103,8 +103,8 @@ const std::map<unsigned long, wchar_t *> *CUcsFile::GetRawMap() const { return &
 static wchar_t *mywcsdup(const char *sStr)
 {
     wchar_t *s = new wchar_t[strlen(sStr) + 1];
-    if (s == 0)
-        return 0;
+    if (s == nullptr)
+        return nullptr;
     for (size_t i = 0; i <= strlen(sStr); ++i)
         s[i] = sStr[i];
     return s;
@@ -117,8 +117,8 @@ static wchar_t *mywcsdup(const wchar_t *sStr)
         (and thus "delete" instead of "free")
     */
     wchar_t *s = new wchar_t[wcslen(sStr) + 1];
-    if (s == 0)
-        return 0;
+    if (s == nullptr)
+        return nullptr;
     wcscpy(s, sStr);
     return s;
 }
@@ -143,7 +143,7 @@ static wchar_t *readwideline(IFileStore::IStream *pStream, unsigned long iInitSi
     {
         auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
         delete[] sBuffer;
-        return 0;
+        return nullptr;
     }
 
     try
@@ -153,10 +153,10 @@ static wchar_t *readwideline(IFileStore::IStream *pStream, unsigned long iInitSi
             if (++iWordsRead >= (iInitSize - 1)) // _shouldn't_ be '>' but you never know...
             {
                 wchar_t *sTmp = new wchar_t[iInitSize <<= 1];
-                if (sTmp == 0)
+                if (sTmp == nullptr)
                 {
                     delete[] sBuffer;
-                    return 0;
+                    return nullptr;
                 }
                 memset(sTmp, 0, sizeof(wchar_t) * iInitSize);
                 wcscpy(sTmp, sBuffer);
@@ -193,7 +193,7 @@ static char *readasciiline(IFileStore::IStream *pStream, unsigned long iInitSize
     {
         auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
         delete[] sBuffer;
-        return 0;
+        return nullptr;
     }
 
     try
@@ -203,10 +203,10 @@ static char *readasciiline(IFileStore::IStream *pStream, unsigned long iInitSize
             if (++iWordsRead >= (iInitSize - 1)) // _shouldn't_ be '>' but you never know...
             {
                 char *sTmp = new char[iInitSize <<= 1];
-                if (sTmp == 0)
+                if (sTmp == nullptr)
                 {
                     delete[] sBuffer;
-                    return 0;
+                    return nullptr;
                 }
                 memset(sTmp, 0, sizeof(char) * iInitSize);
                 strcpy(sTmp, sBuffer);
@@ -227,7 +227,7 @@ void CUcsFile::LoadDat(IFileStore::IStream *pStream)
 {
     _Clean();
 
-    char *sLine = 0;
+    char *sLine = nullptr;
     while (sLine = readasciiline(pStream))
     {
         unsigned long iNumber = 0;
@@ -240,7 +240,7 @@ void CUcsFile::LoadDat(IFileStore::IStream *pStream)
                 iNumber += (sLine[i] - '0');
                 ++i;
             }
-            if (i != 0 && sLine[i] && sLine[++i] && m_mapValues[iNumber] == 0) // silenty ignore duplicate values
+            if (i != 0 && sLine[i] && sLine[++i] && m_mapValues[iNumber] == nullptr) // silenty ignore duplicate values
             {
                 wchar_t *sString = mywcsdup(sLine + i);
                 if (sString)
@@ -276,10 +276,10 @@ void CUcsFile::Load(IFileStore::IStream *pStream)
     {
         // UCS file has invalid header - what should I do?
         // I'll do what relic do; throw an error!
-        throw new CRainmanException(0, __FILE__, __LINE__, "Invalid header (%u)", iHeader);
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Invalid header (%u)", iHeader);
     }
 
-    wchar_t *sLine = 0;
+    wchar_t *sLine = nullptr;
     while (sLine = readwideline(pStream))
     {
         unsigned long iNumber = 0;
@@ -290,7 +290,7 @@ void CUcsFile::Load(IFileStore::IStream *pStream)
             iNumber += (sLine[i] - '0');
             ++i;
         }
-        if (i != 0 && sLine[i] && sLine[++i] && m_mapValues[iNumber] == 0) // silenty ignore duplicate values
+        if (i != 0 && sLine[i] && sLine[++i] && m_mapValues[iNumber] == nullptr) // silenty ignore duplicate values
         {
             wchar_t *sString = mywcsdup(sLine + i);
             if (sString)
@@ -313,20 +313,20 @@ const wchar_t *CUcsFile::ResolveStringID(unsigned long iID)
 {
     const wchar_t *pS = m_mapValues[iID];
     if (!pS)
-        return 0; // throw new CRainmanException(0, __FILE__, __LINE__, "$%ul no key", iID);
+        return nullptr; // throw new CRainmanException(0, __FILE__, __LINE__, "$%ul no key", iID);
     return pS;
 }
 
 void CUcsFile::SetString(unsigned long iID, const wchar_t *pString)
 {
     delete[] m_mapValues[iID];
-    if (pString == 0)
+    if (pString == nullptr)
     {
         m_mapValues.erase(iID);
         return;
     }
     wchar_t *pTmp = mywcsdup(pString);
-    if (pTmp == 0)
+    if (pTmp == nullptr)
         throw new CRainmanException(__FILE__, __LINE__, "Cannot duplicate string (out of memory?)");
     m_mapValues[iID] = pTmp;
 }
@@ -334,7 +334,7 @@ void CUcsFile::SetString(unsigned long iID, const wchar_t *pString)
 void CUcsFile::ReplaceString(unsigned long iID, wchar_t *pString)
 {
     delete[] m_mapValues[iID];
-    if (pString == 0)
+    if (pString == nullptr)
     {
         m_mapValues.erase(iID);
         return;

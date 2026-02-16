@@ -35,17 +35,17 @@ CModuleFile::CModuleFile()
 {
     m_eModuleType = MT_DawnOfWar;
     m_sLocale = strdup("");
-    m_sApplicationPath = 0;
-    m_sFilename = 0;
-    m_pParentModule = 0;
-    m_sScenarioPackRootFolder = 0;
-    m_saScenarioPackRootFolder = 0;
+    m_sApplicationPath = nullptr;
+    m_sFilename = nullptr;
+    m_pParentModule = nullptr;
+    m_sScenarioPackRootFolder = nullptr;
+    m_saScenarioPackRootFolder = nullptr;
 
-    m_sFileMapName = 0;
+    m_sFileMapName = nullptr;
 
-    m_pFSS = 0;
-    m_sCohThisModFolder = 0;
-    m_pNewFileMap = 0;
+    m_pFSS = nullptr;
+    m_sCohThisModFolder = nullptr;
+    m_pNewFileMap = nullptr;
 
     m_iFileMapModNumber = 0;
 
@@ -129,7 +129,7 @@ size_t CModuleFile::GetEngineCount() const { return m_vEngines.size(); }
 CModuleFile *CModuleFile::GetEngine(size_t iId)
 {
     if (iId < 0 || iId >= GetEngineCount())
-        throw new CRainmanException(0, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
                                     (unsigned long)GetEngineCount());
     return m_vEngines[iId];
 }
@@ -137,7 +137,7 @@ CModuleFile *CModuleFile::GetEngine(size_t iId)
 const CModuleFile *CModuleFile::GetEngine(size_t iId) const
 {
     if (iId < 0 || iId >= GetEngineCount())
-        throw new CRainmanException(0, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
                                     (unsigned long)GetEngineCount());
     return m_vEngines[iId];
 }
@@ -155,21 +155,21 @@ CModuleFile::eModuleType CModuleFile::GetModuleType() const { return m_eModuleTy
 void CModuleFile::VInit(void *pUnused)
 {
     RAINMAN_LOG_INFO("CModuleFile::VInit() — initialising module file");
-    if (m_pNewFileMap == 0)
+    if (m_pNewFileMap == nullptr)
         m_pNewFileMap = new CFileMap;
     QUICK_TRYCAT(m_pNewFileMap->VInit(pUnused);)
 }
 
 IFileStore::IStream *CModuleFile::VOpenStream(const char *sFile)
 {
-    if (m_pNewFileMap == 0)
+    if (m_pNewFileMap == nullptr)
         m_pNewFileMap = new CFileMap;
     QUICK_TRYCAT(return m_pNewFileMap->VOpenStream(sFile);)
 }
 
 IFileStore::IOutputStream *CModuleFile::VOpenOutputStream(const char *sIdentifier, bool bEraseIfPresent)
 {
-    if (m_pNewFileMap == 0)
+    if (m_pNewFileMap == nullptr)
         m_pNewFileMap = new CFileMap;
     QUICK_TRYCAT(return m_pNewFileMap->VOpenOutputStream(sIdentifier, bEraseIfPresent);)
 }
@@ -177,21 +177,21 @@ IFileStore::IOutputStream *CModuleFile::VOpenOutputStream(const char *sIdentifie
 // IDirectoryTraverser Interface
 tLastWriteTime CModuleFile::VGetLastWriteTime(const char *sPath)
 {
-    if (m_pNewFileMap == 0)
+    if (m_pNewFileMap == nullptr)
         m_pNewFileMap = new CFileMap;
     QUICK_TRYCAT(return m_pNewFileMap->VGetLastWriteTime(sPath);)
 }
 
 void CModuleFile::VCreateFolderIn(const char *sPath, const char *sNewFolderName)
 {
-    if (m_pNewFileMap == 0)
+    if (m_pNewFileMap == nullptr)
         m_pNewFileMap = new CFileMap;
     QUICK_TRYCAT(return m_pNewFileMap->VCreateFolderIn(sPath, sNewFolderName);)
 }
 
 IDirectoryTraverser::IIterator *CModuleFile::VIterate(const char *sPath)
 {
-    if (m_pNewFileMap == 0)
+    if (m_pNewFileMap == nullptr)
         m_pNewFileMap = new CFileMap;
     try
     {
@@ -205,14 +205,14 @@ IDirectoryTraverser::IIterator *CModuleFile::VIterate(const char *sPath)
 
 unsigned long CModuleFile::VGetEntryPointCount()
 {
-    if (m_pNewFileMap == 0)
+    if (m_pNewFileMap == nullptr)
         m_pNewFileMap = new CFileMap;
     QUICK_TRYCAT(return m_pNewFileMap->VGetEntryPointCount();)
 }
 
 const char *CModuleFile::VGetEntryPoint(unsigned long iID)
 {
-    if (m_pNewFileMap == 0)
+    if (m_pNewFileMap == nullptr)
         m_pNewFileMap = new CFileMap;
     QUICK_TRYCAT(return m_pNewFileMap->VGetEntryPoint(iID);)
 }
@@ -221,12 +221,12 @@ const char *CModuleFile::VGetEntryPoint(unsigned long iID)
 
 bool CModuleFile::VDirectoryExists(const char *sPath)
 {
-    if (m_pNewFileMap == 0)
+    if (m_pNewFileMap == nullptr)
         m_pNewFileMap = new CFileMap;
 
     // Extract the TOC name (everything before the first separator)
     const char *sSlash = strchr(sPath, '\\');
-    if (sSlash == 0)
+    if (sSlash == nullptr)
         sSlash = strchr(sPath, '/');
 
     size_t iTocLen = sSlash ? (size_t)(sSlash - sPath) : strlen(sPath);
@@ -262,8 +262,8 @@ long CModuleFile::GetSgaOutputVersion()
 
 CModuleFile::CUcsHandler::CUcsHandler()
 {
-    m_sName = 0;
-    m_pHandle = 0;
+    m_sName = nullptr;
+    m_pHandle = nullptr;
 }
 
 CModuleFile::CUcsHandler::~CUcsHandler() {}
@@ -277,7 +277,7 @@ CUcsFile *CModuleFile::CUcsHandler::GetUcsHandle() { return m_pHandle; }
 CModuleFile::CFolderHandler::CFolderHandler()
 {
     m_iNumber = 0;
-    m_sName = 0;
+    m_sName = nullptr;
 }
 
 const char *CModuleFile::CFolderHandler::GetName() const { return m_sName; }
@@ -289,8 +289,8 @@ CModuleFile::CFolderHandler::~CFolderHandler() {}
 CModuleFile::CArchiveHandler::CArchiveHandler()
 {
     m_iNumber = 0;
-    m_sName = 0;
-    m_pHandle = 0;
+    m_sName = nullptr;
+    m_pHandle = nullptr;
 }
 
 const char *CModuleFile::CArchiveHandler::GetFileName() const { return m_sName; }
@@ -304,8 +304,8 @@ CModuleFile::CArchiveHandler::~CArchiveHandler() {}
 CModuleFile::CRequiredHandler::CRequiredHandler()
 {
     m_iNumber = 0;
-    m_sName = 0;
-    m_pHandle = 0;
+    m_sName = nullptr;
+    m_pHandle = nullptr;
 }
 
 const char *CModuleFile::CRequiredHandler::GetFileName() const { return m_sName; }
@@ -321,7 +321,7 @@ CModuleFile::CRequiredHandler::~CRequiredHandler() {}
 CModuleFile::CCompatibleHandler::CCompatibleHandler()
 {
     m_iNumber = 0;
-    m_sName = 0;
+    m_sName = nullptr;
 }
 
 const char *CModuleFile::CCompatibleHandler::GetFileName() const { return m_sName; }
@@ -333,9 +333,9 @@ CModuleFile::CCompatibleHandler::~CCompatibleHandler() {}
 CModuleFile::CCohDataSource::CCohDataSource()
 {
     m_iNumber = 0;
-    m_sToc = 0;
-    m_sOption = 0;
-    m_sFolder = 0;
+    m_sToc = nullptr;
+    m_sOption = nullptr;
+    m_sFolder = nullptr;
     m_bIsLoaded = false;
     m_bCanWriteToFolder = true;
 }
@@ -350,31 +350,31 @@ void CModuleFile::_Clean()
         if (m_sApplicationPath)
             free(m_sApplicationPath);
     }
-    m_sApplicationPath = 0;
+    m_sApplicationPath = nullptr;
     if (m_sFilename)
         free(m_sFilename);
-    m_sFilename = 0;
+    m_sFilename = nullptr;
     if (m_sScenarioPackRootFolder)
         free(m_sScenarioPackRootFolder);
-    m_sScenarioPackRootFolder = 0;
+    m_sScenarioPackRootFolder = nullptr;
     if (m_saScenarioPackRootFolder)
         free(m_saScenarioPackRootFolder);
-    m_saScenarioPackRootFolder = 0;
+    m_saScenarioPackRootFolder = nullptr;
 
     if (m_sFileMapName)
         free(m_sFileMapName);
-    m_sFileMapName = 0;
+    m_sFileMapName = nullptr;
     m_metadata.Reset();
 
     if (m_sCohThisModFolder)
         delete[] m_sCohThisModFolder;
-    m_sCohThisModFolder = 0;
+    m_sCohThisModFolder = nullptr;
 
     m_iFileMapModNumber = 0;
 
     _CleanResources();
 
-    m_pParentModule = 0;
+    m_pParentModule = nullptr;
 
     for (std::vector<CFolderHandler *>::iterator itr = m_vFolders.begin(); itr != m_vFolders.end(); ++itr)
     {
@@ -441,7 +441,7 @@ void CModuleFile::_CleanResources()
     {
         if (m_pNewFileMap)
             delete m_pNewFileMap;
-        m_pNewFileMap = 0;
+        m_pNewFileMap = nullptr;
     }
 
     for (std::vector<CArchiveHandler *>::iterator itr = m_vArchives.begin(); itr != m_vArchives.end(); ++itr)
@@ -452,14 +452,14 @@ void CModuleFile::_CleanResources()
                 delete (**itr).m_pHandle->GetInputStream();
             delete (**itr).m_pHandle;
         }
-        (**itr).m_pHandle = 0;
+        (**itr).m_pHandle = nullptr;
     }
 
     for (std::vector<CRequiredHandler *>::iterator itr = m_vRequireds.begin(); itr != m_vRequireds.end(); ++itr)
     {
         if ((**itr).m_pHandle)
             delete (**itr).m_pHandle;
-        (**itr).m_pHandle = 0;
+        (**itr).m_pHandle = nullptr;
     }
 
     for (std::vector<CUcsHandler *>::iterator itr = m_vLocaleTexts.begin(); itr != m_vLocaleTexts.end(); ++itr)
@@ -483,7 +483,7 @@ void CModuleFile::_CleanResources()
                     delete (**itr2).m_pHandle->GetInputStream();
                 delete (**itr2).m_pHandle;
             }
-            (**itr2).m_pHandle = 0;
+            (**itr2).m_pHandle = nullptr;
         }
     }
 
@@ -501,15 +501,15 @@ void CModuleFile::LoadSgaAsMod(const char *sFileName, CALLBACK_ARG)
 
     m_bIsFauxModule = true;
 
-    if (m_pFSS == 0)
+    if (m_pFSS == nullptr)
         m_pFSS = new CFileSystemStore;
-    if (m_pNewFileMap == 0)
+    if (m_pNewFileMap == nullptr)
         m_pNewFileMap = new CFileMap;
 
     { // Set m_sApplicationPath and m_sFilename from sFileName
         m_sApplicationPath = CHECK_MEM(strdup(sFileName));
         char *sSlashLocation = strrchr(m_sApplicationPath, '\\');
-        if (sSlashLocation == 0)
+        if (sSlashLocation == nullptr)
             sSlashLocation = strrchr(m_sApplicationPath, '/');
         ++sSlashLocation;
         m_sFilename = CHECK_MEM(strdup(sSlashLocation));
@@ -548,7 +548,7 @@ void CModuleFile::LoadModuleFile(const char *sFileName, CALLBACK_ARG)
     // Set m_sApplicationPath and m_sFilename from sFileName
     m_sApplicationPath = CHECK_MEM(strdup(sFileName));
     char *sSlashLocation = strrchr(m_sApplicationPath, '\\');
-    if (sSlashLocation == 0)
+    if (sSlashLocation == nullptr)
         sSlashLocation = strrchr(m_sApplicationPath, '/');
     ++sSlashLocation;
     m_sFilename = CHECK_MEM(strdup(sSlashLocation));
@@ -643,8 +643,8 @@ char *CModuleFile::_DawnOfWarRemoveDynamics(const char *sStr, const char *sAlsoA
 
     size_t iNewLength = strlen(sStr) + (strlen(m_sLocale) * iLocaleCount) + (sAlsoAppend ? strlen(sAlsoAppend) : 0) + 1;
     char *sNewString = new char[iNewLength];
-    if (sNewString == 0)
-        return 0;
+    if (sNewString == nullptr)
+        return nullptr;
     char *sNewPosition = sNewString;
 
     while (*sStr)
@@ -730,7 +730,7 @@ const wchar_t *CModuleFile::ResolveUCS(const wchar_t *sDollarString)
         throw new CRainmanException(__FILE__, __LINE__, "sDollarString must be a dollar string");
     try
     {
-        return ResolveUCS(wcstoul(sDollarString + 1, 0, 10));
+        return ResolveUCS(wcstoul(sDollarString + 1, nullptr, 10));
     }
     CATCH_THROW("Cannot resolve value as integer")
 }
@@ -757,7 +757,7 @@ const wchar_t *CModuleFile::ResolveUCS(unsigned long iStringID)
             return t;
     }
 
-    return 0;
+    return nullptr;
 }
 
 size_t CModuleFile::GetUcsCount() const { return m_vLocaleTexts.size(); }
@@ -765,7 +765,7 @@ size_t CModuleFile::GetUcsCount() const { return m_vLocaleTexts.size(); }
 CModuleFile::CUcsHandler *CModuleFile::GetUcs(size_t iId)
 {
     if (iId < 0 || iId >= GetUcsCount())
-        throw new CRainmanException(0, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
                                     (unsigned long)GetUcsCount());
     return m_vLocaleTexts[iId];
 }
@@ -773,7 +773,7 @@ CModuleFile::CUcsHandler *CModuleFile::GetUcs(size_t iId)
 const CModuleFile::CUcsHandler *CModuleFile::GetUcs(size_t iId) const
 {
     if (iId < 0 || iId >= GetUcsCount())
-        throw new CRainmanException(0, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
                                     (unsigned long)GetUcsCount());
     return m_vLocaleTexts[iId];
 }
@@ -781,7 +781,7 @@ const CModuleFile::CUcsHandler *CModuleFile::GetUcs(size_t iId) const
 void CModuleFile::DeleteUcs(size_t iId)
 {
     if (iId < 0 || iId >= GetUcsCount())
-        throw new CRainmanException(0, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
                                     (unsigned long)GetUcsCount());
     m_vLocaleTexts.erase(m_vLocaleTexts.begin() + iId);
 }
@@ -791,7 +791,7 @@ size_t CModuleFile::GetRequiredCount() const { return m_vRequireds.size(); }
 CModuleFile::CRequiredHandler *CModuleFile::GetRequired(size_t iId)
 {
     if (iId < 0 || iId >= GetRequiredCount())
-        throw new CRainmanException(0, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
                                     (unsigned long)GetRequiredCount());
     return m_vRequireds[iId];
 }
@@ -799,7 +799,7 @@ CModuleFile::CRequiredHandler *CModuleFile::GetRequired(size_t iId)
 const CModuleFile::CRequiredHandler *CModuleFile::GetRequired(size_t iId) const
 {
     if (iId < 0 || iId >= GetRequiredCount())
-        throw new CRainmanException(0, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
                                     (unsigned long)GetRequiredCount());
     return m_vRequireds[iId];
 }
@@ -809,7 +809,7 @@ size_t CModuleFile::GetFolderCount() { return m_vFolders.size(); }
 CModuleFile::CFolderHandler *CModuleFile::GetFolder(size_t iId)
 {
     if (iId < 0 || iId >= GetFolderCount())
-        throw new CRainmanException(0, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
                                     (unsigned long)GetFolderCount());
     return m_vFolders[iId];
 }
@@ -819,7 +819,7 @@ size_t CModuleFile::GetArchiveCount() { return m_vArchives.size(); }
 CModuleFile::CArchiveHandler *CModuleFile::GetArchive(size_t iId)
 {
     if (iId < 0 || iId >= GetArchiveCount())
-        throw new CRainmanException(0, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
                                     (unsigned long)GetArchiveCount());
     return m_vArchives[iId];
 }
@@ -827,7 +827,7 @@ CModuleFile::CArchiveHandler *CModuleFile::GetArchive(size_t iId)
 size_t CModuleFile::GetArchiveFullPath(size_t iId, char *sOutput)
 {
     if (iId < 0 || iId >= GetArchiveCount())
-        throw new CRainmanException(0, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
                                     (unsigned long)GetArchiveCount());
     CModuleFile::CArchiveHandler *pHandler = m_vArchives[iId];
 
@@ -866,7 +866,7 @@ size_t CModuleFile::GetCompatibleCount() { return m_vCompatibles.size(); }
 CModuleFile::CCompatibleHandler *CModuleFile::GetCompatible(size_t iId)
 {
     if (iId < 0 || iId >= GetCompatibleCount())
-        throw new CRainmanException(0, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
                                     (unsigned long)GetCompatibleCount());
     return m_vCompatibles[iId];
 }
@@ -876,7 +876,7 @@ size_t CModuleFile::GetDataSourceCount() { return m_vDataSources.size(); }
 CModuleFile::CCohDataSource *CModuleFile::GetDataSource(size_t iId)
 {
     if (iId < 0 || iId >= GetDataSourceCount())
-        throw new CRainmanException(0, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
                                     (unsigned long)GetDataSourceCount());
     return m_vDataSources[iId];
 }
@@ -886,7 +886,7 @@ size_t CModuleFile::CCohDataSource::GetArchiveCount() { return m_vArchives.size(
 CModuleFile::CArchiveHandler *CModuleFile::CCohDataSource::GetArchive(size_t iId)
 {
     if (iId < 0 || iId >= GetArchiveCount())
-        throw new CRainmanException(0, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
                                     (unsigned long)GetArchiveCount());
     return m_vArchives[iId];
 }

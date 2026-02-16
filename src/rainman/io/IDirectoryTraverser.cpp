@@ -31,12 +31,12 @@ IDirectoryTraverser::IIterator::~IIterator(void) {}
 
 void *IDirectoryTraverser::IIterator::VGetTag(long iTag)
 {
-    throw new CRainmanException(0, __FILE__, __LINE__, "Unknown tag %li", iTag);
+    throw new CRainmanException(nullptr, __FILE__, __LINE__, "Unknown tag %li", iTag);
 }
 
 bool IDirectoryTraverser::VDirectoryExists(const char *sPath)
 {
-    IIterator *pItr = 0;
+    IIterator *pItr = nullptr;
     try
     {
         pItr = VIterate(sPath);

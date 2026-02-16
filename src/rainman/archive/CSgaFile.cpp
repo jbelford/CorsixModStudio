@@ -40,19 +40,19 @@ CSgaFile::CSgaFile(void)
         no memory is accidently freed.
     */
     memset(&m_SgaHeader, 0, sizeof(_SgaFileHeader));
-    m_pDataHeaderInfo = 0;
+    m_pDataHeaderInfo = nullptr;
 
-    m_pSgaToCs = 0;
-    m_pSgaDirs = 0;
-    m_pSgaDirExts = 0;
-    m_pSgaDirHashMap = 0;
-    m_pSgaFiles = 0;
-    m_pSga4Files = 0;
-    m_pSgaFileExts = 0;
-    m_pFileStoreInputStream = 0;
+    m_pSgaToCs = nullptr;
+    m_pSgaDirs = nullptr;
+    m_pSgaDirExts = nullptr;
+    m_pSgaDirHashMap = nullptr;
+    m_pSgaFiles = nullptr;
+    m_pSga4Files = nullptr;
+    m_pSgaFileExts = nullptr;
+    m_pFileStoreInputStream = nullptr;
     m_oSgaWriteTime = GetInvalidWriteTime();
 
-    m_pFileStoreInputStream = 0;
+    m_pFileStoreInputStream = nullptr;
 }
 
 CSgaFile::~CSgaFile(void) { _Clean(); }
@@ -79,8 +79,8 @@ static char *mystrdup(const char *sStr)
         (and thus "delete" instead of "free")
     */
     char *s = new char[strlen(sStr) + 1];
-    if (s == 0)
-        return 0;
+    if (s == nullptr)
+        return nullptr;
     strcpy(s, sStr);
     return s;
 }
@@ -125,7 +125,7 @@ void CSgaFile::Load(IFileStore::IStream *pStream, tLastWriteTime oWriteTime)
     RAINMAN_LOG_INFO("CSgaFile::Load() — loading SGA archive");
     _Clean(); // Reset the class to a blank state
 
-    if (pStream == 0)
+    if (pStream == nullptr)
         QUICK_THROW("No stream");
     m_oSgaWriteTime = oWriteTime;
 
@@ -135,7 +135,7 @@ void CSgaFile::Load(IFileStore::IStream *pStream, tLastWriteTime oWriteTime)
         file full of random data.
     */
     m_SgaHeader.sIdentifier = new char[9];
-    if (m_SgaHeader.sIdentifier == 0)
+    if (m_SgaHeader.sIdentifier == nullptr)
     {
         _Clean();
         QUICK_THROW("Failed to allocate memory");
@@ -150,7 +150,7 @@ void CSgaFile::Load(IFileStore::IStream *pStream, tLastWriteTime oWriteTime)
     if (strcmp(m_SgaHeader.sIdentifier, "_ARCHIVE") != 0)
     {
         _Clean();
-        throw new CRainmanException(0, __FILE__, __LINE__, "File identifier is \"%s\", should be \"_ARCHIVE\"",
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "File identifier is \"%s\", should be \"_ARCHIVE\"",
                                     m_SgaHeader.sIdentifier);
     }
 
@@ -167,12 +167,12 @@ void CSgaFile::Load(IFileStore::IStream *pStream, tLastWriteTime oWriteTime)
             An early version of CoH or DoW:DC may have used version 3 - only Relic knows :/
         */
         _Clean();
-        throw new CRainmanException(0, __FILE__, __LINE__, "Version %lu is not supported (only 2 and 4 are)",
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Version %lu is not supported (only 2 and 4 are)",
                                     m_SgaHeader.iVersion);
     }
 
     m_SgaHeader.iToolMD5 = new long[4];
-    if (m_SgaHeader.iToolMD5 == 0)
+    if (m_SgaHeader.iToolMD5 == nullptr)
     {
         _Clean();
         QUICK_THROW("Failed to allocate memory")
@@ -185,7 +185,7 @@ void CSgaFile::Load(IFileStore::IStream *pStream, tLastWriteTime oWriteTime)
     QCCT("Failed to read from stream")
 
     m_SgaHeader.sArchiveType = new wchar_t[65];
-    if (m_SgaHeader.sArchiveType == 0)
+    if (m_SgaHeader.sArchiveType == nullptr)
     {
         _Clean();
         QUICK_THROW("Failed to allocate memory")
@@ -199,7 +199,7 @@ void CSgaFile::Load(IFileStore::IStream *pStream, tLastWriteTime oWriteTime)
     QCCT("Failed to read from stream")
 
     m_SgaHeader.iMD5 = new long[4];
-    if (m_SgaHeader.iMD5 == 0)
+    if (m_SgaHeader.iMD5 == nullptr)
     {
         _Clean();
         QUICK_THROW("Failed to allocate memory")
@@ -226,7 +226,7 @@ void CSgaFile::Load(IFileStore::IStream *pStream, tLastWriteTime oWriteTime)
         */
         _Clean();
         throw new CRainmanException(
-            0, __FILE__, __LINE__,
+            nullptr, __FILE__, __LINE__,
             "Platform #%lu is not supported (only platform #1 is supported, so please show this to programmers)",
             m_SgaHeader.iPlatform);
     }
@@ -238,10 +238,10 @@ void CSgaFile::Load(IFileStore::IStream *pStream, tLastWriteTime oWriteTime)
         as a pointer can simply be set to the location in memory.
     */
     unsigned char *pDataHeader = new unsigned char[m_SgaHeader.iDataHeaderSize];
-    if (pDataHeader == 0)
+    if (pDataHeader == nullptr)
     {
         _Clean();
-        throw new CRainmanException(0, __FILE__, __LINE__, "Cannot allocate %lu bytes for data header",
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Cannot allocate %lu bytes for data header",
                                     m_SgaHeader.iDataHeaderSize);
     }
 
@@ -302,14 +302,14 @@ void CSgaFile::Load(IFileStore::IStream *pStream, tLastWriteTime oWriteTime)
     }
 
     m_pSgaDirHashMap = new _SgaDirHash[m_pDataHeaderInfo->iDirCount];
-    if (m_pSgaDirHashMap == 0)
+    if (m_pSgaDirHashMap == nullptr)
     {
         _Clean();
         QUICK_THROW("Failed to allocate memory")
     }
 
     m_pSgaDirExts = new _SgaDirInfoExt[m_pDataHeaderInfo->iDirCount];
-    if (m_pSgaDirExts == 0)
+    if (m_pSgaDirExts == nullptr)
     {
         _Clean();
         QUICK_THROW("Failed to allocate memory")
@@ -317,12 +317,12 @@ void CSgaFile::Load(IFileStore::IStream *pStream, tLastWriteTime oWriteTime)
     for (unsigned short i = 0; i < m_pDataHeaderInfo->iDirCount; ++i)
     {
         m_pSgaDirExts[i].iParent = -1;
-        m_pSgaDirExts[i].sName = 0;
-        m_pSgaDirExts[i].sShortName = 0;
+        m_pSgaDirExts[i].sName = nullptr;
+        m_pSgaDirExts[i].sShortName = nullptr;
     }
 
     m_pSgaFileExts = new _SgaFileInfoExt[m_pDataHeaderInfo->iFileCount];
-    if (m_pSgaFileExts == 0)
+    if (m_pSgaFileExts == nullptr)
     {
         _Clean();
         QUICK_THROW("Failed to allocate memory")
@@ -330,7 +330,7 @@ void CSgaFile::Load(IFileStore::IStream *pStream, tLastWriteTime oWriteTime)
     for (unsigned short i = 0; i < m_pDataHeaderInfo->iFileCount; ++i)
     {
         m_pSgaFileExts[i].iParent = -1;
-        m_pSgaFileExts[i].sName = 0;
+        m_pSgaFileExts[i].sName = nullptr;
     }
 
     /*
@@ -457,17 +457,17 @@ void CSgaFile::_Clean()
     if (m_SgaHeader.iMD5)
         delete[] m_SgaHeader.iMD5;
 
-    m_SgaHeader.sIdentifier = 0;
+    m_SgaHeader.sIdentifier = nullptr;
     m_SgaHeader.iVersion = 0;
-    m_SgaHeader.iToolMD5 = 0;
-    m_SgaHeader.sArchiveType = 0;
-    m_SgaHeader.iMD5 = 0;
+    m_SgaHeader.iToolMD5 = nullptr;
+    m_SgaHeader.sArchiveType = nullptr;
+    m_SgaHeader.iMD5 = nullptr;
     m_SgaHeader.iDataHeaderSize = 0;
     m_SgaHeader.iDataOffset = 0;
     m_SgaHeader.iPlatform = 0;
 
     m_oSgaWriteTime = GetInvalidWriteTime();
-    m_pFileStoreInputStream = 0;
+    m_pFileStoreInputStream = nullptr;
 
     // Data header
     if (m_pSgaDirHashMap)
@@ -479,14 +479,14 @@ void CSgaFile::_Clean()
     if (m_pDataHeaderInfo)
         delete[] (unsigned char *)m_pDataHeaderInfo;
 
-    m_pDataHeaderInfo = 0;
-    m_pSgaToCs = 0;
-    m_pSgaDirs = 0;
-    m_pSgaDirExts = 0;
-    m_pSgaDirHashMap = 0;
-    m_pSgaFiles = 0;
-    m_pSga4Files = 0;
-    m_pSgaFileExts = 0;
+    m_pDataHeaderInfo = nullptr;
+    m_pSgaToCs = nullptr;
+    m_pSgaDirs = nullptr;
+    m_pSgaDirExts = nullptr;
+    m_pSgaDirHashMap = nullptr;
+    m_pSgaFiles = nullptr;
+    m_pSga4Files = nullptr;
+    m_pSgaFileExts = nullptr;
 }
 
 void CSgaFile::VInit(void *pInitData)
@@ -500,11 +500,11 @@ void CSgaFile::VInit(void *pInitData)
 
 IFileStore::IStream *CSgaFile::VOpenStream(const char *sIdentifier)
 {
-    if (sIdentifier == 0)
+    if (sIdentifier == nullptr)
         throw new CRainmanException(__FILE__, __LINE__, "Identifier required");
-    if (m_pFileStoreInputStream == 0)
+    if (m_pFileStoreInputStream == nullptr)
         throw new CRainmanException(__FILE__, __LINE__, "Input stream must have been set in VInit");
-    if (m_pDataHeaderInfo == 0)
+    if (m_pDataHeaderInfo == nullptr)
         throw new CRainmanException(__FILE__, __LINE__, "No data header loaded");
 
     size_t iDirNameLength = 0;
@@ -516,8 +516,8 @@ IFileStore::IStream *CSgaFile::VOpenStream(const char *sIdentifier)
         Doesn't use a binary chop as there is usually only one ToC
     */
     const char *sTmp = strchr(sIdentifier, '\\');
-    if (sTmp == 0)
-        throw new CRainmanException(0, __FILE__, __LINE__, "ToC could not be seperated - %s", sIdentifier);
+    if (sTmp == nullptr)
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "ToC could not be seperated - %s", sIdentifier);
     long iToCLength = (long)(sTmp - sIdentifier);
     long iToC = -1;
     if (iToCLength == 4 && m_SgaHeader.iVersion == 4)
@@ -540,7 +540,7 @@ IFileStore::IStream *CSgaFile::VOpenStream(const char *sIdentifier)
             }
         }
         if (iToC == -1)
-            throw new CRainmanException(0, __FILE__, __LINE__, "ToC could not be found - %s", sIdentifier);
+            throw new CRainmanException(nullptr, __FILE__, __LINE__, "ToC could not be found - %s", sIdentifier);
     }
     sIdentifier += (iToCLength + 1);
     const char *sFileNameBegin = strrchr(sIdentifier, '\\');
@@ -582,7 +582,7 @@ IFileStore::IStream *CSgaFile::VOpenStream(const char *sIdentifier)
         }
         if (iDirID == -1)
         {
-            throw new CRainmanException(0, __FILE__, __LINE__, "Directory could not be found - %s", sIdentifier);
+            throw new CRainmanException(nullptr, __FILE__, __LINE__, "Directory could not be found - %s", sIdentifier);
         }
     }
     else
@@ -625,7 +625,7 @@ IFileStore::IStream *CSgaFile::VOpenStream(const char *sIdentifier)
         }
     }
 
-    throw new CRainmanException(0, __FILE__, __LINE__, "File could not be found - %s", sIdentifier);
+    throw new CRainmanException(nullptr, __FILE__, __LINE__, "File could not be found - %s", sIdentifier);
 gotfile:
 
     /*
@@ -684,11 +684,11 @@ gotfile:
     if (iDataLengthCompressed != iDataLength)
     {
         char *pDecompressedData = new char[iDataLength];
-        if (pDecompressedData == 0)
+        if (pDecompressedData == nullptr)
         {
             delete[] pData;
-            throw new CRainmanException(0, __FILE__, __LINE__, "Cannot allocate %lu bytes for decompressed \'%s\'",
-                                        iDataLength, sIdentifier);
+            throw new CRainmanException(nullptr, __FILE__, __LINE__,
+                                        "Cannot allocate %lu bytes for decompressed \'%s\'", iDataLength, sIdentifier);
         }
 
         unsigned long iTmp = iDataLength;
@@ -696,7 +696,7 @@ gotfile:
         {
             delete[] pData;
             delete[] pDecompressedData;
-            throw new CRainmanException(0, __FILE__, __LINE__, "Cannot decompress \'%s\'", sIdentifier);
+            throw new CRainmanException(nullptr, __FILE__, __LINE__, "Cannot decompress \'%s\'", sIdentifier);
         }
 
         delete[] pData;
@@ -710,7 +710,7 @@ gotfile:
 
     std::unique_ptr<CStream> pOutStream(new CStream());
     pOutStream->m_pData = pData;
-    pOutStream->m_pRawStream = 0;
+    pOutStream->m_pRawStream = nullptr;
 
     try
     {
@@ -781,7 +781,7 @@ IDirectoryTraverser::IIterator *CSgaFile::VIterate(const char *sPath)
     sTmp = strchr(sPath, '\\');
     iPartLength = (sTmp ? (unsigned long)(sTmp - sPath) : (unsigned long)strlen(sPath));
     if (iPartLength == 0)
-        return 0;
+        return nullptr;
     for (unsigned short i = 0; i < m_pDataHeaderInfo->iToCCount; ++i)
     {
         /*
@@ -795,7 +795,7 @@ IDirectoryTraverser::IIterator *CSgaFile::VIterate(const char *sPath)
         }
     }
     if (iToC == -1)
-        throw new CRainmanException(0, __FILE__, __LINE__, "Cannot iterate \'%s\' - ToC not found", sPath);
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Cannot iterate \'%s\' - ToC not found", sPath);
 
     sPath += iPartLength + (sTmp ? 1 : 0);
     sTmp = strchr(sPath, '\\');
@@ -821,7 +821,7 @@ IDirectoryTraverser::IIterator *CSgaFile::VIterate(const char *sPath)
             }
         }
         if (iSubDir == -1)
-            throw new CRainmanException(0, __FILE__, __LINE__, "Cannot iterate \'%s\' - cannot find \'%s\'",
+            throw new CRainmanException(nullptr, __FILE__, __LINE__, "Cannot iterate \'%s\' - cannot find \'%s\'",
                                         sPathRemember, sPath);
         iDir = iSubDir;
 
@@ -852,7 +852,7 @@ const char *CSgaFile::VGetEntryPoint(unsigned long iID)
     if (!m_pDataHeaderInfo)
         throw new CRainmanException(__FILE__, __LINE__, "No data header present");
     if (iID < 0 || iID >= (unsigned long)m_pDataHeaderInfo->iToCCount)
-        throw new CRainmanException(0, __FILE__, __LINE__, "ID %lu is outside of range 0 -> %lu", iID,
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0 -> %lu", iID,
                                     m_pDataHeaderInfo->iToCCount);
     return m_pSgaToCs[iID].sAlias;
 }
@@ -861,8 +861,8 @@ CSgaFile::CIterator::CIterator(long iDir, CSgaFile *pSga)
 {
     m_iParentDirectory = iDir;
     m_pSga = pSga;
-    m_sParentPath = 0;
-    m_sFullPath = 0;
+    m_sParentPath = nullptr;
+    m_sFullPath = nullptr;
 
     if (m_iParentDirectory < 0)
     {
@@ -893,7 +893,7 @@ CSgaFile::CIterator::CIterator(long iDir, CSgaFile *pSga)
         }
     }
     if (iToC == -1)
-        throw new CRainmanException(0, __FILE__, __LINE__, "Directory %li does not fit into any ToC", iDir);
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Directory %li does not fit into any ToC", iDir);
 
     m_sParentPath = CHECK_MEM(
         new char[strlen(m_pSga->m_pSgaToCs[iToC].sAlias) + 4 + strlen(m_pSga->m_pSgaDirExts[iDir].sName) + 3]);
@@ -916,10 +916,10 @@ CSgaFile::CIterator::CIterator(long iDir, CSgaFile *pSga)
     if (m_iTraversingWhat == 0)
     {
         m_sFullPath = new char[strlen(m_sParentPath) + strlen(m_pSga->m_pSgaDirExts[m_iCurrentItem].sShortName) + 1];
-        if (m_sFullPath == 0)
+        if (m_sFullPath == nullptr)
         {
             delete[] m_sParentPath;
-            m_sParentPath = 0;
+            m_sParentPath = nullptr;
             throw new CRainmanException(__FILE__, __LINE__, "Memory allocate error");
         }
         strcpy(m_sFullPath, m_sParentPath);
@@ -928,10 +928,10 @@ CSgaFile::CIterator::CIterator(long iDir, CSgaFile *pSga)
     else if (m_iTraversingWhat == 1)
     {
         m_sFullPath = new char[strlen(m_sParentPath) + strlen(m_pSga->m_pSgaFileExts[m_iCurrentItem].sName) + 1];
-        if (m_sFullPath == 0)
+        if (m_sFullPath == nullptr)
         {
             delete[] m_sParentPath;
-            m_sParentPath = 0;
+            m_sParentPath = nullptr;
             throw new CRainmanException(__FILE__, __LINE__, "Memory allocate error");
         }
         strcpy(m_sFullPath, m_sParentPath);
@@ -1055,7 +1055,7 @@ work_out_name:
     if (m_iTraversingWhat == 0)
     {
         delete[] m_sFullPath;
-        m_sFullPath = 0;
+        m_sFullPath = nullptr;
         m_sFullPath =
             CHECK_MEM(new char[strlen(m_sParentPath) + strlen(m_pSga->m_pSgaDirExts[m_iCurrentItem].sShortName) + 1]);
         strcpy(m_sFullPath, m_sParentPath);
@@ -1065,7 +1065,7 @@ work_out_name:
     else
     {
         delete[] m_sFullPath;
-        m_sFullPath = 0;
+        m_sFullPath = nullptr;
         m_sFullPath =
             CHECK_MEM(new char[strlen(m_sParentPath) + strlen(m_pSga->m_pSgaFileExts[m_iCurrentItem].sName) + 1]);
         strcpy(m_sFullPath, m_sParentPath);

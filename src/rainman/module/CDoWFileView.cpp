@@ -41,7 +41,7 @@ CDoWFileView::_VirtFile *CDoWFileView::_FindFile(const char *sPath, CDoWFileView
     unsigned long iPartLength;
     const char *sSlashLoc = strchr(sPath, '\\');
     if (ipFolder)
-        *ipFolder = 0;
+        *ipFolder = nullptr;
 
     size_t iBSL, iBSH, iBSM;
     // Identify Correct Folder
@@ -80,7 +80,7 @@ CDoWFileView::_VirtFile *CDoWFileView::_FindFile(const char *sPath, CDoWFileView
             }
         }
         if (!bFound)
-            throw new CRainmanException(0, __FILE__, __LINE__, "Could not find \'%s\'", sPath);
+            throw new CRainmanException(nullptr, __FILE__, __LINE__, "Could not find \'%s\'", sPath);
 
         sPath += iPartLength + (sSlashLoc ? 1 : 0);
         sSlashLoc = strchr(sPath, '\\');
@@ -130,7 +130,7 @@ CDoWFileView::_VirtFile *CDoWFileView::_FindFile(const char *sPath, CDoWFileView
         }
     }
     */
-    throw new CRainmanException(0, __FILE__, __LINE__, "Could not find \'%s\'", sPath);
+    throw new CRainmanException(nullptr, __FILE__, __LINE__, "Could not find \'%s\'", sPath);
 }
 
 void CDoWFileView::VCreateFolderIn(const char *sPath, const char *sNewFolderName)
@@ -180,7 +180,7 @@ void CDoWFileView::_EnsureOutputFolder(_VirtFolder *pFolder, unsigned long *pSou
         pFolder->mapSourceFolderNames[*pSourceID] = sNewName;
         return;
     }
-    throw new CRainmanException(0, __FILE__, __LINE__, "Cannot ensure output folder (%s)", pFolder->sFullName);
+    throw new CRainmanException(nullptr, __FILE__, __LINE__, "Cannot ensure output folder (%s)", pFolder->sFullName);
 }
 
 IFileStore::IOutputStream *CDoWFileView::VOpenOutputStream(const char *sFile, bool bEraseIfPresent)
@@ -194,8 +194,8 @@ IFileStore::IOutputStream *CDoWFileView::VOpenOutputStream(const char *sFile, bo
     catch (CRainmanException *pE)
     {
         auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
-        pFile = 0;
-        if (pFolder == 0)
+        pFile = nullptr;
+        if (pFolder == nullptr)
         {
             throw new CRainmanException(guard.release(), __FILE__, __LINE__, "Failed to file \'%s\'", sFile);
         }
@@ -206,7 +206,7 @@ IFileStore::IOutputStream *CDoWFileView::VOpenOutputStream(const char *sFile, bo
         if (m_vSourceFlags[pFile->iSourceID].first || m_vSourceFlags[pFile->iSourceID].second)
         {
             char *sStoragePath = new char[strlen(sFile) + 2 + strlen(pFolder->mapSourceFolderNames[pFile->iSourceID])];
-            if (sStoragePath == 0)
+            if (sStoragePath == nullptr)
                 throw new CRainmanException(__FILE__, __LINE__, "Cannot allocate memory");
             strcpy(sStoragePath, pFolder->mapSourceFolderNames[pFile->iSourceID]);
             if (*sStoragePath && sStoragePath[strlen(sStoragePath) - 1] != '\\')
@@ -244,7 +244,8 @@ IFileStore::IOutputStream *CDoWFileView::VOpenOutputStream(const char *sFile, bo
         }
         if (!(!pFile || (iSource < pFile->iSourceID)))
         {
-            throw new CRainmanException(0, __FILE__, __LINE__, "Problem ensuring output folder for \'%s\'", sFile);
+            throw new CRainmanException(nullptr, __FILE__, __LINE__, "Problem ensuring output folder for \'%s\'",
+                                        sFile);
         }
         if (!pFile)
         {
@@ -258,7 +259,7 @@ IFileStore::IOutputStream *CDoWFileView::VOpenOutputStream(const char *sFile, bo
         pFile->iSourceID = iSource;
         pFile->iModID = iSource; // it's the same :)
         char *sStoragePath = new char[strlen(sFile) + 2 + strlen(pFolder->mapSourceFolderNames[pFile->iSourceID])];
-        if (sStoragePath == 0)
+        if (sStoragePath == nullptr)
             throw new CRainmanException(__FILE__, __LINE__, "Failed to allocate memory");
         strcpy(sStoragePath, pFolder->mapSourceFolderNames[pFile->iSourceID]);
         if (*sStoragePath && sStoragePath[strlen(sStoragePath) - 1] != '\\')
@@ -278,7 +279,7 @@ IFileStore::IOutputStream *CDoWFileView::VOpenOutputStream(const char *sFile, bo
             throw new CRainmanException(pE, __FILE__, __LINE__, "Failed to open source store for \'%s\'", sFile);
         }
     }
-    throw new CRainmanException(0, __FILE__, __LINE__, "Failed to open \'%s\'", sFile);
+    throw new CRainmanException(nullptr, __FILE__, __LINE__, "Failed to open \'%s\'", sFile);
 }
 
 IFileStore::IStream *CDoWFileView::VOpenStream(const char *sPath)
@@ -295,7 +296,7 @@ IFileStore::IStream *CDoWFileView::VOpenStream(const char *sPath)
     }
     sPath = pFile->sName;
     char *sStoragePath = new char[strlen(sPath) + 2 + strlen(pFolder->mapSourceFolderNames[pFile->iSourceID])];
-    if (sStoragePath == 0)
+    if (sStoragePath == nullptr)
         throw new CRainmanException(__FILE__, __LINE__, "Failed to allocate memory");
     strcpy(sStoragePath, pFolder->mapSourceFolderNames[pFile->iSourceID]);
     if (*sStoragePath && sStoragePath[strlen(sStoragePath) - 1] != '\\')
@@ -317,7 +318,7 @@ IFileStore::IStream *CDoWFileView::VOpenStream(const char *sPath)
 CDoWFileView::CIterator::CIterator(_VirtFolder *pFolder, CDoWFileView *pStore)
 {
     m_sParentPath = pFolder->sFullName;
-    m_sFullPath = 0;
+    m_sFullPath = nullptr;
     m_pStore = pStore;
     m_pDirectory = pFolder;
     m_FoldIter = pFolder->vChildFolders.begin();
@@ -333,7 +334,7 @@ CDoWFileView::CIterator::CIterator(_VirtFolder *pFolder, CDoWFileView *pStore)
         else
         {
             m_sFullPath = new char[strlen(m_sParentPath) + 2 + strlen((**m_FileIter).sName)];
-            if (m_sFullPath == 0)
+            if (m_sFullPath == nullptr)
             {
                 m_iWhat = 0;
                 throw new CRainmanException(__FILE__, __LINE__, "Memory allocation error");
@@ -347,7 +348,7 @@ CDoWFileView::CIterator::CIterator(_VirtFolder *pFolder, CDoWFileView *pStore)
     else
     {
         m_sFullPath = new char[strlen(m_sParentPath) + 2 + strlen((**m_FoldIter).sName)];
-        if (m_sFullPath == 0)
+        if (m_sFullPath == nullptr)
         {
             m_iWhat = 0;
             throw new CRainmanException(__FILE__, __LINE__, "Memory allocation error");
@@ -379,12 +380,12 @@ IDirectoryTraverser::IIterator *CDoWFileView::CIterator::VOpenSubDir()
     if (m_iWhat != 1)
         throw new CRainmanException(__FILE__, __LINE__, "Can only open directories");
     CIterator *pItr = new CIterator(*m_FoldIter, m_pStore);
-    if (pItr == 0)
+    if (pItr == nullptr)
         throw new CRainmanException(__FILE__, __LINE__, "Memory allocate error");
     if (pItr && pItr->m_iWhat == 0)
     {
         delete pItr;
-        pItr = 0;
+        pItr = nullptr;
     }
     return pItr;
 }
@@ -431,7 +432,7 @@ tLastWriteTime CDoWFileView::VGetLastWriteTime(const char *sPath)
 
     sPath = pFile->sName;
     char *sStoragePath = new char[strlen(sPath) + 2 + strlen(pFolder->mapSourceFolderNames[pFile->iSourceID])];
-    if (sStoragePath == 0)
+    if (sStoragePath == nullptr)
         throw new CRainmanException(__FILE__, __LINE__, "Failed to allocate memory");
     strcpy(sStoragePath, pFolder->mapSourceFolderNames[pFile->iSourceID]);
     if (*sStoragePath && sStoragePath[strlen(sStoragePath) - 1] != '\\')
@@ -462,7 +463,7 @@ tLastWriteTime CDoWFileView::CIterator::VGetLastWriteTime()
 
         const char *sPath = pFile->sName;
         char *sStoragePath = new char[strlen(sPath) + 2 + strlen(m_pDirectory->mapSourceFolderNames[pFile->iSourceID])];
-        if (sStoragePath == 0)
+        if (sStoragePath == nullptr)
             throw new CRainmanException(__FILE__, __LINE__, "Failed to allocate memory");
         strcpy(sStoragePath, m_pDirectory->mapSourceFolderNames[pFile->iSourceID]);
         if (*sStoragePath && sStoragePath[strlen(sStoragePath) - 1] != '\\')
@@ -506,7 +507,7 @@ IDirectoryTraverser::IIterator::eErrors CDoWFileView::CIterator::VNextItem()
             if (m_sFullPath)
                 delete[] m_sFullPath;
             m_sFullPath = new char[strlen(m_sParentPath) + 2 + strlen((**m_FoldIter).sName)];
-            if (m_sFullPath == 0)
+            if (m_sFullPath == nullptr)
             {
                 m_iWhat = 0;
                 throw new CRainmanException(__FILE__, __LINE__, "Failed to allocate memory");
@@ -530,7 +531,7 @@ IDirectoryTraverser::IIterator::eErrors CDoWFileView::CIterator::VNextItem()
             if (m_sFullPath)
                 delete[] m_sFullPath;
             m_sFullPath = new char[strlen(m_sParentPath) + 2 + strlen((**m_FileIter).sName)];
-            if (m_sFullPath == 0)
+            if (m_sFullPath == nullptr)
             {
                 m_iWhat = 0;
                 throw new CRainmanException(__FILE__, __LINE__, "Failed to allocate memory");
@@ -582,7 +583,7 @@ IDirectoryTraverser::IIterator *CDoWFileView::VIterate(const char *sPath)
             }
         }
         if (!bFound)
-            throw new CRainmanException(0, __FILE__, __LINE__, "Could not find \'%s\'", sPath);
+            throw new CRainmanException(nullptr, __FILE__, __LINE__, "Could not find \'%s\'", sPath);
 
         sPath += iPartLength + (sSlashLoc ? 1 : 0);
         sSlashLoc = strchr(sPath, '\\');
@@ -593,7 +594,7 @@ IDirectoryTraverser::IIterator *CDoWFileView::VIterate(const char *sPath)
     if (pItr && pItr->VGetType() == IDirectoryTraverser::IIterator::T_Nothing)
     {
         delete pItr;
-        pItr = 0;
+        pItr = nullptr;
     }
     return pItr;
 }
@@ -606,9 +607,9 @@ void CDoWFileView::AddFileSource(IDirectoryTraverser *pTrav, IDirectoryTraverser
                                  IFileStore *pIOStore, const char *sMod, const char *sSourceType, bool bIsReqMod,
                                  bool bCanWrite, bool bIsOutput)
 {
-    if (pDirectory == 0)
+    if (pDirectory == nullptr)
         throw new CRainmanException(__FILE__, __LINE__, "Null pDirectory");
-    if (pIOStore == 0)
+    if (pIOStore == nullptr)
         throw new CRainmanException(__FILE__, __LINE__, "Null pIOStore");
 
     unsigned long iModID = static_cast<unsigned long>(m_vModNames.size());
@@ -632,8 +633,8 @@ void CDoWFileView::AddFileSource(IDirectoryTraverser *pTrav, IDirectoryTraverser
 
 CDoWFileView::_VirtFile::_VirtFile()
 {
-    sName = 0;
-    pParent = 0;
+    sName = nullptr;
+    pParent = nullptr;
     bInReqMod = false;
     bGotWriteTime = false;
     oWriteTime = GetInvalidWriteTime();
@@ -641,9 +642,9 @@ CDoWFileView::_VirtFile::_VirtFile()
 
 CDoWFileView::_VirtFolder::_VirtFolder()
 {
-    sName = 0;
-    sFullName = 0;
-    pParent = 0;
+    sName = nullptr;
+    sFullName = nullptr;
+    pParent = nullptr;
 }
 
 void CDoWFileView::_Clean()
@@ -706,10 +707,10 @@ void CDoWFileView::_RawMapFolder(unsigned long iModID, unsigned long iSourceID,
                                  IDirectoryTraverser::IIterator *pSourceDirectory, _VirtFolder *pDestination,
                                  bool bIsReqMod)
 {
-    if (pSourceDirectory == 0)
+    if (pSourceDirectory == nullptr)
         throw new CRainmanException(__FILE__, __LINE__, "No source directory");
 
-    if (pDestination->mapSourceFolderNames[iSourceID] == 0)
+    if (pDestination->mapSourceFolderNames[iSourceID] == nullptr)
     {
         pDestination->mapSourceFolderNames[iSourceID] = strdup(pSourceDirectory->VGetDirectoryPath());
     }
@@ -718,7 +719,7 @@ void CDoWFileView::_RawMapFolder(unsigned long iModID, unsigned long iSourceID,
     {
         if (pSourceDirectory->VGetType() == IDirectoryTraverser::IIterator::T_File)
         {
-            _VirtFile *pOldFile = 0;
+            _VirtFile *pOldFile = nullptr;
             for (std::vector<_VirtFile *>::iterator itr = pDestination->vChildFiles.begin();
                  !pOldFile && itr != pDestination->vChildFiles.end(); ++itr)
             {
@@ -731,7 +732,7 @@ void CDoWFileView::_RawMapFolder(unsigned long iModID, unsigned long iSourceID,
             if (!pOldFile)
             {
                 _VirtFile *pNewFile = new _VirtFile;
-                if (pNewFile == 0)
+                if (pNewFile == nullptr)
                     throw new CRainmanException(__FILE__, __LINE__, "Memory allocation error");
                 if (pNewFile->bInReqMod = bIsReqMod)
                 {
@@ -754,7 +755,7 @@ void CDoWFileView::_RawMapFolder(unsigned long iModID, unsigned long iSourceID,
         }
         else
         {
-            _VirtFolder *pTarget = 0;
+            _VirtFolder *pTarget = nullptr;
             for (std::vector<_VirtFolder *>::iterator itr = pDestination->vChildFolders.begin();
                  !pTarget && itr != pDestination->vChildFolders.end(); ++itr)
             {
@@ -764,12 +765,12 @@ void CDoWFileView::_RawMapFolder(unsigned long iModID, unsigned long iSourceID,
             if (!pTarget)
             {
                 _VirtFolder *pNewFolder = new _VirtFolder;
-                if (pNewFolder == 0)
+                if (pNewFolder == nullptr)
                     throw new CRainmanException(__FILE__, __LINE__, "Memory allocation error");
                 pNewFolder->pParent = pDestination;
                 pNewFolder->sName = strdup(pSourceDirectory->VGetName());
                 pNewFolder->sFullName = new char[strlen(pNewFolder->sName) + strlen(pDestination->sFullName) + 2];
-                if (pNewFolder->sFullName == 0)
+                if (pNewFolder->sFullName == nullptr)
                     throw new CRainmanException(__FILE__, __LINE__, "Memory allocation error");
                 strcpy(pNewFolder->sFullName, pDestination->sFullName);
                 if (*pNewFolder->sFullName)

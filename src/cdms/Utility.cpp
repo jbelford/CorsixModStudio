@@ -82,7 +82,7 @@ bool _ErrorBox(wxString sError, const char *sFile, long iLine, bool bUnhandled, 
     int iAnswer = wxOK;
     if (bUnhandled)
     {
-        ::MessageBox(0, sErr.c_str(), _T("Error"), MB_ICONERROR);
+        ::MessageBox(nullptr, sErr.c_str(), _T("Error"), MB_ICONERROR);
     }
     else
     {
@@ -126,7 +126,7 @@ bool _ErrorBox(CRainmanException *pE, const char *sFile, long iLine, bool bUnhan
     int iAnswer = wxOK;
     if (bUnhandled)
     {
-        ::MessageBox(0, sError.c_str(), _T("Error"), MB_ICONERROR);
+        ::MessageBox(nullptr, sError.c_str(), _T("Error"), MB_ICONERROR);
     }
     else
     {

@@ -32,7 +32,7 @@ frmTabDialog::frmTabDialog(const wxString &sTitle)
     CentreOnParent();
     wxBoxSizer *pTopSizer = new wxBoxSizer(wxVERTICAL);
 
-    m_pTabs = 0;
+    m_pTabs = nullptr;
 
     pTopSizer->Add(
         m_pTabs = new wxAuiNotebook(

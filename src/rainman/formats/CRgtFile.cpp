@@ -37,7 +37,7 @@ static void SquishDecompress(unsigned char *rgba, int width, int height, void *b
 
 CRgtFile::CRgtFile()
 {
-    m_pChunky = 0;
+    m_pChunky = nullptr;
     m_eFormat = IF_None;
 
     m_iWidth = 0;
@@ -48,7 +48,7 @@ CRgtFile::CRgtFile()
     m_iMipCurrent = 0;
     m_iDxtCompression = 0;
 
-    m_pData = 0;
+    m_pData = nullptr;
 
     m_fnCompress = SquishCompress;
     m_fnDecompress = SquishDecompress;
@@ -408,7 +408,7 @@ unsigned char *CRgtFile::DownsizeData(unsigned char *pRGBAData, unsigned long &i
         iWidth -= 1, iRowSkip = 4;
 
     if ((iWidth * iHeight) < 4)
-        return 0;
+        return nullptr;
 
     unsigned char *pMippedData = new unsigned char[iWidth * iHeight], *pMipOut, *pInA, *pInB;
     pMipOut = pMippedData;
@@ -441,7 +441,7 @@ void CRgtFile::_MakeTgaImagMips(CChunkyFile::CChunk *pTXTR, unsigned long iWidth
                                 unsigned char *pRGBAData)
 {
     pRGBAData = DownsizeData(pRGBAData, iWidth, iHeight);
-    if (pRGBAData == 0)
+    if (pRGBAData == nullptr)
         return;
 
     CChunkyFile::CChunk *pIMAG = pTXTR->InsertBefore(2, "IMAG", CChunkyFile::CChunk::T_Folder);
@@ -494,20 +494,20 @@ void CRgtFile::LoadDDS(IFileStore::IStream *pFile)
     if (strncmp(sDDS_Magic, "DDS ", 4) != 0)
     {
         _Clean();
-        throw new CRainmanException(0, __FILE__, __LINE__, "Not a valid DDS file (\"%.4s\")", sDDS_Magic);
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Not a valid DDS file (\"%.4s\")", sDDS_Magic);
     }
     pFile->VRead(1, sizeof(uint32_t), &iDDS_HeaderLen);
     if (iDDS_HeaderLen != 124)
     {
         _Clean();
-        throw new CRainmanException(0, __FILE__, __LINE__, "Not a valid DDS file (L %lu)", iDDS_HeaderLen);
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Not a valid DDS file (L %lu)", iDDS_HeaderLen);
     }
     pFile->VRead(1, sizeof(uint32_t), &iDDS_Flags);
     if (((iDDS_Flags & 1) == 0) || ((iDDS_Flags & 2) == 0) || ((iDDS_Flags & 4) == 0))
     {
         _Clean();
         throw new CRainmanException(
-            0, __FILE__, __LINE__,
+            nullptr, __FILE__, __LINE__,
             "Unsupported DDS File; flags must contain at least DDSD_CAPS, DDSD_WIDTH and DDSD_HEIGHT (%lu)",
             iDDS_Flags);
     }
@@ -528,15 +528,16 @@ void CRgtFile::LoadDDS(IFileStore::IStream *pFile)
     if (iDDSPF_Size != 32)
     {
         _Clean();
-        throw new CRainmanException(0, __FILE__, __LINE__, "Pixel format invalid; length is %lu", iDDSPF_Size);
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Pixel format invalid; length is %lu", iDDSPF_Size);
     }
 
     pFile->VRead(1, sizeof(uint32_t), &iDDSPF_Flags);
     if (((iDDSPF_Flags & 4) == 0))
     {
         _Clean();
-        throw new CRainmanException(
-            0, __FILE__, __LINE__, "Pixel format invalid; flags (%lu) must contain at least DDPF_FOURCC", iDDSPF_Flags);
+        throw new CRainmanException(nullptr, __FILE__, __LINE__,
+                                    "Pixel format invalid; flags (%lu) must contain at least DDPF_FOURCC",
+                                    iDDSPF_Flags);
     }
 
     pFile->VRead(4, 1, sDDSPF_FourCC);
@@ -548,7 +549,7 @@ void CRgtFile::LoadDDS(IFileStore::IStream *pFile)
     else
     {
         _Clean();
-        throw new CRainmanException(0, __FILE__, __LINE__,
+        throw new CRainmanException(nullptr, __FILE__, __LINE__,
                                     "Only DXT1,3,5 images are supported. Use TGA for raw RGBA data.");
     }
     pFile->VSeek(
@@ -560,7 +561,7 @@ void CRgtFile::LoadDDS(IFileStore::IStream *pFile)
     if ((iDDSC_Caps1 & 0x1000) == 0)
     {
         _Clean();
-        throw new CRainmanException(0, __FILE__, __LINE__,
+        throw new CRainmanException(nullptr, __FILE__, __LINE__,
                                     "DDS Caps invalid; Cap1 (%lu) must contain at least DDSCAPS_TEXTURE", iDDSC_Caps1);
     }
     pFile->VRead(1, sizeof(uint32_t), &iDDSC_Caps2);
@@ -703,7 +704,7 @@ void CRgtFile::SaveDDS(IFileStore::IOutputStream *pFile, int iCompression, bool 
     }
     if (m_iDxtCompression != iCompression || bMipLevels)
     {
-        if (m_fnDecompress == 0 || m_fnCompress == 0)
+        if (m_fnDecompress == nullptr || m_fnCompress == nullptr)
         {
             throw new CRainmanException(__FILE__, __LINE__,
                                         "DXTC compressor and decompressor functions required for operation");
@@ -737,7 +738,7 @@ void CRgtFile::SaveDDS(IFileStore::IOutputStream *pFile, int iCompression, bool 
     _Save_Dxtc_Header(pFile, (unsigned short)iW, (unsigned short)iH, iCompression, iPrimarySize, iMipCount);
 
     // Primary surface
-    unsigned char *pRGBATop = 0;
+    unsigned char *pRGBATop = nullptr;
 
     if (m_iDxtCompression != iCompression || bMipLevels)
     {
@@ -796,7 +797,7 @@ void CRgtFile::SaveDDS(IFileStore::IOutputStream *pFile, int iCompression, bool 
         {
             unsigned char *pReduced = DownsizeData(pRGBATop, iW, iH);
             delete[] pRGBATop;
-            if ((pRGBATop = pReduced) == 0)
+            if ((pRGBATop = pReduced) == nullptr)
                 break;
             iPrimarySize = ((iW + 3) / 4) * ((iH + 3) / 4);
             if (iCompression == 1)
@@ -920,7 +921,7 @@ void CRgtFile::SaveTGA(IFileStore::IOutputStream *pFile, bool bIncludeAlpha)
     }
 
     // DXTC format
-    if (m_fnDecompress == 0)
+    if (m_fnDecompress == nullptr)
     {
         throw new CRainmanException(__FILE__, __LINE__, "DXTC data requires a decompressor function");
     }
@@ -1175,7 +1176,7 @@ void CRgtFile::_Clean()
 {
     if (m_pChunky)
         delete m_pChunky;
-    m_pChunky = 0;
+    m_pChunky = nullptr;
 
     m_eFormat = IF_None;
 

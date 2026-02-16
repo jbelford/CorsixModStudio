@@ -143,10 +143,10 @@ void frmUCSToDAT::OnGoClick(wxCommandEvent &event)
 
 UCSToDATConvertor::UCSToDATConvertor()
 {
-    m_sOutputName = 0;
+    m_sOutputName = nullptr;
     m_iRangeStart = 0;
     m_iRangeEnd = 0;
-    m_pModule = 0;
+    m_pModule = nullptr;
 }
 
 UCSToDATConvertor::~UCSToDATConvertor() { delete[] m_sOutputName; }
@@ -154,7 +154,7 @@ UCSToDATConvertor::~UCSToDATConvertor() { delete[] m_sOutputName; }
 void UCSToDATConvertor::setOutputFilename(const char *sFilename)
 {
     delete[] m_sOutputName;
-    m_sOutputName = 0;
+    m_sOutputName = nullptr;
     size_t iLength = strlen(CHECK_STR(sFilename)) + 1;
     m_sOutputName = CHECK_MEM(new char[iLength]);
     memcpy(m_sOutputName, sFilename, iLength);
@@ -163,7 +163,7 @@ void UCSToDATConvertor::setOutputFilename(const char *sFilename)
 void UCSToDATConvertor::setRange(unsigned long iStart, unsigned long iEnd)
 {
     if (iEnd < iStart)
-        throw new CModStudioException(0, __FILE__, __LINE__, "Range %lu -> %lu is invalid", iStart, iEnd);
+        throw new CModStudioException(nullptr, __FILE__, __LINE__, "Range %lu -> %lu is invalid", iStart, iEnd);
     m_iRangeStart = iStart;
     m_iRangeEnd = iEnd;
 }
@@ -223,7 +223,7 @@ static void AddUcsFilesToVector(const CModuleFile *pModule, std::vector<const CU
 
 void UCSToDATConvertor::doConvertion()
 {
-    if (m_sOutputName == 0 || m_pModule == 0)
+    if (m_sOutputName == nullptr || m_pModule == nullptr)
         QUICK_THROW("Convertion parameters not set");
 
     std::vector<const CUcsFile *> vFiles;
@@ -245,11 +245,11 @@ void UCSToDATConvertor::doConvertion()
     }
 
     m_fDAT = fopen(m_sOutputName, "wt");
-    if (m_fDAT == 0)
+    if (m_fDAT == nullptr)
     {
         delete[] m_aUCSFiles;
         delete[] m_aUCSFileEnds;
-        throw new CModStudioException(0, __FILE__, __LINE__, "Cannot open output file \'%s\'", m_sOutputName);
+        throw new CModStudioException(nullptr, __FILE__, __LINE__, "Cannot open output file \'%s\'", m_sOutputName);
     }
 
     fprintf(m_fDAT, "/////////////////////////////////////////////////////////////////////\n");

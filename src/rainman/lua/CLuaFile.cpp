@@ -48,7 +48,7 @@ extern "C"
 
 struct tLuaTableProtector
 {
-    void Init(lua_State *L, int iT, bool bOwn, tLuaTableProtector *parent = 0)
+    void Init(lua_State *L, int iT, bool bOwn, tLuaTableProtector *parent = nullptr)
     {
         iMagic = 0x7291BEEF;
         lua_pushvalue(L, iT);
@@ -118,7 +118,7 @@ struct tLuaTableProtector
                     lua_pushlightuserdata(L, (void *)pExisting);
                     lua_gettable(L, LUA_REGISTRYINDEX); // swap {w -1} with {t}
                     tLuaTableProtector *pWrap = (tLuaTableProtector *)lua_newuserdata(L, sizeof(tLuaTableProtector));
-                    pWrap->Init(L, -2, false, 0);
+                    pWrap->Init(L, -2, false, nullptr);
                     lua_remove(L, -2); // remove {v} so that {w -1}
                 }
                 else
@@ -178,11 +178,11 @@ struct tLuaTableProtector
 
 CLuaFile::CLuaFile(void)
 {
-    m_pLua = 0;
-    m_sLuaError = 0;
-    m_pRefQueue = 0;
-    m_pCache = 0;
-    m_pDowModStudio = 0;
+    m_pLua = nullptr;
+    m_sLuaError = nullptr;
+    m_pRefQueue = nullptr;
+    m_pCache = nullptr;
+    m_pDowModStudio = nullptr;
     m_bOwnCache = true;
     _Clean();
 }
@@ -338,7 +338,7 @@ int CLuaFile::_Inherit(lua_State *L)
         catch (CRainmanException *pE)
         {
             delete[] sFullPathFile;
-            sFullPathFile = 0;
+            sFullPathFile = nullptr;
             lua_pushlightuserdata(
                 L, new CRainmanException(pE, __FILE__, __LINE__, "unable to open file `%s' in `_Inherit'", sFile));
             lua_error(L);
@@ -488,7 +488,7 @@ int CLuaFile::_InheritMeta(lua_State *L)
         catch (CRainmanException *pE)
         {
             delete[] sFullPathFile;
-            sFullPathFile = 0;
+            sFullPathFile = nullptr;
             lua_pushlightuserdata(
                 L, new CRainmanException(pE, __FILE__, __LINE__, "unable to open file `%s' in `_InheritMeta'", sFile));
             lua_error(L);
@@ -648,7 +648,7 @@ int CLuaFile::_Reference(lua_State *L)
         catch (CRainmanException *pE)
         {
             delete[] sFullPathFile;
-            sFullPathFile = 0;
+            sFullPathFile = nullptr;
             lua_pushlightuserdata(
                 L, new CRainmanException(pE, __FILE__, __LINE__, "unable to open file `%s' in `_Reference'", sFile));
             lua_error(L);
@@ -863,12 +863,12 @@ char *CLuaFile::GetReferencedFile(IFileStore::IStream *pStream)
             char *sLuaError = strdup(lua_tostring(m_pLua, -1));
             _Clean();
             m_sLuaError = sLuaError;
-            throw new CRainmanException(0, __FILE__, __LINE__, "Lua error (%i): %s", iLuaError, sLuaError);
+            throw new CRainmanException(nullptr, __FILE__, __LINE__, "Lua error (%i): %s", iLuaError, sLuaError);
         }
         case LUA_TLIGHTUSERDATA:
         {
             char *sLuaError = (char *)lua_touserdata(m_pLua, -1);
-            if (sLuaError == 0)
+            if (sLuaError == nullptr)
                 throw new CRainmanException(__FILE__, __LINE__, "Unable to attain Reference");
             _Clean();
             return sLuaError;
@@ -878,7 +878,7 @@ char *CLuaFile::GetReferencedFile(IFileStore::IStream *pStream)
             char *sLuaError = strdup("Unknown error");
             _Clean();
             m_sLuaError = sLuaError;
-            throw new CRainmanException(0, __FILE__, __LINE__, "Lua unknown error (%i)", iLuaError);
+            throw new CRainmanException(nullptr, __FILE__, __LINE__, "Lua unknown error (%i)", iLuaError);
         }
         };
     }
@@ -991,7 +991,7 @@ void CLuaFile::Load(IFileStore::IStream *pStream, IFileStore *pFiles, const char
             if (bOwnRefQueue)
                 delete m_pRefQueue;
             _Clean();
-            throw new CRainmanException(0, __FILE__, __LINE__, "Circular reference detected (%s)", sFileName);
+            throw new CRainmanException(nullptr, __FILE__, __LINE__, "Circular reference detected (%s)", sFileName);
         }
     }
     m_pRefQueue->push_back(sFileName);
@@ -1020,7 +1020,7 @@ void CLuaFile::Load(IFileStore::IStream *pStream, IFileStore *pFiles, const char
             char *sLuaError = strdup(lua_tostring(m_pLua, -1));
             _Clean();
             m_sLuaError = sLuaError;
-            throw new CRainmanException(0, __FILE__, __LINE__, "Lua error (%i): %s", iLuaError, sLuaError);
+            throw new CRainmanException(nullptr, __FILE__, __LINE__, "Lua error (%i): %s", iLuaError, sLuaError);
         }
         case LUA_TLIGHTUSERDATA:
         {
@@ -1035,7 +1035,7 @@ void CLuaFile::Load(IFileStore::IStream *pStream, IFileStore *pFiles, const char
             char *sLuaError = strdup("Unknown error");
             _Clean();
             m_sLuaError = sLuaError;
-            throw new CRainmanException(0, __FILE__, __LINE__, "Lua unknown error (%i)", iLuaError);
+            throw new CRainmanException(nullptr, __FILE__, __LINE__, "Lua unknown error (%i)", iLuaError);
         }
         };
     }
@@ -1045,7 +1045,7 @@ void CLuaFile::Load(IFileStore::IStream *pStream, IFileStore *pFiles, const char
     lua_gettable(m_pLua, LUA_GLOBALSINDEX);
     try
     {
-        _TableToNodeList(m_lstGlobals, m_pLua, 0, true);
+        _TableToNodeList(m_lstGlobals, m_pLua, nullptr, true);
     }
     catch (CRainmanException *pE)
     {
@@ -1070,16 +1070,16 @@ void CLuaFile::_Clean()
         if (m_bOwnCache) // Yah, unowned caches are persistant through death
         {
             delete m_pCache;
-            m_pCache = 0;
+            m_pCache = nullptr;
         }
     }
 
-    m_pLua = 0;
+    m_pLua = nullptr;
 
     if (m_sLuaError)
     {
         free(m_sLuaError);
-        m_sLuaError = 0;
+        m_sLuaError = nullptr;
     }
 
     for (_NodeList::iterator itr = m_lstGlobals.begin(); itr != m_lstGlobals.end(); ++itr)
@@ -1093,7 +1093,7 @@ void CLuaFile::_Clean()
         if (m_pDowModStudio->eNameType == _NodeLocator::NT_String)
             free(m_pDowModStudio->sName);
         delete m_pDowModStudio;
-        m_pDowModStudio = 0;
+        m_pDowModStudio = nullptr;
     }
     m_lstGlobals.clear();
 }
@@ -1120,7 +1120,7 @@ unsigned long CLuaFile::VGetChildCount() { return static_cast<unsigned long>(m_l
 IMetaNode *CLuaFile::VGetChild(unsigned long iIndex)
 {
     if (iIndex >= VGetChildCount())
-        throw new CRainmanException(0, __FILE__, __LINE__, "Index %lu is beyong %lu", iIndex, VGetChildCount());
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Index %lu is beyong %lu", iIndex, VGetChildCount());
     return new CLuaFile::CMetaNode(m_lstGlobals[iIndex], m_pLua);
 }
 
@@ -1167,7 +1167,7 @@ CLuaFile::_NodeLocator::_NodeLocator(const CLuaFile::_NodeLocator &Other)
 {
 }
 
-CLuaFile::_NodeLocator::_NodeLocator() : pParent(0), sName(0), eNameType(NT_String) {}
+CLuaFile::_NodeLocator::_NodeLocator() : pParent(nullptr), sName(nullptr), eNameType(NT_String) {}
 CLuaFile::_NodeLocator::_NodeLocator(lua_State *L, int iIndex,
                                      const _NodeLocator *pParent) // init from key in stack + parent
 {
@@ -1210,9 +1210,9 @@ CLuaFile::_NodeLocator::_NodeLocator(lua_State *L, int iIndex,
 // Stack required: 2 - no matter how deep (1 returned, 1 temp)
 void CLuaFile::_NodeLocator::GetValue(lua_State *L) const
 {
-    if (eNameType == NT_String && sName == 0)
+    if (eNameType == NT_String && sName == nullptr)
         throw new CRainmanException(__FILE__, __LINE__, "Blank name"); // Stack change: 0
-    if (L == 0)
+    if (L == nullptr)
         throw new CRainmanException(__FILE__, __LINE__, "No state"); // Stack change: 0
     if (pParent)
     {
@@ -1254,9 +1254,9 @@ void CLuaFile::_NodeLocator::GetValue(lua_State *L) const
 // Stack required: 2 - no matter how deep (0 returned, 2 temp)
 void CLuaFile::_NodeLocator::SetValue(lua_State *L) const
 {
-    if (eNameType == NT_String && sName == 0)
+    if (eNameType == NT_String && sName == nullptr)
         throw new CRainmanException(__FILE__, __LINE__, "Invalid name"); // Stack change: 0
-    if (L == 0)
+    if (L == nullptr)
         throw new CRainmanException(__FILE__, __LINE__, "No state"); // Stack change: 0
     if (lua_type(L, -1) == LUA_TNONE)
         throw new CRainmanException(__FILE__, __LINE__, "No value on stack"); // Stack change: 0
@@ -1323,11 +1323,11 @@ bool CLuaFile::_SortCMetaTableChildren(CLuaFile::_NodeLocator *p1, CLuaFile::_No
 
     if (p1->eNameType == CLuaFile::_NodeLocator::NT_String)
     {
-        if (p1->sName == 0 || p2->sName == 0)
+        if (p1->sName == nullptr || p2->sName == nullptr)
         {
-            if (p1->sName == 0 && p2->sName != 0)
+            if (p1->sName == nullptr && p2->sName != nullptr)
                 return true;
-            if (p2->sName == 0 && p1->sName != 0)
+            if (p2->sName == nullptr && p1->sName != nullptr)
                 return false;
             return false;
         }
@@ -1364,7 +1364,7 @@ bool CLuaFile::_SortCMetaTableChildren(CLuaFile::_NodeLocator *p1, CLuaFile::_No
 void CLuaFile::_TableToNodeList(CLuaFile::_NodeList &lstNodeList, lua_State *L, const CLuaFile::_NodeLocator *pParent,
                                 bool bSkip_G)
 {
-    if (L == 0)
+    if (L == nullptr)
         throw new CRainmanException(__FILE__, __LINE__, "No state");
     if (lua_isuserdata(L, -1))
     {
@@ -1395,7 +1395,7 @@ void CLuaFile::_TableToNodeList(CLuaFile::_NodeList &lstNodeList, lua_State *L, 
 }
 
 CLuaFile::CMetaNode::CMetaNode(const CLuaFile::_NodeLocator *pNode, lua_State *L)
-    : m_pNode(pNode), m_sName(0), m_bOwnName(false), m_pLua(L), m_sValue(0)
+    : m_pNode(pNode), m_sName(nullptr), m_bOwnName(false), m_pLua(L), m_sValue(nullptr)
 {
     switch (pNode->eNameType)
     {
@@ -1639,9 +1639,9 @@ void CLuaFile::CMetaNode::SGetNodeFromRainmanRgd(IFileStore::IStream *pInput, bo
 CLuaFile::CMetaTable::CMetaTable(lua_State *L)
 {
     m_pLua = L;
-    m_sRef = 0;
-    m_pDowModStudio = 0;
-    m_pRef = 0;
+    m_sRef = nullptr;
+    m_pDowModStudio = nullptr;
+    m_pRef = nullptr;
 }
 
 void CLuaFile::CMetaTable::_Init(const CLuaFile::_NodeLocator *pParent)
@@ -1703,24 +1703,24 @@ unsigned long CLuaFile::CMetaTable::VGetChildCount() { return static_cast<unsign
 IMetaNode *CLuaFile::CMetaTable::VGetChild(unsigned long iIndex)
 {
     if (iIndex >= VGetChildCount())
-        throw new CRainmanException(0, __FILE__, __LINE__, "Index %lu is beyond %lu", iIndex, VGetChildCount());
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Index %lu is beyond %lu", iIndex, VGetChildCount());
     return new CLuaFile::CMetaNode(m_vecChildren[iIndex], m_pLua);
 }
 
 IMetaNode::eDataTypes CLuaFile::CMetaTable::VGetReferenceType()
 {
-    if (m_pRef == 0)
+    if (m_pRef == nullptr)
         return CLuaFile::CMetaNode::DT_NoData;
-    if (m_pRef->sName == 0)
+    if (m_pRef->sName == nullptr)
         throw new CRainmanException(__FILE__, __LINE__, "Blank m_pRef name");
     return CLuaFile::CMetaNode::DT_String; // i set it; i know its a string
 }
 
 const char *CLuaFile::CMetaTable::VGetReferenceString()
 {
-    if (m_pRef == 0)
+    if (m_pRef == nullptr)
         throw new CRainmanException(__FILE__, __LINE__, "No m_pRef");
-    if (m_pRef->sName == 0)
+    if (m_pRef->sName == nullptr)
         throw new CRainmanException(__FILE__, __LINE__, "Blank m_pRef name");
     if (!m_sRef)
     {

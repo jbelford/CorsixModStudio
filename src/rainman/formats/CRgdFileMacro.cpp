@@ -11,12 +11,12 @@
 
 CRgdFileMacro::CRgdFileMacro()
 {
-    m_pL = 0;
-    m_pHashTableToUse = 0;
-    m_pCallbackTag = 0;
-    m_fpPrintCallback = 0;
-    m_fpOnSaveCallback = 0;
-    m_pUcsResolverModule = 0;
+    m_pL = nullptr;
+    m_pHashTableToUse = nullptr;
+    m_pCallbackTag = nullptr;
+    m_fpPrintCallback = nullptr;
+    m_fpOnSaveCallback = nullptr;
+    m_pUcsResolverModule = nullptr;
     m_bIsDowMod = true;
 }
 
@@ -27,7 +27,7 @@ void CRgdFileMacro::_cleanLua()
     if (m_pL)
     {
         lua51_close(m_pL);
-        m_pL = 0;
+        m_pL = nullptr;
     }
 }
 
@@ -37,13 +37,13 @@ void CRgdFileMacro::_tCRgdFile::construct(CRgdFileMacro *_pMacro, const char *_s
     pMacro = _pMacro;
     sFile = strdup(_sFile);
     pStore = _pStore;
-    pRgd = 0;
+    pRgd = nullptr;
 }
 
 int CRgdFileMacro::_tCRgdFile::luaf_save(lua_State *L)
 {
     _tCRgdFile *self = _fromLua<_tCRgdFile>(L, 1);
-    if (self == 0)
+    if (self == nullptr)
     {
         lua51_pushstring(L, LuaArgMsg("CRgdFile", "save", __LINE__));
         lua51_error(L);
@@ -55,13 +55,13 @@ int CRgdFileMacro::_tCRgdFile::luaf_save(lua_State *L)
 int CRgdFileMacro::_tCRgdFile::luaf_saveAs(lua_State *L)
 {
     _tCRgdFile *self = _fromLua<_tCRgdFile>(L, 1);
-    if (self == 0)
+    if (self == nullptr)
     {
         lua51_pushstring(L, LuaArgMsg("CRgdFile", "saveAs", __LINE__));
         lua51_error(L);
     }
 
-    if (self->pRgd == 0)
+    if (self->pRgd == nullptr)
     {
         try
         {
@@ -139,16 +139,16 @@ int CRgdFileMacro::_tCRgdFile::luaf_SET(lua_State *L)
 int CRgdFileMacro::_tCRgdFile::luaf_GET(lua_State *L)
 {
     _tCRgdFile *self = _fromLua<_tCRgdFile>(L, 1);
-    if (self == 0)
+    if (self == nullptr)
     {
         lua51_pushstring(L, LuaArgMsg("CRgdFile", "GET", __LINE__));
         lua51_error(L);
     }
 
-    if ((lua51_tostring(L, 2) == 0) || stricmp(lua51_tostring(L, 2), "GameData") != 0)
+    if ((lua51_tostring(L, 2) == nullptr) || stricmp(lua51_tostring(L, 2), "GameData") != 0)
         return 0;
 
-    if (self->pRgd == 0)
+    if (self->pRgd == nullptr)
     {
         try
         {
@@ -169,7 +169,7 @@ int CRgdFileMacro::_tCRgdFile::luaf_GET(lua_State *L)
     {
         if ((pCurrentEntry->Type != IMetaNode::DT_Table) && (pCurrentEntry->Type != CRgdFile::sk_TableInt))
             return 0;
-        if (pCurrentEntry->Data.t == 0)
+        if (pCurrentEntry->Data.t == nullptr)
             return 0;
 
         const char *sChildName = lua51_tostring(L, n);
@@ -215,14 +215,14 @@ int CRgdFileMacro::_tCRgdFile::luae_newindex(lua_State *L)
 int CRgdFileMacro::_tCRgdTable::luap_setself(lua_State *L)
 {
     _tCRgdTable *self = _fromLua<_tCRgdTable>(L, 1);
-    if (self == 0)
+    if (self == nullptr)
     {
         lua51_pushstring(L, LuaArgMsg("CRgdTable", "SET", __LINE__));
         lua51_error(L);
     }
     _lua_udat_to_table(L, 2);
     CRgdFile::_CleanRgdTable(self->pRgdData);
-    self->pRgdData->pExt = 0;
+    self->pRgdData->pExt = nullptr;
     self->pRgdData->Data.t = new std::vector<CRgdFile::_RgdEntry *>;
 
     lua51_pushstring(L, "children");
@@ -280,7 +280,7 @@ int CRgdFileMacro::_tCRgdFile::luae_gc(lua_State *L)
     }
     */
 
-    if (self == 0)
+    if (self == nullptr)
     {
         lua51_pushstring(L, LuaArgMsg("CRgdFile", "GameData", __LINE__));
         lua51_error(L);
@@ -303,7 +303,7 @@ int CRgdFileMacro::_tCRgdFile::luae_delayload(lua_State *L)
 {
     _tCRgdFile *pThis = _fromLuaLight<_tCRgdFile>(L, lua_upvalueindex(1));
 
-    if (pThis->pRgd == 0)
+    if (pThis->pRgd == nullptr)
     {
         try
         {
@@ -429,12 +429,12 @@ CRgdFileMacro::_tCRgdFile *CRgdFileMacro::_tCRgdFile::construct(lua_State *L, CR
     // Fill members
     {
         const char *sName = strrchr(_sFile, '\\');
-        if (sName == 0)
+        if (sName == nullptr)
             sName = _sFile;
         else
             ++sName;
         const char *sName2 = strrchr(_sFile, '/');
-        if (sName2 == 0)
+        if (sName2 == nullptr)
             sName2 = _sFile;
         else
             ++sName2;
@@ -551,7 +551,7 @@ void CRgdFileMacro::_tCRgdFile::_loadRgd()
     }
     catch (CRainmanException *pE)
     {
-        pRgd = 0;
+        pRgd = nullptr;
         throw pE;
     }
 
@@ -564,7 +564,7 @@ void CRgdFileMacro::_tCRgdFile::_loadRgd()
     catch (CRainmanException *pE)
     {
         delete pRgd;
-        pRgd = 0;
+        pRgd = nullptr;
         throw pE;
     }
 }
@@ -575,7 +575,7 @@ CRgdFile::_RgdEntry *CRgdFileMacro::_getRootEntry(CRgdFile *pFile) { return &(pF
 int CRgdFileMacro::_tCRgdTable::luaf_GET(lua_State *L)
 {
     _tCRgdTable *self = _fromLua<_tCRgdTable>(L, 1);
-    if (self == 0)
+    if (self == nullptr)
     {
         lua51_pushstring(L, LuaArgMsg("CRgdTable", "GET", __LINE__));
         lua51_error(L);
@@ -588,7 +588,7 @@ int CRgdFileMacro::_tCRgdTable::luaf_GET(lua_State *L)
     {
         if ((pCurrentEntry->Type != IMetaNode::DT_Table) && (pCurrentEntry->Type != CRgdFile::sk_TableInt))
             return 0;
-        if (pCurrentEntry->Data.t == 0)
+        if (pCurrentEntry->Data.t == nullptr)
             return 0;
 
         const char *sChildName = lua51_tostring(L, n);
@@ -633,7 +633,7 @@ int CRgdFileMacro::_tCRgdTable::luaf_SET(lua_State *L)
         if (iTop == 2)
         {
             _tCRgdTable *self = _fromLua<_tCRgdTable>(L, 1);
-            if (self != 0)
+            if (self != nullptr)
             {
                 return luap_setself(L);
             }
@@ -679,7 +679,7 @@ int CRgdFileMacro::_tCRgdTable::luae_newindex(lua_State *L)
         pNewChild->iHash = pUs->pParentFile->GetHashTable()->ValueToHash(lua51_tostring(L, 2)));
     pNewChild->Type = CRgdFile::DT_Bool;
     pNewChild->Data.b = false;
-    pNewChild->pExt = 0;
+    pNewChild->pExt = nullptr;
 
     return luae_setindex(L);
 }
@@ -693,7 +693,7 @@ int CRgdFileMacro::_tCRgdTable::luae_setindex(lua_State *L)
 {
     _tCRgdTable *self = _fromLua<_tCRgdTable>(L, 1);
 
-    CRgdFile::_RgdEntry *pUs = self->pRgdData, *pChild = 0;
+    CRgdFile::_RgdEntry *pUs = self->pRgdData, *pChild = nullptr;
 
     const char *sChildName = lua51_tostring(L, 2);
     unsigned long iChildHash = 0;
@@ -927,7 +927,7 @@ int CRgdFileMacro::_tCRgdTable::luae_delayload(lua_State *L)
         }
         else
         {
-            construct(L, 0, *itr); // T K V Tmeta ChildrenT RgdFileT key val
+            construct(L, nullptr, *itr); // T K V Tmeta ChildrenT RgdFileT key val
         }
         lua51_settable(L, -4); // T K V Tmeta ChildrenT RgdFileT
     }
@@ -1097,7 +1097,7 @@ CRgdFileMacro::_tCRgdTable *CRgdFileMacro::_tCRgdTable::construct(lua_State *L, 
             lua51_pushnil(L);
             break;
         }
-        return 0;
+        return nullptr;
     }
 }
 
@@ -1123,7 +1123,7 @@ int CRgdFileMacro::luaf_ucs(lua_State *L)
             if (pThis->m_pUcsResolverModule)
             {
                 const wchar_t *pValue = pThis->m_pUcsResolverModule->ResolveUCS(iN);
-                if (pValue == 0)
+                if (pValue == nullptr)
                 {
                     char sBuffer[256];
                     sprintf(sBuffer, "$%lu no key", iN);
@@ -1156,7 +1156,7 @@ int CRgdFileMacro::luaf_ucs(lua_State *L)
         if (pThis->m_pUcsResolverModule)
         {
             const wchar_t *pValue = pThis->m_pUcsResolverModule->ResolveUCS(iN);
-            if (pValue == 0)
+            if (pValue == nullptr)
             {
                 char sBuffer[256];
                 sprintf(sBuffer, "$%lu no key", iN);
@@ -1198,7 +1198,7 @@ int CRgdFileMacro::luaf_print(lua_State *L)
         lua51_pushvalue(L, i);  /* value to print */
         lua51_call(L, 1, 1);
         s = lua51_tostring(L, -1); /* get result */
-        if (s == NULL)
+        if (s == nullptr)
             return lua51L_error(L, "`tostring' must return a string to `print'");
         // pThis->_onPrint(s);
         lua51_replace(L, i); /* pop result */
@@ -1215,7 +1215,7 @@ void CRgdFileMacro::_lua_udat_to_table(lua_State *L, int i)
     if (lua51_type(L, i) == LUA_TUSERDATA)
     {
         _tUserData *p = (_tUserData *)lua51_touserdata(L, i);
-        if (p != 0 && (p->iMagic == _tCRgdFile::kMagic || p->iMagic == _tCRgdTable::kMagic))
+        if (p != nullptr && (p->iMagic == _tCRgdFile::kMagic || p->iMagic == _tCRgdTable::kMagic))
         {
             lua51_pushstring(L, "children");
             lua51_gettable(L, i);
@@ -1608,9 +1608,9 @@ void CRgdFileMacro::loadMacro(const char *sCode)
 
     int iLoadErr = lua51L_loadbuffer(m_pL, sCode, strlen(sCode), "macro");
     if (iLoadErr == LUA_ERRSYNTAX)
-        throw new CRainmanException(0, __FILE__, __LINE__, "Syntax error in macro: %s", lua51_tostring(m_pL, -1));
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Syntax error in macro: %s", lua51_tostring(m_pL, -1));
     if (iLoadErr == LUA_ERRMEM)
-        throw new CRainmanException(0, __FILE__, __LINE__, "Memory error in macro: %s", lua51_tostring(m_pL, -1));
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Memory error in macro: %s", lua51_tostring(m_pL, -1));
     iLoadErr = lua51_pcall(m_pL, 0, 0, 0);
     if (iLoadErr)
     {
@@ -1638,7 +1638,7 @@ void CRgdFileMacro::loadMacro(const char *sCode)
                 sErrM = "Unknown error loading macro : %s";
                 break;
             }
-            PAUSE_THROW(0, __FILE__, __LINE__, sErrM, lua51_tostring(m_pL, -1));
+            PAUSE_THROW(nullptr, __FILE__, __LINE__, sErrM, lua51_tostring(m_pL, -1));
             lua51_pop(m_pL, 1);
             UNPAUSE_THROW;
         }
@@ -1680,7 +1680,7 @@ int CRgdFileMacro::luaf_protect2(lua_State *L)
 
 void CRgdFileMacro::runAtEnd()
 {
-    if (m_pL == 0)
+    if (m_pL == nullptr)
         return;
     lua51_getglobal(m_pL, "at_end");
     if (lua51_type(m_pL, -1) == LUA_TNIL)
@@ -1716,7 +1716,7 @@ void CRgdFileMacro::runAtEnd()
                 sErrM = "Unknown error running end event : %s";
                 break;
             }
-            PAUSE_THROW(0, __FILE__, __LINE__, sErrM, lua51_tostring(m_pL, -1));
+            PAUSE_THROW(nullptr, __FILE__, __LINE__, sErrM, lua51_tostring(m_pL, -1));
             lua51_pop(m_pL, 1);
             UNPAUSE_THROW;
         }
@@ -1725,7 +1725,7 @@ void CRgdFileMacro::runAtEnd()
 
 void CRgdFileMacro::runMacro(const char *sFile, IFileStore *pStore)
 {
-    if (m_pL == 0)
+    if (m_pL == nullptr)
         return;
     lua51_getglobal(m_pL, "each_file");
     if (lua51_type(m_pL, -1) == LUA_TNIL)
@@ -1770,7 +1770,7 @@ void CRgdFileMacro::runMacro(const char *sFile, IFileStore *pStore)
                 sErrM = "Unknown error processing RGD \'%s\' : %s";
                 break;
             }
-            PAUSE_THROW(0, __FILE__, __LINE__, sErrM, sFile, lua51_tostring(m_pL, -1));
+            PAUSE_THROW(nullptr, __FILE__, __LINE__, sErrM, sFile, lua51_tostring(m_pL, -1));
             lua51_pop(m_pL, 1);
             UNPAUSE_THROW;
         }

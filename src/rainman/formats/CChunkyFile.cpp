@@ -120,7 +120,7 @@ void CChunkyFile::Load(IFileStore::IStream *pStream)
 
         if (strcmp(m_sHeader, "Relic Chunky\x0D\x0A\x1A") != 0)
         {
-            throw new CRainmanException(0, __FILE__, __LINE__, "Unrecognised header (%s)", m_sHeader);
+            throw new CRainmanException(nullptr, __FILE__, __LINE__, "Unrecognised header (%s)", m_sHeader);
         }
 
         pStream->Read(m_iVersion);
@@ -137,7 +137,7 @@ void CChunkyFile::Load(IFileStore::IStream *pStream)
         throw new CRainmanException(__FILE__, __LINE__, "Error reading from stream", pE);
     }
 
-    CChunk *pChunk = 0;
+    CChunk *pChunk = nullptr;
 
     try
     {
@@ -199,7 +199,7 @@ bool CChunkyFile::CChunk::_Load(IFileStore::IStream *pStream, long iChunkyVersio
     else if (strcmp(sType, "FOLD") == 0)
         m_eType = T_Folder;
     else
-        throw new CRainmanException(0, __FILE__, __LINE__, "Unrecognised chunk type \'%s\'", sType);
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Unrecognised chunk type \'%s\'", sType);
 
     unsigned long iDescriptorLength = 0;
     try
@@ -221,7 +221,7 @@ bool CChunkyFile::CChunk::_Load(IFileStore::IStream *pStream, long iChunkyVersio
 
     if (m_sDescriptor)
         delete[] m_sDescriptor;
-    m_sDescriptor = 0;
+    m_sDescriptor = nullptr;
     m_sDescriptor = CHECK_MEM(new char[iDescriptorLength + 1]);
     m_sDescriptor[iDescriptorLength] = 0;
 
@@ -280,7 +280,7 @@ bool CChunkyFile::CChunk::_Load(IFileStore::IStream *pStream, long iChunkyVersio
     {
         if (m_pData)
             delete[] m_pData;
-        m_pData = 0;
+        m_pData = nullptr;
         m_pData = CHECK_MEM(new char[m_iDataLength]);
         try
         {
@@ -314,7 +314,7 @@ unsigned long CChunkyFile::CChunk::_FoldUpdateSize()
     m_iDataLength = iDataLength;
 
     iDataLength += 8 + (5 * sizeof(uint32_t));
-    if (m_sDescriptor != 0 && strlen(m_sDescriptor))
+    if (m_sDescriptor != nullptr && strlen(m_sDescriptor))
         iDataLength += strlen(m_sDescriptor) + 1;
     return iDataLength;
 }
@@ -376,11 +376,11 @@ CChunkyFile::CChunk::CChunk()
     m_sName[2] = 'L';
     m_sName[3] = 'L';
     m_sName[4] = 0;
-    m_sDescriptor = 0;
+    m_sDescriptor = nullptr;
     m_iVersion = 0;
     m_iUnknown1 = 0;
     m_iUnknown2 = 0;
-    m_pData = 0;
+    m_pData = nullptr;
     m_iDataLength = 0;
 }
 
@@ -401,7 +401,7 @@ CChunkyFile::CChunk *CChunkyFile::GetChildByName(const char *sName, CChunkyFile:
         if ((**itr).m_eType == eType && strcmp(sName, (**itr).m_sName) == 0)
             return *itr;
     }
-    return 0;
+    return nullptr;
 }
 
 size_t CChunkyFile::CChunk::GetChildCount() const { return m_vChildren.size(); }
@@ -423,7 +423,7 @@ CChunkyFile::CChunk *CChunkyFile::CChunk::GetChildByName(const char *sName, CChu
         if ((**itr).m_eType == eType && strcmp(sName, (**itr).m_sName) == 0)
             return *itr;
     }
-    return 0;
+    return nullptr;
 }
 
 CMemoryStore::CStream *CChunkyFile::CChunk::GetData()

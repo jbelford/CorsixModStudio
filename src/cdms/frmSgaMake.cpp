@@ -56,7 +56,7 @@ frmSgaMake::frmSgaMake()
     CModuleFile *pMod = TheConstruct->GetModuleService().GetModule();
     for (size_t i = 0; i < pMod->GetArchiveCount(); ++i)
     {
-        char *sFullpath = new char[pMod->GetArchiveFullPath(i, NULL)];
+        char *sFullpath = new char[pMod->GetArchiveFullPath(i, nullptr)];
         pMod->GetArchiveFullPath(i, sFullpath);
         lstArchives.Add(AsciiTowxString(sFullpath));
         delete[] sFullpath;

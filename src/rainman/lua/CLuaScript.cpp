@@ -33,8 +33,8 @@ extern "C"
 
 CLuaScript::CLuaScript(void)
 {
-    m_pLua = 0;
-    m_sLuaError = 0;
+    m_pLua = nullptr;
+    m_sLuaError = nullptr;
 }
 
 CLuaScript::~CLuaScript(void) { _Clean(); }
@@ -54,7 +54,7 @@ void CLuaScript::Load(const char *sFile)
         char *sLuaError = strdup(lua_tostring(m_pLua, -1));
         _Clean();
         m_sLuaError = sLuaError;
-        throw new CRainmanException(0, __FILE__, __LINE__, "Lua error: %s", sLuaError);
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Lua error: %s", sLuaError);
     }
 
     // LuaBind_Globals(m_pLua);
@@ -87,7 +87,7 @@ void CLuaScript::Execute()
             char *sLuaError = strdup(lua_tostring(m_pLua, -1));
             _Clean();
             m_sLuaError = sLuaError;
-            throw new CRainmanException(0, __FILE__, __LINE__, "Lua error: %s", sLuaError);
+            throw new CRainmanException(nullptr, __FILE__, __LINE__, "Lua error: %s", sLuaError);
         }
         case LUA_TLIGHTUSERDATA:
         {
@@ -102,7 +102,7 @@ void CLuaScript::Execute()
             char *sLuaError = strdup("Unknown error");
             _Clean();
             m_sLuaError = sLuaError;
-            throw new CRainmanException(0, __FILE__, __LINE__, "Lua unknown error");
+            throw new CRainmanException(nullptr, __FILE__, __LINE__, "Lua unknown error");
         }
         };
     }
@@ -117,11 +117,11 @@ void CLuaScript::_Clean()
     if (m_sLuaError)
     {
         free(m_sLuaError);
-        m_sLuaError = 0;
+        m_sLuaError = nullptr;
     }
     if (m_pLua)
     {
         lua_close(m_pLua);
-        m_pLua = 0;
+        m_pLua = nullptr;
     }
 }

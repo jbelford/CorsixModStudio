@@ -49,7 +49,7 @@ frmWelcome::frmWelcome(wxWindow *parent, wxWindowID id, const wxPoint &pos, cons
     wxButton *pNewMod = new wxButton(this, IDC_NewMod, AppStr(new_mod), wxDefaultPosition, FromDIP(wxSize(150, -1)));
     SetBackgroundColour(pNewMod->GetBackgroundColour());
 
-    srand((unsigned)time(NULL));
+    srand((unsigned)time(nullptr));
     int iDonatePos = rand() % 9;
 
     int iShowDonate = 1;

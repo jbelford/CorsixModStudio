@@ -177,7 +177,7 @@ void CBfxFile::_SaveRaw(IFileStore::IOutputStream *pStream, _RgdEntry *pSource, 
         {
             _RgdEntry *p = vEntries[i];
             const char *sT = p->sName;
-            if (p->sName == 0)
+            if (p->sName == nullptr)
             {
                 bIsNumericT = false;
                 break;

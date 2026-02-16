@@ -35,20 +35,20 @@ void Util_strtolower(char *sStr)
 char *Util_fgetline(FILE *f, unsigned int iInitSize)
 {
     unsigned int iTotalLen;
-    if (f == 0)
-        return 0;
+    if (f == nullptr)
+        return nullptr;
     if (iInitSize < 4)
         iInitSize = 4;
     iTotalLen = iInitSize;
     char *sBuffer = new char[iInitSize];
-    if (sBuffer == 0)
-        return 0;
+    if (sBuffer == nullptr)
+        return nullptr;
     sBuffer[0] = '\0';
     char *sReadTo = sBuffer;
 
     do
     {
-        if (fgets(sReadTo, iInitSize, f) == 0)
+        if (fgets(sReadTo, iInitSize, f) == nullptr)
         {
             if (feof(f))
             {
@@ -58,7 +58,7 @@ char *Util_fgetline(FILE *f, unsigned int iInitSize)
                 return sBuffer;
             }
             delete[] sBuffer;
-            return 0;
+            return nullptr;
         }
         if (sReadTo[strlen(sReadTo) - 1] == '\n')
         {
@@ -67,10 +67,10 @@ char *Util_fgetline(FILE *f, unsigned int iInitSize)
         }
         iTotalLen += iInitSize;
         char *sTmp = new char[iTotalLen];
-        if (sTmp == 0)
+        if (sTmp == nullptr)
         {
             delete[] sBuffer;
-            return 0;
+            return nullptr;
         }
         strcpy(sTmp, sBuffer);
         delete[] sBuffer;
@@ -121,7 +121,7 @@ void Util_ForEach(IDirectoryTraverser::IIterator *pDirectory, Util_ForEachFuncti
                 }
                 else if (bRecursive)
                 {
-                    IDirectoryTraverser::IIterator *pSub = 0;
+                    IDirectoryTraverser::IIterator *pSub = nullptr;
                     try
                     {
                         pSub = pDirectory->VOpenSubDir();

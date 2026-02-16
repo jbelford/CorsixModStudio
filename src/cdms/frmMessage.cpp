@@ -30,8 +30,8 @@ frmMessage::frmMessage(const wxString &sImage, const wxString &sTitle)
               wxFRAME_FLOAT_ON_PARENT | wxFRAME_TOOL_WINDOW)
 {
     CentreOnParent();
-    m_pImage = 0;
-    m_pText = 0;
+    m_pImage = nullptr;
+    m_pText = nullptr;
 
     m_pImage = new wxBitmap(sImage, wxBITMAP_TYPE_BMP_RESOURCE);
     m_pText = new wxStaticText(this, -1, sTitle, FromDIP(wxPoint(0, 50)), FromDIP(wxSize(200, 82)),

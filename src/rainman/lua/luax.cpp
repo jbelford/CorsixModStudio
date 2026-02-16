@@ -30,188 +30,188 @@ extern "C"
 // Moves the GameData table to the top of the stack
 void luax_GetGameData(lua_State *L)
 {
-	if (L == 0)
-		throw new CRainmanException(__FILE__, __LINE__, "Invalid lua_State");
-	lua_pushstring(L, "GameData");
-	lua_gettable(L, LUA_GLOBALSINDEX);
-	if (!lua_istable(L, -1))
-	{
-		lua_pop(L, 1);
-		throw new CRainmanException(__FILE__, __LINE__, "GameData is not table.");
-	}
-	return;
+    if (L == nullptr)
+        throw new CRainmanException(__FILE__, __LINE__, "Invalid lua_State");
+    lua_pushstring(L, "GameData");
+    lua_gettable(L, LUA_GLOBALSINDEX);
+    if (!lua_istable(L, -1))
+    {
+        lua_pop(L, 1);
+        throw new CRainmanException(__FILE__, __LINE__, "GameData is not table.");
+    }
+    return;
 }
 
 // Moves the MetaData table to the top of the stack
 void luax_GetMetaData(lua_State *L)
 {
-	if (L == 0)
-		throw new CRainmanException(__FILE__, __LINE__, "Invalid lua_State");
-	lua_pushstring(L, "MetaData");
-	lua_gettable(L, LUA_GLOBALSINDEX);
-	if (!lua_istable(L, -1))
-	{
-		lua_pop(L, 1);
-		throw new CRainmanException(__FILE__, __LINE__, "MetaData is not table.");
-	}
-	return;
+    if (L == nullptr)
+        throw new CRainmanException(__FILE__, __LINE__, "Invalid lua_State");
+    lua_pushstring(L, "MetaData");
+    lua_gettable(L, LUA_GLOBALSINDEX);
+    if (!lua_istable(L, -1))
+    {
+        lua_pop(L, 1);
+        throw new CRainmanException(__FILE__, __LINE__, "MetaData is not table.");
+    }
+    return;
 }
 
 // Prints the _G table to file (doesn't print _G._G)
 void luax_PrintGlobals(lua_State *L, const char *sFile, unsigned long iLevel, bool bSkipG)
 {
-	FILE *f;
-	if (bSkipG)
-	{
-		lua_pushstring(L, "_G");
-		lua_gettable(L, LUA_GLOBALSINDEX);
-		f = fopen(sFile, "wb");
-	}
-	else
-	{
-		f = (FILE *)sFile;
-	}
+    FILE *f;
+    if (bSkipG)
+    {
+        lua_pushstring(L, "_G");
+        lua_gettable(L, LUA_GLOBALSINDEX);
+        f = fopen(sFile, "wb");
+    }
+    else
+    {
+        f = (FILE *)sFile;
+    }
 
-	lua_pushnil(L); // first key
-	while (lua_next(L, -2) != 0)
-	{
-		for (unsigned long i = 0; i < iLevel; ++i)
-			fputs("  ", f);
-		if (bSkipG && (lua_type(L, -2) == LUA_TSTRING) && (strcmp(lua_tostring(L, -2), "_G") == 0))
-		{
-		}
-		else
-		{
-			switch (lua_type(L, -2))
-			{
-			case LUA_TNONE:
-				fputs("(none)", f);
-				break;
+    lua_pushnil(L); // first key
+    while (lua_next(L, -2) != 0)
+    {
+        for (unsigned long i = 0; i < iLevel; ++i)
+            fputs("  ", f);
+        if (bSkipG && (lua_type(L, -2) == LUA_TSTRING) && (strcmp(lua_tostring(L, -2), "_G") == 0))
+        {
+        }
+        else
+        {
+            switch (lua_type(L, -2))
+            {
+            case LUA_TNONE:
+                fputs("(none)", f);
+                break;
 
-			case LUA_TNIL:
-				fputs("(nil)", f);
-				break;
+            case LUA_TNIL:
+                fputs("(nil)", f);
+                break;
 
-			case LUA_TBOOLEAN:
-				fputs(lua_toboolean(L, -2) ? "true" : "false", f);
-				break;
+            case LUA_TBOOLEAN:
+                fputs(lua_toboolean(L, -2) ? "true" : "false", f);
+                break;
 
-			case LUA_TLIGHTUSERDATA:
-				fputs("(light userdata)", f);
-				break;
+            case LUA_TLIGHTUSERDATA:
+                fputs("(light userdata)", f);
+                break;
 
-			case LUA_TNUMBER:
-				fprintf(f, "%.2f", lua_tonumber(L, -2));
-				break;
+            case LUA_TNUMBER:
+                fprintf(f, "%.2f", lua_tonumber(L, -2));
+                break;
 
-			case LUA_TSTRING:
-				fprintf(f, "\"%s\"", lua_tostring(L, -2));
-				break;
+            case LUA_TSTRING:
+                fprintf(f, "\"%s\"", lua_tostring(L, -2));
+                break;
 
-			case LUA_TTABLE:
-				fputs("(table)", f);
-				break;
+            case LUA_TTABLE:
+                fputs("(table)", f);
+                break;
 
-			case LUA_TFUNCTION:
-				fputs("(function)", f);
-				break;
+            case LUA_TFUNCTION:
+                fputs("(function)", f);
+                break;
 
-			case LUA_TUSERDATA:
-				fputs("(userdata)", f);
-				break;
+            case LUA_TUSERDATA:
+                fputs("(userdata)", f);
+                break;
 
-			case LUA_TTHREAD:
-				fputs("(thread)", f);
-				break;
-			}
-			fputs(" = ", f);
-			switch (lua_type(L, -1))
-			{
-			case LUA_TNONE:
-				fputs("(none)", f);
-				break;
+            case LUA_TTHREAD:
+                fputs("(thread)", f);
+                break;
+            }
+            fputs(" = ", f);
+            switch (lua_type(L, -1))
+            {
+            case LUA_TNONE:
+                fputs("(none)", f);
+                break;
 
-			case LUA_TNIL:
-				fputs("(nil)", f);
-				break;
+            case LUA_TNIL:
+                fputs("(nil)", f);
+                break;
 
-			case LUA_TBOOLEAN:
-				fputs(lua_toboolean(L, -1) ? "true" : "false", f);
-				break;
+            case LUA_TBOOLEAN:
+                fputs(lua_toboolean(L, -1) ? "true" : "false", f);
+                break;
 
-			case LUA_TLIGHTUSERDATA:
-				fputs("(light userdata)", f);
-				break;
+            case LUA_TLIGHTUSERDATA:
+                fputs("(light userdata)", f);
+                break;
 
-			case LUA_TNUMBER:
-				fprintf(f, "%.2f", lua_tonumber(L, -1));
-				break;
+            case LUA_TNUMBER:
+                fprintf(f, "%.2f", lua_tonumber(L, -1));
+                break;
 
-			case LUA_TSTRING:
-				fprintf(f, "\"%s\"", lua_tostring(L, -1));
-				break;
+            case LUA_TSTRING:
+                fprintf(f, "\"%s\"", lua_tostring(L, -1));
+                break;
 
-			case LUA_TTABLE:
-				fputs("{\n", f);
-				luax_PrintGlobals(L, (const char *)f, iLevel + 1, false);
-				for (unsigned long i = 0; i < iLevel; ++i)
-					fputs("  ", f);
-				fputs("}", f);
-				break;
+            case LUA_TTABLE:
+                fputs("{\n", f);
+                luax_PrintGlobals(L, (const char *)f, iLevel + 1, false);
+                for (unsigned long i = 0; i < iLevel; ++i)
+                    fputs("  ", f);
+                fputs("}", f);
+                break;
 
-			case LUA_TFUNCTION:
-				fputs("(function)", f);
-				break;
+            case LUA_TFUNCTION:
+                fputs("(function)", f);
+                break;
 
-			case LUA_TUSERDATA:
-				fputs("(userdata)", f);
-				break;
+            case LUA_TUSERDATA:
+                fputs("(userdata)", f);
+                break;
 
-			case LUA_TTHREAD:
-				fputs("(thread)", f);
-				break;
-			}
-			fputs("\n", f);
-		}
-		lua_pop(L, 1); // removes `value'; keeps `key' for next iteration
-	}
+            case LUA_TTHREAD:
+                fputs("(thread)", f);
+                break;
+            }
+            fputs("\n", f);
+        }
+        lua_pop(L, 1); // removes `value'; keeps `key' for next iteration
+    }
 
-	if (bSkipG)
-	{
-		lua_pop(L, 1); // stack preservation
-		fclose(f);
-	}
-	return;
+    if (bSkipG)
+    {
+        lua_pop(L, 1); // stack preservation
+        fclose(f);
+    }
+    return;
 }
 
 // Pops a key from the stack and then gets it as a table or makes a new table
 void luax_GetOrMakeTable(lua_State *L, int iParentTable)
 {
-	lua_gettable(L, iParentTable);
-	if (!lua_istable(L, -1))
-	{
-		lua_pop(L, 1);
-		lua_newtable(L);
-	}
+    lua_gettable(L, iParentTable);
+    if (!lua_istable(L, -1))
+    {
+        lua_pop(L, 1);
+        lua_newtable(L);
+    }
 }
 
 // Pops a key from the stack and then gets it raw as a table or makes a new table
 void luax_GetRawOrMakeTable(lua_State *L, int iParentTable)
 {
-	lua_rawget(L, iParentTable);
-	if (!lua_istable(L, -1))
-	{
-		lua_pop(L, 1);
-		lua_newtable(L);
-	}
+    lua_rawget(L, iParentTable);
+    if (!lua_istable(L, -1))
+    {
+        lua_pop(L, 1);
+        lua_newtable(L);
+    }
 }
 
 // Removes (sets to nil) a global variable
 void luax_DeleteGlobal(lua_State *L, const char *sName)
 {
-	lua_pushstring(L, sName);
-	lua_pushnil(L);
-	lua_settable(L, LUA_GLOBALSINDEX);
+    lua_pushstring(L, sName);
+    lua_pushnil(L);
+    lua_settable(L, LUA_GLOBALSINDEX);
 }
 
 /*

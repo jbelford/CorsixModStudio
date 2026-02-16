@@ -69,7 +69,7 @@ frmUCSSelector::frmUCSSelector(const wxString &sTitle)
 {
     m_bGotAnswer = false;
     m_bAnswerIsReadOnly = false;
-    m_pAnswer = 0;
+    m_pAnswer = nullptr;
     CentreOnParent();
     wxBoxSizer *pTopSizer = new wxBoxSizer(wxVERTICAL);
 

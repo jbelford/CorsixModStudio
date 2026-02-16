@@ -23,9 +23,9 @@ extern "C"
 
 CLuaFile2::CLuaFile2()
 {
-    m_pCache = 0;
-    m_sFileName = 0;
-    m_pRefMap = 0;
+    m_pCache = nullptr;
+    m_sFileName = nullptr;
+    m_pRefMap = nullptr;
     m_bOwnCache = false;
     m_bOwnRefMap = false;
     m_sRootFolder = strdup("");
@@ -44,7 +44,7 @@ void CLuaFile2::_clean()
 {
     if (m_sFileName)
         free(m_sFileName);
-    m_sFileName = 0;
+    m_sFileName = nullptr;
     if (m_pRefMap && m_bOwnRefMap)
         delete m_pRefMap;
     m_bOwnRefMap = false;
@@ -106,7 +106,7 @@ void CLuaFile2::newFile(const char *sFileName)
 
 void CLuaFile2::loadFile(IFileStore::IStream *pStream, IFileStore *pFiles, const char *sFileName)
 {
-    if (pStream == 0 || pFiles == 0 || sFileName == 0)
+    if (pStream == nullptr || pFiles == nullptr || sFileName == nullptr)
         QUICK_THROW("Invalid argument")
     _AutoClean AutoClean_(this);
 
@@ -125,7 +125,7 @@ void CLuaFile2::loadFile(IFileStore::IStream *pStream, IFileStore *pFiles, const
     }
     unsigned long iNameCrc = crc32_case_idt(0, (const Bytef *)sFileName, (uInt)strlen(sFileName));
     if ((*m_pRefMap)[iNameCrc] > (int)1)
-        throw new CRainmanException(0, __FILE__, __LINE__, "Circular reference detected (%s)", sFileName);
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Circular reference detected (%s)", sFileName);
     ++(*m_pRefMap)[iNameCrc];
 
     // Load
@@ -151,7 +151,7 @@ void CLuaFile2::loadFile(IFileStore::IStream *pStream, IFileStore *pFiles, const
     if (iLuaError == LUA_ERRMEM)
         QUICK_THROW("Lua memory error")
     else if (iLuaError == LUA_ERRSYNTAX)
-        throw new CRainmanException(0, __FILE__, __LINE__, "Lua error (LUA_ERRSYNTAX): %s", lua_tostring(L, -1));
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Lua error (LUA_ERRSYNTAX): %s", lua_tostring(L, -1));
 
 // Prepare lua state
 #define quick_fn_register(n, f)                                                                                        \
@@ -172,12 +172,13 @@ void CLuaFile2::loadFile(IFileStore::IStream *pStream, IFileStore *pFiles, const
         switch (lua_type(L, -1))
         {
         case LUA_TSTRING:
-            throw new CRainmanException(0, __FILE__, __LINE__, "Lua error (%i): %s", iLuaError, lua_tostring(L, -1));
+            throw new CRainmanException(nullptr, __FILE__, __LINE__, "Lua error (%i): %s", iLuaError,
+                                        lua_tostring(L, -1));
         case LUA_TLIGHTUSERDATA:
             throw new CRainmanException((CRainmanException *)lua_touserdata(L, -1), __FILE__, __LINE__,
                                         "Lua exception (%i)", iLuaError);
         default:
-            throw new CRainmanException(0, __FILE__, __LINE__, "Lua unknown error (%i)", iLuaError);
+            throw new CRainmanException(nullptr, __FILE__, __LINE__, "Lua unknown error (%i)", iLuaError);
         };
     }
 
@@ -202,7 +203,7 @@ int CLuaFile2::_luaReference(lua_State *L) { return _getOwner(L)->_luaParent("Re
 static void luaEnquiry(lua_State *L, int i)
 {
     int iType = lua_type(L, i);
-    const char *sType = 0, *sVal = 0;
+    const char *sType = nullptr, *sVal = nullptr;
     if (iType == LUA_TNONE)
         sType = "none";
     if (iType == LUA_TNIL)
@@ -291,12 +292,12 @@ int CLuaFile2::_luaParent(const char *sFnName, const char *sTableToGrab)
         // Grab other required stuff
         IFileStore *pFiles = (IFileStore *)lua_touserdata(L, lua_upvalueindex(1));
         const char *sFileName = lua_tostring(L, -1);
-        if (pFiles == 0 || sFileName == 0)
+        if (pFiles == nullptr || sFileName == nullptr)
             QUICK_THROW("Invalid argument")
 
         // Load parented file
         CLuaFile2 oParentFile;
-        if ((oParentFile.L = m_pCache->Fetch(sFileName)) == 0)
+        if ((oParentFile.L = m_pCache->Fetch(sFileName)) == nullptr)
         {
             if (sFileName[0] == 0)
             {
@@ -312,7 +313,7 @@ int CLuaFile2::_luaParent(const char *sFnName, const char *sTableToGrab)
                 AutoDelete<char> sFileNameFull_(sFileNameFull, true);
                 strcpy(sFileNameFull, m_sRootFolder);
                 strcat(sFileNameFull, sFileName);
-                IFileStore::IStream *pFileIn = 0;
+                IFileStore::IStream *pFileIn = nullptr;
                 try
                 {
                     pFileIn = pFiles->VOpenStream(sFileNameFull);
@@ -423,7 +424,7 @@ void CLuaFile2::_LuaLocator::push(lua_State *L)
 CLuaStateNode::CLuaStateNode(lua_State *pL, int iVal, int iKey) : m_L(pL, iVal)
 {
     L = pL;
-    sName = 0;
+    sName = nullptr;
     lua_pushvalue(pL, iKey);
     sName = strdup(lua_tostring(pL, -1));
     lua_pop(pL, 1);
@@ -664,7 +665,7 @@ void CLuaFile2::CTable::VDoRefresh()
 {
     if (m_sRef)
         free(m_sRef);
-    m_sRef = 0;
+    m_sRef = nullptr;
     for (std::vector<CLuaFile2::CNode *>::iterator itr = m_vNodes.begin(); itr != m_vNodes.end(); ++itr)
     {
         delete *itr;
@@ -695,7 +696,7 @@ void CLuaFile2::CTable::_DoLoad()
             {
                 if (iHash == 0x1DA0FE3C) // $FUNC
                 {
-                    if (m_sRef == 0 && lua_strlen(L, -2))
+                    if (m_sRef == nullptr && lua_strlen(L, -2))
                     {
                         lua_pushstring(L, "$REF"); // "$REF" K V K T T
                         lua_gettable(L, -5);       // $REF K V K T T
@@ -757,7 +758,10 @@ void CLuaFile2::CTable::_DoLoad()
     lua_pop(L, 1); // T
 }
 
-CLuaFile2::CTable::CTable(lua_State *pL, bool bG) : m_oTablePtr(pL, -1), m_sRef(0), m_bGlobals(bG), L(pL) { _DoLoad(); }
+CLuaFile2::CTable::CTable(lua_State *pL, bool bG) : m_oTablePtr(pL, -1), m_sRef(nullptr), m_bGlobals(bG), L(pL)
+{
+    _DoLoad();
+}
 
 bool CLuaFile2::_SaveKey::_Sort(_SaveKey *p1, _SaveKey *p2)
 {
@@ -768,9 +772,9 @@ bool CLuaFile2::_SaveKey::_Sort(_SaveKey *p1, _SaveKey *p2)
     else if (p1->iWhat == 3)
         return p1->b < p2->b;
 
-    if (p1->s == 0 || p2->s == 0)
+    if (p1->s == nullptr || p2->s == nullptr)
     {
-        if (p1->s == 0 && p2->s != 0)
+        if (p1->s == nullptr && p2->s != nullptr)
             return true;
         return false;
     }
@@ -795,9 +799,9 @@ bool CLuaFile2::_SaveKey::_Sort(_SaveKey *p1, _SaveKey *p2)
 
 bool CLuaFile2::CTable::_SortNodes(CLuaFile2::CNode *p1, CLuaFile2::CNode *p2)
 {
-    if (p1->m_sName == 0 || p2->m_sName == 0)
+    if (p1->m_sName == nullptr || p2->m_sName == nullptr)
     {
-        if (p1->m_sName == 0 && p2->m_sName != 0)
+        if (p1->m_sName == nullptr && p2->m_sName != nullptr)
             return true;
         return false;
     }
@@ -1348,7 +1352,7 @@ void CLuaFile2::_saveTable(const char *sPrefix, IFileStore::IOutputStream *pStre
         lua_pushvalue(L, -1); // K K T
         lua_gettable(L, -3);  // V K T
 
-        char *sNewPrefix = 0;
+        char *sNewPrefix = nullptr;
         if (lua_isstring(L, -2))
         {
             sNewPrefix = new char[strlen(sPrefix) + (lua_strlen(L, -2) * 2) + 1];
@@ -1440,8 +1444,8 @@ void CLuaFile2::_saveTable(const char *sPrefix, IFileStore::IOutputStream *pStre
         {
             if (iMode != 4)
             {
-                const char *sTypeNames[] = {
-                    "LUA_TNIL", 0, "LUA_TLIGHTUSERDATA", 0, 0, 0, "LUA_TFUNCTION", "LUA_TUSERDATA", "LUA_TTHREAD"};
+                const char *sTypeNames[] = {"LUA_TNIL", nullptr,         "LUA_TLIGHTUSERDATA", nullptr,      nullptr,
+                                            nullptr,    "LUA_TFUNCTION", "LUA_TUSERDATA",      "LUA_TTHREAD"};
                 pStream->VWriteString("-- ");
                 pStream->VWriteString(sNewPrefix);
                 pStream->VWriteString(" = (");

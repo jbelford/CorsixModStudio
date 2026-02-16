@@ -30,8 +30,8 @@ frmCredits::frmCredits()
                wxFRAME_FLOAT_ON_PARENT | wxDEFAULT_DIALOG_STYLE)
 {
     CentreOnParent();
-    m_pLoadingImage = 0;
-    m_pText = 0;
+    m_pLoadingImage = nullptr;
+    m_pText = nullptr;
 
     wxString sCredits;
 

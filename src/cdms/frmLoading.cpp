@@ -31,8 +31,8 @@ frmLoading::frmLoading(const wxString &sTitle)
               wxFRAME_FLOAT_ON_PARENT | wxFRAME_TOOL_WINDOW)
 {
     CentreOnParent();
-    m_pLoadingImage = 0;
-    m_pText = 0;
+    m_pLoadingImage = nullptr;
+    m_pText = nullptr;
 
     m_pLoadingImage = new wxBitmap(wxT("RIDB_LOADING"), wxBITMAP_TYPE_BMP_RESOURCE);
     m_pText = new wxStaticText(this, -1, sTitle, FromDIP(wxPoint(0, 317)), FromDIP(wxSize(384, 33)),

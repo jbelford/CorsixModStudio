@@ -30,15 +30,15 @@ CModuleParseResult CModuleParser::Parse(const char *sFileName)
     CModuleParseResult result;
 
     FILE *fModule = fopen(sFileName, "rb");
-    if (fModule == 0)
-        throw new CRainmanException(0, __FILE__, __LINE__, "Unable to open \'%s\' for reading", sFileName);
+    if (fModule == nullptr)
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Unable to open \'%s\' for reading", sFileName);
 
     size_t iCurrentDS = SIZE_MAX;
     bool bInGlobal = false;
     while (!feof(fModule))
     {
         char *sLine = Util_fgetline(fModule);
-        if (sLine == 0)
+        if (sLine == nullptr)
         {
             fclose(fModule);
             throw new CRainmanException(__FILE__, __LINE__, "Error reading from file");
@@ -202,7 +202,7 @@ CModuleParseResult CModuleParser::Parse(const char *sFileName)
         else
         {
             char *sLeftBraceChar = strchr(sLine, '[');
-            char *sRightBraceChar = sLeftBraceChar ? strchr(sLeftBraceChar, ']') : 0;
+            char *sRightBraceChar = sLeftBraceChar ? strchr(sLeftBraceChar, ']') : nullptr;
             if (sLeftBraceChar && sRightBraceChar)
             {
                 // [Section]

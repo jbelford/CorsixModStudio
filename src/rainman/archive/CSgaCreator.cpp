@@ -75,9 +75,9 @@ CSgaCreator::CInputDirectory::~CInputDirectory()
 CSgaCreator::CInputDirectory *CSgaCreator::_ScanDirectory(IDirectoryTraverser::IIterator *pDirectory,
                                                           IFileStore *pStore, size_t iDirBaseL)
 {
-    if (pDirectory == 0)
+    if (pDirectory == nullptr)
         QUICK_THROW("No input directory")
-    if (pStore == 0)
+    if (pStore == nullptr)
         QUICK_THROW("No input file store")
 
     CSgaCreator::CInputDirectory *pUs = CHECK_MEM(new CSgaCreator::CInputDirectory);
@@ -126,9 +126,9 @@ CSgaCreator::CInputDirectory *CSgaCreator::_ScanDirectory(IDirectoryTraverser::I
                     throw new CRainmanException(pE, __FILE__, __LINE__, "Cannot traverse sub-dir \'%s\'",
                                                 pDirectory->VGetFullPath());
                 }
-                if (pChild != 0)
+                if (pChild != nullptr)
                 {
-                    CSgaCreator::CInputDirectory *pChildIn = 0;
+                    CSgaCreator::CInputDirectory *pChildIn = nullptr;
                     try
                     {
                         pChildIn = _ScanDirectory(pChild, pStore, iDirBaseL);
@@ -187,8 +187,8 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
     RAINMAN_LOG_INFO("CSgaCreator — building SGA archive \"{}\" (version {})", sOutputFile ? sOutputFile : "(null)",
                      iVersion);
     if (iVersion != 2 && iVersion != 4)
-        throw new CRainmanException(0, __FILE__, __LINE__, "Version %li not supported", iVersion);
-    CSgaCreator::CInputDirectory *pInput = 0;
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Version %li not supported", iVersion);
+    CSgaCreator::CInputDirectory *pInput = nullptr;
     try
     {
         pInput = _ScanDirectory(pDirectory, pStore);
@@ -198,17 +198,17 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
         throw new CRainmanException(pE, __FILE__, __LINE__, "ScanDirectory failed");
     }
 
-    FILE *fOut = 0;
+    FILE *fOut = nullptr;
     std::unique_ptr<IFileStore::IOutputStream> dataHeader;
-    char *pFileBuffer = 0, *pCompressedBuffer = 0;
+    char *pFileBuffer = nullptr, *pCompressedBuffer = nullptr;
     try
     {
         unsigned long iTmp = 0;
         unsigned short iSTmp = 0;
         fOut = fopen(sOutputFile, "w+b");
-        if (fOut == 0)
+        if (fOut == nullptr)
             throw new CRainmanException(
-                0, __FILE__, __LINE__,
+                nullptr, __FILE__, __LINE__,
                 "Cold not open \'%s\' (does the directory exist, and do you have permission to create files there?)",
                 sOutputFile);
 
@@ -265,7 +265,7 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
         CMemoryStore oMemoryStore;
         try
         {
-            dataHeader = std::unique_ptr<IFileStore::IOutputStream>(oMemoryStore.VOpenOutputStream(0, false));
+            dataHeader = std::unique_ptr<IFileStore::IOutputStream>(oMemoryStore.VOpenOutputStream(nullptr, false));
 
             // TOC offset & count
             iTmp = 24;
@@ -482,7 +482,7 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
             {
                 delete[] pFileBuffer;
             }
-            pFileBuffer = 0;
+            pFileBuffer = nullptr;
 
             iDataLengthTotal += iPreDataSize;
             try
@@ -539,7 +539,7 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
                 throw new CRainmanException(__FILE__, __LINE__, "Write operation failed");
             iDataLengthTotal += iCompBuffSize;
             delete[] pCompressedBuffer;
-            pCompressedBuffer = 0;
+            pCompressedBuffer = nullptr;
         }
 
         // Header MD5

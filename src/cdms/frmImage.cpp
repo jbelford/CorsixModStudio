@@ -67,7 +67,7 @@ frmImageViewer::frmImageViewer(wxTreeItemId &oFileParent, wxString sFilename, wx
     wxBoxSizer *pTopSizer = new wxBoxSizer(wxVERTICAL);
 
     m_pRgtFile = pImage;
-    m_pImageBitmap = 0;
+    m_pImageBitmap = nullptr;
     m_bOwnRgt = bOwnImage;
 
     {

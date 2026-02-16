@@ -69,7 +69,7 @@ void frmUCSEditor::OnApply(wxCommandEvent &event)
     if (m_pResultVal)
     {
         wxString sStr = m_pPropertyGrid->GetPropertyLabel(oSelected);
-        *m_pResultVal = wcstoul(sStr.c_str() + 1, 0, 10);
+        *m_pResultVal = wcstoul(sStr.c_str() + 1, nullptr, 10);
     }
     OnClose(event);
 }
@@ -78,8 +78,8 @@ frmUCSEditor::frmUCSEditor(wxWindow *parent, wxWindowID id, bool bReadOnly, cons
                            unsigned long *pResult)
     : wxWindow(parent, id, pos, size)
 {
-    m_pTabStripForLoad = 0;
-    m_pUCS = 0;
+    m_pTabStripForLoad = nullptr;
+    m_pUCS = nullptr;
     m_pResultVal = pResult;
     m_bNeedsSave = false;
     m_bReadOnly = bReadOnly;
@@ -138,7 +138,7 @@ void frmUCSEditor::SetTabStripForLoad(wxAuiNotebook *pTabStrib)
 {
     m_pTabStripForLoad = pTabStrib;
 
-    m_pLoadButton->Show(m_pTabStripForLoad != 0);
+    m_pLoadButton->Show(m_pTabStripForLoad != nullptr);
 
     Layout();
 }
@@ -200,7 +200,7 @@ void frmUCSEditor::OnSize(wxSizeEvent &event)
 
 void frmUCSEditor::OnPropertyChange(wxPropertyGridEvent &event)
 {
-    unsigned long iID = wcstoul(((const wchar_t *)event.GetProperty()->GetLabel()) + 1, 0, 10);
+    unsigned long iID = wcstoul(((const wchar_t *)event.GetProperty()->GetLabel()) + 1, nullptr, 10);
     try
     {
         m_pUCS->SetString(iID, event.GetPropertyValue().GetString());
@@ -247,7 +247,7 @@ void frmUCSEditor::OnNewEntry(wxCommandEvent &event)
             ++pStr;
         if (*pStr)
         {
-            unsigned long iNewID = wcstoul(pStr, 0, 10);
+            unsigned long iNewID = wcstoul(pStr, nullptr, 10);
             if (iNewID < 15000000 || iNewID > 20000000)
             {
                 bool bDontAsk;

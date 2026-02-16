@@ -35,9 +35,9 @@ END_EVENT_TABLE()
 class CRgmMaterialTreeData : public wxTreeItemData
 {
   public:
-    CRgmMaterialTreeData(CRgmFile::CMaterial *pMat) : pMaterial(pMat), pVariable(0) {}
+    CRgmMaterialTreeData(CRgmFile::CMaterial *pMat) : pMaterial(pMat), pVariable(nullptr) {}
 
-    CRgmMaterialTreeData(CRgmFile::CMaterial::CVariable *pVar) : pMaterial(0), pVariable(pVar) {}
+    CRgmMaterialTreeData(CRgmFile::CMaterial::CVariable *pVar) : pMaterial(nullptr), pVariable(pVar) {}
 
     ~CRgmMaterialTreeData() {}
 
@@ -124,7 +124,7 @@ void frmRgmMaterialEditor::SetObject(CRgmFile *pRgmFile, bool bTakeOwnership)
 void frmRgmMaterialEditor::_FillLeft()
 {
     m_pTables->SetWindowStyle(m_pTables->GetWindowStyle() | wxTR_HIDE_ROOT);
-    wxTreeItemId oRoot = m_pTables->AddRoot(wxT(""), -1, -1, 0);
+    wxTreeItemId oRoot = m_pTables->AddRoot(wxT(""), -1, -1, nullptr);
 
     size_t iMaterialCount = m_pRgmFile->GetMaterialCount();
     for (size_t i = 0; i < iMaterialCount; ++i)
@@ -158,7 +158,7 @@ wxPGProperty *frmRgmMaterialEditor::GetVariableEditor(CRgmFile::CMaterial::CVari
     catch (CRainmanException *pE)
     {
         auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
-        return 0;
+        return nullptr;
     }
     wxPGProperty *pTmp = new wxStringProperty(sName, sName, wxT("This property cannot be edited"));
     pTmp->Enable(false);
@@ -172,12 +172,12 @@ void frmRgmMaterialEditor::_FillRight(CRgmFile::CMaterial *pMaterial)
     wxPGProperty *oEntry =
         m_pPropertyGrid->Append(new wxStringProperty(wxT("Name"), wxT("Name"), AsciiTowxString(pMaterial->GetName())));
     m_pPropertyGrid->SetPropertyHelpString(oEntry, wxT("Name of this material"));
-    m_pPropertyGrid->SetPropertyClientData(oEntry, (void *)0);
+    m_pPropertyGrid->SetPropertyClientData(oEntry, (void *)nullptr);
 
     oEntry = m_pPropertyGrid->Append(
         new wxStringProperty(wxT("Shader"), wxT("Shader"), AsciiTowxString(pMaterial->GetDxName())));
     m_pPropertyGrid->SetPropertyHelpString(oEntry, wxT("The shader used by this material (see Data\\shaders folder)"));
-    m_pPropertyGrid->SetPropertyClientData(oEntry, (void *)0);
+    m_pPropertyGrid->SetPropertyClientData(oEntry, (void *)nullptr);
 
     m_pPropertyGrid->Append(new wxPropertyCategory(wxT("Children")));
 
@@ -220,7 +220,7 @@ frmRgmMaterialEditor::frmRgmMaterialEditor(wxTreeItemId &oFileParent, wxString s
 
     CallAfter([this]() { m_pSplitter->SetSashPosition(0); });
 
-    m_pRgmFile = 0;
+    m_pRgmFile = nullptr;
     m_bOwnRgm = false;
 }
 
@@ -265,7 +265,7 @@ void frmRgmMaterialEditor::OnPropertyChange(wxPropertyGridEvent &event)
 {
     CRgmFile::CMaterial::CVariable *pVar =
         (CRgmFile::CMaterial::CVariable *)m_pPropertyGrid->GetPropertyClientData(event.GetProperty());
-    if (pVar == 0)
+    if (pVar == nullptr)
     {
         CRgmMaterialTreeData *pData = (CRgmMaterialTreeData *)m_pTables->GetItemData(m_pTables->GetSelection());
         if (event.GetPropertyName().IsSameAs(wxT("Name")))
