@@ -78,10 +78,9 @@ TEST_F(StrconvTest, AsciiTowxStringNullReturnsEmpty) {
 
 TEST_F(StrconvTest, wxStringToAsciiRoundTrip) {
     wxString input(wxT("round trip"));
-    char* result = wxStringToAscii(input);
+    auto result = wxStringToAscii(input);
     ASSERT_NE(result, nullptr);
-    EXPECT_STREQ(result, "round trip");
-    delete[] result;
+    EXPECT_STREQ(result.get(), "round trip");
 }
 
 TEST_F(StrconvTest, AsciiToUnicodeHighAsciiRange) {
@@ -121,10 +120,9 @@ TEST_F(StrconvTest, AsciiTowxStringEmptyString) {
 
 TEST_F(StrconvTest, wxStringToAsciiEmptyString) {
     wxString input(wxT(""));
-    char* result = wxStringToAscii(input);
+    auto result = wxStringToAscii(input);
     ASSERT_NE(result, nullptr);
-    EXPECT_STREQ(result, "");
-    delete[] result;
+    EXPECT_STREQ(result.get(), "");
 }
 
 TEST_F(StrconvTest, wxStringToAsciiUnicodeContent) {
@@ -132,9 +130,8 @@ TEST_F(StrconvTest, wxStringToAsciiUnicodeContent) {
     wxString input;
     input += (wchar_t)0x4E2D; // Chinese character
     input += wxT("A");
-    char* result = wxStringToAscii(input);
+    auto result = wxStringToAscii(input);
     ASSERT_NE(result, nullptr);
-    EXPECT_EQ(result[0], '?');
-    EXPECT_EQ(result[1], 'A');
-    delete[] result;
+    EXPECT_EQ(result.get()[0], '?');
+    EXPECT_EQ(result.get()[1], 'A');
 }

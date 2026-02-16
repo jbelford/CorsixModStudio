@@ -26,22 +26,20 @@
 
 Result<std::unique_ptr<IFileStore::IStream>> FileService::OpenStream(const wxString &sPath)
 {
-    char *sFile = wxStringToAscii(sPath);
+    auto sFile = wxStringToAscii(sPath);
     if (!sFile)
         return Result<std::unique_ptr<IFileStore::IStream>>::Err(wxT("Memory allocation error"));
 
     IFileStore::IStream *pStream = nullptr;
     try
     {
-        pStream = m_pStore->VOpenStream(sFile);
+        pStream = m_pStore->VOpenStream(sFile.get());
     }
     catch (CRainmanException *pE)
     {
-        delete[] sFile;
         return ResultFromExceptionT<std::unique_ptr<IFileStore::IStream>>(pE);
     }
 
-    delete[] sFile;
     if (!pStream)
         return Result<std::unique_ptr<IFileStore::IStream>>::Err(wxT("Cannot open file"));
 
@@ -51,22 +49,20 @@ Result<std::unique_ptr<IFileStore::IStream>> FileService::OpenStream(const wxStr
 Result<std::unique_ptr<IFileStore::IOutputStream>> FileService::OpenOutputStream(const wxString &sPath,
                                                                                  bool bEraseIfPresent)
 {
-    char *sFile = wxStringToAscii(sPath);
+    auto sFile = wxStringToAscii(sPath);
     if (!sFile)
         return Result<std::unique_ptr<IFileStore::IOutputStream>>::Err(wxT("Memory allocation error"));
 
     IFileStore::IOutputStream *pStream = nullptr;
     try
     {
-        pStream = m_pStore->VOpenOutputStream(sFile, bEraseIfPresent);
+        pStream = m_pStore->VOpenOutputStream(sFile.get(), bEraseIfPresent);
     }
     catch (CRainmanException *pE)
     {
-        delete[] sFile;
         return ResultFromExceptionT<std::unique_ptr<IFileStore::IOutputStream>>(pE);
     }
 
-    delete[] sFile;
     if (!pStream)
         return Result<std::unique_ptr<IFileStore::IOutputStream>>::Err(wxT("Cannot open output stream"));
 
@@ -77,22 +73,20 @@ Result<std::unique_ptr<IFileStore::IOutputStream>> FileService::OpenOutputStream
 
 Result<IteratorGuard> FileService::Iterate(const wxString &sPath)
 {
-    char *sDir = wxStringToAscii(sPath);
+    auto sDir = wxStringToAscii(sPath);
     if (!sDir)
         return Result<IteratorGuard>::Err(wxT("Memory allocation error"));
 
     IDirectoryTraverser::IIterator *pItr = nullptr;
     try
     {
-        pItr = m_pTraverser->VIterate(sDir);
+        pItr = m_pTraverser->VIterate(sDir.get());
     }
     catch (CRainmanException *pE)
     {
-        delete[] sDir;
         return ResultFromExceptionT<IteratorGuard>(pE);
     }
 
-    delete[] sDir;
     return Result<IteratorGuard>::Ok(IteratorGuard(pItr));
 }
 
@@ -106,43 +100,39 @@ wxString FileService::GetEntryPoint(unsigned long iID) const
 
 Result<bool> FileService::DirectoryExists(const wxString &sPath)
 {
-    char *sDir = wxStringToAscii(sPath);
+    auto sDir = wxStringToAscii(sPath);
     if (!sDir)
         return Result<bool>::Err(wxT("Memory allocation error"));
 
     bool bExists = false;
     try
     {
-        bExists = m_pTraverser->VDirectoryExists(sDir);
+        bExists = m_pTraverser->VDirectoryExists(sDir.get());
     }
     catch (CRainmanException *pE)
     {
-        delete[] sDir;
         return ResultFromExceptionT<bool>(pE);
     }
 
-    delete[] sDir;
     return Result<bool>::Ok(bExists);
 }
 
 Result<tLastWriteTime> FileService::GetLastWriteTime(const wxString &sPath)
 {
-    char *sFile = wxStringToAscii(sPath);
+    auto sFile = wxStringToAscii(sPath);
     if (!sFile)
         return Result<tLastWriteTime>::Err(wxT("Memory allocation error"));
 
     tLastWriteTime t;
     try
     {
-        t = m_pTraverser->VGetLastWriteTime(sFile);
+        t = m_pTraverser->VGetLastWriteTime(sFile.get());
     }
     catch (CRainmanException *pE)
     {
-        delete[] sFile;
         return ResultFromExceptionT<tLastWriteTime>(pE);
     }
 
-    delete[] sFile;
     return Result<tLastWriteTime>::Ok(t);
 }
 
@@ -150,7 +140,7 @@ Result<tLastWriteTime> FileService::GetLastWriteTime(const wxString &sPath)
 
 Result<IteratorGuard> FileService::IterateFileSystem(const wxString &sPath)
 {
-    char *sDir = wxStringToAscii(sPath);
+    auto sDir = wxStringToAscii(sPath);
     if (!sDir)
         return Result<IteratorGuard>::Err(wxT("Memory allocation error"));
 
@@ -158,15 +148,13 @@ Result<IteratorGuard> FileService::IterateFileSystem(const wxString &sPath)
     IDirectoryTraverser::IIterator *pItr = nullptr;
     try
     {
-        pItr = oStore.VIterate(sDir);
+        pItr = oStore.VIterate(sDir.get());
     }
     catch (CRainmanException *pE)
     {
-        delete[] sDir;
         return ResultFromExceptionT<IteratorGuard>(pE);
     }
 
-    delete[] sDir;
     return Result<IteratorGuard>::Ok(IteratorGuard(pItr));
 }
 

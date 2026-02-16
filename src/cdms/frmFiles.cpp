@@ -157,9 +157,8 @@ void CLuaAction::VHandle(wxString sFile, wxTreeItemId &oParent, wxTreeItemId &oF
         return;
     }
     std::unique_ptr<IFileStore::IStream> pStream(streamResult.value().release());
-    char *saFile = wxStringToAscii(sFile);
-    CLuaFile2 *pLua = DoLoad2(pStream.get(), saFile);
-    delete[] saFile;
+    auto saFile = wxStringToAscii(sFile);
+    CLuaFile2 *pLua = DoLoad2(pStream.get(), saFile.get());
     if (pLua)
     {
         frmRGDEditor *pForm;
@@ -275,7 +274,7 @@ void frmFiles::OnPageChange(wxAuiNotebookEvent &event)
 
 bool frmFiles::UpdateDirectoryChildren(wxTreeItemId &oDirectory, IDirectoryTraverser::IIterator *pChildren)
 {
-    char *sTreeItem;
+    std::unique_ptr<char[]> sTreeItem;
     const char *sDirItem;
     wxTreeItemIdValue oTreeCookie;
     bool bGotOld = false;
@@ -284,13 +283,13 @@ bool frmFiles::UpdateDirectoryChildren(wxTreeItemId &oDirectory, IDirectoryTrave
     wxTreeItemId oTreeItem = m_pTree->GetFirstChild(oDirectory, oTreeCookie), oTheOldItem;
     do
     {
-        sTreeItem = oTreeItem.IsOk() ? wxStringToAscii(m_pTree->GetItemText(oTreeItem)) : 0;
+        sTreeItem = oTreeItem.IsOk() ? wxStringToAscii(m_pTree->GetItemText(oTreeItem)) : nullptr;
         sDirItem = pChildren->VGetType() == IDirectoryTraverser::IIterator::T_Nothing ? 0 : pChildren->VGetName();
 
         if (sTreeItem && sDirItem)
         {
             // Items on both
-            int i = stricmp(sTreeItem, sDirItem);
+            int i = stricmp(sTreeItem.get(), sDirItem);
             if (i < 0)
             {
                 // Tree item before dir (delete item)
@@ -346,7 +345,6 @@ bool frmFiles::UpdateDirectoryChildren(wxTreeItemId &oDirectory, IDirectoryTrave
                 {
                     m_pTree->Thaw();
                     m_pTree->Update();
-                    delete[] sTreeItem;
                     return false;
                 }
                 pChildren->VNextItem();
@@ -365,13 +363,11 @@ bool frmFiles::UpdateDirectoryChildren(wxTreeItemId &oDirectory, IDirectoryTrave
         {
             // Item in dir only
             bool bRet = _FillPartialFromIDirectoryTraverserIIterator(oDirectory, pChildren, 0);
-            delete[] sTreeItem;
             m_pTree->Thaw();
             m_pTree->Update();
             return bRet;
         }
 
-        delete[] sTreeItem;
     } while (sTreeItem && sDirItem);
 
     m_pTree->Thaw();

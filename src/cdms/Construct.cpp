@@ -126,7 +126,7 @@ CRgdHashTable *ConstructFrame::GetRgdHashTable()
     auto result = m_hashService.Initialize(AppStr(app_dictionariespath));
     if (!result.ok())
     {
-        throw new CModStudioException(__FILE__, __LINE__, wxStringToAscii(result.error()));
+        throw new CModStudioException(__FILE__, __LINE__, wxStringToAscii(result.error()).get());
     }
 
     m_pRgdHashTable = m_hashService.GetHashTable();
@@ -810,11 +810,10 @@ void ConstructFrame::DoLoadMod(wxString sPath, eLoadModGames eGame)
             delete pLocaleSelect;
         }
 
-        char *sLocale = wxStringToAscii(TheConfig->Read(AppStr(config_mod_locale), AppStr(localeselect_default)));
+        auto sLocale = wxStringToAscii(TheConfig->Read(AppStr(config_mod_locale), AppStr(localeselect_default)));
         {
             ModuleService tmpSvc(pMod);
-            auto locResult = tmpSvc.SetLocale(wxString::FromUTF8(sLocale));
-            delete[] sLocale;
+            auto locResult = tmpSvc.SetLocale(wxString::FromUTF8(sLocale.get()));
             if (!locResult.ok())
             {
                 ErrorBoxS(locResult.error());

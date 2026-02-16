@@ -435,19 +435,17 @@ void frmUCSEditor::DoSave()
 found_ucs_file:
 
     BackupFile(sNewFile);
-    char *saNewFile = wxStringToAscii(sNewFile);
+    auto saNewFile = wxStringToAscii(sNewFile);
     try
     {
-        m_pUCS->Save(saNewFile);
+        m_pUCS->Save(saNewFile.get());
     }
     catch (CRainmanException *pE)
     {
-        delete[] saNewFile;
         ErrorBoxE(pE);
         RestoreBackupFile(sNewFile);
         return;
     }
-    delete[] saNewFile;
 
     m_bNeedsSave = false;
     wxMessageBox(AppStr(ucsedit_save_caption), AppStr(ucsedit_save_title), wxICON_INFORMATION, this);

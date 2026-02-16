@@ -36,15 +36,14 @@ class CRGODeBurnAction : public frmFiles::IHandler
     virtual void VHandle(wxString sFile, wxTreeItemId &oParent, wxTreeItemId &oFile)
     {
         // CFilesTreeItemData *pData = (CFilesTreeItemData*)TheConstruct->GetFilesList()->GetTree()->GetItemData(oFile);
-        char *saFile = wxStringToAscii(sFile);
+        auto saFile = wxStringToAscii(sFile);
         try
         {
-            DoDeBurn(saFile);
+            DoDeBurn(saFile.get());
         }
         catch (CRainmanException *pE)
         {
             ErrorBoxE(pE);
-            delete[] saFile;
             return;
         }
 
@@ -56,7 +55,6 @@ class CRGODeBurnAction : public frmFiles::IHandler
             delete pDir;
             wxMessageBox(AppStr(rgodeburn_good), VGetAction(), wxICON_INFORMATION, TheConstruct);
         }
-        delete[] saFile;
     }
 
     static void DoDeBurn(char *saFile)

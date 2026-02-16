@@ -36,20 +36,19 @@ class CRgtToGenericAction : public frmFiles::IHandler
     virtual void VHandle(wxString sFile, wxTreeItemId &oParent, wxTreeItemId &oFile)
     {
         // CFilesTreeItemData *pData = (CFilesTreeItemData*)TheConstruct->GetFilesList()->GetTree()->GetItemData(oFile);
-        char *saFile = wxStringToAscii(sFile);
+        auto saFile = wxStringToAscii(sFile);
         wxString sConvertedTo;
         try
         {
-            sConvertedTo = DoConvert(saFile);
+            sConvertedTo = DoConvert(saFile.get());
         }
         catch (CRainmanException *pE)
         {
             ErrorBoxE(pE);
-            delete[] saFile;
             return;
         }
 
-        char *saDir = strdup(saFile), *pSlash;
+        char *saDir = strdup(saFile.get()), *pSlash;
         pSlash = strrchr(saDir, '\\');
         if (pSlash)
             *pSlash = 0;

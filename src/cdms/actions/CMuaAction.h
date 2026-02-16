@@ -43,9 +43,8 @@ class CMuaAction : public frmFiles::IHandler
             return;
         }
         auto &stream = streamResult.value();
-        char *saFile = wxStringToAscii(sFile);
-        CLuaFile *pLua = CLuaAction::DoLoad(stream.get(), saFile);
-        delete[] saFile;
+        auto saFile = wxStringToAscii(sFile);
+        CLuaFile *pLua = CLuaAction::DoLoad(stream.get(), saFile.get());
         if (pLua)
         {
             frmRGDEditor *pForm;

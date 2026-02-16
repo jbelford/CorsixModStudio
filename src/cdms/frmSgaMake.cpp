@@ -230,13 +230,14 @@ void frmSgaMake::OnGoClick(wxCommandEvent &event)
             return;
         }
         IDirectoryTraverser::IIterator *pItr = itrResult.value().release();
-        char *saDir = wxStringToAscii(m_pOutFile->GetValue());
-        char *saToc = wxStringToAscii(m_pTocName->GetValue());
+        auto saDir = wxStringToAscii(m_pOutFile->GetValue());
+        auto saToc = wxStringToAscii(m_pTocName->GetValue());
 
         bool bGood = true;
         try
         {
-            CSgaCreator::CreateSga(pItr, &oFSO, saToc, saDir, TheConstruct->GetModuleService().GetSgaOutputVersion());
+            CSgaCreator::CreateSga(pItr, &oFSO, saToc.get(), saDir.get(),
+                                   TheConstruct->GetModuleService().GetSgaOutputVersion());
         }
         catch (CRainmanException *pE)
         {
@@ -245,8 +246,6 @@ void frmSgaMake::OnGoClick(wxCommandEvent &event)
         }
 
         delete pItr;
-        delete[] saDir;
-        delete[] saToc;
 
         delete pMsg;
 

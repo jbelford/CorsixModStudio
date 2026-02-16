@@ -410,7 +410,7 @@ void frmRGDEditor::DoSave()
     }
     TheConstruct->GetFilesList()->UpdateDirectoryChildren(m_oFileParent, dirResult.value().get());
 
-    char *saNewFile = wxStringToAscii(m_sFilename);
+    auto saNewFile = wxStringToAscii(m_sFilename);
 
     if (m_iObjectType == 1)
     {
@@ -422,7 +422,6 @@ void frmRGDEditor::DoSave()
         {
             RestoreBackupFile(TheConstruct->GetModuleService().GetModule(), m_sFilename);
             ErrorBoxE(pE);
-            delete[] saNewFile;
             return;
         }
         m_bDataNeedsSaving = false;
@@ -431,13 +430,13 @@ void frmRGDEditor::DoSave()
     else if (m_iObjectType == 3)
     {
         size_t iChop = 0;
-        if (strnicmp(saNewFile, "Generic\\Attrib\\", 15) == 0)
+        if (strnicmp(saNewFile.get(), "Generic\\Attrib\\", 15) == 0)
             iChop = 15;
-        else if (strnicmp(saNewFile, "Data\\Attrib\\", 12) == 0)
+        else if (strnicmp(saNewFile.get(), "Data\\Attrib\\", 12) == 0)
             iChop = 12;
-        else if (strnicmp(saNewFile, "Attrib\\Attrib\\", 14) == 0)
+        else if (strnicmp(saNewFile.get(), "Attrib\\Attrib\\", 14) == 0)
             iChop = 14;
-        char *sSrc = saNewFile + iChop - 1;
+        char *sSrc = saNewFile.get() + iChop - 1;
         do
         {
             ++sSrc;
@@ -449,13 +448,12 @@ void frmRGDEditor::DoSave()
 
         try
         {
-            m_pLua2Object->saveFile(streamResult.value().get(), saNewFile);
+            m_pLua2Object->saveFile(streamResult.value().get(), saNewFile.get());
         }
         catch (CRainmanException *pE)
         {
             RestoreBackupFile(TheConstruct->GetModuleService().GetModule(), m_sFilename);
             ErrorBoxE(pE);
-            delete[] saNewFile;
             return;
         }
         m_bDataNeedsSaving = false;
@@ -464,8 +462,6 @@ void frmRGDEditor::DoSave()
     else
     {
     }
-
-    delete[] saNewFile;
 }
 
 void frmRGDEditor::OnSave(wxCommandEvent &event)
@@ -1136,10 +1132,10 @@ void frmRGDEditor::OnPropertyChange(wxPropertyGridEvent &event)
         CRGDTreeItemData *pData = (CRGDTreeItemData *)m_pTables->GetItemData(m_pTables->GetSelection());
         if (pData->pNode->VGetName())
         {
-            char *sName = wxStringToAscii(event.GetPropertyValue().GetString());
+            auto sName = wxStringToAscii(event.GetPropertyValue().GetString());
             try
             {
-                pData->pNode->VSetName(sName);
+                pData->pNode->VSetName(sName.get());
                 // m_pPropertyGrid->Clear();
 
                 m_pTables->SetItemText(m_pTables->GetSelection(), event.GetPropertyValue().GetString());
@@ -1154,7 +1150,6 @@ void frmRGDEditor::OnPropertyChange(wxPropertyGridEvent &event)
                 m_pPropertyGrid->SetPropertyHelpString(wxT("Name"), GetMetaNodeHelp(pData->pNode));
                 ErrorBoxE(pE);
             }
-            delete[] sName;
         }
         else
         {
@@ -1273,17 +1268,16 @@ void frmRGDEditor::_DoValueChange(wxTreeItemId oTreeItem, wxPropertyGridEvent &e
         break;
     case IMetaNode::DT_String:
     {
-        char *saValue = wxStringToAscii(event.GetPropertyValue().GetString());
+        auto saValue = wxStringToAscii(event.GetPropertyValue().GetString());
         try
         {
-            pData->pNode->VSetValueString(saValue);
+            pData->pNode->VSetValueString(saValue.get());
         }
         catch (CRainmanException *pE)
         {
             event.GetProperty()->SetValueFromString(AsciiTowxString(pData->pNode->VGetValueString()));
             ErrorBoxE(pE);
         }
-        delete[] saValue;
         break;
     }
     case IMetaNode::DT_WString:
@@ -1306,17 +1300,16 @@ void frmRGDEditor::_DoValueChange(wxTreeItemId oTreeItem, wxPropertyGridEvent &e
             pData->pTable->VSetReferenceType(IMetaNode::DT_String);
         case IMetaNode::DT_String:
         {
-            char *saValue = wxStringToAscii(event.GetPropertyValue().GetString());
+            auto saValue = wxStringToAscii(event.GetPropertyValue().GetString());
             try
             {
-                pData->pTable->VSetReferenceString(saValue);
+                pData->pTable->VSetReferenceString(saValue.get());
             }
             catch (CRainmanException *pE)
             {
                 event.GetProperty()->SetValueFromString(AsciiTowxString(pData->pTable->VGetReferenceString()));
                 ErrorBoxE(pE);
             }
-            delete[] saValue;
             break;
         }
         case IMetaNode::DT_WString:
@@ -1512,19 +1505,18 @@ void frmRGDEditor::OnAddChild(wxCommandEvent &event)
     wxString sName = wxGetTextFromUser(wxT("Name of new child:"), wxT("Add Child"), wxT("new"), (wxWindow *)this);
     if (sName != wxT(""))
     {
-        char *saName = wxStringToAscii(sName);
+        auto saName = wxStringToAscii(sName);
         IMetaNode *pNode, *pNode2;
         CRGDTreeItemData *pData = (CRGDTreeItemData *)m_pTables->GetItemData(m_pTables->GetSelection());
         if (pData->pTable)
         {
             try
             {
-                pNode = pData->pTable->VAddChild(saName);
+                pNode = pData->pTable->VAddChild(saName.get());
             }
             catch (CRainmanException *pE)
             {
                 ErrorBoxE(pE);
-                delete[] saName;
                 return;
             }
 
@@ -1540,7 +1532,7 @@ void frmRGDEditor::OnAddChild(wxCommandEvent &event)
                     wxPGProperty *oEntry;
                     if (iID == (pData->pTable->VGetChildCount() - 1))
                     {
-                        m_pTables->AppendItem(m_pTables->GetSelection(), AsciiTowxString(saName), -1, -1,
+                        m_pTables->AppendItem(m_pTables->GetSelection(), AsciiTowxString(saName.get()), -1, -1,
                                               new CRGDTreeItemData(pNode, 0, true, false));
                         oEntry = m_pPropertyGrid->Append(GetMetaNodeEditor(pNode, L""));
                         m_pPropertyGrid->Refresh();
@@ -1548,7 +1540,7 @@ void frmRGDEditor::OnAddChild(wxCommandEvent &event)
                     }
                     else
                     {
-                        m_pTables->InsertItem(m_pTables->GetSelection(), iID, AsciiTowxString(saName), -1, -1,
+                        m_pTables->InsertItem(m_pTables->GetSelection(), iID, AsciiTowxString(saName.get()), -1, -1,
                                               new CRGDTreeItemData(pNode, 0, true, false));
                         oEntry = m_pPropertyGrid->Insert(oPropItem, GetMetaNodeEditor(pNode, L""));
                     }
@@ -1574,7 +1566,6 @@ void frmRGDEditor::OnAddChild(wxCommandEvent &event)
         {
             wxMessageBox(AppStr(rgd_cantaddchild), AppStr(rgd_errortitle), wxICON_ERROR, this);
         }
-        delete[] saName;
     }
 }
 

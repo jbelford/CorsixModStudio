@@ -65,9 +65,9 @@ class CLuaBurnAction : public frmFiles::IHandler
             return;
         }
         auto &stream = streamResult.value();
-        char *saFile = wxStringToAscii(sFile);
+        auto saFile = wxStringToAscii(sFile);
 
-        CLuaFile *pLua = CLuaAction::DoLoad(stream.get(), saFile);
+        CLuaFile *pLua = CLuaAction::DoLoad(stream.get(), saFile.get());
         if (pLua)
         {
             CRgdFile *pRgd = new CRgdFile;
@@ -84,18 +84,20 @@ class CLuaBurnAction : public frmFiles::IHandler
                     goto after_rgd_loaded_cleany_code;
                 }
                 {
-                    bool bMovedTOC = ConvertLuaFilenameToRgd(saFile);
-                    BackupFile(TheConstruct->GetModuleService().GetModule(), AsciiTowxString(saFile));
-                    auto outResult = TheConstruct->GetFileService().OpenOutputStream(AsciiTowxString(saFile), true);
+                    bool bMovedTOC = ConvertLuaFilenameToRgd(saFile.get());
+                    BackupFile(TheConstruct->GetModuleService().GetModule(), AsciiTowxString(saFile.get()));
+                    auto outResult =
+                        TheConstruct->GetFileService().OpenOutputStream(AsciiTowxString(saFile.get()), true);
                     if (outResult)
                     {
                         auto &outStream = outResult.value();
                         auto itrResult =
-                            TheConstruct->GetFileService().Iterate(AsciiTowxString(saFile).BeforeLast('\\'));
+                            TheConstruct->GetFileService().Iterate(AsciiTowxString(saFile.get()).BeforeLast('\\'));
                         IDirectoryTraverser::IIterator *pDir = itrResult ? itrResult.value().release() : nullptr;
                         frmFiles *pFiles = TheConstruct->GetFilesList();
                         if (bMovedTOC)
-                            pFiles->UpdateDirectoryChildren(pFiles->FindFile(AsciiTowxString(saFile), true), pDir);
+                            pFiles->UpdateDirectoryChildren(pFiles->FindFile(AsciiTowxString(saFile.get()), true),
+                                                            pDir);
                         else
                             pFiles->UpdateDirectoryChildren(oParent, pDir);
                         delete pDir;
@@ -107,7 +109,8 @@ class CLuaBurnAction : public frmFiles::IHandler
                         catch (CRainmanException *pE)
                         {
                             ErrorBoxE(pE);
-                            RestoreBackupFile(TheConstruct->GetModuleService().GetModule(), AsciiTowxString(saFile));
+                            RestoreBackupFile(TheConstruct->GetModuleService().GetModule(),
+                                              AsciiTowxString(saFile.get()));
                         }
                     }
                     else
@@ -123,7 +126,6 @@ class CLuaBurnAction : public frmFiles::IHandler
                 ErrorBoxAS(err_memory);
             }
         }
-        delete[] saFile;
         delete pLua;
     }
 };

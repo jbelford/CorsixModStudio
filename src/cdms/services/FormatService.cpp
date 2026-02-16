@@ -223,11 +223,10 @@ Result<void> FormatService::SaveUcs(CUcsFile *pUcs, const char *sFile)
 
 Result<void> FormatService::SaveUcs(CUcsFile *pUcs, const wxString &sFile)
 {
-    char *s = wxStringToAscii(sFile);
+    auto s = wxStringToAscii(sFile);
     if (!s)
         return Result<void>::Err(wxT("Memory allocation error"));
 
-    auto result = SaveUcs(pUcs, s);
-    delete[] s;
+    auto result = SaveUcs(pUcs, s.get());
     return result;
 }

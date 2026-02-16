@@ -164,9 +164,8 @@ void frmLuaInheritTree::OnTreeActivate(wxTreeEvent &event)
             ErrorBoxS(streamResult.error());
             return;
         }
-        char *saFile = wxStringToAscii(sFile);
-        CLuaFile2 *pLua = CLuaAction::DoLoad2(streamResult.value().get(), saFile);
-        delete[] saFile;
+        auto saFile = wxStringToAscii(sFile);
+        CLuaFile2 *pLua = CLuaAction::DoLoad2(streamResult.value().get(), saFile.get());
         if (pLua)
         {
             frmRGDEditor *pForm;

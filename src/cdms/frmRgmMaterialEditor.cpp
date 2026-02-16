@@ -270,16 +270,14 @@ void frmRgmMaterialEditor::OnPropertyChange(wxPropertyGridEvent &event)
         CRgmMaterialTreeData *pData = (CRgmMaterialTreeData *)m_pTables->GetItemData(m_pTables->GetSelection());
         if (event.GetPropertyName().IsSameAs(wxT("Name")))
         {
-            char *sAscii = wxStringToAscii(event.GetPropertyValue().GetString());
-            pData->pMaterial->SetName(sAscii);
-            delete[] sAscii;
+            auto sAscii = wxStringToAscii(event.GetPropertyValue().GetString());
+            pData->pMaterial->SetName(sAscii.get());
             m_pTables->SetItemText(m_pTables->GetSelection(), event.GetPropertyValue().GetString());
         }
         else if (event.GetPropertyName().IsSameAs(wxT("Shader")))
         {
-            char *sAscii = wxStringToAscii(event.GetPropertyValue().GetString());
-            pData->pMaterial->SetDxName(sAscii);
-            delete[] sAscii;
+            auto sAscii = wxStringToAscii(event.GetPropertyValue().GetString());
+            pData->pMaterial->SetDxName(sAscii.get());
         }
     }
     else
@@ -288,9 +286,8 @@ void frmRgmMaterialEditor::OnPropertyChange(wxPropertyGridEvent &event)
         {
         case CRgmFile::CMaterial::CVariable::VT_Text:
         {
-            char *sAscii = wxStringToAscii(event.GetPropertyValue().GetString());
-            pVar->SetValueText(sAscii);
-            delete[] sAscii;
+            auto sAscii = wxStringToAscii(event.GetPropertyValue().GetString());
+            pVar->SetValueText(sAscii.get());
             break;
         }
         case CRgmFile::CMaterial::CVariable::VT_Number:

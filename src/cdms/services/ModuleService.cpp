@@ -28,58 +28,52 @@
 Result<CModuleFile *> ModuleService::LoadModuleFile(const wxString &sPath, pfnStatusCallback pfnCallback,
                                                     void *pCallbackTag)
 {
-    char *sFile = wxStringToAscii(sPath);
+    auto sFile = wxStringToAscii(sPath);
     if (!sFile)
         return Result<CModuleFile *>::Err(wxT("Memory allocation error"));
 
     CModuleFile *pMod = new CModuleFile;
     if (!pMod)
     {
-        delete[] sFile;
         return Result<CModuleFile *>::Err(wxT("Memory allocation error"));
     }
 
     try
     {
-        pMod->LoadModuleFile(sFile, pfnCallback, pCallbackTag);
+        pMod->LoadModuleFile(sFile.get(), pfnCallback, pCallbackTag);
     }
     catch (CRainmanException *pE)
     {
         delete pMod;
-        delete[] sFile;
         return ResultFromExceptionT<CModuleFile *>(pE);
     }
 
-    delete[] sFile;
     return Result<CModuleFile *>::Ok(pMod);
 }
 
 Result<CModuleFile *> ModuleService::LoadSgaAsMod(const wxString &sPath, pfnStatusCallback pfnCallback,
                                                   void *pCallbackTag)
 {
-    char *sFile = wxStringToAscii(sPath);
+    auto sFile = wxStringToAscii(sPath);
     if (!sFile)
         return Result<CModuleFile *>::Err(wxT("Memory allocation error"));
 
     CModuleFile *pMod = new CModuleFile;
     if (!pMod)
     {
-        delete[] sFile;
         return Result<CModuleFile *>::Err(wxT("Memory allocation error"));
     }
 
     try
     {
-        pMod->LoadSgaAsMod(sFile, pfnCallback, pCallbackTag);
+        pMod->LoadSgaAsMod(sFile.get(), pfnCallback, pCallbackTag);
     }
     catch (CRainmanException *pE)
     {
         delete pMod;
-        delete[] sFile;
         return ResultFromExceptionT<CModuleFile *>(pE);
     }
 
-    delete[] sFile;
     return Result<CModuleFile *>::Ok(pMod);
 }
 
@@ -87,21 +81,19 @@ Result<CModuleFile *> ModuleService::LoadSgaAsMod(const wxString &sPath, pfnStat
 
 Result<void> ModuleService::SetLocale(const wxString &sLocale)
 {
-    char *sVal = wxStringToAscii(sLocale);
+    auto sVal = wxStringToAscii(sLocale);
     if (!sVal)
         return Result<void>::Err(wxT("Memory allocation error"));
 
     try
     {
-        m_pModule->SetLocale(sVal);
+        m_pModule->SetLocale(sVal.get());
     }
     catch (CRainmanException *pE)
     {
-        delete[] sVal;
         return ResultFromException(pE);
     }
 
-    delete[] sVal;
     return Result<void>::Ok();
 }
 
@@ -160,41 +152,37 @@ long ModuleService::GetSgaOutputVersion() const { return m_pModule->GetSgaOutput
 
 void ModuleService::SetDescription(const wxString &sValue)
 {
-    char *s = wxStringToAscii(sValue);
+    auto s = wxStringToAscii(sValue);
     if (s)
     {
-        m_pModule->SetDescription(s);
-        delete[] s;
+        m_pModule->SetDescription(s.get());
     }
 }
 
 void ModuleService::SetTextureFe(const wxString &sValue)
 {
-    char *s = wxStringToAscii(sValue);
+    auto s = wxStringToAscii(sValue);
     if (s)
     {
-        m_pModule->SetTextureFe(s);
-        delete[] s;
+        m_pModule->SetTextureFe(s.get());
     }
 }
 
 void ModuleService::SetTextureIcon(const wxString &sValue)
 {
-    char *s = wxStringToAscii(sValue);
+    auto s = wxStringToAscii(sValue);
     if (s)
     {
-        m_pModule->SetTextureIcon(s);
-        delete[] s;
+        m_pModule->SetTextureIcon(s.get());
     }
 }
 
 void ModuleService::SetUiName(const wxString &sValue)
 {
-    char *s = wxStringToAscii(sValue);
+    auto s = wxStringToAscii(sValue);
     if (s)
     {
-        m_pModule->SetUiName(s);
-        delete[] s;
+        m_pModule->SetUiName(s.get());
     }
 }
 
@@ -214,52 +202,47 @@ const wchar_t *ModuleService::ResolveUCS(unsigned long iStringID) const { return
 
 Result<void> ModuleService::NewUCS(const wxString &sName)
 {
-    char *s = wxStringToAscii(sName);
+    auto s = wxStringToAscii(sName);
     if (!s)
         return Result<void>::Err(wxT("Memory allocation error"));
 
     try
     {
-        m_pModule->NewUCS(s);
+        m_pModule->NewUCS(s.get());
     }
     catch (CRainmanException *pE)
     {
-        delete[] s;
         return ResultFromException(pE);
     }
 
-    delete[] s;
     return Result<void>::Ok();
 }
 
 Result<void> ModuleService::NewUCS(const wxString &sName, CUcsFile *pUcs)
 {
-    char *s = wxStringToAscii(sName);
+    auto s = wxStringToAscii(sName);
     if (!s)
         return Result<void>::Err(wxT("Memory allocation error"));
 
     try
     {
-        m_pModule->NewUCS(s, pUcs);
+        m_pModule->NewUCS(s.get(), pUcs);
     }
     catch (CRainmanException *pE)
     {
-        delete[] s;
         return ResultFromException(pE);
     }
 
-    delete[] s;
     return Result<void>::Ok();
 }
 
 Result<bool> ModuleService::DirectoryExists(const wxString &sPath)
 {
-    char *s = wxStringToAscii(sPath);
+    auto s = wxStringToAscii(sPath);
     if (!s)
         return Result<bool>::Err(wxT("Memory allocation error"));
 
-    bool bExists = m_pModule->VDirectoryExists(s);
-    delete[] s;
+    bool bExists = m_pModule->VDirectoryExists(s.get());
     return Result<bool>::Ok(bExists);
 }
 

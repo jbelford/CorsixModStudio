@@ -198,7 +198,7 @@ void frmScarEditor::DoSave()
     TheConstruct->GetFilesList()->UpdateDirectoryChildren(m_oFileParent, dirResult.value().get());
 
     wxString sContent = m_pSTC->GetText();
-    char *saContent = wxStringToAscii(sContent);
+    auto saContent = wxStringToAscii(sContent);
     if (!saContent)
     {
         ErrorBoxAS(err_memory);
@@ -207,20 +207,17 @@ void frmScarEditor::DoSave()
 
     try
     {
-        streamResult.value()->VWrite((unsigned long)sContent.Length(), 1, saContent);
+        streamResult.value()->VWrite((unsigned long)sContent.Length(), 1, saContent.get());
     }
     catch (CRainmanException *pE)
     {
         RestoreBackupFile(TheConstruct->GetModuleService().GetModule(), m_sFilename);
-        delete[] saContent;
         ErrorBoxE(pE);
         return;
     }
     m_bNeedsSaving = false;
     m_pSTC->SetSavePoint();
     wxMessageBox(AppStr(scar_savegood), AppStr(scar_save), wxICON_INFORMATION, this);
-
-    delete[] saContent;
 }
 
 void frmScarEditor::OnSavePointLeave(wxStyledTextEvent &event)
@@ -300,11 +297,11 @@ void frmScarEditor::OnCharAdded(wxStyledTextEvent &event)
         int iWordPos = m_pSTC->WordStartPosition(iPos, false);
         m_oThisCalltip.iPos = iWordPos;
         wxString sWord = m_pSTC->GetTextRange(iWordPos, iPos);
-        char *saWord = wxStringToAscii(sWord);
+        auto saWord = wxStringToAscii(sWord);
         for (std::list<_ScarFunction>::iterator itr = m_lstScarFunctions.begin(); itr != m_lstScarFunctions.end();
              ++itr)
         {
-            if (itr->iType == 0 && strcmp(saWord, itr->sName) == 0)
+            if (itr->iType == 0 && strcmp(saWord.get(), itr->sName) == 0)
             {
                 m_oThisCalltip.sTip = wxT("");
                 m_oThisCalltip.sTip.Append(AsciiTowxString(itr->sReturn));
@@ -326,7 +323,6 @@ void frmScarEditor::OnCharAdded(wxStyledTextEvent &event)
                 m_pSTC->CallTipSetBackground(wxColour(_T("LIGHT BLUE")));
                 m_pSTC->CallTipSetForeground(wxColour(_T("BLACK")));
                 m_pSTC->CallTipShow(iWordPos, m_oThisCalltip.sTip);
-                delete[] saWord;
                 return;
             }
         }
@@ -336,7 +332,6 @@ void frmScarEditor::OnCharAdded(wxStyledTextEvent &event)
         m_pSTC->CallTipSetForeground(wxColour(_T("BLACK")));
         m_oThisCalltip.sTip = wxT("No help available");
         m_pSTC->CallTipShow(iWordPos, m_oThisCalltip.sTip);
-        delete[] saWord;
     }
     else if ((char)event.GetKey() == '_')
     {
@@ -345,7 +340,7 @@ void frmScarEditor::OnCharAdded(wxStyledTextEvent &event)
             int iPos = m_pSTC->GetCurrentPos() - 1;
             int iWordPos = m_pSTC->WordStartPosition(iPos, false);
             wxString sWord = m_pSTC->GetTextRange(iWordPos, iPos);
-            char *saWord = wxStringToAscii(sWord);
+            auto saWord = wxStringToAscii(sWord);
             wxString sItems;
             size_t iLen = 0, iWordLen = sWord.Len();
             bool GotWords = false;
@@ -356,7 +351,7 @@ void frmScarEditor::OnCharAdded(wxStyledTextEvent &event)
             for (std::list<_ScarFunction>::iterator itr = m_lstScarFunctions.begin(); itr != m_lstScarFunctions.end();
                  ++itr)
             {
-                if (strncmp(saWord, itr->sName, iWordLen) == 0)
+                if (strncmp(saWord.get(), itr->sName, iWordLen) == 0)
                 {
                     if (GotWords)
                         sItems.Append(' ');
@@ -364,7 +359,6 @@ void frmScarEditor::OnCharAdded(wxStyledTextEvent &event)
                     GotWords = true;
                 }
             }
-            delete[] saWord;
             m_pSTC->AutoCompSetAutoHide(true);
             if (GotWords)
             {
@@ -456,12 +450,11 @@ void frmScarEditor::OnCheckLua(wxCommandEvent &event)
         pfn_lua_close = lua51_close;
     }
 
-    char *sLua = wxStringToAscii(m_pSTC->GetText());
+    auto sLua = wxStringToAscii(m_pSTC->GetText());
 
     lua_State *L;
     L = pfn_lua_open();
-    int iLuaError = pfn_luaL_loadbuffer(L, sLua, strlen(sLua), "");
-    delete[] sLua;
+    int iLuaError = pfn_luaL_loadbuffer(L, sLua.get(), strlen(sLua.get()), "");
     if (iLuaError)
     {
         const char *sErr = pfn_lua_tolstring(L, -1, 0);

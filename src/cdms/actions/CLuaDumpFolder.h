@@ -60,16 +60,15 @@ class CLuaDumpFolder : public frmFiles::IHandler
                         m_pProgress->Update(iPVal, sFile);
 
                         sFile = sFolder + wxT("\\") + pTree->GetItemText(oChild);
-                        char *saFile = wxStringToAscii(sFile);
+                        auto saFile = wxStringToAscii(sFile);
                         try
                         {
-                            CRgdToLuaDumpAction::DoConvert(saFile);
+                            CRgdToLuaDumpAction::DoConvert(saFile.get());
                         }
                         catch (CRainmanException *pE)
                         {
                             ErrorBoxE(pE);
                         }
-                        delete[] saFile;
                     }
                 }
             }

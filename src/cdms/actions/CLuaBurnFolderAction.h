@@ -78,14 +78,14 @@ class CLuaBurnFolderAction : public frmFiles::IHandler
                         m_pProgress->Update(iPVal, sFile);
 
                         sFile = sFolder + wxT("\\") + pTree->GetItemText(oChild);
-                        char *saFile = wxStringToAscii(sFile);
-                        char *saRgd = strdup(saFile);
+                        auto saFile = wxStringToAscii(sFile);
+                        char *saRgd = strdup(saFile.get());
                         bAnyMovedToC = CLuaBurnAction::ConvertLuaFilenameToRgd(saRgd) || bAnyMovedToC;
 
                         if (m_bCheckSkip)
                         {
                             tLastWriteTime oLuaWriteTime =
-                                TheConstruct->GetModuleService().GetModule()->VGetLastWriteTime(saFile);
+                                TheConstruct->GetModuleService().GetModule()->VGetLastWriteTime(saFile.get());
                             if (IsValidWriteTime(oLuaWriteTime))
                             {
                                 try
@@ -96,7 +96,6 @@ class CLuaBurnFolderAction : public frmFiles::IHandler
                                     {
                                         if (IsWriteTimeNewer(oRgdWriteTime, oLuaWriteTime))
                                         {
-                                            delete[] saFile;
                                             free(saRgd);
                                             goto rgd_is_newer;
                                         }
@@ -110,14 +109,13 @@ class CLuaBurnFolderAction : public frmFiles::IHandler
                         wxString sError = wxT("");
                         if (!streamResult)
                         {
-                            delete[] saFile;
                             free(saRgd);
                             sError = wxT("Cannot open file");
                         }
                         else
                         {
                             auto &stream = streamResult.value();
-                            CLuaFile *pLua = CLuaAction::DoLoad(stream.get(), saFile, m_pCache);
+                            CLuaFile *pLua = CLuaAction::DoLoad(stream.get(), saFile.get(), m_pCache);
                             if (pLua)
                             {
                                 CRgdFile *pRgd = new CRgdFile;
@@ -173,7 +171,6 @@ class CLuaBurnFolderAction : public frmFiles::IHandler
                                     sError = AppStr(err_memory);
                                 }
                             }
-                            delete[] saFile;
                             free(saRgd);
                             if (pLua)
                                 m_pCache->FreeState(pLua->m_pLua);

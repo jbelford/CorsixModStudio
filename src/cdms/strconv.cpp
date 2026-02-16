@@ -21,80 +21,83 @@
 
 wchar_t *AsciiToUnicode(const char *sAscii)
 {
-	size_t iLen = strlen(sAscii) + 1;
-	wchar_t *pUnicode = new wchar_t[iLen];
-	if (!pUnicode)
-		return 0;
-	for (size_t i = 0; i < iLen; ++i)
-	{
-		pUnicode[i] = (wchar_t)sAscii[i];
-	}
-	return pUnicode;
+    size_t iLen = strlen(sAscii) + 1;
+    wchar_t *pUnicode = new wchar_t[iLen];
+    if (!pUnicode)
+        return 0;
+    for (size_t i = 0; i < iLen; ++i)
+    {
+        pUnicode[i] = (wchar_t)sAscii[i];
+    }
+    return pUnicode;
 }
 
 wchar_t *AsciiToUnicodeDel(char *sAscii)
 {
-	size_t iLen = strlen(sAscii) + 1;
-	wchar_t *pUnicode = new wchar_t[iLen];
-	if (!pUnicode)
-	{
-		delete[] sAscii;
-		return 0;
-	}
-	for (size_t i = 0; i < iLen; ++i)
-	{
-		pUnicode[i] = (wchar_t)sAscii[i];
-	}
-	delete[] sAscii;
-	return pUnicode;
+    size_t iLen = strlen(sAscii) + 1;
+    wchar_t *pUnicode = new wchar_t[iLen];
+    if (!pUnicode)
+    {
+        delete[] sAscii;
+        return 0;
+    }
+    for (size_t i = 0; i < iLen; ++i)
+    {
+        pUnicode[i] = (wchar_t)sAscii[i];
+    }
+    delete[] sAscii;
+    return pUnicode;
 }
 
 wchar_t *AsciiToUnicodeFree(char *sAscii)
 {
-	size_t iLen = strlen(sAscii) + 1;
-	wchar_t *pUnicode = new wchar_t[iLen];
-	if (!pUnicode)
-	{
-		free(sAscii);
-		return 0;
-	}
-	for (size_t i = 0; i < iLen; ++i)
-	{
-		pUnicode[i] = (wchar_t)sAscii[i];
-	}
-	free(sAscii);
-	return pUnicode;
+    size_t iLen = strlen(sAscii) + 1;
+    wchar_t *pUnicode = new wchar_t[iLen];
+    if (!pUnicode)
+    {
+        free(sAscii);
+        return 0;
+    }
+    for (size_t i = 0; i < iLen; ++i)
+    {
+        pUnicode[i] = (wchar_t)sAscii[i];
+    }
+    free(sAscii);
+    return pUnicode;
 }
 
 char *UnicodeToAscii(const wchar_t *pUnicode)
 {
-	size_t iLen = wcslen(pUnicode) + 1;
-	char *sAscii = new char[iLen];
-	if (!sAscii)
-		return 0;
-	for (size_t i = 0; i < iLen; ++i)
-	{
-		wchar_t iChar = pUnicode[i];
-		if (iChar & ~0xFF)
-			sAscii[i] = '?';
-		else
-			sAscii[i] = (char)iChar;
-	}
-	return sAscii;
+    size_t iLen = wcslen(pUnicode) + 1;
+    char *sAscii = new char[iLen];
+    if (!sAscii)
+        return 0;
+    for (size_t i = 0; i < iLen; ++i)
+    {
+        wchar_t iChar = pUnicode[i];
+        if (iChar & ~0xFF)
+            sAscii[i] = '?';
+        else
+            sAscii[i] = (char)iChar;
+    }
+    return sAscii;
 }
 
 wxString AsciiTowxString(const char *sAscii)
 {
-	if (sAscii == 0)
-		return wxString();
-	/*
-	wchar_t* pUnicode = AsciiToUnicode(sAscii);
-	if(!pUnicode) return wxString();
-	wxString r(pUnicode);
-	delete[] pUnicode;
-	return r;
-	*/
-	return wxString(sAscii, wxConvUTF8);
+    if (sAscii == 0)
+        return wxString();
+    /*
+    wchar_t* pUnicode = AsciiToUnicode(sAscii);
+    if(!pUnicode) return wxString();
+    wxString r(pUnicode);
+    delete[] pUnicode;
+    return r;
+    */
+    return wxString(sAscii, wxConvUTF8);
 }
 
-char *wxStringToAscii(const wxString &oStr) { return UnicodeToAscii(oStr.c_str()); }
+std::unique_ptr<char[]> wxStringToAscii(const wxString &oStr)
+{
+    return std::unique_ptr<char[]>(UnicodeToAscii(oStr.c_str()));
+}

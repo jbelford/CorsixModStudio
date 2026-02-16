@@ -43,17 +43,15 @@ class CMakeCopyAction : public frmFiles::IHandler
             return;
         sNewName = sFile.BeforeLast('\\') + wxT("\\") + sNewName;
 
-        char *saSrcFile = wxStringToAscii(sFile);
-        char *saFile = wxStringToAscii(sNewName);
+        auto saSrcFile = wxStringToAscii(sFile);
+        auto saFile = wxStringToAscii(sNewName);
         try
         {
-            DoExtract(saSrcFile, saFile);
+            DoExtract(saSrcFile.get(), saFile.get());
         }
         catch (CRainmanException *pE)
         {
             ErrorBoxE(pE);
-            delete[] saFile;
-            delete[] saSrcFile;
             return;
         }
 
@@ -65,8 +63,6 @@ class CMakeCopyAction : public frmFiles::IHandler
             delete pDir;
             wxMessageBox(wxT("File copied"), VGetAction(), wxICON_INFORMATION, TheConstruct);
         }
-        delete[] saFile;
-        delete[] saSrcFile;
     }
 
     static void DoExtract(char *saFile, char *saDestFile, char *p4mbBuffer = 0)

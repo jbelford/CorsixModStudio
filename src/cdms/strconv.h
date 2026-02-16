@@ -19,6 +19,7 @@
 #ifndef _STRCONV_H_
 #define _STRCONV_H_
 
+#include <memory>
 #include <string.h>
 #include <wx/string.h>
 
@@ -50,6 +51,6 @@ wxString AsciiTowxString(const char *sAscii);
 /*
     \return Returns a string, or 0 on error
 */
-char *wxStringToAscii(const wxString &oStr);
+std::unique_ptr<char[]> wxStringToAscii(const wxString &oStr);
 
 #endif

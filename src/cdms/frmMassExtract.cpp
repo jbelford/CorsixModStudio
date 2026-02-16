@@ -148,10 +148,10 @@ size_t frmMassExtract::_DoExtract(wxTreeCtrl *pTree, wxTreeItemId &oFolder, wxSt
                     if (sPath.Len())
                         sFile.Append('\\');
                     sFile.Append(pTree->GetItemText(oChild));
-                    char *saFile = wxStringToAscii(sFile);
+                    auto saFile = wxStringToAscii(sFile);
                     try
                     {
-                        CExtractAction::DoExtract(saFile, m_p4mbBuffer);
+                        CExtractAction::DoExtract(saFile.get(), m_p4mbBuffer);
                     }
                     catch (CRainmanException *pE)
                     {
@@ -164,7 +164,6 @@ size_t frmMassExtract::_DoExtract(wxTreeCtrl *pTree, wxTreeItemId &oFolder, wxSt
                         m_pGauge->Refresh();
                         iGVal = iNGVal;
                     }
-                    delete[] saFile;
                 }
             }
         }
@@ -183,9 +182,8 @@ size_t frmMassExtract::_DoExtract(wxTreeCtrl *pTree, wxTreeItemId &oFolder, wxSt
 
     if (!bCountOnly && sPath.Len())
     {
-        char *saPath = wxStringToAscii(sPath);
-        IDirectoryTraverser::IIterator *pDir = pModule->VIterate(saPath);
-        delete[] saPath;
+        auto saPath = wxStringToAscii(sPath);
+        IDirectoryTraverser::IIterator *pDir = pModule->VIterate(saPath.get());
         if (m_bForceUpdate || pTree->IsExpanded(oFolder))
             TheConstruct->GetFilesList()->UpdateDirectoryChildren(oFolder, pDir);
         delete pDir;
@@ -250,13 +248,11 @@ void frmMassExtract::OnGoClick(wxCommandEvent &event)
         pSource = modSvc.GetFileMap()->RegisterSource(0, false, 0, "", "", modSvc.GetFileSystem(),
                                                       modSvc.GetFileSystem(), true, true, true);
 
-        const char *saPath = wxStringToAscii(sSaveDirectory);
-        std::unique_ptr<IDirectoryTraverser::IIterator> pItr(modSvc.GetFileSystem()->VIterate(saPath));
-        delete[] saPath;
+        auto saPath = wxStringToAscii(sSaveDirectory);
+        std::unique_ptr<IDirectoryTraverser::IIterator> pItr(modSvc.GetFileSystem()->VIterate(saPath.get()));
 
-        const char *saPathVirtual = wxStringToAscii(m_sPath);
-        modSvc.GetFileMap()->MapIteratorDeep(pSource, saPathVirtual, &*pItr);
-        delete[] saPathVirtual;
+        auto saPathVirtual = wxStringToAscii(m_sPath);
+        modSvc.GetFileMap()->MapIteratorDeep(pSource, saPathVirtual.get(), &*pItr);
     }
 
     for (size_t i = 0; i < m_vSrcs.size(); ++i)

@@ -118,10 +118,10 @@ void frmUCSToDAT::OnGoClick(wxCommandEvent &event)
     UCSToDATConvertor oConvertor;
 
     bool bGood = true;
-    char *sFilename = wxStringToAscii(m_pOutFile->GetValue());
+    auto sFilename = wxStringToAscii(m_pOutFile->GetValue());
     try
     {
-        oConvertor.setOutputFilename(sFilename);
+        oConvertor.setOutputFilename(sFilename.get());
         oConvertor.setRange(iRangeStart, iRangeEnd);
         oConvertor.setModule(TheConstruct->GetModuleService().GetModule());
         oConvertor.doConvertion();
@@ -131,8 +131,6 @@ void frmUCSToDAT::OnGoClick(wxCommandEvent &event)
         ErrorBoxE(pE);
         bGood = false;
     }
-
-    delete[] sFilename;
 
     delete pMsg;
 

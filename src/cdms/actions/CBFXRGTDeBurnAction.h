@@ -69,18 +69,17 @@ class CBFXRGTDeBurnAction : public frmFiles::IHandler
                         m_pProgress->Update(iPVal, sFile);
 
                         sFile = sFolder + wxT("\\") + pTree->GetItemText(oChild);
-                        char *saFile = wxStringToAscii(sFile);
+                        auto saFile = wxStringToAscii(sFile);
 
                         if (sFile.AfterLast('.').IsSameAs(wxT("bfx"), false))
                         {
-                            CBfxToLuaDumpAction::DoConvert(saFile, L);
+                            CBfxToLuaDumpAction::DoConvert(saFile.get(), L);
                         }
                         else
                         {
                             auto streamResult = TheConstruct->GetFileService().OpenStream(sFile);
                             if (!streamResult)
                             {
-                                delete[] saFile;
                                 ErrorBox("Cannot open file");
                                 return iCount;
                             }
@@ -89,15 +88,13 @@ class CBFXRGTDeBurnAction : public frmFiles::IHandler
                             CRgtFile *pRgt = new CRgtFile;
                             pRgt->Load(stream.get());
 
-                            strcpy(strrchr(saFile, '.'), ".tga");
+                            strcpy(strrchr(saFile.get(), '.'), ".tga");
                             auto outResult =
-                                TheConstruct->GetFileService().OpenOutputStream(AsciiTowxString(saFile), true);
+                                TheConstruct->GetFileService().OpenOutputStream(AsciiTowxString(saFile.get()), true);
                             pRgt->SaveTGA(outResult ? outResult.value().get() : nullptr);
 
                             delete pRgt;
                         }
-
-                        delete[] saFile;
                     }
                 }
             }

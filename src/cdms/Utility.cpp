@@ -157,13 +157,14 @@ static bool fsCopyFile(IFileStore* pStore, wxString& sSrc, wxString& sDest)
     bool bRet = false;
     if(pStore)
     {
-        char* saSrc = wxStringToAscii(sSrc), *saDest = wxStringToAscii(sDest);
+        auto saSrc = wxStringToAscii(sSrc);
+        auto saDest = wxStringToAscii(sDest);
         if(saSrc && saDest)
         {
-            IFileStore::IStream* pIn = pStore->VOpenStream(saSrc);
+            IFileStore::IStream* pIn = pStore->VOpenStream(saSrc.get());
             if(pIn)
             {
-                IFileStore::IOutputStream* pOut = pStore->VOpenOutputStream(saDest, true);
+                IFileStore::IOutputStream* pOut = pStore->VOpenOutputStream(saDest.get(), true);
                 if(pOut)
                 {
                     if(pIn->VSeek(0, IFileStore::IStream::SL_End))
@@ -184,8 +185,7 @@ static bool fsCopyFile(IFileStore* pStore, wxString& sSrc, wxString& sDest)
                 delete pIn;
             }
         }
-        delete[] saDest;
-        delete[] saSrc;
+
     }
     return bRet;
 }

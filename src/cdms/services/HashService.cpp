@@ -36,7 +36,7 @@ Result<void> HashService::Initialize(const wxString &sDictionaryPath)
     if (!m_pHashTable)
         return Result<void>::Err(wxT("Memory allocation error"));
 
-    char *sDicPath = wxStringToAscii(sDictionaryPath);
+    auto sDicPath = wxStringToAscii(sDictionaryPath);
     if (!sDicPath)
     {
         delete m_pHashTable;
@@ -48,16 +48,14 @@ Result<void> HashService::Initialize(const wxString &sDictionaryPath)
     IDirectoryTraverser::IIterator *pItr = nullptr;
     try
     {
-        pItr = oStore.VIterate(sDicPath);
+        pItr = oStore.VIterate(sDicPath.get());
     }
     catch (CRainmanException *pE)
     {
-        delete[] sDicPath;
         delete m_pHashTable;
         m_pHashTable = nullptr;
         return ResultFromException(pE);
     }
-    delete[] sDicPath;
 
     if (!pItr)
         return Result<void>::Ok();
@@ -112,21 +110,19 @@ void HashService::Shutdown()
 
 Result<void> HashService::CrossRefWithStringList(const wxString &sFile)
 {
-    char *s = wxStringToAscii(sFile);
+    auto s = wxStringToAscii(sFile);
     if (!s)
         return Result<void>::Err(wxT("Memory allocation error"));
 
     try
     {
-        m_pHashTable->XRefWithStringList(s);
+        m_pHashTable->XRefWithStringList(s.get());
     }
     catch (CRainmanException *pE)
     {
-        delete[] s;
         return ResultFromException(pE);
     }
 
-    delete[] s;
     return Result<void>::Ok();
 }
 

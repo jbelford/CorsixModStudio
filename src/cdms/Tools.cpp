@@ -124,21 +124,19 @@ void CUcsTool::HandleSelectorResponse(frmUCSSelector *pSelector, wxAuiNotebook *
         sNewFile.Append(wxT("\\"));
         sNewFile.Append(pSelector->GetAnswer());
 
-        char *saNewFile = wxStringToAscii(sNewFile);
+        auto saNewFile = wxStringToAscii(sNewFile);
         CUcsFile *pNewUcs = new CUcsFile;
         try
         {
-            pNewUcs->Save(saNewFile);
+            pNewUcs->Save(saNewFile.get());
         }
         catch (CRainmanException *pE)
         {
-            delete[] saNewFile;
             delete pNewUcs;
             delete pSelector;
             ErrorBoxE(pE);
             return;
         }
-        delete[] saNewFile;
         {
             auto result = TheConstruct->GetModuleService().NewUCS(pSelector->GetAnswer(), pNewUcs);
             if (!result)
@@ -233,7 +231,7 @@ void CDpsCalculatorTool::DoAction()
     if (sOutFile.Len() == 0)
         return;
 
-    char *sOut = wxStringToAscii(sOutFile);
+    auto sOut = wxStringToAscii(sOutFile);
 
     frmMessage *pMsg = new frmMessage(wxT("IDB_TOOL_CALCULATOR"), AppStr(dpscalculator_message));
     pMsg->Show(true);
@@ -280,11 +278,11 @@ void CDpsCalculatorTool::DoAction()
 
         try
         {
-            AutoDPS::AutoDPS_OutputHTML(pPack, sOut);
+            AutoDPS::AutoDPS_OutputHTML(pPack, sOut.get());
         }
         catch (CRainmanException *pE)
         {
-            throw new CModStudioException(pE, __FILE__, __LINE__, "Error saving output to \'%s\'", sOut);
+            throw new CModStudioException(pE, __FILE__, __LINE__, "Error saving output to \'%s\'", sOut.get());
         }
 
         wxMessageBox(AppStr(dpscalculator_done), AppStr(dpscalculator_title), wxICON_INFORMATION, TheConstruct);
@@ -298,7 +296,6 @@ void CDpsCalculatorTool::DoAction()
         delete pPack;
     if (pItr)
         delete pItr;
-    delete[] sOut;
     delete pMsg;
 }
 

@@ -440,21 +440,19 @@ void frmRgdMacro::OnRunClick(wxCommandEvent &event)
     oMacro.setIsDowMod(TheConstruct->GetModuleService().GetModuleType() == CModuleFile::MT_DawnOfWar);
 
     wxString sContent = m_pSTC->GetText();
-    char *saContent = CHECK_MEM(wxStringToAscii(sContent));
+    auto saContent = wxStringToAscii(sContent);
 
     m_pTextbox->Clear();
 
     try
     {
-        oMacro.loadMacro(saContent);
+        oMacro.loadMacro(saContent.get());
     }
     catch (CRainmanException *pE)
     {
         ErrorBoxE(pE);
-        delete[] saContent;
         return;
     }
-    delete[] saContent;
 
     if (!m_bShowingOutput)
     {
@@ -556,11 +554,11 @@ void ForEach_FindRgds(IDirectoryTraverser::IIterator *pItr, void *pTag)
 
 void frmRgdMacro::_populateFileList(std::vector<char *> *lstFiles)
 {
-    char *saPath = wxStringToAscii(m_sPath);
+    auto saPath = wxStringToAscii(m_sPath);
 
     m_iPathLen = (unsigned long)m_sPath.Length();
-    m_iPathHash = crc32_case_idt(0, (const unsigned char *)saPath, m_iPathLen);
-    if ((saPath[m_iPathLen - 1] != '/') && (saPath[m_iPathLen - 1] != '\\'))
+    m_iPathHash = crc32_case_idt(0, (const unsigned char *)saPath.get(), m_iPathLen);
+    if ((saPath.get()[m_iPathLen - 1] != '/') && (saPath.get()[m_iPathLen - 1] != '\\'))
     {
         m_iPathHash = crc32_case_idt(m_iPathHash, (const unsigned char *)"\\", 1);
         ++m_iPathLen;
@@ -569,7 +567,6 @@ void frmRgdMacro::_populateFileList(std::vector<char *> *lstFiles)
     auto dirResult = TheConstruct->GetFileService().Iterate(m_sPath);
     if (!dirResult)
     {
-        delete[] saPath;
         return;
     }
     try
@@ -577,8 +574,6 @@ void frmRgdMacro::_populateFileList(std::vector<char *> *lstFiles)
         Rainman_ForEach(dirResult.value().get(), ForEach_FindRgds, (void *)lstFiles, true);
     }
     IGNORE_EXCEPTIONS
-
-    delete[] saPath;
 }
 
 void frmRgdMacro::OnCancelClick(wxCommandEvent &event)
