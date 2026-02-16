@@ -1,6 +1,6 @@
 # CorsixModStudio — Target Architecture & Refactoring Roadmap
 
-> **Status**: Active — Phases A–E½ complete. Phase F (Modernization) is next. Based on the as-is analysis in [architecture.md](architecture.md).
+> **Status**: Active — Phases A–F complete. Based on the as-is analysis in [architecture.md](architecture.md).
 
 ---
 
@@ -138,7 +138,10 @@ src/rainman/
 │   └── CUcsTransaction.h       # UCS transaction wrapper
 │
 ├── module/
-│   ├── CModuleFile.h/cpp        # .module file parser
+│   ├── CModuleFile.h/cpp        # .module file façade (delegates to sub-classes)
+│   ├── CModuleMetadata.h        # Parsed directive fields (RAII struct)
+│   ├── CModuleParser.h/cpp      # INI parsing + module type heuristics
+│   ├── CResourceLoader.h/cpp    # Resource loading orchestration
 │   ├── CDoWModule.h/cpp         # Game installation scanner
 │   ├── CDoWFileView.h/cpp       # Virtual file view
 │   └── CFileMap.h/cpp           # File index
@@ -527,7 +530,7 @@ Each phase is a standalone unit of work. Complete one before starting the next. 
 3. ~~Modernize string handling: `wxStringToAscii()` returns `std::unique_ptr<char[]>`, eliminating manual `delete[]`~~
 4. ~~Extract `ModuleManager` from `ConstructFrame` (module lifecycle, services, hash table)~~
 5. ~~Extract `TabManager` from `ConstructFrame` (wxAuiNotebook tab management)~~
-6. Consider `CModuleFile` decomposition (only with full test coverage)
+6. ~~`CModuleFile` decomposition: extracted `CModuleMetadata` (directives), `CModuleParser` (INI parsing), `CResourceLoader` (resource loading). CModuleFile.cpp reduced from 1,606 to 775 lines (52%). UCS/collection extraction deferred (nested types create circular dependencies for minimal benefit). 58 tests, 338 total passing.~~
 
 ---
 
