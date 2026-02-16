@@ -100,7 +100,7 @@ void ConstructFrame::OnOpenSga(wxCommandEvent &event)
 void ConstructFrame::LaunchTool(wxString sExeName, bool bIsInModTools)
 {
     wxString sCommand, sFolder;
-    sFolder = m_sModuleFile.BeforeLast('\\');
+    sFolder = m_moduleManager.GetModuleFile().BeforeLast('\\');
     if (bIsInModTools)
         sFolder.Append(wxT("\\ModTools"));
     sFolder.Append(wxT("\\"));
@@ -112,20 +112,7 @@ void ConstructFrame::LaunchTool(wxString sExeName, bool bIsInModTools)
 
 CRgdHashTable *ConstructFrame::GetRgdHashTable()
 {
-    if (m_pRgdHashTable)
-        return m_pRgdHashTable;
-
-    auto result = m_hashService.Initialize(AppStr(app_dictionariespath));
-    if (!result.ok())
-    {
-        throw new CModStudioException(__FILE__, __LINE__, wxStringToAscii(result.error()).get());
-    }
-
-    m_pRgdHashTable = m_hashService.GetHashTable();
-    if (m_hashService.GetCustomOutPath())
-        m_sRgdHashCustomOut = strdup(m_hashService.GetCustomOutPath());
-
-    return m_pRgdHashTable;
+    return m_moduleManager.GetRgdHashTable(AppStr(app_dictionariespath));
 }
 
 void ConstructFrame::LaunchCredits(wxCommandEvent &event)
@@ -254,9 +241,9 @@ void ConstructFrame::LaunchW40k(wxCommandEvent &event)
     sCommand = sFolder;
     sCommand.Append(wxT("W40k.exe"));
     sCmdLine = wxT("");
-    if (m_pModule)
+    if (m_moduleManager.GetModule())
     {
-        sCmdLine = m_sModuleFile;
+        sCmdLine = m_moduleManager.GetModuleFile();
         sCmdLine = sCmdLine.BeforeLast('.');
         sCmdLine = sCmdLine.AfterLast('\\');
         sCmdLine.Prepend(wxT("-modname "));
@@ -286,9 +273,9 @@ void ConstructFrame::LaunchDC(wxCommandEvent &event)
     sCommand = sFolder;
     sCommand.Append(wxT("DarkCrusade.exe"));
     sCmdLine = wxT("");
-    if (m_pModule)
+    if (m_moduleManager.GetModule())
     {
-        sCmdLine = m_sModuleFile;
+        sCmdLine = m_moduleManager.GetModuleFile();
         sCmdLine = sCmdLine.BeforeLast('.');
         sCmdLine = sCmdLine.AfterLast('\\');
         sCmdLine.Prepend(wxT("-modname "));
@@ -318,9 +305,9 @@ void ConstructFrame::LaunchSS(wxCommandEvent &event)
     sCommand = sFolder;
     sCommand.Append(wxT("Soulstorm.exe"));
     sCmdLine = wxT("");
-    if (m_pModule)
+    if (m_moduleManager.GetModule())
     {
-        sCmdLine = m_sModuleFile;
+        sCmdLine = m_moduleManager.GetModuleFile();
         sCmdLine = sCmdLine.BeforeLast('.');
         sCmdLine = sCmdLine.AfterLast('\\');
         sCmdLine.Prepend(wxT("-modname "));
@@ -352,9 +339,9 @@ void ConstructFrame::LaunchCOH(wxCommandEvent &event)
         sCommand.Append(wxT("\\"));
     sCommand.Append(wxT("RelicCOH.exe"));
     sCmdLine = wxT("");
-    if (m_pModule)
+    if (m_moduleManager.GetModule())
     {
-        sCmdLine = AsciiTowxString(m_pModule->GetName());
+        sCmdLine = AsciiTowxString(m_moduleManager.GetModule()->GetName());
         sCmdLine.Prepend(wxT("-modname "));
     }
 
@@ -382,9 +369,9 @@ void ConstructFrame::LaunchW40kWA(wxCommandEvent &event)
     sCommand = sFolder;
     sCommand.Append(wxT("W40kWA.exe"));
     sCmdLine = wxT("");
-    if (m_pModule)
+    if (m_moduleManager.GetModule())
     {
-        sCmdLine = m_sModuleFile;
+        sCmdLine = m_moduleManager.GetModuleFile();
         sCmdLine = sCmdLine.BeforeLast('.');
         sCmdLine = sCmdLine.AfterLast('\\');
         sCmdLine.Prepend(wxT("-modname "));
@@ -437,11 +424,6 @@ void ConstructFrame::LaunchWarnings(wxCommandEvent &event)
 ConstructFrame::ConstructFrame(const wxString &sTitle, const wxPoint &oPos, const wxSize &oSize)
     : wxFrame((wxFrame *)NULL, -1, sTitle, oPos, oSize, wxDEFAULT_FRAME_STYLE | wxMAXIMIZE)
 {
-    m_pModule = 0;
-    m_sModuleFile = wxT("");
-    m_pRgdHashTable = 0;
-    m_sRgdHashCustomOut = 0;
-
     // Initiate tools
     m_toolRegistry.Register(new CLocaleTool);
     m_toolRegistry.Register(new CUcsTool);
@@ -489,39 +471,19 @@ void ConstructFrame::DoTool(wxString sName) { m_toolRegistry.DoTool(sName); }
 ConstructFrame::~ConstructFrame()
 {
     frmRGDEditor::FreeNodeHelp();
-    if (m_pModule)
-        delete m_pModule;
-    // HashService owns the hash table lifecycle (save + delete)
-    m_hashService.Shutdown();
-    m_pRgdHashTable = nullptr;
-    if (m_sRgdHashCustomOut)
-        free(m_sRgdHashCustomOut);
+    // ModuleManager destructor handles m_pModule, hash service, etc.
     // ToolRegistry destructor handles tool cleanup
 }
 
-CModuleFile *ConstructFrame::GetModule() const { return m_pModule; }
+CModuleFile *ConstructFrame::GetModule() const { return m_moduleManager.GetModule(); }
 
-const wxString &ConstructFrame::GetModuleFile() const { return m_sModuleFile; }
+const wxString &ConstructFrame::GetModuleFile() const { return m_moduleManager.GetModuleFile(); }
 
-void ConstructFrame::OnCloseMod(wxCommandEvent &event) { SetModule(0); }
+void ConstructFrame::OnCloseMod(wxCommandEvent &event) { SetModule(nullptr); }
 
-void ConstructFrame::SetModule(CModuleFile *pMod)
+void ConstructFrame::SetModule(CModuleFile *pMod, const wxString &sModuleFile)
 {
-    if (m_pModule)
-        delete m_pModule;
-    m_pModule = pMod;
-    m_moduleService.SetModule(pMod);
-    if (pMod)
-    {
-        // CModuleFile implements both IFileStore and IDirectoryTraverser
-        m_fileService.SetStore(pMod);
-        m_fileService.SetTraverser(pMod);
-    }
-    else
-    {
-        m_fileService.SetStore(nullptr);
-        m_fileService.SetTraverser(nullptr);
-    }
+    m_moduleManager.SetModule(pMod, sModuleFile);
     if (pMod != 0)
     {
         if (!m_tabManager.IsSplit())
@@ -537,10 +499,12 @@ void ConstructFrame::SetModule(CModuleFile *pMod)
             frmFiles *pFiles = new frmFiles(m_tabManager.GetSplitter(), -1);
             m_tabManager.SplitWithFileTree(pFiles, TheConfig->Read(AppStr(config_sashposition), 189));
             pFiles->FillFromIDirectoryTraverser(pMod);
-            m_tabManager.AddPage(
-                new frmModule(m_tabManager.GetTabs(), -1),
-                AppStr(mod_tabname).Append(wxString(wxT(" ["))).Append(m_sModuleFile.AfterLast('\\')).Append(wxT("]")),
-                true);
+            m_tabManager.AddPage(new frmModule(m_tabManager.GetTabs(), -1),
+                                 AppStr(mod_tabname)
+                                     .Append(wxString(wxT(" [")))
+                                     .Append(m_moduleManager.GetModuleFile().AfterLast('\\'))
+                                     .Append(wxT("]")),
+                                 true);
             while (m_tabManager.GetTabs()->GetPageCount() > 1)
                 m_tabManager.GetTabs()->DeletePage(0);
 
@@ -574,7 +538,6 @@ void ConstructFrame::SetModule(CModuleFile *pMod)
         GetMenuBar()->GetMenu(3)->Enable(IDM_PlayDC, false);
         GetMenuBar()->GetMenu(3)->Enable(IDM_PlaySS, false);
 
-        m_sModuleFile = wxT("");
         if (m_tabManager.IsSplit())
         {
             GetMenuBar()->GetMenu(0)->Enable(wxID_CLOSE, false);
@@ -677,8 +640,7 @@ void ConstructFrame::DoLoadSga()
 
         m_pLoadingForm->SetMessage(wxString(wxT("Initializing GUI")));
         wxSafeYield(m_pLoadingForm);
-        m_sModuleFile = pFileDialog->GetPath();
-        SetModule(pMod);
+        SetModule(pMod, pFileDialog->GetPath());
 
         GetMenuBar()->EnableTop(3, false);
 
@@ -830,8 +792,7 @@ void ConstructFrame::DoLoadMod(wxString sPath, eLoadModGames eGame)
         }
         m_pLoadingForm->SetMessage(wxString(wxT("Initializing GUI")));
         wxSafeYield(m_pLoadingForm);
-        m_sModuleFile = pFileDialog ? pFileDialog->GetPath() : sPath;
-        SetModule(pMod);
+        SetModule(pMod, pFileDialog ? pFileDialog->GetPath() : sPath);
 
         delete[] sFile;
         m_pLoadingForm->Close(true);

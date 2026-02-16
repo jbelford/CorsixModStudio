@@ -35,10 +35,7 @@
 #include "TabManager.h"
 #include "frmFiles.h"
 #include <rainman/module/CModuleFile.h>
-#include <rainman/formats/CRgdHashTable.h>
-#include "services/ModuleService.h"
-#include "services/FileService.h"
-#include "services/HashService.h"
+#include "ModuleManager.h"
 #include "ITool.h"
 #include "ToolRegistry.h"
 #include "MenuController.h"
@@ -47,16 +44,8 @@ class ConstructFrame : public wxFrame
 {
   protected:
     TabManager m_tabManager;
-    CModuleFile *m_pModule;
-    wxString m_sModuleFile;
+    ModuleManager m_moduleManager;
     frmLoading *m_pLoadingForm;
-
-    CRgdHashTable *m_pRgdHashTable;
-    char *m_sRgdHashCustomOut;
-
-    ModuleService m_moduleService;
-    FileService m_fileService;
-    HashService m_hashService;
 
   public:
     // Backward compatibility: ConstructFrame::ITool resolves to the standalone ITool
@@ -126,14 +115,14 @@ class ConstructFrame : public wxFrame
 
     CModuleFile *GetModule() const;
     const wxString &GetModuleFile() const;
-    void SetModule(CModuleFile *pMod);
+    void SetModule(CModuleFile *pMod, const wxString &sModuleFile = wxT(""));
     wxAuiNotebook *GetTabs();
     frmLoading *GetLoadingForm();
     frmFiles *GetFilesList();
 
-    ModuleService &GetModuleService() { return m_moduleService; }
-    FileService &GetFileService() { return m_fileService; }
-    HashService &GetHashService() { return m_hashService; }
+    ModuleService &GetModuleService() { return m_moduleManager.GetModuleService(); }
+    FileService &GetFileService() { return m_moduleManager.GetFileService(); }
+    HashService &GetHashService() { return m_moduleManager.GetHashService(); }
 
     size_t GetToolCount();
     ITool *GetTool(size_t i);
