@@ -147,6 +147,24 @@ frmLuaInheritTree::frmLuaInheritTree(wxWindow *parent, wxWindowID id, const wxPo
     else
     {
         CDMS_LOG_INFO("Lua inherit tree: 'Generic\\attrib\\' folder not found in module — tab will be empty");
+
+        auto *pSizer = new wxBoxSizer(wxVERTICAL);
+        pSizer->AddStretchSpacer();
+
+        auto *pLabel = new wxStaticText(this, wxID_ANY,
+                                        wxT("No Lua inheritance data available.\n\n"
+                                            "This module does not contain a 'Generic\\attrib' folder\n"
+                                            "with Lua attribute files.\n\n"
+                                            "Lua attributes are used by Dawn of War and Winter Assault.\n"
+                                            "Later titles (Dark Crusade, Soulstorm, Company of Heroes)\n"
+                                            "use compiled RGD attributes instead."),
+                                        wxDefaultPosition, wxDefaultSize, wxALIGN_CENTRE_HORIZONTAL);
+        pLabel->SetForegroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT));
+        pSizer->Add(pLabel, 0, wxALIGN_CENTER_HORIZONTAL | wxALL, 20);
+
+        pSizer->AddStretchSpacer();
+        SetSizer(pSizer);
+        pSizer->SetSizeHints(this);
     }
 }
 frmLuaInheritTree::~frmLuaInheritTree()
