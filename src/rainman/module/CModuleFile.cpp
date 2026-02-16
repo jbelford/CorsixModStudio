@@ -1784,6 +1784,35 @@ CModuleFile::CArchiveHandler *CModuleFile::CCohDataSource::GetArchive(size_t iId
     return m_vArchives[iId];
 }
 
+const char *CModuleFile::CCohDataSource::GetToc() const { return m_sToc; }
+
+void CModuleFile::CCohDataSource::SetToc(const char *sToc)
+{
+    if (m_sToc)
+        free(m_sToc);
+    m_sToc = strdup(sToc);
+}
+
+const char *CModuleFile::CCohDataSource::GetOption() const { return m_sOption; }
+
+void CModuleFile::CCohDataSource::SetOption(const char *sOption)
+{
+    if (m_sOption)
+        free(m_sOption);
+    m_sOption = strdup(sOption);
+}
+
+signed long CModuleFile::CCohDataSource::GetNumber() const { return m_iNumber; }
+
+void CModuleFile::CCohDataSource::SetNumber(signed long iNumber) { m_iNumber = iNumber; }
+
 const char *CModuleFile::CCohDataSource::GetFolder() const { return m_sFolder; }
+
+void CModuleFile::CCohDataSource::SetFolder(const char *sFolder)
+{
+    if (m_sFolder)
+        free(m_sFolder);
+    m_sFolder = strdup(sFolder);
+}
 
 bool CModuleFile::CCohDataSource::IsLoaded() const { return m_bIsLoaded; }
