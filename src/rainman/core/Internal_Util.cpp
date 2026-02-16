@@ -25,135 +25,137 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 void Util_strtolower(char *sStr)
 {
-	while (*sStr)
-	{
-		*sStr = tolower(*sStr);
-		++sStr;
-	}
+    while (*sStr)
+    {
+        *sStr = tolower(*sStr);
+        ++sStr;
+    }
 }
 
 char *Util_fgetline(FILE *f, unsigned int iInitSize)
 {
-	unsigned int iTotalLen;
-	if (f == 0)
-		return 0;
-	if (iInitSize < 4)
-		iInitSize = 4;
-	iTotalLen = iInitSize;
-	char *sBuffer = new char[iInitSize];
-	char *sReadTo = sBuffer;
-	if (sBuffer == 0)
-		return 0;
+    unsigned int iTotalLen;
+    if (f == 0)
+        return 0;
+    if (iInitSize < 4)
+        iInitSize = 4;
+    iTotalLen = iInitSize;
+    char *sBuffer = new char[iInitSize];
+    if (sBuffer == 0)
+        return 0;
+    sBuffer[0] = '\0';
+    char *sReadTo = sBuffer;
 
-	do
-	{
-		if (fgets(sReadTo, iInitSize, f) == 0)
-		{
-			if (feof(f))
-			{
-				if (sReadTo[strlen(sReadTo) - 1] == '\n')
-					sReadTo[strlen(sReadTo) - 1] = 0;
-				return sBuffer;
-			}
-			delete[] sBuffer;
-			return 0;
-		}
-		if (sReadTo[strlen(sReadTo) - 1] == '\n')
-		{
-			sReadTo[strlen(sReadTo) - 1] = 0;
-			return sBuffer;
-		}
-		iTotalLen += iInitSize;
-		char *sTmp = new char[iTotalLen];
-		if (sTmp == 0)
-		{
-			delete[] sBuffer;
-			return 0;
-		}
-		strcpy(sTmp, sBuffer);
-		delete[] sBuffer;
-		sBuffer = sTmp;
-		sReadTo = sBuffer + strlen(sBuffer);
-	} while (1);
+    do
+    {
+        if (fgets(sReadTo, iInitSize, f) == 0)
+        {
+            if (feof(f))
+            {
+                size_t len = strlen(sBuffer);
+                if (len > 0 && sBuffer[len - 1] == '\n')
+                    sBuffer[len - 1] = 0;
+                return sBuffer;
+            }
+            delete[] sBuffer;
+            return 0;
+        }
+        if (sReadTo[strlen(sReadTo) - 1] == '\n')
+        {
+            sReadTo[strlen(sReadTo) - 1] = 0;
+            return sBuffer;
+        }
+        iTotalLen += iInitSize;
+        char *sTmp = new char[iTotalLen];
+        if (sTmp == 0)
+        {
+            delete[] sBuffer;
+            return 0;
+        }
+        strcpy(sTmp, sBuffer);
+        delete[] sBuffer;
+        sBuffer = sTmp;
+        sReadTo = sBuffer + strlen(sBuffer);
+    } while (1);
 }
 
 char *Util_mystrdup(const char *sStr)
 {
-	char *s = new char[strlen(sStr) + 1];
-	if (s)
-		strcpy(s, sStr);
-	return s;
+    char *s = new char[strlen(sStr) + 1];
+    if (s)
+        strcpy(s, sStr);
+    return s;
 }
 
 void Util_TrimWhitespace(char **pStringPointer)
 {
-	char *sBegin = *pStringPointer;
-	while (*sBegin == ' ' || *sBegin == '\t' || *sBegin == 10 || *sBegin == 13)
-		++sBegin;
-	*pStringPointer = sBegin;
-	size_t iL = strlen(sBegin);
-	if (iL)
-	{
-		--iL;
-		while (sBegin[iL] == ' ' || sBegin[iL] == '\t' || sBegin[iL] == 10 || sBegin[iL] == 13)
-		{
-			sBegin[iL] = 0;
-			--iL;
-		}
-	}
+    char *sBegin = *pStringPointer;
+    while (*sBegin == ' ' || *sBegin == '\t' || *sBegin == 10 || *sBegin == 13)
+        ++sBegin;
+    *pStringPointer = sBegin;
+    size_t iL = strlen(sBegin);
+    if (iL)
+    {
+        --iL;
+        while (sBegin[iL] == ' ' || sBegin[iL] == '\t' || sBegin[iL] == 10 || sBegin[iL] == 13)
+        {
+            sBegin[iL] = 0;
+            --iL;
+        }
+    }
 }
 
 void Util_ForEach(IDirectoryTraverser::IIterator *pDirectory, Util_ForEachFunction pFn, void *pTag, bool bRecursive)
 {
-	try
-	{
-		// Check if directory has anything in it (blank directories can either be null pointers or T_Nothing so accodate
-		// for both)
-		if (pDirectory && pDirectory->VGetType() != IDirectoryTraverser::IIterator::T_Nothing)
-		{
-			do
-			{
-				if (pDirectory->VGetType() == IDirectoryTraverser::IIterator::T_File)
-				{
-					pFn(pDirectory, pTag);
-				}
-				else if (bRecursive)
-				{
-					IDirectoryTraverser::IIterator *pSub = 0;
-					try
-					{
-						pSub = pDirectory->VOpenSubDir();
-						Util_ForEach(pSub, pFn, pTag, true);
-					}
-					catch (CRainmanException *pE)
-					{
-						delete pSub;
-						throw new CRainmanException(pE, __FILE__, __LINE__, "Error iterating sub-directory");
-					}
-					delete pSub;
-				}
-			} while (pDirectory->VNextItem() == IDirectoryTraverser::IIterator::E_OK);
-		}
-	}
-	CATCH_THROW("Error") // Error could have been many causes, so only a generic message can be given
+    try
+    {
+        // Check if directory has anything in it (blank directories can either be null pointers or T_Nothing so accodate
+        // for both)
+        if (pDirectory && pDirectory->VGetType() != IDirectoryTraverser::IIterator::T_Nothing)
+        {
+            do
+            {
+                if (pDirectory->VGetType() == IDirectoryTraverser::IIterator::T_File)
+                {
+                    pFn(pDirectory, pTag);
+                }
+                else if (bRecursive)
+                {
+                    IDirectoryTraverser::IIterator *pSub = 0;
+                    try
+                    {
+                        pSub = pDirectory->VOpenSubDir();
+                        Util_ForEach(pSub, pFn, pTag, true);
+                    }
+                    catch (CRainmanException *pE)
+                    {
+                        delete pSub;
+                        throw new CRainmanException(pE, __FILE__, __LINE__, "Error iterating sub-directory");
+                    }
+                    delete pSub;
+                }
+            } while (pDirectory->VNextItem() == IDirectoryTraverser::IIterator::E_OK);
+        }
+    }
+    CATCH_THROW("Error") // Error could have been many causes, so only a generic message can be given
 }
 
 void Util_EnsureEndsWith(char *sStr, char cChar)
 {
-	size_t iL = strlen(sStr) - 1;
-	if (sStr[iL] != cChar)
-	{
-		sStr[iL] = cChar;
-		sStr[++iL] = 0;
-	}
+    size_t iL = strlen(sStr) - 1;
+    if (sStr[iL] != cChar)
+    {
+        sStr[iL] = cChar;
+        sStr[++iL] = 0;
+    }
 }
 
 void Util_EnsureEndsWith(char *sStr, char cChar, char cChar2)
 {
-	size_t iL = strlen(sStr) - 1;
-	if (sStr[iL] != cChar && sStr[iL] != cChar2)
-	{
-		sStr[iL] = cChar;
-		sStr[++iL] = 0;
-	}
+    size_t iL = strlen(sStr) - 1;
+    if (sStr[iL] != cChar && sStr[iL] != cChar2)
+    {
+        sStr[iL] = cChar;
+        sStr[++iL] = 0;
+    }
 }
