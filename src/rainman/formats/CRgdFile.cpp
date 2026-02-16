@@ -1147,7 +1147,7 @@ void CRgdFile::_ProcessRawRgdData(IFileStore::IStream *pStream, _RgdEntry *pDest
                 while (i <= 10000)
                 {
                     _ultoa(i, sBuffer, 10);
-                    h = m_pHashTable->ValueToHashStatic(sBuffer);
+                    h = CRgdHashTable::ValueToHashStatic(sBuffer);
                     if (h == pEntry->iHash)
                     {
                         h = m_pHashTable->ValueToHash(sBuffer);

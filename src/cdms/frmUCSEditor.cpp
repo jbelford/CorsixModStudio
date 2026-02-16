@@ -20,7 +20,6 @@
 #include "frmUCSOutRange.h"
 #include "Construct.h"
 #include "Tools.h"
-#include "frmUCSEditor.h"
 #include "strings.h"
 #include "config.h"
 #include "Utility.h"
@@ -226,7 +225,7 @@ void frmUCSEditor::OnNewEntry(wxCommandEvent &event)
     sNumberBuffer[0] = '$';
     try
     {
-        if (m_pUCS->GetRawMap()->size() > 0)
+        if (!m_pUCS->GetRawMap()->empty())
             _ultow((m_pUCS->GetRawMap()->rbegin()->first) + 1, sNumberBuffer + 1, 10);
         else
             wcscpy(sNumberBuffer, AppStr(ucsedit_newentrydefault));

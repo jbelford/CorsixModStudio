@@ -37,47 +37,47 @@
 class frmMassExtract : public wxDialog
 {
   protected:
-	struct _tSrc
-	{
-		_tSrc(const char *sM, const char *sS);
-		const char *sMod;
-		const char *sSrc;
-	};
-	std::vector<_tSrc> m_vSrcs, m_vActiveSrcs;
+    struct _tSrc
+    {
+        _tSrc(const char *sM, const char *sS);
+        const char *sMod;
+        const char *sSrc;
+    };
+    std::vector<_tSrc> m_vSrcs, m_vActiveSrcs;
 
-	wxCheckListBox *m_pCheckList;
-	wxGauge *m_pGauge;
-	wxStaticText *m_pCaption;
-	wxButton *m_pSelectAllBtn, *m_pAdvancedBtn;
-	wxString m_sPath;
-	wxTreeItemId &m_oFolder;
+    wxCheckListBox *m_pCheckList;
+    wxGauge *m_pGauge;
+    wxStaticText *m_pCaption;
+    wxButton *m_pSelectAllBtn, *m_pAdvancedBtn;
+    wxString m_sPath;
+    wxTreeItemId &m_oFolder;
 
-	char *m_p4mbBuffer;
-	bool m_bForceUpdate;
-	bool m_bAdvancedVisible;
+    char *m_p4mbBuffer;
+    bool m_bForceUpdate;
+    bool m_bAdvancedVisible;
 
-	size_t _DoExtract(wxTreeCtrl *pTree, wxTreeItemId &oFolder, wxString sPath, CModuleFile *pModule, bool bCountOnly,
-	                  size_t iCountBase, size_t iCountDiv);
+    size_t _DoExtract(wxTreeCtrl *pTree, wxTreeItemId &oFolder, const wxString &sPath, CModuleFile *pModule,
+                      bool bCountOnly, size_t iCountBase, size_t iCountDiv);
 
-	void _FillCheckList(CModuleFile *pMod, bool bIsRoot, wxArrayString &sList, std::vector<_tSrc> &vList);
+    void _FillCheckList(CModuleFile *pMod, bool bIsRoot, wxArrayString &sList, std::vector<_tSrc> &vList);
 
   public:
-	frmMassExtract(wxString sFile, wxTreeItemId &oFolder, bool bForceUpdate = false);
+    frmMassExtract(wxString sFile, wxTreeItemId &oFolder, bool bForceUpdate = false);
 
-	void OnGoClick(wxCommandEvent &event);
-	void OnSelectClick(wxCommandEvent &event);
-	void OnCancelClick(wxCommandEvent &event);
-	void OnAdvancedClick(wxCommandEvent &event);
+    void OnGoClick(wxCommandEvent &event);
+    void OnSelectClick(wxCommandEvent &event);
+    void OnCancelClick(wxCommandEvent &event);
+    void OnAdvancedClick(wxCommandEvent &event);
 
-	enum
-	{
-		IDC_Go = wxID_HIGHEST + 1,
-		IDC_Cancel,
-		IDC_Advanced,
-		IDC_SelectAll
-	};
+    enum
+    {
+        IDC_Go = wxID_HIGHEST + 1,
+        IDC_Cancel,
+        IDC_Advanced,
+        IDC_SelectAll
+    };
 
-	DECLARE_EVENT_TABLE()
+    DECLARE_EVENT_TABLE()
 };
 
 #endif

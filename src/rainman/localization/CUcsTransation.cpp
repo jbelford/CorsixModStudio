@@ -42,7 +42,7 @@ void CUcsTransaction::Save(const char *sFile)
 
 std::map<unsigned long, wchar_t *> *CUcsTransaction::GetRawMap()
 {
-    if (m_mapValues.size() == 0)
+    if (m_mapValues.empty())
         return m_pRawFile->GetRawMap();
 
     // Need to make a faux map of a combination of our edits and the original

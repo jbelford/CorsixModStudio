@@ -24,22 +24,22 @@
 class CStatText : public wxEvtHandler
 {
   public:
-	void Event(wxMouseEvent &e)
-	{
-		if (e.Entering())
-		{
-			TheConstruct->GetStatusBar()->PushStatusText(((wxWindow *)this)->GetToolTip()->GetTip());
-		}
-		else
-		{
-			TheConstruct->GetStatusBar()->PopStatusText();
-		}
-	}
+    void Event(wxMouseEvent &e)
+    {
+        if (e.Entering())
+        {
+            TheConstruct->GetStatusBar()->PushStatusText(((wxWindow *)this)->GetToolTip()->GetTip());
+        }
+        else
+        {
+            TheConstruct->GetStatusBar()->PopStatusText();
+        }
+    }
 };
 
-void AddStatusbarText(wxWindow *pWnd, wxString sMsg)
+void AddStatusbarText(wxWindow *pWnd, const wxString &sMsg)
 {
-	pWnd->SetToolTip(sMsg);
-	pWnd->GetEventHandler()->Connect(wxEVT_ENTER_WINDOW, wxMouseEventHandler(CStatText::Event));
-	pWnd->GetEventHandler()->Connect(wxEVT_LEAVE_WINDOW, wxMouseEventHandler(CStatText::Event));
+    pWnd->SetToolTip(sMsg);
+    pWnd->GetEventHandler()->Connect(wxEVT_ENTER_WINDOW, wxMouseEventHandler(CStatText::Event));
+    pWnd->GetEventHandler()->Connect(wxEVT_LEAVE_WINDOW, wxMouseEventHandler(CStatText::Event));
 }

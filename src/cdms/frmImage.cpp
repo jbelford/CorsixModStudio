@@ -23,6 +23,8 @@
 #include "Utility.h"
 #include <wx/msgdlg.h>
 #include <wx/mstream.h>
+
+#include <utility>
 #include "Common.h"
 
 BEGIN_EVENT_TABLE(frmImageViewer, wxWindow)
@@ -62,7 +64,7 @@ END_EVENT_TABLE()
 
 frmImageViewer::frmImageViewer(wxTreeItemId &oFileParent, wxString sFilename, wxWindow *parent, wxWindowID id,
                                CRgtFile *pImage, bool bOwnImage, const wxPoint &pos, const wxSize &size)
-    : m_oFileParent(oFileParent), m_sFilename(sFilename), wxWindow(parent, id, pos, size)
+    : m_oFileParent(oFileParent), m_sFilename(std::move(sFilename)), wxWindow(parent, id, pos, size)
 {
     auto *pTopSizer = new wxBoxSizer(wxVERTICAL);
 

@@ -31,11 +31,11 @@
 #include "wx/wx.h"
 #endif
 // ----------------------------
-void AddStatusbarText(wxWindow *pWnd, wxString sMsg);
+void AddStatusbarText(wxWindow *pWnd, const wxString &sMsg);
 
 template <class T> T *SBT(T *pWnd, wxString sMsg)
 {
-	AddStatusbarText(pWnd, sMsg);
-	return pWnd;
+    AddStatusbarText(pWnd, sMsg);
+    return pWnd;
 }
 #endif

@@ -38,56 +38,56 @@
 class frmRgdMacro : public wxDialog
 {
   protected:
-	wxStyledTextCtrl *m_pSTC;
-	wxTextCtrl *m_pTextbox;
-	std::map<unsigned long, char *> m_mapToUpdate;
+    wxStyledTextCtrl *m_pSTC;
+    wxTextCtrl *m_pTextbox;
+    std::map<unsigned long, char *> m_mapToUpdate;
 
-	wxStaticText *m_pCaption;
-	wxButton *m_pSaveBtn, *m_pLoadBtn, *m_pRunBtn, *m_pModeBtn;
-	wxBoxSizer *m_pFormMainSizer;
+    wxStaticText *m_pCaption;
+    wxButton *m_pSaveBtn, *m_pLoadBtn, *m_pRunBtn, *m_pModeBtn;
+    wxBoxSizer *m_pFormMainSizer;
 
-	bool m_bShowingOutput;
+    bool m_bShowingOutput;
 
-	unsigned long m_iPathHash;
-	unsigned long m_iPathLen;
+    unsigned long m_iPathHash;
+    unsigned long m_iPathLen;
 
-	bool m_bAllowDebug;
-	bool m_bAllowIO;
-	bool m_bAllowOS;
-	bool m_bAllowSave;
-	bool m_bAllowLoad;
+    bool m_bAllowDebug;
+    bool m_bAllowIO;
+    bool m_bAllowOS;
+    bool m_bAllowSave;
+    bool m_bAllowLoad;
 
-	wxString m_sPath;
-	wxTreeItemId &m_oFolder;
+    wxString m_sPath;
+    wxTreeItemId &m_oFolder;
 
-	static void _callback_print(void *pTag, const char *sMsg);
-	static bool _callback_save(void *pTag, const char *sFile);
-	static bool _callback_load(void *pTag, const char *sFile);
-	static bool _callback_security(void *pTag, CRgdFileMacro::eSecurityTypes);
-	void _populateFileList(std::vector<char *> *lstFiles);
-	bool _request_Permission(wxString sAction);
+    static void _callback_print(void *pTag, const char *sMsg);
+    static bool _callback_save(void *pTag, const char *sFile);
+    static bool _callback_load(void *pTag, const char *sFile);
+    static bool _callback_security(void *pTag, CRgdFileMacro::eSecurityTypes);
+    void _populateFileList(std::vector<char *> *lstFiles);
+    bool _request_Permission(const wxString &sAction);
 
   public:
-	frmRgdMacro(wxString sFile, wxTreeItemId &oFolder);
+    frmRgdMacro(wxString sFile, wxTreeItemId &oFolder);
 
-	void OnRunClick(wxCommandEvent &event);
-	void OnModeClick(wxCommandEvent &event);
-	void OnLoadClick(wxCommandEvent &event);
-	void OnSaveClick(wxCommandEvent &event);
-	void OnCancelClick(wxCommandEvent &event);
-	void OnStyleNeeded(wxStyledTextEvent &event);
-	void OnCharAdded(wxStyledTextEvent &event);
+    void OnRunClick(wxCommandEvent &event);
+    void OnModeClick(wxCommandEvent &event);
+    void OnLoadClick(wxCommandEvent &event);
+    void OnSaveClick(wxCommandEvent &event);
+    void OnCancelClick(wxCommandEvent &event);
+    void OnStyleNeeded(wxStyledTextEvent &event);
+    void OnCharAdded(wxStyledTextEvent &event);
 
-	enum
-	{
-		IDC_Run = wxID_HIGHEST + 1,
-		IDC_Load,
-		IDC_Save,
-		IDC_Cancel,
-		IDC_Mode,
-	};
+    enum
+    {
+        IDC_Run = wxID_HIGHEST + 1,
+        IDC_Load,
+        IDC_Save,
+        IDC_Cancel,
+        IDC_Mode,
+    };
 
-	DECLARE_EVENT_TABLE()
+    DECLARE_EVENT_TABLE()
 };
 
 #endif

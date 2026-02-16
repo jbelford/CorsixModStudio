@@ -22,6 +22,7 @@
 #include "strconv.h"
 #include "Utility.h"
 #include <memory>
+#include <utility>
 #include <rainman/module/CFileMap.h>
 #include <rainman/io/CFileSystemStore.h>
 #include "Common.h"
@@ -113,7 +114,7 @@ void frmMassExtract::_FillCheckList(CModuleFile *pMod, bool bIsRoot, wxArrayStri
     }
 }
 
-size_t frmMassExtract::_DoExtract(wxTreeCtrl *pTree, wxTreeItemId &oFolder, wxString sPath, CModuleFile *pModule,
+size_t frmMassExtract::_DoExtract(wxTreeCtrl *pTree, wxTreeItemId &oFolder, const wxString &sPath, CModuleFile *pModule,
                                   bool bCountOnly, size_t iCountBase, size_t iCountDiv)
 {
     int iGVal = (int)(iCountBase / iCountDiv);
@@ -192,7 +193,7 @@ size_t frmMassExtract::_DoExtract(wxTreeCtrl *pTree, wxTreeItemId &oFolder, wxSt
 }
 
 frmMassExtract::frmMassExtract(wxString sFile, wxTreeItemId &oFolder, bool bForceUpdate)
-    : m_oFolder(oFolder), m_sPath(sFile),
+    : m_oFolder(oFolder), m_sPath(std::move(sFile)),
       wxDialog(wxTheApp->GetTopWindow(), -1, AppStr(massext_title), wxPoint(0, 0), wxDefaultSize,
                wxFRAME_FLOAT_ON_PARENT | wxFRAME_TOOL_WINDOW | wxCAPTION)
 {
@@ -318,7 +319,7 @@ void frmMassExtract::OnAdvancedClick(wxCommandEvent &event)
 void frmMassExtract::OnSelectClick(wxCommandEvent &event)
 {
     UNUSED(event);
-    if (m_vSrcs.size())
+    if (!m_vSrcs.empty())
     {
         bool bSetTo = !m_pCheckList->IsChecked(0);
         for (size_t i = 0; i < m_vSrcs.size(); ++i)

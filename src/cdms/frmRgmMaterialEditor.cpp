@@ -17,6 +17,8 @@
 */
 
 #include "frmRgmMaterialEditor.h"
+
+#include <utility>
 #include "strconv.h"
 #include "Construct.h"
 #include "config.h"
@@ -193,7 +195,7 @@ void frmRgmMaterialEditor::_FillRight(CRgmFile::CMaterial *pMaterial)
 
 frmRgmMaterialEditor::frmRgmMaterialEditor(wxTreeItemId &oFileParent, wxString sFilename, wxWindow *parent,
                                            wxWindowID id, const wxPoint &pos, const wxSize &size)
-    : m_oFileParent(oFileParent), m_sFilename(sFilename), wxWindow(parent, id, pos, size)
+    : m_oFileParent(oFileParent), m_sFilename(std::move(sFilename)), wxWindow(parent, id, pos, size)
 {
     auto *pTopSizer = new wxBoxSizer(wxVERTICAL);
 

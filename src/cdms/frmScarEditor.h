@@ -41,68 +41,68 @@
 class frmScarEditor : public wxWindow
 {
   protected:
-	wxStyledTextCtrl *m_pSTC;
-	wxString m_sFilename;
-	wxChoice *m_pFunctionDropdown;
-	wxTreeItemId m_oFileParent;
-	bool m_bNeedsSaving;
+    wxStyledTextCtrl *m_pSTC;
+    wxString m_sFilename;
+    wxChoice *m_pFunctionDropdown;
+    wxTreeItemId m_oFileParent;
+    bool m_bNeedsSaving;
 
-	struct _ScarFunction
-	{
-		char *sReturn;
-		char *sName;
-		std::list<char *> sArguments;
-		char *sDesc;
-		int iType;
-	};
+    struct _ScarFunction
+    {
+        char *sReturn;
+        char *sName;
+        std::list<char *> sArguments;
+        char *sDesc;
+        int iType;
+    };
 
-	struct _CCalltipPop
-	{
-		int iPos;
-		wxString sTip;
-	};
+    struct _CCalltipPop
+    {
+        int iPos;
+        wxString sTip;
+    };
 
-	_CCalltipPop m_oThisCalltip;
-	std::stack<_CCalltipPop> m_stkCalltips;
-	std::list<_ScarFunction> m_lstScarFunctions;
-	static char *_ReadNiceString(FILE *f);
-	void _RestorePreviousCalltip();
-	void _PushThisCalltip();
-	int _FillFunctionDrop(wxString sNameTarget);
+    _CCalltipPop m_oThisCalltip;
+    std::stack<_CCalltipPop> m_stkCalltips;
+    std::list<_ScarFunction> m_lstScarFunctions;
+    static char *_ReadNiceString(FILE *f);
+    void _RestorePreviousCalltip();
+    void _PushThisCalltip();
+    int _FillFunctionDrop(const wxString &sNameTarget);
 
   public:
-	frmScarEditor(wxTreeItemId &oFileParent, wxString sFilename, wxWindow *parent, wxWindowID id,
-	              const wxPoint &pos = wxDefaultPosition, const wxSize &size = wxDefaultSize,
-	              const wchar_t *pLangRef = AppStr(app_scarreffile));
-	~frmScarEditor();
+    frmScarEditor(wxTreeItemId &oFileParent, wxString sFilename, wxWindow *parent, wxWindowID id,
+                  const wxPoint &pos = wxDefaultPosition, const wxSize &size = wxDefaultSize,
+                  const wchar_t *pLangRef = AppStr(app_scarreffile));
+    ~frmScarEditor();
 
-	void OnSize(wxSizeEvent &event);
+    void OnSize(wxSizeEvent &event);
 
-	void OnCharAdded(wxStyledTextEvent &event);
-	void OnStyleNeeded(wxStyledTextEvent &event);
-	void OnSavePointLeave(wxStyledTextEvent &event);
-	void OnSavePointReach(wxStyledTextEvent &event);
+    void OnCharAdded(wxStyledTextEvent &event);
+    void OnStyleNeeded(wxStyledTextEvent &event);
+    void OnSavePointLeave(wxStyledTextEvent &event);
+    void OnSavePointReach(wxStyledTextEvent &event);
 
-	void DoSave();
-	void OnSave(wxCommandEvent &event);
-	void OnCheckLua(wxCommandEvent &event);
-	void OnAutoCompChoose(wxStyledTextEvent &event);
-	void OnFuncListChoose(wxCommandEvent &event);
+    void DoSave();
+    void OnSave(wxCommandEvent &event);
+    void OnCheckLua(wxCommandEvent &event);
+    void OnAutoCompChoose(wxStyledTextEvent &event);
+    void OnFuncListChoose(wxCommandEvent &event);
 
-	void Load(IFileStore::IStream *pFile);
+    void Load(IFileStore::IStream *pFile);
 
-	void OnCloseWindow(wxCloseEvent &event);
+    void OnCloseWindow(wxCloseEvent &event);
 
-	enum
-	{
-		IDC_Text = wxID_HIGHEST + 1,
-		IDC_Compile,
-		IDC_ToolSave,
-		IDC_ToolCheck,
-		IDC_FunctionDrop
-	};
+    enum
+    {
+        IDC_Text = wxID_HIGHEST + 1,
+        IDC_Compile,
+        IDC_ToolSave,
+        IDC_ToolCheck,
+        IDC_FunctionDrop
+    };
 
-	DECLARE_EVENT_TABLE()
+    DECLARE_EVENT_TABLE()
 };
 
 #endif

@@ -23,100 +23,100 @@
 #include <rainman/core/Exception.h>
 #include "Common.h"
 
-wxColour ConfGetColour(wxString keyname, int def_r, int def_g, int def_b)
+wxColour ConfGetColour(const wxString &keyname, int def_r, int def_g, int def_b)
 {
-	wxString sKey;
+    wxString sKey;
 
-	sKey = keyname;
-	sKey.Append(AppStr(config_colour_rpost));
-	TheConfig->Read(sKey, &def_r, def_r);
+    sKey = keyname;
+    sKey.Append(AppStr(config_colour_rpost));
+    TheConfig->Read(sKey, &def_r, def_r);
 
-	sKey = keyname;
-	sKey.Append(AppStr(config_colour_gpost));
-	TheConfig->Read(sKey, &def_g, def_g);
+    sKey = keyname;
+    sKey.Append(AppStr(config_colour_gpost));
+    TheConfig->Read(sKey, &def_g, def_g);
 
-	sKey = keyname;
-	sKey.Append(AppStr(config_colour_bpost));
-	TheConfig->Read(sKey, &def_b, def_b);
+    sKey = keyname;
+    sKey.Append(AppStr(config_colour_bpost));
+    TheConfig->Read(sKey, &def_b, def_b);
 
-	return wxColour(def_r, def_g, def_b);
+    return wxColour(def_r, def_g, def_b);
 }
 
 wxString ConfGetDoWFolder()
 {
-	char *sDefault;
-	try
-	{
-		sDefault = Rainman_GetDoWPath();
-	}
-	catch (CRainmanException *pE)
-	{
-		throw new CModStudioException(__FILE__, __LINE__, "Unable to get DoW path", pE);
-	}
-	wxString wsDefault = AsciiTowxString(sDefault);
-	Rainman_DeleteCharArray(sDefault);
-	return TheConfig->Read(AppStr(config_dowfolder), wsDefault);
+    char *sDefault;
+    try
+    {
+        sDefault = Rainman_GetDoWPath();
+    }
+    catch (CRainmanException *pE)
+    {
+        throw new CModStudioException(__FILE__, __LINE__, "Unable to get DoW path", pE);
+    }
+    wxString wsDefault = AsciiTowxString(sDefault);
+    Rainman_DeleteCharArray(sDefault);
+    return TheConfig->Read(AppStr(config_dowfolder), wsDefault);
 }
 
 wxString ConfGetDCFolder()
 {
-	char *sDefault;
-	try
-	{
-		sDefault = Rainman_GetDCPath();
-	}
-	catch (CRainmanException *pE)
-	{
-		throw new CModStudioException(__FILE__, __LINE__, "Unable to get DoW:DC path", pE);
-	}
-	wxString wsDefault = AsciiTowxString(sDefault);
-	Rainman_DeleteCharArray(sDefault);
-	return TheConfig->Read(AppStr(config_dcfolder), wsDefault);
+    char *sDefault;
+    try
+    {
+        sDefault = Rainman_GetDCPath();
+    }
+    catch (CRainmanException *pE)
+    {
+        throw new CModStudioException(__FILE__, __LINE__, "Unable to get DoW:DC path", pE);
+    }
+    wxString wsDefault = AsciiTowxString(sDefault);
+    Rainman_DeleteCharArray(sDefault);
+    return TheConfig->Read(AppStr(config_dcfolder), wsDefault);
 }
 
 wxString ConfGetSSFolder()
 {
-	char *sDefault;
-	try
-	{
-		sDefault = Rainman_GetSSPath();
-	}
-	catch (CRainmanException *pE)
-	{
-		throw new CModStudioException(__FILE__, __LINE__, "Unable to get DoW:SS path", pE);
-	}
-	wxString wsDefault = AsciiTowxString(sDefault);
-	Rainman_DeleteCharArray(sDefault);
-	return TheConfig->Read(AppStr(config_ssfolder), wsDefault);
+    char *sDefault;
+    try
+    {
+        sDefault = Rainman_GetSSPath();
+    }
+    catch (CRainmanException *pE)
+    {
+        throw new CModStudioException(__FILE__, __LINE__, "Unable to get DoW:SS path", pE);
+    }
+    wxString wsDefault = AsciiTowxString(sDefault);
+    Rainman_DeleteCharArray(sDefault);
+    return TheConfig->Read(AppStr(config_ssfolder), wsDefault);
 }
 
 wxString ConfGetCoHFolder()
 {
-	char *sDefault;
-	try
-	{
-		sDefault = Rainman_GetCoHPath();
-	}
-	catch (CRainmanException *pE)
-	{
-		throw new CModStudioException(__FILE__, __LINE__, "Unable to get CoH path", pE);
-	}
-	wxString wsDefault = AsciiTowxString(sDefault);
-	Rainman_DeleteCharArray(sDefault);
-	return TheConfig->Read(AppStr(config_cohfolder), wsDefault);
+    char *sDefault;
+    try
+    {
+        sDefault = Rainman_GetCoHPath();
+    }
+    catch (CRainmanException *pE)
+    {
+        throw new CModStudioException(__FILE__, __LINE__, "Unable to get CoH path", pE);
+    }
+    wxString wsDefault = AsciiTowxString(sDefault);
+    Rainman_DeleteCharArray(sDefault);
+    return TheConfig->Read(AppStr(config_cohfolder), wsDefault);
 }
 
 wxString ConfGetModToolsFolder()
 {
-	wxString sDoWFolder;
-	try
-	{
-		sDoWFolder = ConfGetDoWFolder();
-	}
-	catch (CRainmanException *pE)
-	{
-		throw new CModStudioException(__FILE__, __LINE__, "Unable to get DoW folder", pE);
-	}
-	sDoWFolder.Append(wxT("ModTools\\"));
-	return TheConfig->Read(AppStr(config_modtoolsfolder), sDoWFolder);
+    wxString sDoWFolder;
+    try
+    {
+        sDoWFolder = ConfGetDoWFolder();
+    }
+    catch (CRainmanException *pE)
+    {
+        throw new CModStudioException(__FILE__, __LINE__, "Unable to get DoW folder", pE);
+    }
+    sDoWFolder.Append(wxT("ModTools\\"));
+    return TheConfig->Read(AppStr(config_modtoolsfolder), sDoWFolder);
 }

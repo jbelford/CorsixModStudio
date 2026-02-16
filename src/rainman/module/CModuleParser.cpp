@@ -275,9 +275,9 @@ CModuleParseResult CModuleParser::Parse(const char *sFileName)
     iHeuristicDow += (result.requireds.size() * 3);
     iHeuristicDow += (result.compatibles.size() * 3);
     iHeuristicCoh += (result.dataSources.size() * 3);
-    if (result.dataSources.size() == 0)
+    if (result.dataSources.empty())
         iHeuristicDow += 5, iHeuristicCohEarly += 5;
-    if (result.folders.size() == 0 && result.archives.size() == 0 && result.requireds.size() == 0)
+    if (result.folders.empty() && result.archives.empty() && result.requireds.empty())
         iHeuristicCoh += 5, iHeuristicCohEarly += 5;
 
     if (iHeuristicDow == 0 && iHeuristicCoh == 0 && iHeuristicCohEarly == 0)

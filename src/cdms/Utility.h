@@ -40,15 +40,16 @@
 class CModStudioException : public CRainmanException
 {
   public:
-	CModStudioException(const char *sFile, unsigned long iLine, const char *sMessage,
-	                    CRainmanException *pPrecursor = 0);
-	CModStudioException(CRainmanException *pPrecursor, const char *sFile, unsigned long iLine, const char *sFormat,
-	                    ...);
+    CModStudioException(const char *sFile, unsigned long iLine, const char *sMessage,
+                        CRainmanException *pPrecursor = 0);
+    CModStudioException(CRainmanException *pPrecursor, const char *sFile, unsigned long iLine, const char *sFormat,
+                        ...);
 
-	virtual void destroy();
+    virtual void destroy();
 };
 
-bool _ErrorBox(wxString sError, const char *sFile, long iLine, bool bUnhandled = false, bool bAllowCancel = false);
+bool _ErrorBox(const wxString &sError, const char *sFile, long iLine, bool bUnhandled = false,
+               bool bAllowCancel = false);
 #define ErrorBox(sError) _ErrorBox(wxT(sError), __FILE__, __LINE__)
 #define ErrorBoxS(sError) _ErrorBox(sError, __FILE__, __LINE__)
 #define ErrorBoxAS(sError) _ErrorBox(AppStr(sError), __FILE__, __LINE__)

@@ -50,7 +50,7 @@ IFileStore::IStream *CFileMap::_OpenFile(CFileMap::_File *pFile, CFileMap::_Fold
     if (pFolder == nullptr)
         throw new CRainmanException(nullptr, __FILE__, __LINE__, "Found \'%s\', but did not find folder", sFile);
 
-    if (pFile->mapSources.size() == 0)
+    if (pFile->mapSources.empty())
         throw new CRainmanException(nullptr, __FILE__, __LINE__, "Found \'%s\', but it is not mapped to a source",
                                     sFile);
     _DataSource *pSrc = pFile->mapSources.begin()->first;
@@ -100,7 +100,7 @@ tLastWriteTime CFileMap::VGetLastWriteTime(const char *sFile)
     }
     if (!pFile)
         throw new CRainmanException(nullptr, __FILE__, __LINE__, "Could not find \'%s\'", sFile);
-    if (pFile->mapSources.size() == 0)
+    if (pFile->mapSources.empty())
         throw new CRainmanException(nullptr, __FILE__, __LINE__, "Found \'%s\', but it is not mapped to anything",
                                     sFile);
 
@@ -111,7 +111,7 @@ CFileMap::_DataSource *CFileMap::_MakeFolderWritable(CFileMap::_Folder *pFolder,
 {
     // Work out the source sort number
     unsigned long iSortNumExisting = 0x0000ffff; // DS sort num. must be less than or equal to this
-    if (pFile->mapSources.size())
+    if (!pFile->mapSources.empty())
     {
         _DataSource *pDS = pFile->mapSources.begin()->first;
         if (pDS->iSortNumber < iSortNumExisting)
@@ -119,7 +119,7 @@ CFileMap::_DataSource *CFileMap::_MakeFolderWritable(CFileMap::_Folder *pFolder,
     }
 
     // Check if the file already uses a suitable source
-    if (pFile->pParent == pFolder && pFile->mapSources.size())
+    if (pFile->pParent == pFolder && !pFile->mapSources.empty())
     {
         _DataSource *pDS = pFile->mapSources.begin()->first;
         if (pDS->iSortNumber <= iSortNumExisting && (pDS->bIsWritable || pDS->bIsDefaultOutput))
@@ -248,7 +248,7 @@ IFileStore::IOutputStream *CFileMap::VOpenOutputStream(const char *sFile, bool b
 
     if (!bEraseIfPresent)
     {
-        if (pFile->mapSources.size() && pDS != pFile->mapSources.begin()->first)
+        if (!pFile->mapSources.empty() && pDS != pFile->mapSources.begin()->first)
         {
             if (bFileWasCreated)
             {
@@ -500,7 +500,7 @@ tLastWriteTime CFileMap::CIterator::VGetLastWriteTime()
 {
     if (m_eWhat != IW_Files)
         throw new CRainmanException(__FILE__, __LINE__, "Current item is not a file");
-    if ((**m_FileIter).mapSources.size() == 0)
+    if ((**m_FileIter).mapSources.empty())
         throw new CRainmanException(__FILE__, __LINE__, "File is not mapped");
     return (**m_FileIter).mapSources.begin()->second;
 }
@@ -510,7 +510,7 @@ void *CFileMap::CIterator::VGetTag(long iTag)
     if (m_eWhat == IW_Files)
     {
         CFileMap::_DataSource *pSrc = nullptr;
-        if ((**m_FileIter).mapSources.size() == 0)
+        if ((**m_FileIter).mapSources.empty())
             return nullptr;
         pSrc = (**m_FileIter).mapSources.begin()->first;
 

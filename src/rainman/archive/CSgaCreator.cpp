@@ -345,7 +345,7 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
             qDirsTodo.push(pInput);
             vFilesList.reserve(iFileCount);
             size_t iDirC = 1, iFileC = 0;
-            while (qDirsTodo.size())
+            while (!qDirsTodo.empty())
             {
                 CInputDirectory *pDir = qDirsTodo.front();
                 qDirsTodo.pop();

@@ -36,7 +36,7 @@
 
 #define TheConfig wxConfigBase::Get()
 
-wxColour ConfGetColour(wxString keyname, int def_r, int def_g, int def_b);
+wxColour ConfGetColour(const wxString &keyname, int def_r, int def_g, int def_b);
 
 /*!
     may throw a CRainmanException

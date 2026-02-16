@@ -66,7 +66,7 @@ void CModStudioException::destroy()
     delete this;
 }
 
-bool _ErrorBox(wxString sError, const char *sFile, long iLine, bool bUnhandled, bool bAllowCancel)
+bool _ErrorBox(const wxString &sError, const char *sFile, long iLine, bool bUnhandled, bool bAllowCancel)
 {
     wchar_t *pFile = AsciiToUnicode(sFile);
     wchar_t pLine[33];
