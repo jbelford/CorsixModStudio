@@ -473,33 +473,37 @@ CFileMap::DirEntry CResourceLoader::ScanDirectory(IDirectoryTraverser::IIterator
         return root;
 
     root.directoryPath = pItr->VGetDirectoryPath();
+    root.children.reserve(32);
 
-    while (pItr->VGetType() != IDirectoryTraverser::IIterator::T_Nothing)
+    auto eType = pItr->VGetType();
+    while (eType != IDirectoryTraverser::IIterator::T_Nothing)
     {
         CFileMap::DirEntry entry;
-        entry.name = pItr->VGetName();
 
-        if (pItr->VGetType() == IDirectoryTraverser::IIterator::T_File)
+        if (eType == IDirectoryTraverser::IIterator::T_File)
         {
+            entry.name = pItr->VGetName();
             entry.isFile = true;
             entry.lastWriteTime = pItr->VGetLastWriteTime();
         }
         else
         {
+            std::string sName = pItr->VGetName();
             entry.isFile = false;
             entry.lastWriteTime = 0;
             auto *pSubItr = pItr->VOpenSubDir();
             if (pSubItr)
             {
                 entry = ScanDirectory(pSubItr);
-                entry.name = pItr->VGetName();
                 delete pSubItr;
             }
+            entry.name = std::move(sName);
         }
         root.children.push_back(std::move(entry));
 
         if (pItr->VNextItem() != IDirectoryTraverser::IIterator::E_OK)
             break;
+        eType = pItr->VGetType();
     }
     return root;
 }

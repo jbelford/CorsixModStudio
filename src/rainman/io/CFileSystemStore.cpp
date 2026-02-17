@@ -496,18 +496,11 @@ CFileSystemStore::CIterator::CIterator(const char *sFolder, const CFileSystemSto
     // Pre-reserve capacity for full path: parent + '\' + MAX_PATH filename
     m_sFullPathBuf.reserve(m_iParentPathLen + 2 + MAX_PATH);
 
-    char *sTmp;
-    sTmp = new char[strlen(sFolder) + 3];
-    if (sTmp == nullptr)
-    {
-        delete[] m_sParentPath;
-        throw new CRainmanException(__FILE__, __LINE__, "Failed to allocate memory");
-    }
-    strcpy(sTmp, sFolder);
-    strcat(sTmp, "\\*");
+    std::string sPattern(sFolder);
+    sPattern += "\\*";
 
-    m_HandFD = FindFirstFileA(sTmp, &m_W32FD);
-    delete[] sTmp;
+    m_HandFD = FindFirstFileExA(sPattern.c_str(), FindExInfoBasic, &m_W32FD, FindExSearchNameMatch, nullptr,
+                                FIND_FIRST_EX_LARGE_FETCH);
     if (m_HandFD == INVALID_HANDLE_VALUE)
     {
         DWORD dwErr = GetLastError();
