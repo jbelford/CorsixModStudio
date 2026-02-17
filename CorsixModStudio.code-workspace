@@ -33,6 +33,11 @@
       "editor.defaultFormatter": "ms-vscode.cpptools",
     },
     "C_Cpp.clang_format_fallbackStyle": "LLVM",
+    "C_Cpp.files.exclude": {
+      "**/.vscode": true,
+      "**/.vs": true,
+      "./CDMSSrc_055": true,
+    },
 
     // ── File associations ───────────────────────────────────────
     "files.associations": {
