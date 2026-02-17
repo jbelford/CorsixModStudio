@@ -53,6 +53,7 @@ EVT_SIZE(frmFiles::OnSize)
 EVT_TREE_ITEM_GETTOOLTIP(IDC_FilesTree, frmFiles::OnNodeTooltip)
 EVT_LIST_ITEM_ACTIVATED(IDC_ToolsList, frmFiles::LaunchTool)
 EVT_TREE_ITEM_ACTIVATED(IDC_FilesTree, frmFiles::OnNodeActivate)
+EVT_TREE_ITEM_EXPANDING(IDC_FilesTree, frmFiles::OnTreeExpanding)
 EVT_TREE_ITEM_MENU(IDC_FilesTree, frmFiles::OnNodeRightClick)
 EVT_MENU(wxID_ANY, frmFiles::OnMenu)
 EVT_AUINOTEBOOK_PAGE_CHANGED(wxID_ANY, frmFiles::OnPageChange)
@@ -68,8 +69,9 @@ extern "C"
 
 CFilesTreeItemData::CFilesTreeItemData(IDirectoryTraverser::IIterator *pItr)
 {
-    sMod = 0;
-    sSource = 0;
+    sMod = nullptr;
+    sSource = nullptr;
+    pToFillWith = nullptr;
     if (pItr->VGetType() == IDirectoryTraverser::IIterator::T_File)
     {
         try
@@ -84,6 +86,28 @@ CFilesTreeItemData::CFilesTreeItemData(IDirectoryTraverser::IIterator *pItr)
         IGNORE_EXCEPTIONS
     }
 }
+
+CFilesTreeItemData::CFilesTreeItemData(IDirectoryTraverser::IIterator *pItr, IDirectoryTraverser::IIterator *pSubDirItr)
+{
+    sMod = nullptr;
+    sSource = nullptr;
+    pToFillWith = pSubDirItr;
+    if (pItr->VGetType() == IDirectoryTraverser::IIterator::T_File)
+    {
+        try
+        {
+            sMod = (const char *)pItr->VGetTag(0);
+        }
+        IGNORE_EXCEPTIONS
+        try
+        {
+            sSource = (const char *)pItr->VGetTag(1);
+        }
+        IGNORE_EXCEPTIONS
+    }
+}
+
+CFilesTreeItemData::~CFilesTreeItemData() { delete pToFillWith; }
 
 // Handlers — CLuaAction method implementations (declared in frmFiles.h)
 
@@ -275,6 +299,9 @@ void frmFiles::OnPageChange(wxAuiNotebookEvent &event)
 
 bool frmFiles::UpdateDirectoryChildren(const wxTreeItemId &oDirectory, IDirectoryTraverser::IIterator *pChildren)
 {
+    // If the directory node hasn't been lazily populated yet, populate it now
+    PopulateChildren(oDirectory);
+
     std::unique_ptr<char[]> sTreeItem;
     const char *sDirItem;
     wxTreeItemIdValue oTreeCookie;
@@ -676,6 +703,7 @@ bool frmFiles::FillFromIDirectoryTraverser(IDirectoryTraverser *pTraverser)
     m_cOtherMod = ConfGetColour(AppStr(file_colourothermod), 64, 64, 128);
     m_cEngine = ConfGetColour(AppStr(file_colourengine), 128, 128, 128);
 
+    m_pTree->Freeze();
     m_pTree->DeleteAllItems();
     wxTreeItemId oRoot = m_pTree->AddRoot(wxT(""));
 
@@ -688,16 +716,83 @@ bool frmFiles::FillFromIDirectoryTraverser(IDirectoryTraverser *pTraverser)
         IDirectoryTraverser::IIterator *pEntry = pTraverser->VIterate(sEntryPoint);
         if (pEntry)
         {
-            if (!_FillPartialFromIDirectoryTraverserIIterator(oEntry, pEntry, 0))
-            {
-                delete pEntry;
-                return false;
-            }
+            // Populate the first level of children under each entry point
+            _FillOneLevelFromIterator(oEntry, pEntry);
             delete pEntry;
         }
     }
+    m_pTree->Thaw();
     return true;
 }
+
+void frmFiles::_FillOneLevelFromIterator(wxTreeItemId oParent, IDirectoryTraverser::IIterator *pChildren)
+{
+    if (!pChildren || pChildren->VGetType() == IDirectoryTraverser::IIterator::T_Nothing)
+        return;
+
+    do
+    {
+        switch (pChildren->VGetType())
+        {
+        case IDirectoryTraverser::IIterator::T_File:
+        {
+            wxString sName = AsciiTowxString(pChildren->VGetName());
+            int iImg = CFileTreePresenter::ClassifyFileIcon(sName);
+            wxTreeItemId oChild = m_pTree->AppendItem(oParent, sName, iImg, iImg, new CFilesTreeItemData(pChildren));
+            if (AsciiTowxString((const char *)pChildren->VGetTag(0)) ==
+                TheConstruct->GetModuleService().GetFileMapName())
+            {
+                m_pTree->SetItemTextColour(oChild, m_cThisMod);
+            }
+            else if (_IsEngineFileMapName((const char *)pChildren->VGetTag(0),
+                                          TheConstruct->GetModuleService().GetModule()))
+            {
+                m_pTree->SetItemTextColour(oChild, m_cEngine);
+            }
+            else
+            {
+                m_pTree->SetItemTextColour(oChild, m_cOtherMod);
+            }
+            break;
+        }
+        case IDirectoryTraverser::IIterator::T_Directory:
+        {
+            // Store the sub-iterator for lazy population on expand
+            IDirectoryTraverser::IIterator *pSubDir = pChildren->VOpenSubDir();
+            bool bHasChildren = pSubDir && pSubDir->VGetType() != IDirectoryTraverser::IIterator::T_Nothing;
+
+            auto *pData = new CFilesTreeItemData(pChildren, bHasChildren ? pSubDir : nullptr);
+            wxTreeItemId oChild = m_pTree->AppendItem(oParent, AsciiTowxString(pChildren->VGetName()), 4, 4, pData);
+            m_pTree->SetItemImage(oChild, 5, wxTreeItemIcon_Expanded);
+
+            if (bHasChildren)
+                m_pTree->SetItemHasChildren(oChild, true);
+            else
+                delete pSubDir;
+            break;
+        }
+        default:
+            break;
+        }
+    } while (pChildren->VNextItem() == IDirectoryTraverser::IIterator::E_OK);
+}
+
+void frmFiles::PopulateChildren(const wxTreeItemId &oParent)
+{
+    auto *pData = static_cast<CFilesTreeItemData *>(m_pTree->GetItemData(oParent));
+    if (!pData || !pData->pToFillWith)
+        return;
+
+    m_pTree->Freeze();
+    _FillOneLevelFromIterator(oParent, pData->pToFillWith);
+
+    // Iterator consumed — release it
+    delete pData->pToFillWith;
+    pData->pToFillWith = nullptr;
+    m_pTree->Thaw();
+}
+
+void frmFiles::OnTreeExpanding(wxTreeEvent &event) { PopulateChildren(event.GetItem()); }
 
 bool frmFiles::_FillPartialFromIDirectoryTraverserIIterator(wxTreeItemId oParent,
                                                             IDirectoryTraverser::IIterator *pChildren, int iExpandLevel,
@@ -750,27 +845,23 @@ bool frmFiles::_FillPartialFromIDirectoryTraverserIIterator(wxTreeItemId oParent
             break;
             case IDirectoryTraverser::IIterator::T_Directory:
             {
+                // Store sub-iterator for lazy population on expand
+                IDirectoryTraverser::IIterator *pSubDir = pChildren->VOpenSubDir();
+                bool bHasChildren = pSubDir && pSubDir->VGetType() != IDirectoryTraverser::IIterator::T_Nothing;
+
+                auto *pItemData = new CFilesTreeItemData(pChildren, bHasChildren ? pSubDir : nullptr);
                 wxTreeItemId oChild;
                 if (pAfter)
-                    oChild = m_pTree->InsertItem(oParent, *pAfter, AsciiTowxString(pChildren->VGetName()), 4, 4,
-                                                 new CFilesTreeItemData(pChildren));
+                    oChild =
+                        m_pTree->InsertItem(oParent, *pAfter, AsciiTowxString(pChildren->VGetName()), 4, 4, pItemData);
                 else
-                    oChild = m_pTree->AppendItem(oParent, AsciiTowxString(pChildren->VGetName()), 4, 4,
-                                                 new CFilesTreeItemData(pChildren));
+                    oChild = m_pTree->AppendItem(oParent, AsciiTowxString(pChildren->VGetName()), 4, 4, pItemData);
                 m_pTree->SetItemImage(oChild, 5, wxTreeItemIcon_Expanded);
-                IDirectoryTraverser::IIterator *pChild = pChildren->VOpenSubDir();
-                if (pChild)
-                {
-                    if (!_FillPartialFromIDirectoryTraverserIIterator(oChild, pChild,
-                                                                      iExpandLevel ? iExpandLevel - 1 : 0))
-                    {
-                        delete pChild;
-                        return false;
-                    }
-                    if (iExpandLevel)
-                        m_pTree->EnsureVisible(oChild);
-                    delete pChild;
-                }
+
+                if (bHasChildren)
+                    m_pTree->SetItemHasChildren(oChild, true);
+                else
+                    delete pSubDir;
                 break;
             }
             };

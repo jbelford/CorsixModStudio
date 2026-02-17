@@ -45,9 +45,19 @@
 class CFilesTreeItemData : public wxTreeItemData
 {
   public:
+    //! Construct from a positioned iterator (file or directory item)
     CFilesTreeItemData(IDirectoryTraverser::IIterator *pItr);
+
+    //! Construct a lazy directory node with a deferred sub-iterator
+    CFilesTreeItemData(IDirectoryTraverser::IIterator *pItr, IDirectoryTraverser::IIterator *pSubDirItr);
+
+    ~CFilesTreeItemData();
+
     const char *sMod;
     const char *sSource;
+
+    //! Sub-directory iterator for lazy child population; owned by this object
+    IDirectoryTraverser::IIterator *pToFillWith;
 };
 
 class frmFiles : public wxWindow
@@ -60,6 +70,7 @@ class frmFiles : public wxWindow
     bool _FillPartialFromIDirectoryTraverserIIterator(wxTreeItemId oParent, IDirectoryTraverser::IIterator *pChildren,
                                                       int iExpandLevel, bool bOnlyOne = false,
                                                       wxTreeItemId *pAfter = 0);
+    void _FillOneLevelFromIterator(wxTreeItemId oParent, IDirectoryTraverser::IIterator *pChildren);
 
     wxColour m_cThisMod, m_cOtherMod, m_cEngine;
     wxString m_sPopupFileName;
@@ -77,6 +88,7 @@ class frmFiles : public wxWindow
     void OnNodeTooltip(wxTreeEvent &event);
     void OnNodeActivate(wxTreeEvent &event);
     void OnNodeRightClick(wxTreeEvent &event);
+    void OnTreeExpanding(wxTreeEvent &event);
     void OnPageChange(wxAuiNotebookEvent &event);
     void OnMenu(wxCommandEvent &event);
     void LaunchTool(wxListEvent &event);
@@ -84,6 +96,9 @@ class frmFiles : public wxWindow
     bool UpdateDirectoryChildren(const wxTreeItemId &oDirectory, IDirectoryTraverser::IIterator *pChildren);
     wxTreeCtrl *GetTree();
     wxTreeItemId FindFile(wxString sFile, bool bParent);
+
+    //! Populate lazy-loaded children of a directory node
+    void PopulateChildren(const wxTreeItemId &oParent);
 
     //! Handler for an action on a file / folder
     class IHandler
