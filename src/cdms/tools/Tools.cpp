@@ -64,8 +64,7 @@ void CLocaleTool::DoAction()
     pLocaleSelect->ShowModal();
     delete pLocaleSelect;
 
-    CRefreshFilesTool oReload;
-    oReload.DoAction();
+    TheConstruct->DoTool(AppStr(refreshfiles_name));
 }
 
 wxString CAESetupTool::GetName() { return AppStr(aesetup_name); }
@@ -468,6 +467,8 @@ void CRedButtonTool::DoAction()
     delete pS;
     */
 }
+
+CRefreshFilesTool::~CRefreshFilesTool() { HideLoading(); }
 
 wxString CRefreshFilesTool::GetName() { return AppStr(refreshfiles_name); }
 wxString CRefreshFilesTool::GetHelpString() { return wxT(""); }

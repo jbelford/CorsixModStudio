@@ -298,3 +298,69 @@ TEST(CTaskRunnerTest, DestructorJoinsRunningTask)
 
     EXPECT_TRUE(taskFinished.load());
 }
+
+// ---------------------------------------------------------------------------
+// CWxTaskRunner alive-flag tests
+// ---------------------------------------------------------------------------
+
+#include "async/CWxTaskRunner.h"
+#include <wx/event.h>
+
+TEST(CWxTaskRunnerTest, DestroyIdleRunnerDoesNotCrash)
+{
+    wxEvtHandler handler;
+    { CWxTaskRunner runner(&handler); }
+    // No crash = success
+}
+
+TEST(CWxTaskRunnerTest, DestroyRunnerWhileTaskRunningDoesNotCrash)
+{
+    wxEvtHandler handler;
+    std::atomic<bool> taskFinished{false};
+
+    {
+        CWxTaskRunner runner(&handler);
+        runner.RunAsync<void>(
+            [&taskFinished](CProgressChannel &progress, CCancellationToken &cancel) {
+                for (int i = 0; i < 20 && !cancel.IsCancelled(); ++i)
+                {
+                    progress.Report("step");
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                }
+                taskFinished.store(true);
+            },
+            [](const std::string &) {}, [](Result<void>) {});
+        // Destructor should cancel, join, and mark alive=false.
+        // Any stale CallAfter lambdas in the handler's queue will
+        // see the dead flag and skip — no use-after-free.
+    }
+
+    EXPECT_TRUE(taskFinished.load());
+}
+
+TEST(CWxTaskRunnerTest, SequentialRunsAfterDestructionWork)
+{
+    wxEvtHandler handler;
+
+    // First runner — destroyed while task may still be posting CallAfter
+    {
+        CWxTaskRunner runner(&handler);
+        runner.RunAsync<int>(
+            [](CProgressChannel &progress, CCancellationToken &) -> int {
+                progress.Report("hello");
+                return 42;
+            },
+            [](const std::string &) {}, [](Result<int>) {});
+    }
+
+    // Second runner on the same handler — must work cleanly
+    {
+        CWxTaskRunner runner(&handler);
+        std::atomic<bool> done{false};
+        runner.RunAsync<void>(
+            [&done](CProgressChannel &, CCancellationToken &) { done.store(true); },
+            [](const std::string &) {}, [](Result<void>) {});
+
+        ASSERT_TRUE(WaitFor([&]() { return done.load(); }));
+    }
+}

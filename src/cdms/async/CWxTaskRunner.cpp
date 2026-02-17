@@ -18,7 +18,12 @@
 
 #include "CWxTaskRunner.h"
 
-CWxTaskRunner::CWxTaskRunner(wxEvtHandler *pHandler) : m_pHandler(pHandler) {}
+CWxTaskRunner::CWxTaskRunner(wxEvtHandler *pHandler)
+    : m_pHandler(pHandler), m_pAlive(std::make_shared<std::atomic<bool>>(true))
+{
+}
+
+CWxTaskRunner::~CWxTaskRunner() { m_pAlive->store(false, std::memory_order_release); }
 
 void CWxTaskRunner::Cancel() { m_runner.Cancel(); }
 

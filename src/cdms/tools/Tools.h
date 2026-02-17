@@ -140,6 +140,8 @@ class CMakeLuaInheritTree : public ConstructFrame::ITool
 class CRefreshFilesTool : public ConstructFrame::ITool, private IRefreshFilesView
 {
   public:
+    ~CRefreshFilesTool() override;
+
     virtual wxString GetName();
     virtual wxString GetHelpString();
     virtual wxString GetBitmapName();
