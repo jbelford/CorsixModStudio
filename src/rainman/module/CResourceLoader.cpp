@@ -740,6 +740,7 @@ void CResourceLoader::LoadCohEngine(CModuleFile &module, const char *sFolder, co
 void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsigned long iReloadWhatRequiredMods,
                            unsigned long iReloadWhatEngines, CALLBACK_ARG)
 {
+    auto tLoadStart = std::chrono::steady_clock::now();
     module._CleanResources();
 
     if (module.m_pFSS == nullptr)
@@ -749,6 +750,7 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
 
     if (iReloadWhat & CModuleFile::RR_LocalisedText)
     {
+        auto tPhaseStart = std::chrono::steady_clock::now();
         char *sUcsPath;
         if (module.m_metadata.m_sLocFolder && *module.m_metadata.m_sLocFolder)
         {
@@ -787,9 +789,13 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
             delete pItr;
         }
         delete[] sUcsPath;
+        auto tPhaseEnd = std::chrono::steady_clock::now();
+        RAINMAN_LOG_INFO("Load phase: UCS files = {} ms",
+                         std::chrono::duration_cast<std::chrono::milliseconds>(tPhaseEnd - tPhaseStart).count());
     }
     if (iReloadWhat & CModuleFile::RR_DataFolders)
     {
+        auto tPhaseStart = std::chrono::steady_clock::now();
         if (module.m_eModuleType == CModuleFile::MT_DawnOfWar)
         {
             char *sOutFolder = nullptr;
@@ -859,9 +865,13 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
             }
             LoadFoldersParallel(folderTasks, module, THE_CALLBACK);
         }
+        auto tPhaseEnd = std::chrono::steady_clock::now();
+        RAINMAN_LOG_INFO("Load phase: Data folders = {} ms",
+                         std::chrono::duration_cast<std::chrono::milliseconds>(tPhaseEnd - tPhaseStart).count());
     }
     if (iReloadWhat & CModuleFile::RR_DataArchives)
     {
+        auto tPhaseStart = std::chrono::steady_clock::now();
         if (module.m_eModuleType == CModuleFile::MT_DawnOfWar)
         {
             std::vector<ArchiveTask> tasks;
@@ -924,6 +934,9 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
             CallCallback(THE_CALLBACK, "Loading data archives for mod \'%s\'", module.m_sFileMapName);
             LoadArchivesParallel(tasks, module, THE_CALLBACK);
         }
+        auto tPhaseEnd = std::chrono::steady_clock::now();
+        RAINMAN_LOG_INFO("Load phase: Data archives = {} ms",
+                         std::chrono::duration_cast<std::chrono::milliseconds>(tPhaseEnd - tPhaseStart).count());
     }
     if (iReloadWhat & CModuleFile::RR_MapArchives)
     {
@@ -965,6 +978,7 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
     }
     if (iReloadWhat & CModuleFile::RR_RequiredMods)
     {
+        auto tPhaseStart = std::chrono::steady_clock::now();
         if (module.m_eModuleType == CModuleFile::MT_DawnOfWar)
         {
             for (auto *pReqHandler : module.m_vRequireds)
@@ -992,9 +1006,13 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
                                       0, 0, THE_CALLBACK);
             }
         }
+        auto tPhaseEnd = std::chrono::steady_clock::now();
+        RAINMAN_LOG_INFO("Load phase: Required mods = {} ms",
+                         std::chrono::duration_cast<std::chrono::milliseconds>(tPhaseEnd - tPhaseStart).count());
     }
     if (iReloadWhat & CModuleFile::RR_Engines)
     {
+        auto tPhaseStart = std::chrono::steady_clock::now();
         if (module.m_eModuleType == CModuleFile::MT_DawnOfWar)
         {
             CModuleFile *pEngine = CHECK_MEM(new CModuleFile);
@@ -1041,11 +1059,17 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
             LoadCohEngine(module, "Engine", "(Engine)", iReloadWhatEngines, 30001, THE_CALLBACK);
             LoadCohEngine(module, "RelicOnline", "(Relic Online)", iReloadWhatEngines, 30000, THE_CALLBACK);
         }
+        auto tPhaseEnd = std::chrono::steady_clock::now();
+        RAINMAN_LOG_INFO("Load phase: Engines = {} ms",
+                         std::chrono::duration_cast<std::chrono::milliseconds>(tPhaseEnd - tPhaseStart).count());
     }
     if (iReloadWhat && CModuleFile::RR_DataGeneric)
     {
         LoadDataGeneric(module, THE_CALLBACK);
     }
+    auto tLoadEnd = std::chrono::steady_clock::now();
+    RAINMAN_LOG_INFO("Load TOTAL for '{}' = {} ms", module.m_sFileMapName ? module.m_sFileMapName : "(unknown)",
+                     std::chrono::duration_cast<std::chrono::milliseconds>(tLoadEnd - tLoadStart).count());
 }
 
 void CResourceLoader::DoLoadFolder(CModuleFile &module, const char *sFullPath, bool bIsDefaultWrite,
