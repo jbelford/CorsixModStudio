@@ -186,3 +186,89 @@ TEST_F(BfxFileTest, SaveMultipleTopLevelEntries)
 	EXPECT_NE(output.find("beta = 2,"), std::string::npos);
 	EXPECT_NE(output.find("gamma = 3,"), std::string::npos);
 }
+
+TEST_F(BfxFileTest, SaveSmallFloat)
+{
+	bfx.New(3);
+	auto *table = bfx.VGetValueMetatable();
+	ASSERT_NE(table, nullptr);
+
+	auto *child = table->VAddChild("tiny");
+	child->VSetType(IMetaNode::DT_Float);
+	child->VSetValueFloat(0.00123f);
+	delete child;
+	delete table;
+
+	std::string output = SaveToString();
+	EXPECT_NE(output.find("tiny = "), std::string::npos);
+	// Should contain the value, not be empty
+	EXPECT_NE(output.find(","), std::string::npos);
+}
+
+TEST_F(BfxFileTest, SaveNegativeFloat)
+{
+	bfx.New(3);
+	auto *table = bfx.VGetValueMetatable();
+	ASSERT_NE(table, nullptr);
+
+	auto *child = table->VAddChild("offset");
+	child->VSetType(IMetaNode::DT_Float);
+	child->VSetValueFloat(-42.5f);
+	delete child;
+	delete table;
+
+	std::string output = SaveToString();
+	EXPECT_NE(output.find("offset = -42"), std::string::npos);
+}
+
+TEST_F(BfxFileTest, SaveStringWithQuotes)
+{
+	bfx.New(3);
+	auto *table = bfx.VGetValueMetatable();
+	ASSERT_NE(table, nullptr);
+
+	auto *child = table->VAddChild("quote_test");
+	child->VSetType(IMetaNode::DT_String);
+	child->VSetValueString("say \"hello\"");
+	delete child;
+	delete table;
+
+	std::string output = SaveToString();
+	// Quotes should be escaped
+	EXPECT_NE(output.find("\\\"hello\\\""), std::string::npos);
+}
+
+TEST_F(BfxFileTest, SaveDeeplyNestedTables)
+{
+	bfx.New(3);
+	auto *table = bfx.VGetValueMetatable();
+	ASSERT_NE(table, nullptr);
+
+	// Create 3 levels deep
+	auto *l1 = table->VAddChild("level1");
+	l1->VSetType(IMetaNode::DT_Table);
+	auto *l1t = l1->VGetValueMetatable();
+
+	auto *l2 = l1t->VAddChild("level2");
+	l2->VSetType(IMetaNode::DT_Table);
+	auto *l2t = l2->VGetValueMetatable();
+
+	auto *leaf = l2t->VAddChild("value");
+	leaf->VSetType(IMetaNode::DT_Integer);
+	leaf->VSetValueInteger(99);
+
+	delete leaf;
+	delete l2t;
+	delete l2;
+	delete l1t;
+	delete l1;
+	delete table;
+
+	std::string output = SaveToString();
+	EXPECT_NE(output.find("level1 = "), std::string::npos);
+	EXPECT_NE(output.find("level2 = "), std::string::npos);
+	EXPECT_NE(output.find("value = 99,"), std::string::npos);
+	// Should have proper closing braces
+	auto count = std::count(output.begin(), output.end(), '{');
+	EXPECT_EQ(count, 2); // level1 + level2 (root is iterated directly, not wrapped)
+}
