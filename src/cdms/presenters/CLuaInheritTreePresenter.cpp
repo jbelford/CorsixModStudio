@@ -17,7 +17,7 @@
 */
 
 #include "CLuaInheritTreePresenter.h"
-#include "Tools.h"
+#include "tools/Tools.h"
 #include "common/strconv.h"
 #include <rainman/lua/CInheritTable.h>
 

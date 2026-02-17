@@ -45,8 +45,8 @@ add_executable(cdms_tests
     ${CDMS_SRC_DIR}/presenters/CRgdMacroPresenter.cpp
     ${CDMS_SRC_DIR}/presenters/CMassExtractPresenter.cpp
     ${CDMS_SRC_DIR}/presenters/CRefreshFilesPresenter.cpp
-    ${CDMS_SRC_DIR}/Tool_AutoDPS.cpp
-    ${CDMS_SRC_DIR}/Tool_AESetup.cpp
+    ${CDMS_SRC_DIR}/tools/Tool_AutoDPS.cpp
+    ${CDMS_SRC_DIR}/tools/Tool_AESetup.cpp
     ${CDMS_SRC_DIR}/CtrlStatusText.cpp
 )
 

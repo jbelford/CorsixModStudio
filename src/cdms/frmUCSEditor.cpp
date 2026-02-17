@@ -19,7 +19,7 @@
 #include "frmUCSEditor.h"
 #include "frmUCSOutRange.h"
 #include "frame/Construct.h"
-#include "Tools.h"
+#include "tools/Tools.h"
 #include "common/strings.h"
 #include "common/config.h"
 #include "common/Utility.h"

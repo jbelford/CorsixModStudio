@@ -16,7 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include "frmLuaInheritTree.h"
-#include "Tools.h"
+#include "tools/Tools.h"
 #include "frmRgdEditor.h"
 #include "common/Common.h"
 #include <rainman/core/RainmanLog.h>

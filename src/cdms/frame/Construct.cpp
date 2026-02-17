@@ -29,7 +29,7 @@
 #include <memory>
 #include <rainman/io/CFileSystemStore.h>
 #include <rainman/module/CFileMap.h>
-#include "Tools.h"
+#include "tools/Tools.h"
 extern "C"
 {
 #include "rainman/util/md5.h"

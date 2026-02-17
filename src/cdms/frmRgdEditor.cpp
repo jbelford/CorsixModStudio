@@ -18,7 +18,7 @@
 
 #include "frmRgdEditor.h"
 #include "common/TabDialog.h"
-#include "Tools.h"
+#include "tools/Tools.h"
 #include "frmUCSEditor.h"
 #include "frmFileSelector.h"
 #include "common/strconv.h"

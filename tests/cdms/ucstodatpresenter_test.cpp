@@ -21,7 +21,7 @@
 #include "async/CProgressChannel.h"
 #include "services/Result.h"
 #include "common/strconv.h"
-#include "Tool_AESetup.h"
+#include "tools/Tool_AESetup.h"
 #include <rainman/core/Exception.h>
 #include <gtest/gtest.h>
 #include <chrono>

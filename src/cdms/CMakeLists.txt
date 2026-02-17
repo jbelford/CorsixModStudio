@@ -2,7 +2,7 @@
 find_package(wxWidgets REQUIRED COMPONENTS core base aui html xml xrc propgrid stc adv)
 include(${wxWidgets_USE_FILE})
 
-file(GLOB CDMS_SOURCES "*.cpp" "*.c" "common/*.cpp" "frame/*.cpp" "services/*.cpp" "actions/*.cpp" "async/*.cpp" "presenters/*.cpp" "views/*.cpp")
+file(GLOB CDMS_SOURCES "*.cpp" "*.c" "common/*.cpp" "frame/*.cpp" "tools/*.cpp" "services/*.cpp" "actions/*.cpp" "async/*.cpp" "presenters/*.cpp" "views/*.cpp")
 
 add_executable(CorsixModStudio WIN32 ${CDMS_SOURCES} resource.rc)
 
