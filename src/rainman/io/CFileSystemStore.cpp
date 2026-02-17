@@ -505,8 +505,10 @@ CFileSystemStore::CIterator::CIterator(const char *sFolder, const CFileSystemSto
     {
         DWORD dwErr = GetLastError();
         m_HandFD = nullptr;
-        RAINMAN_LOG_WARN("FindFirstFile: directory not accessible '{}' (Windows error {})", sFolder, dwErr);
-        return; // missing/inaccessible directory treated as empty
+        delete[] m_sParentPath;
+        m_sParentPath = nullptr;
+        throw new CRainmanException(nullptr, __FILE__, __LINE__, "FindFirstFile failed on '%s' (Windows error %lu)",
+                                    sFolder, dwErr);
     }
     while (strcmp(m_W32FD.cFileName, ".") == 0 || strcmp(m_W32FD.cFileName, "..") == 0)
     {
