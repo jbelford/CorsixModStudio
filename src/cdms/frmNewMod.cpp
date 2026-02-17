@@ -20,7 +20,7 @@
 #include "common/strings.h"
 #include "common/strconv.h"
 #include "common/config.h"
-#include "Construct.h"
+#include "frame/Construct.h"
 #include "CtrlStatusText.h"
 #include <errno.h>
 #include <wx/textdlg.h>

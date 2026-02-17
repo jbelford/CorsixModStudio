@@ -20,7 +20,7 @@
 
 #include "frmFiles.h"
 #include "frmRgdEditor.h"
-#include "Construct.h"
+#include "frame/Construct.h"
 #include "common/Utility.h"
 #include "common/strconv.h"
 #include "actions/ActionUtil.h"

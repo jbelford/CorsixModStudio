@@ -30,7 +30,7 @@
 #include "wx/wx.h"
 #endif
 // ----------------------------
-#include "Construct.h"
+#include "frame/Construct.h"
 
 class frmLocaleSelector : public wxDialog
 {

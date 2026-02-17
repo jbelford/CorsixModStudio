@@ -19,7 +19,7 @@
 #include "frmFileSelector.h"
 #include "common/strings.h"
 #include "common/strconv.h"
-#include "Construct.h"
+#include "frame/Construct.h"
 #include "common/config.h"
 #include <wx/textdlg.h>
 #include <list>

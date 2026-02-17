@@ -17,7 +17,7 @@
 */
 
 #include "Application.h"
-#include "Construct.h"
+#include "frame/Construct.h"
 #include <crtdbg.h>
 #include "strings.h"
 #include "Utility.h"

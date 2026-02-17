@@ -16,7 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include "frmWelcome.h"
-#include "Construct.h"
+#include "frame/Construct.h"
 #include "common/config.h"
 #include "CtrlStatusText.h"
 #include "common/strings.h"

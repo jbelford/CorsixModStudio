@@ -18,7 +18,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "frmUCSSelector.h"
 #include "common/strings.h"
 #include "common/strconv.h"
-#include "Construct.h"
+#include "frame/Construct.h"
 #include <wx/textdlg.h>
 #include "common/Common.h"
 

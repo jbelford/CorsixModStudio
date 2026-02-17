@@ -18,7 +18,7 @@
 #include "common/TabDialog.h"
 #include "frmUCSEditor.h"
 #include "frmUCSOutRange.h"
-#include "Construct.h"
+#include "frame/Construct.h"
 #include "Tools.h"
 #include "common/strings.h"
 #include "common/config.h"

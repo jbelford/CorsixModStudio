@@ -17,7 +17,7 @@
 */
 
 #include "frmModule.h"
-#include "Construct.h"
+#include "frame/Construct.h"
 #include "common/strconv.h"
 #include "CtrlStatusText.h"
 #include "common/strings.h"

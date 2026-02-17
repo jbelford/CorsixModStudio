@@ -25,7 +25,7 @@
 #include "frmMassExtract.h"
 #include "frmRgdMacro.h"
 #include "frmMessage.h"
-#include "Construct.h"
+#include "frame/Construct.h"
 #include "common/strconv.h"
 #include "common/strings.h"
 #include "common/config.h"

@@ -17,7 +17,7 @@
 */
 
 #include "frmImage.h"
-#include "Construct.h"
+#include "frame/Construct.h"
 #include "common/strings.h"
 #include "common/config.h"
 #include "common/Utility.h"

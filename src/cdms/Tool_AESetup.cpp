@@ -15,7 +15,7 @@
     along with Corsix's Mod Studio; if not, write to the Free Software
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
-#include "Construct.h"
+#include "frame/Construct.h"
 #include "common/strconv.h"
 #include "common/strings.h"
 #include "common/Utility.h"

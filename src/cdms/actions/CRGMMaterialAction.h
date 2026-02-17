@@ -20,7 +20,7 @@
 
 #include "frmFiles.h"
 #include "frmRgmMaterialEditor.h"
-#include "Construct.h"
+#include "frame/Construct.h"
 #include "common/Utility.h"
 #include "actions/ActionUtil.h"
 #include <rainman/formats/CRgmFile.h>
