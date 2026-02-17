@@ -787,18 +787,19 @@ Add parallelism within Rainman for archive loading and SGA compression.
 5. Test: verify parallel loading produces identical results to sequential
 6. Benchmark: measure speedup on mods with 5+ archives
 
-### Phase K: CDMS Directory Restructuring
+### Phase K: CDMS Directory Restructuring ✅
 
 Reorganize the CDMS directory structure.
 
-1. Create directories: `async/`, `models/`, `views/`, `views/interfaces/`, `presenters/`, `common/`, `frame/`, `tools/`
-2. Move utility files to `common/` (Application, config, strconv, strings, Utility, ITool, TabDialog)
-3. Move frame infrastructure to `frame/` (Construct, ModuleManager, TabManager, MenuController, ToolRegistry)
-4. Move tool implementations to `tools/` (Tools, Tool_AESetup, Tool_AutoDPS)
-5. Move view files to `views/` (all frm* files, CtrlStatusText)
-6. Update CMakeLists.txt glob patterns
-7. Update all `#include` paths
-8. Build and test after each group
+1. ✅ Create directories: `async/`, `models/`, `views/`, `views/interfaces/`, `presenters/`, `common/`, `frame/`, `tools/`
+2. ✅ Move utility files to `common/` (Application, config, strconv, strings, Utility, ITool, TabDialog, Common.h)
+3. ✅ Move frame infrastructure to `frame/` (Construct, ModuleManager, TabManager, MenuController, ToolRegistry)
+4. ✅ Move tool implementations to `tools/` (Tools, Tool_AESetup, Tool_AutoDPS)
+5. ✅ Move view interfaces to `views/interfaces/` (all I*View.h files)
+6. ✅ Move view files to `views/` (all frm* files, CtrlStatusText)
+7. ✅ Update CMakeLists.txt glob patterns and test source paths
+8. ✅ Update all `#include` paths
+9. ✅ Build and test after each group
 
 ### Phase L: MVP Extraction (Per-Editor)
 
