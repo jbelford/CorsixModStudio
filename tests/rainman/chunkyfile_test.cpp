@@ -195,3 +195,85 @@ TEST_F(ChunkyFileTest, RemoveChild) {
     EXPECT_EQ(chunky.GetChildCount(), 1u);
     EXPECT_STREQ(chunky.GetChild(0)->GetName(), "BBB2");
 }
+
+TEST_F(ChunkyFileTest, DeepNestingRoundTrip) {
+    chunky.New(3);
+    auto* level1 = chunky.AppendNew("LVL1", CChunkyFile::CChunk::T_Folder);
+    auto* level2 = level1->AppendNew("LVL2", CChunkyFile::CChunk::T_Folder);
+    auto* level3 = level2->AppendNew("LVL3", CChunkyFile::CChunk::T_Folder);
+    auto* leaf = level3->AppendNew("LEAF", CChunkyFile::CChunk::T_Data);
+
+    auto* dataOut = CMemoryStore::OpenOutputStreamExt();
+    const char payload[] = "deep";
+    dataOut->VWrite(sizeof(payload) - 1, 1, payload);
+    leaf->SetData(dataOut);
+    delete dataOut;
+
+    auto* saveStream = CMemoryStore::OpenOutputStreamExt();
+    chunky.Save(saveStream);
+
+    auto* loadStream = CMemoryStore::OpenStreamExt(
+        const_cast<char*>(saveStream->GetData()), saveStream->GetDataLength(), false);
+    CChunkyFile chunky2;
+    chunky2.Load(loadStream);
+
+    ASSERT_EQ(chunky2.GetChildCount(), 1u);
+    auto* l1 = chunky2.GetChild(0);
+    ASSERT_EQ(l1->GetChildCount(), 1u);
+    auto* l2 = l1->GetChild(0);
+    ASSERT_EQ(l2->GetChildCount(), 1u);
+    auto* l3 = l2->GetChild(0);
+    ASSERT_EQ(l3->GetChildCount(), 1u);
+    auto* loaded = l3->GetChild(0);
+    EXPECT_STREQ(loaded->GetName(), "LEAF");
+    EXPECT_EQ(loaded->GetDataLength(), sizeof(payload) - 1);
+    EXPECT_EQ(std::memcmp(loaded->GetDataRaw(), payload, sizeof(payload) - 1), 0);
+
+    delete loadStream;
+    delete saveStream;
+}
+
+TEST_F(ChunkyFileTest, EmptyDescriptorRoundTrip) {
+    chunky.New(3);
+    auto* chunk = chunky.AppendNew("TEST", CChunkyFile::CChunk::T_Data);
+    chunk->SetDescriptor("");
+
+    auto* dataOut = CMemoryStore::OpenOutputStreamExt();
+    dataOut->VWrite(3, 1, "abc");
+    chunk->SetData(dataOut);
+    delete dataOut;
+
+    auto* saveStream = CMemoryStore::OpenOutputStreamExt();
+    chunky.Save(saveStream);
+
+    auto* loadStream = CMemoryStore::OpenStreamExt(
+        const_cast<char*>(saveStream->GetData()), saveStream->GetDataLength(), false);
+    CChunkyFile chunky2;
+    chunky2.Load(loadStream);
+
+    ASSERT_EQ(chunky2.GetChildCount(), 1u);
+    EXPECT_STREQ(chunky2.GetChild(0)->GetDescriptor(), "");
+    EXPECT_EQ(chunky2.GetChild(0)->GetDataLength(), 3u);
+
+    delete loadStream;
+    delete saveStream;
+}
+
+TEST_F(ChunkyFileTest, InsertBeforeOrderPreserved) {
+    chunky.New(3);
+    chunky.AppendNew("BBBB", CChunkyFile::CChunk::T_Data);
+    auto* folder = chunky.AppendNew("FOLD", CChunkyFile::CChunk::T_Folder);
+    folder->AppendNew("CC", CChunkyFile::CChunk::T_Data);
+    folder->InsertBefore(0, "AA", CChunkyFile::CChunk::T_Data);
+
+    ASSERT_EQ(folder->GetChildCount(), 2u);
+    EXPECT_STREQ(folder->GetChild(0)->GetName(), "AA\0\0");
+    EXPECT_STREQ(folder->GetChild(1)->GetName(), "CC\0\0");
+}
+
+TEST_F(ChunkyFileTest, GetDataLengthIsConst) {
+    chunky.New(3);
+    auto* chunk = chunky.AppendNew("DATA", CChunkyFile::CChunk::T_Data);
+    const auto* constChunk = chunk;
+    EXPECT_EQ(constChunk->GetDataLength(), 0u);
+}

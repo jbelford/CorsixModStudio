@@ -22,6 +22,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "rainman/core/gnuc_defines.h"
 #include "rainman/io/CMemoryStore.h"
 #include "rainman/core/Exception.h"
+#include <array>
+#include <memory>
+#include <string>
 #include <vector>
 
 class RAINMAN_API CChunkyFile
@@ -59,7 +62,7 @@ class RAINMAN_API CChunkyFile
         // Only applicable to T_Data
         CMemoryStore::CStream *GetData();
         char *GetDataRaw();
-        unsigned long GetDataLength();
+        unsigned long GetDataLength() const;
 
         void SetData(CMemoryStore::COutStream *pStream);
 
@@ -91,16 +94,16 @@ class RAINMAN_API CChunkyFile
         unsigned long _FoldUpdateSize();
 
         eTypes m_eType;
-        char m_sName[5];
-        char *m_sDescriptor;
+        std::array<char, 5> m_sName;
+        std::string m_sDescriptor;
         long m_iVersion;
 
         long m_iUnknown1, m_iUnknown2;
 
-        char *m_pData;
-        unsigned long m_iDataLength;
+        std::vector<char> m_vData;
+        unsigned long m_iDataLength; //!< Wire-format content length (for folders: aggregate child size)
 
-        std::vector<CChunk *> m_vChildren;
+        std::vector<std::unique_ptr<CChunk>> m_vChildren;
     };
 
     long GetVersion() const;
@@ -113,10 +116,10 @@ class RAINMAN_API CChunkyFile
     CChunk *AppendNew(const char *sName, CChunk::eTypes eType);
 
   protected:
-    char m_sHeader[17];
+    std::array<char, 17> m_sHeader;
     long m_iVersion;
 
     long m_iUnknown1, m_iUnknown2, m_iUnknown3, m_iUnknown4;
 
-    std::vector<CChunk *> m_vChunks;
+    std::vector<std::unique_ptr<CChunk>> m_vChunks;
 };
