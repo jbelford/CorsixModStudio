@@ -18,12 +18,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 #include "rainman/archive/CSgaCreator.h"
+#include "rainman/core/CThreadPool.h"
 #include "rainman/core/Internal_Util.h"
 #include "rainman/io/CMemoryStore.h"
 #include <chrono>
 #include <future>
 #include <memory>
-#include <thread>
 #include <zlib.h>
 #include <ctime>
 extern "C"
@@ -506,12 +506,12 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
 
         // Phase 1: Parallel per-file compression
         auto tCompressStart = std::chrono::steady_clock::now();
+        auto &pool = CThreadPool::Instance();
         std::vector<std::future<CompressedFileData>> compressionFutures;
         compressionFutures.reserve(vFilesList.size());
         for (auto itr = vFilesList.begin(); itr != vFilesList.end(); ++itr)
         {
-            compressionFutures.push_back(
-                std::async(std::launch::async, CompressOneFile, (**itr).pFileStore, (**itr).sFullPath, iVersion));
+            compressionFutures.push_back(pool.Submit(CompressOneFile, (**itr).pFileStore, (**itr).sFullPath, iVersion));
         }
 
         // Phase 2: Sequential header writing and data output

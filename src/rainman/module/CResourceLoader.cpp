@@ -23,6 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "rainman/localization/CUcsFile.h"
 #include "rainman/module/CFileMap.h"
 #include "rainman/io/CFileSystemStore.h"
+#include "rainman/core/CThreadPool.h"
 #include "rainman/core/Internal_Util.h"
 #include "rainman/core/Exception.h"
 #include "rainman/core/RainmanLog.h"
@@ -30,7 +31,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include <chrono>
 #include <memory>
 #include <string>
-#include <thread>
 
 // -- Parallel archive preloading infrastructure (Phase J) --
 
@@ -201,14 +201,15 @@ void CResourceLoader::LoadArchivesParallel(std::vector<ArchiveTask> &tasks, CMod
 
     auto tStart = std::chrono::steady_clock::now();
 
-    // Phase 1: Launch parallel SGA preloads
+    // Phase 1: Launch parallel SGA preloads via thread pool
+    auto &pool = CThreadPool::Instance();
     std::vector<std::future<SgaPreloadResult>> futures;
     futures.reserve(tasks.size());
     for (auto &task : tasks)
     {
-        futures.push_back(std::async(std::launch::async, &CResourceLoader::PreloadSga, module.m_pFSS,
-                                     task.archivePath.c_str(), module.m_eModuleType, module.m_sCohThisModFolder,
-                                     module.m_sApplicationPath, module.m_saScenarioPackRootFolder));
+        futures.push_back(pool.Submit(&CResourceLoader::PreloadSga, module.m_pFSS, task.archivePath.c_str(),
+                                      module.m_eModuleType, module.m_sCohThisModFolder, module.m_sApplicationPath,
+                                      module.m_saScenarioPackRootFolder));
     }
 
     // Phase 2: Collect results and register sequentially
@@ -373,7 +374,7 @@ void CResourceLoader::LoadUcsFilesParallel(CModuleFile &module, IDirectoryTraver
 
     auto startTime = std::chrono::steady_clock::now();
 
-    // Phase 2 (parallel): Load CUcsFile instances in batches to limit concurrency
+    // Phase 2 (parallel): Load CUcsFile instances via thread pool
     struct UcsLoadResult
     {
         CUcsFile *pHandle = nullptr;
@@ -381,70 +382,61 @@ void CResourceLoader::LoadUcsFilesParallel(CModuleFile &module, IDirectoryTraver
         CRainmanException *pError = nullptr;
     };
 
-    const size_t maxConcurrency =
-        (std::max)(static_cast<size_t>(1), static_cast<size_t>(std::thread::hardware_concurrency()));
+    auto &pool = CThreadPool::Instance();
+    std::vector<std::future<UcsLoadResult>> futures;
+    futures.reserve(files.size());
 
-    // Phase 3 (serial, interleaved): Collect results and register in module
+    for (const auto &fileInfo : files)
+    {
+        futures.push_back(pool.Submit(
+            [&fileInfo, pFSS = module.m_pFSS]() -> UcsLoadResult
+            {
+                UcsLoadResult result;
+                result.name = fileInfo.name;
+                result.pHandle = new CUcsFile;
+                try
+                {
+                    std::unique_ptr<IFileStore::IStream> stream(pFSS->VOpenStream(fileInfo.fullPath.c_str()));
+                    if (fileInfo.isUcs)
+                        result.pHandle->Load(stream.get());
+                    else
+                        result.pHandle->LoadDat(stream.get());
+                }
+                catch (CRainmanException *pE)
+                {
+                    delete result.pHandle;
+                    result.pHandle = nullptr;
+                    result.pError = pE;
+                }
+                return result;
+            }));
+    }
+
+    // Phase 3 (serial): Collect results and register in module
     CRainmanException *pFirstError = nullptr;
     std::string sFirstErrorFile;
 
-    for (size_t batchStart = 0; batchStart < files.size(); batchStart += maxConcurrency)
+    for (auto &fut : futures)
     {
-        size_t batchEnd = (std::min)(batchStart + maxConcurrency, files.size());
-
-        std::vector<std::future<UcsLoadResult>> futures;
-        futures.reserve(batchEnd - batchStart);
-
-        for (size_t idx = batchStart; idx < batchEnd; ++idx)
+        UcsLoadResult result = fut.get();
+        if (result.pError != nullptr)
         {
-            const auto &fileInfo = files[idx];
-            futures.push_back(std::async(std::launch::async,
-                                         [&fileInfo, pFSS = module.m_pFSS]() -> UcsLoadResult
-                                         {
-                                             UcsLoadResult result;
-                                             result.name = fileInfo.name;
-                                             result.pHandle = new CUcsFile;
-                                             try
-                                             {
-                                                 std::unique_ptr<IFileStore::IStream> stream(
-                                                     pFSS->VOpenStream(fileInfo.fullPath.c_str()));
-                                                 if (fileInfo.isUcs)
-                                                     result.pHandle->Load(stream.get());
-                                                 else
-                                                     result.pHandle->LoadDat(stream.get());
-                                             }
-                                             catch (CRainmanException *pE)
-                                             {
-                                                 delete result.pHandle;
-                                                 result.pHandle = nullptr;
-                                                 result.pError = pE;
-                                             }
-                                             return result;
-                                         }));
-        }
-
-        for (auto &fut : futures)
-        {
-            UcsLoadResult result = fut.get();
-            if (result.pError != nullptr)
+            if (pFirstError == nullptr)
             {
-                if (pFirstError == nullptr)
-                {
-                    pFirstError = result.pError;
-                    sFirstErrorFile = result.name;
-                }
-                else
-                {
-                    result.pError->destroy();
-                }
-                continue;
+                pFirstError = result.pError;
+                sFirstErrorFile = result.name;
             }
-
-            auto *pUcsEntry = new CModuleFile::CUcsHandler;
-            pUcsEntry->m_sName = strdup(result.name.c_str());
-            pUcsEntry->m_pHandle = result.pHandle;
-            module.m_vLocaleTexts.push_back(pUcsEntry);
+            else
+            {
+                result.pError->destroy();
+            }
+            continue;
         }
+
+        auto *pUcsEntry = new CModuleFile::CUcsHandler;
+        pUcsEntry->m_sName = strdup(result.name.c_str());
+        pUcsEntry->m_pHandle = result.pHandle;
+        module.m_vLocaleTexts.push_back(pUcsEntry);
     }
 
     auto endTime = std::chrono::steady_clock::now();
@@ -526,33 +518,34 @@ void CResourceLoader::LoadFoldersParallel(std::vector<FolderTask> &tasks, CModul
         bool hasIterator = false;
     };
 
+    auto &pool = CThreadPool::Instance();
     std::vector<std::future<ScanResult>> futures;
     futures.reserve(tasks.size());
 
     for (const auto &task : tasks)
     {
-        futures.push_back(std::async(std::launch::async,
-                                     [&task, pFSS = module.m_pFSS]() -> ScanResult
-                                     {
-                                         ScanResult result;
-                                         IDirectoryTraverser::IIterator *pDirItr = nullptr;
-                                         try
-                                         {
-                                             pDirItr = pFSS->VIterate(task.folderPath.c_str());
-                                         }
-                                         catch (CRainmanException *pE)
-                                         {
-                                             pE->destroy();
-                                             return result;
-                                         }
-                                         if (pDirItr)
-                                         {
-                                             result.snapshot = ScanDirectory(pDirItr);
-                                             result.hasIterator = true;
-                                             delete pDirItr;
-                                         }
-                                         return result;
-                                     }));
+        futures.push_back(pool.Submit(
+            [&task, pFSS = module.m_pFSS]() -> ScanResult
+            {
+                ScanResult result;
+                IDirectoryTraverser::IIterator *pDirItr = nullptr;
+                try
+                {
+                    pDirItr = pFSS->VIterate(task.folderPath.c_str());
+                }
+                catch (CRainmanException *pE)
+                {
+                    pE->destroy();
+                    return result;
+                }
+                if (pDirItr)
+                {
+                    result.snapshot = ScanDirectory(pDirItr);
+                    result.hasIterator = true;
+                    delete pDirItr;
+                }
+                return result;
+            }));
     }
 
     // Phase 2 (serial): Register sources and replay snapshots into CFileMap
@@ -1015,13 +1008,14 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
             RAINMAN_LOG_INFO("Cross-phase parallelism: launching {} phases concurrently", parallelCount);
             auto tParStart = std::chrono::steady_clock::now();
 
+            auto &crossPool = CThreadPool::Instance();
             std::future<CRainmanException *> ucsFut, foldersFut, archivesFut;
             if (bRunUcs)
-                ucsFut = std::async(std::launch::async, ucsPhase);
+                ucsFut = crossPool.Submit(ucsPhase);
             if (bRunFolders)
-                foldersFut = std::async(std::launch::async, foldersPhase);
+                foldersFut = crossPool.Submit(foldersPhase);
             if (bRunArchives)
-                archivesFut = std::async(std::launch::async, archivesPhase);
+                archivesFut = crossPool.Submit(archivesPhase);
 
             if (bRunUcs)
                 pUcsError = ucsFut.get();

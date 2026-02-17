@@ -32,6 +32,7 @@ add_executable(rainman_tests
     filemap_parallel_test.cpp
     luafilecache_parallel_test.cpp
     parallel_loading_test.cpp
+    threadpool_test.cpp
 )
 
 target_link_libraries(rainman_tests
