@@ -30,6 +30,7 @@
 #include "common/strings.h"
 #include "common/config.h"
 #include "common/Utility.h"
+#include "presenters/CFileTreePresenter.h"
 #include <zlib.h>
 extern "C"
 {
@@ -715,33 +716,7 @@ bool frmFiles::_FillPartialFromIDirectoryTraverserIIterator(wxTreeItemId oParent
             case IDirectoryTraverser::IIterator::T_File:
             {
                 wxString sName = AsciiTowxString(pChildren->VGetName());
-                int iExt = sName.Find('.', true), iImg = -2;
-                if (iExt != -1)
-                {
-                    wxString sExtension = sName.Mid(iExt);
-                    if (sExtension.IsSameAs(wxT(".ai"), false))
-                        iImg = 0;
-                    else if (sExtension.IsSameAs(wxT(".lua"), false))
-                        iImg = 1;
-                    else if (sExtension.IsSameAs(wxT(".nil"), false))
-                        iImg = 2;
-                    else if (sExtension.IsSameAs(wxT(".rgd"), false))
-                        iImg = 3;
-                    else if (sExtension.IsSameAs(wxT(".scar"), false))
-                        iImg = 6;
-                    else if (sExtension.IsSameAs(wxT(".tga"), false))
-                        iImg = 8;
-                    else if (sExtension.IsSameAs(wxT(".rgt"), false))
-                        iImg = 9;
-                    else if (sExtension.IsSameAs(wxT(".dds"), false))
-                        iImg = 10;
-                    else if (sExtension.IsSameAs(wxT(".bfx"), false))
-                        iImg = 11;
-                    else if (sExtension.IsSameAs(wxT(".abp"), false))
-                        iImg = 12;
-                    else if (sExtension.IsSameAs(wxT(".rgm"), false))
-                        iImg = 13;
-                }
+                int iImg = CFileTreePresenter::ClassifyFileIcon(sName);
                 wxTreeItemId oChild;
                 if (pAfter)
                     oChild =
