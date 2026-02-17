@@ -33,10 +33,8 @@ ModuleManager::~ModuleManager()
 
 void ModuleManager::SetModule(CModuleFile *pMod, const wxString &sModuleFile)
 {
-    if (m_pModule)
-        delete m_pModule;
-    m_pModule = pMod;
-    m_sModuleFile = sModuleFile;
+    // Clear service references to the old module before deleting it
+    // to avoid dangling pointers in services during destruction.
     m_moduleService.SetModule(pMod);
     if (pMod)
     {
@@ -48,6 +46,11 @@ void ModuleManager::SetModule(CModuleFile *pMod, const wxString &sModuleFile)
         m_fileService.SetStore(nullptr);
         m_fileService.SetTraverser(nullptr);
     }
+
+    if (m_pModule)
+        delete m_pModule;
+    m_pModule = pMod;
+    m_sModuleFile = sModuleFile;
 }
 
 void ModuleManager::ClearModule() { SetModule(nullptr, wxT("")); }

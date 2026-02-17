@@ -484,9 +484,9 @@ void ConstructFrame::OnCloseMod(wxCommandEvent &event) { SetModule(nullptr); }
 
 void ConstructFrame::SetModule(CModuleFile *pMod, const wxString &sModuleFile)
 {
-    m_moduleManager.SetModule(pMod, sModuleFile);
     if (pMod != 0)
     {
+        m_moduleManager.SetModule(pMod, sModuleFile);
         if (!m_tabManager.IsSplit())
         {
             GetMenuBar()->GetMenu(0)->Enable(wxID_CLOSE, true);
@@ -550,9 +550,13 @@ void ConstructFrame::SetModule(CModuleFile *pMod, const wxString &sModuleFile)
             GetMenuBar()->GetMenu(0)->Enable(wxID_NEW, true);
             GetMenuBar()->EnableTop(1, false);
 
+            // Destroy the tree before the module — tree items hold borrowed
+            // pointers (sMod, sSource) into CFileMap data owned by the module.
             m_tabManager.ShowWelcomePage();
             m_tabManager.UnsplitFileTree();
         }
+
+        m_moduleManager.SetModule(nullptr, sModuleFile);
     }
 }
 
