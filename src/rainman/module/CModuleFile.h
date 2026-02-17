@@ -264,6 +264,7 @@ class RAINMAN_API CModuleFile : public IFileStore, public IDirectoryTraverser
         ~CUcsHandler();
 
         friend class CModuleFile;
+        friend class CResourceLoader;
         friend void CModuleFile_UcsForEach(IDirectoryTraverser::IIterator *, void *);
         char *m_sName;       //!< This is a "resource" (because CUcsHandler is)
         CUcsFile *m_pHandle; //!< This is a "resource" (because CUcsHandler is)

@@ -212,6 +212,30 @@ class RAINMAN_API CFileMap : public IFileStore, public IDirectoryTraverser
 
     void _RawMap(_DataSource *pSource, IDirectoryTraverser::IIterator *pItr, _Folder *pFolder);
     void _Clean();
+
+  public:
+    //! In-memory representation of a directory entry for parallel pre-scanning
+    struct DirEntry
+    {
+        std::string name;
+        std::string directoryPath; // for folders: the path the iterator reports
+        bool isFile;
+        tLastWriteTime lastWriteTime;   // only meaningful for files
+        std::vector<DirEntry> children; // only meaningful for directories
+    };
+
+    /*!
+        Maps a pre-scanned directory snapshot into the file map as a ToC root folder.
+        This is the parallel-friendly alternative to MapIterator(): the directory tree
+        has already been walked into memory (no I/O), so the lock is held only briefly.
+        \param[in] pSource Files source registered with RegisterSource()
+        \param[in] sTocName Name of ToC to add this folder to
+        \param[in] snapshot The pre-scanned directory tree
+    */
+    void MapSnapshot(void *pSource, const char *sTocName, const DirEntry &snapshot);
+
+  protected:
+    void _RawMapFromSnapshot(_DataSource *pSource, const DirEntry &snapshot, _Folder *pFolder);
     void _EraseSourceFromFolder(_DataSource *pSource, _Folder *pFolder);
     void _CleanFolder(_Folder *pFolder);
     void _FolderSetupSourceNameFromSingleFileMap(_Folder *pFolder, _DataSource *pDataSource, const char *sPathFull,

@@ -987,6 +987,97 @@ void CFileMap::MapIterator(void *pSource, const char *sTocName, IDirectoryTraver
     _RawMap((_DataSource *)pSource, pItr, pToc->pRootFolder);
 }
 
+void CFileMap::MapSnapshot(void *pSource, const char *sTocName, const DirEntry &snapshot)
+{
+    std::lock_guard<std::recursive_mutex> lock(m_mtxMap);
+    _TOC *pToc = nullptr;
+    for (auto itr = m_vTOCs.begin(); itr != m_vTOCs.end(); ++itr)
+    {
+        if (stricmp((**itr).sName, sTocName) == 0)
+        {
+            pToc = *itr;
+            break;
+        }
+    }
+    if (!pToc)
+    {
+        pToc = new _TOC;
+        pToc->sName = strdup(sTocName);
+        pToc->pRootFolder = new _Folder;
+        pToc->pRootFolder->pParent = nullptr;
+        pToc->pRootFolder->sFullName = strdup(sTocName);
+        pToc->pRootFolder->sName = pToc->pRootFolder->sFullName;
+
+        m_vTOCs.push_back(pToc);
+    }
+
+    _RawMapFromSnapshot((_DataSource *)pSource, snapshot, pToc->pRootFolder);
+}
+
+void CFileMap::_RawMapFromSnapshot(_DataSource *pSource, const DirEntry &snapshot, _Folder *pFolder)
+{
+    if (pFolder->mapSourceNames[pSource] == nullptr && !snapshot.directoryPath.empty())
+    {
+        pFolder->mapSourceNames[pSource] = strdup(snapshot.directoryPath.c_str());
+    }
+
+    for (const auto &entry : snapshot.children)
+    {
+        if (entry.isFile)
+        {
+            if (!pSource->bIsPureOutput)
+            {
+                _File *pTheFile = nullptr;
+                for (auto itr = pFolder->vChildFiles.begin(); itr != pFolder->vChildFiles.end(); ++itr)
+                {
+                    if (stricmp((**itr).sName, entry.name.c_str()) == 0)
+                    {
+                        pTheFile = *itr;
+                        break;
+                    }
+                }
+                if (pTheFile == nullptr)
+                {
+                    pTheFile = new _File;
+                    pTheFile->pParent = pFolder;
+                    pTheFile->sName = strdup(entry.name.c_str());
+                    pFolder->vChildFiles.push_back(pTheFile);
+                }
+                pTheFile->mapSources[pSource] = entry.lastWriteTime;
+            }
+        }
+        else
+        {
+            _Folder *pTheFolder = nullptr;
+            for (auto itr = pFolder->vChildFolders.begin(); itr != pFolder->vChildFolders.end(); ++itr)
+            {
+                if (stricmp((**itr).sName, entry.name.c_str()) == 0)
+                {
+                    pTheFolder = *itr;
+                    break;
+                }
+            }
+            if (pTheFolder == nullptr)
+            {
+                pTheFolder = new _Folder;
+                pTheFolder->pParent = pFolder;
+                size_t iLParent = strlen(pFolder->sFullName);
+                size_t iLThis = entry.name.size();
+                pTheFolder->sFullName = new char[iLParent + iLThis + 2];
+                sprintf(pTheFolder->sFullName, "%s\\%s", pFolder->sFullName, entry.name.c_str());
+                pTheFolder->sName = pTheFolder->sFullName + iLParent + 1;
+
+                pFolder->vChildFolders.push_back(pTheFolder);
+            }
+
+            _RawMapFromSnapshot(pSource, entry, pTheFolder);
+        }
+    }
+
+    std::sort(pFolder->vChildFiles.begin(), pFolder->vChildFiles.end(), _SortFiles);
+    std::sort(pFolder->vChildFolders.begin(), pFolder->vChildFolders.end(), _SortFolds);
+}
+
 void CFileMap::_FolderSetupSourceNameFromSingleFileMap(_Folder *pFolder, _DataSource *pDataSource,
                                                        const char *sPathFull, const char *sPathPartLeft)
 {

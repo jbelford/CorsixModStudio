@@ -21,6 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "rainman/core/Callbacks.h"
 #include "rainman/module/CModuleFile.h"
+#include "rainman/module/CFileMap.h"
 
 class CSgaFile;
 
@@ -44,6 +45,15 @@ class CResourceLoader
     static void LoadDataGeneric(CModuleFile &module, CALLBACK_ARG);
     static void LoadCohEngine(CModuleFile &module, const char *sFolder, const char *sUiName, unsigned long iLoadWhat,
                               unsigned short iNum, CALLBACK_ARG);
+
+    // Phase J: parallel UCS loading helpers
+    struct UcsFileInfo;
+    static void LoadUcsFilesParallel(CModuleFile &module, IDirectoryTraverser::IIterator *pItr);
+
+    // Phase J: parallel folder pre-scanning helpers
+    struct FolderTask;
+    static CFileMap::DirEntry ScanDirectory(IDirectoryTraverser::IIterator *pItr);
+    static void LoadFoldersParallel(std::vector<FolderTask> &tasks, CModuleFile &module, CALLBACK_ARG);
 
     // Phase J: parallel archive loading helpers
     struct ArchiveTask;
