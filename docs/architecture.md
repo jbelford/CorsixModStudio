@@ -1,7 +1,7 @@
 # CorsixModStudio — Architecture Document
 
-> **Status**: Living document — captures the as-is architecture after all migration phases (A–F) are complete.
-> **Next steps**: See [target-architecture-v2.md](target-architecture-v2.md) for the planned concurrency + MVP architecture (Phases G–L).
+> **Status**: Living document — captures the as-is architecture after all migration phases (A–F, G–L) are complete.
+> **Design reference**: See [target-architecture-v2.md](target-architecture-v2.md) for the design rationale behind Phases G–L (concurrency + MVP).
 > **Audience**: Contributors, AI assistants, and future maintainers.
 
 ---
@@ -23,12 +23,12 @@
 
 ## 1. System Overview
 
-CorsixModStudio is a modding IDE for Relic Entertainment's Dawn of War and Company of Heroes games. The architecture is a two-layer system:
+CorsixModStudio is a modding IDE for Relic Entertainment's Dawn of War and Company of Heroes games. The architecture is a layered system with MVP separation:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                   CDMS GUI Application                  │
-│            (wxWidgets, 16.5k lines, GPL v2)             │
+│            (wxWidgets, ~18k lines, GPL v2)              │
 │                                                         │
 │  ConstructFrame ─┬─ ModuleManager (mod lifecycle)       │
 │                  ├─ TabManager (wxAuiNotebook tabs)     │
@@ -37,38 +37,65 @@ CorsixModStudio is a modding IDE for Relic Entertainment's Dawn of War and Compa
 │                  ├─ frmFiles (file browser)             │
 │                  ├─ frmRgdEditor (RGD editor)           │
 │                  ├─ frmScarEditor (script editor)       │
-│                  ├─ frmUCSEditor (localization editor)   │
-│                  ├─ frmModule (mod settings)             │
-│                  ├─ frmSgaMake (archive builder)         │
+│                  ├─ frmUCSEditor (localization editor)  │
+│                  ├─ frmModule (mod settings)            │
+│                  ├─ frmSgaMake (archive builder)        │
 │                  └─ 10 ITool plugins                    │
 │                                                         │
-│  ┌──────────── Service / Adapter Layer ───────────────┐ │
-│  │  ModuleService, FileService, FormatService,        │ │
-│  │  HashService — wraps Rainman types → wx types      │ │
-│  └────────────────────────────────────────────────────┘ │
+│  ┌── View Interfaces (views/interfaces/) ────────────┐ │
+│  │  IMainFrameView, IFileTreeView, IRgdEditorView,   │ │
+│  │  IScarEditorView, IUcsEditorView, IImageView,     │ │
+│  │  IModuleSettingsView, ISgaMakeView, IMassExtract,  │ │
+│  │  IRgdMacroView, IDpsCalculatorView, + 3 more      │ │
+│  └───────────────────────────────────────────────────┘ │
+│                         ▲                               │
+│                         │ implements                    │
+│                         ▼                               │
+│  ┌── Presenters (presenters/) ───────────────────────┐ │
+│  │  CModuleLoadPresenter, CFileTreePresenter,        │ │
+│  │  CRgdEditorPresenter, CScarEditorPresenter,       │ │
+│  │  CUcsEditorPresenter, CImagePresenter,            │ │
+│  │  CModuleSettingsPresenter, CSgaMakePresenter,     │ │
+│  │  CMassExtractPresenter, CRgdMacroPresenter,       │ │
+│  │  CDpsCalculatorPresenter, + 3 more                │ │
+│  │  (no wxWidgets dependency — testable with mocks)  │ │
+│  └───────────────────────────────────────────────────┘ │
+│                         │                               │
+│                         │ uses                          │
+│                         ▼                               │
+│  ┌── Async Infrastructure (async/) ──────────────────┐ │
+│  │  CTaskRunner (std::thread), CWxTaskRunner (bridge)│ │
+│  │  CProgressChannel, CCancellationToken             │ │
+│  └───────────────────────────────────────────────────┘ │
+│                                                         │
+│  ┌── Service / Adapter Layer (services/) ────────────┐ │
+│  │  ModuleService, FileService, FormatService,       │ │
+│  │  HashService — wraps Rainman types → wx types     │ │
+│  └───────────────────────────────────────────────────┘ │
 ├─────────────────────────────────────────────────────────┤
 │                    Rainman Library                       │
-│           (static lib, 26.8k lines, LGPL v2.1)          │
+│      (static lib, ~27k lines, LGPL v2.1, thread-safe)  │
 │                                                         │
 │  ┌──────────┐  ┌──────────────┐  ┌──────────────────┐  │
 │  │ core/    │  │ formats/     │  │ lua/             │  │
 │  │Exception │  │ CRgdFile     │  │ CLuaFile (5.0.2) │  │
 │  │Logging   │  │ CChunkyFile  │  │ CLuaFile2(5.0.2) │  │
 │  │Callbacks │  │ CRgtFile     │  │ CLuaScript       │  │
-│  └──────────┘  │ CRgmFile     │  │ CLuaFromRgd      │  │
-│  ┌──────────┐  │ CBfxFile     │  │ CInheritTable    │  │
-│  │ io/      │  └──────────────┘  │ Lua51 (5.1.2)    │  │
-│  │IFileStore│  ┌──────────────┐  └──────────────────┘  │
-│  │CFileSys  │  │localization/ │                        │
-│  │CMemory   │  │ CUcsFile     │  ┌──────────────────┐  │
-│  └──────────┘  │ CCohUcsFile  │  │ util/            │  │
-│  ┌──────────┐  └──────────────┘  │ CRgdHashTbl      │  │
-│  │ archive/ │  ┌──────────────┐  │ CSgaCreator      │  │
-│  │CSgaFile  │  │ module/      │  │ Callbacks        │  │
-│  │CSgaCrtr  │  │CModuleFile   │  │ RainmanLog       │  │
-│  └──────────┘  │CDoWModule    │  └──────────────────┘  │
-│                │CDoWFileView  │                        │
-│                │ CFileMap     │                        │
+│  │ThreadPool│  │ CRgmFile     │  │ CLuaFromRgd      │  │
+│  └──────────┘  │ CBfxFile     │  │ CInheritTable    │  │
+│  ┌──────────┐  └──────────────┘  │ Lua51 (5.1.2)    │  │
+│  │ io/      │  ┌──────────────┐  └──────────────────┘  │
+│  │IFileStore│  │localization/ │                        │
+│  │CFileSys  │  │ CUcsFile     │  ┌──────────────────┐  │
+│  │CMemory   │  │ CCohUcsFile  │  │ util/            │  │
+│  └──────────┘  └──────────────┘  │ CRgdHashTbl      │  │
+│  ┌──────────┐  ┌──────────────┐  │ CSgaCreator ║    │  │
+│  │ archive/ │  │ module/      │  │ Callbacks        │  │
+│  │CSgaFile  │  │CModuleFile   │  │ RainmanLog       │  │
+│  │          │  │CDoWModule    │  └──────────────────┘  │
+│  └──────────┘  │CDoWFileView  │                        │
+│                │ CFileMap ║   │  ║ = has mutex /        │
+│                │CResourceLdr║ │      uses CThreadPool  │
 │                └──────────────┘                        │
 ├─────────────────────────────────────────────────────────┤
 │              Vendored Lua Runtimes                      │
@@ -83,13 +110,13 @@ CorsixModStudio is a modding IDE for Relic Entertainment's Dawn of War and Compa
 
 | Component | Lines of Code | Files | Language |
 |-----------|--------------|-------|----------|
-| Rainman library (`src/rainman/` excl vendor) | 26,801 | 88 | C++/C |
-| CDMS application (`src/cdms/`) | 16,503 | 115 | C++ |
-| Tests (`tests/**/*.cpp`) | 4,420 | 37 | C++ |
+| Rainman library (`src/rainman/` excl vendor) | ~27,600 | 90 | C++/C |
+| CDMS application (`src/cdms/`) | ~19,300 | 164 | C++ |
+| Tests (`tests/**/*.cpp`) | ~8,300 | 59 | C++ |
 | Vendored Lua 5.0.2 (`vendor/lua502/`) | 11,384 | ~40 | C |
 | Vendored Lua 5.1.2 (`vendor/lua512/`) | 13,601 | ~40 | C |
-| **Total (our code)** | **47,724** | **~240** | |
-| **Total (including vendored)** | **72,709** | **~320** | |
+| **Total (our code)** | **~55,200** | **~313** | |
+| **Total (including vendored)** | **~80,100** | **~393** | |
 
 ### Largest Files (>500 LOC)
 
@@ -302,7 +329,8 @@ wxFrame
 │   ├── owns: ModuleManager          (CModuleFile* lifecycle, services, hash table)
 │   ├── owns: TabManager             (wxAuiNotebook tab management)
 │   ├── owns: MenuController         (menu bar construction)
-│   └── owns: ToolRegistry           (ITool registration + dispatch)
+│   ├── owns: ToolRegistry           (ITool registration + dispatch)
+│   └── owns: CModuleLoadPresenter   (async module loading via CWxTaskRunner)
 ├── frmLoading                       (progress/splash)
 └── frmMessage                       (message display)
 
@@ -311,28 +339,56 @@ ITool                                (standalone tool plugin interface, was nest
 ├── CSgaPackerTool, CExtractAllTool, CDpsCalculatorTool
 ├── CRedButtonTool, CMakeLuaInheritTree, CRefreshFilesTool
 
-wxWindow
-├── frmFiles                         (file tree browser)
+wxWindow (views — each implements its I*View interface)
+├── frmFiles : IFileTreeView         (file tree browser)
 │   ├── IHandler                     (file action interface)
 │   │   ├── CLuaAction, CTextViewAction, CExtractAction, ...
 │   │   └── (32 action handler files in src/cdms/actions/)
 │   └── CFilesTreeItemData : wxTreeItemData
-├── frmWelcome, frmLuaInheritTree, frmImageViewer
-├── frmRGDEditor, frmRgmMaterialEditor
-├── frmUCSEditor, frmScarEditor
-└── frmModule
+├── frmWelcome, frmLuaInheritTree
+├── frmImageViewer : IImageView
+├── frmRGDEditor : IRgdEditorView
+├── frmRgmMaterialEditor
+├── frmUCSEditor : IUcsEditorView
+├── frmScarEditor : IScarEditorView
+└── frmModule : IModuleSettingsView
     ├── pgMain : wxWindow
     ├── pgDataFolders : wxWindow
     ├── pgDataArchives : pgDataFolders
     ├── pgRequiredMods : pgDataFolders
     └── pgCompatibleMods : pgDataFolders
 
-wxDialog
+wxDialog (dialogs — tool dialogs implement I*View)
 ├── frmCredits, frmFileSelector, frmLocaleSelector
-├── frmNewMod, frmMassExtract, frmRgdMacro
-├── frmSgaMake, frmUCSSelector, frmUCSOutOfRange
+├── frmNewMod
+├── frmMassExtract : IMassExtractView
+├── frmRgdMacro : IRgdMacroView
+├── frmSgaMake : ISgaMakeView
+├── frmUCSSelector, frmUCSOutOfRange
 ├── frmTabDialog
 └── frmUCSToDAT                      (in Tool_AESetup.h)
+
+Presenters (no wxWidgets dependency, testable with mock views)
+├── CModuleLoadPresenter             (async module/SGA loading)
+├── CSgaMakePresenter                (async SGA creation)
+├── CMassExtractPresenter            (async file extraction)
+├── CRgdMacroPresenter               (async RGD macro execution)
+├── CDpsCalculatorPresenter          (async DPS calculation)
+├── CLuaInheritTreePresenter         (async Lua tree building)
+├── CUcsToDatPresenter               (async UCS→DAT conversion)
+├── CRefreshFilesPresenter           (async file refresh)
+├── CImagePresenter                  (image save/transcode logic)
+├── CModuleSettingsPresenter         (module settings filtering)
+├── CUcsEditorPresenter              (UCS ID validation, path logic)
+├── CScarEditorPresenter             (function parsing, Lua error parsing)
+├── CFileTreePresenter               (file classification, source categorization)
+└── CRgdEditorPresenter              (node formatting, hash computation)
+
+Async Infrastructure
+├── CTaskRunner                      (std::thread-based background task runner)
+├── CWxTaskRunner : CTaskRunner      (bridges results to main thread via CallAfter)
+├── CProgressChannel                 (thread-safe progress reporting + RainmanCallback bridge)
+└── CCancellationToken               (atomic cancellation flag, header-only)
 ```
 
 ### 3.4 Exception Handling
@@ -424,6 +480,7 @@ The main frame delegates responsibilities to focused helper classes:
 - **`TabManager`** — owns the `wxAuiNotebook` tab container
 - **`MenuController`** — builds the menu bar (receives `wxFrame*` and `ToolRegistry&`)
 - **`ToolRegistry`** — registers and dispatches `ITool` plugins; owns tool lifetime
+- **`CModuleLoadPresenter`** — async module/SGA loading via `CWxTaskRunner`; posts progress and completion to main thread
 - `frmFiles` — file browser panel (left splitter pane)
 - `frmLoading` — splash/progress frame
 
@@ -525,6 +582,111 @@ class ITool {
 
 Tools are dispatched via `ToolRegistry` using array-driven dispatch: a single `OnToolMenuCommand(wxCommandEvent&)` handler extracts the tool index from `IDM_ModToolBase + index` event IDs. Up to 100 tool slots are reserved.
 
+### 4.8 Async Infrastructure (`src/cdms/async/`)
+
+Background operations use a `CTaskRunner` → `CWxTaskRunner` architecture that moves heavy Rainman work off the UI thread:
+
+```
+┌──────────────────────────────────────────────────┐
+│ Presenter (main thread)                          │
+│   CWxTaskRunner::Run(task, onProgress, onDone)   │
+│        │                    ▲                    │
+│        ▼                    │ CallAfter()        │
+│   ┌─────────────────┐  ┌───┴──────────────┐     │
+│   │ Background      │  │ Main thread      │     │
+│   │ std::thread     │→→│ event loop       │     │
+│   │ runs task       │  │ receives results │     │
+│   └─────────────────┘  └──────────────────┘     │
+└──────────────────────────────────────────────────┘
+```
+
+**Components:**
+
+- **`CCancellationToken`** — Header-only atomic flag; passed to background tasks for cooperative cancellation
+- **`CProgressChannel`** — Thread-safe progress reporting; includes `RainmanCallback` static method that bridges Rainman's `pfnStatusCallback` to the channel
+- **`CTaskRunner`** — Launches tasks on a `std::thread`, returns `std::future<T>` for result retrieval
+- **`CWxTaskRunner`** — Extends `CTaskRunner`; uses `wxEvtHandler::CallAfter()` to post progress and completion callbacks back to the main thread
+
+### 4.9 MVP Pattern (Presenters + View Interfaces)
+
+Each editor/tool dialog follows the MVP (Model-View-Presenter) pattern:
+
+- **View interface** (`views/interfaces/I*View.h`) — pure abstract class; uses `wxString` and primitives, no wx widget types
+- **Presenter** (`presenters/C*Presenter.h/.cpp`) — contains business logic; holds a reference to the view interface; no wxWidgets compile dependency; testable with mock views
+- **View implementation** (`views/frm*.h/.cpp`) — the wxWidgets class implements the view interface and delegates business logic to its presenter
+
+**14 presenter/view pairs exist:**
+
+| Presenter | View Interface | Purpose | Async? |
+|-----------|---------------|---------|--------|
+| `CModuleLoadPresenter` | `IMainFrameView` | Module/SGA loading | ✅ CWxTaskRunner |
+| `CSgaMakePresenter` | `ISgaMakeView` | SGA archive creation | ✅ CWxTaskRunner |
+| `CMassExtractPresenter` | `IMassExtractView` | Bulk file extraction | ✅ CWxTaskRunner |
+| `CRgdMacroPresenter` | `IRgdMacroView` | RGD macro execution | ✅ CWxTaskRunner |
+| `CDpsCalculatorPresenter` | `IDpsCalculatorView` | DPS calculation | ✅ CWxTaskRunner |
+| `CLuaInheritTreePresenter` | `ILuaInheritTreeView` | Lua inheritance tree | ✅ CWxTaskRunner |
+| `CUcsToDatPresenter` | `IUcsToDatView` | UCS→DAT conversion | ✅ CWxTaskRunner |
+| `CRefreshFilesPresenter` | `IRefreshFilesView` | File tree refresh | ✅ CWxTaskRunner |
+| `CImagePresenter` | `IImageView` | Image save/transcode | No (synchronous) |
+| `CModuleSettingsPresenter` | `IModuleSettingsView` | Module settings filtering | No |
+| `CUcsEditorPresenter` | `IUcsEditorView` | UCS ID validation | No |
+| `CScarEditorPresenter` | `IScarEditorView` | Function/error parsing | No |
+| `CFileTreePresenter` | `IFileTreeView` | File type classification | No |
+| `CRgdEditorPresenter` | `IRgdEditorView` | Node formatting, hashing | No |
+
+### 4.10 Rainman Thread Safety
+
+Key Rainman classes have thread-safety additions to support concurrent access from background tasks:
+
+| Class | Mechanism | Scope |
+|-------|-----------|-------|
+| `CFileMap` | `std::recursive_mutex m_mtxMap` | Guards all map mutations |
+| `CLuaFileCache` | `std::recursive_mutex m_mtx` | Guards cache operations |
+| `CResourceLoader` | `CThreadPool` | Parallel archive/folder/UCS loading |
+| `CSgaCreator` | `CThreadPool` | Parallel per-file compression |
+| `CThreadPool` | Process-wide singleton | `CThreadPool::Instance().Submit(callable, args...)` |
+
+### 4.11 CDMS Directory Structure
+
+```
+src/cdms/
+├── async/                        # Threading infrastructure (4 files)
+│   ├── CTaskRunner.h/cpp         # std::thread-based task runner
+│   ├── CWxTaskRunner.h/cpp       # wx CallAfter bridge
+│   ├── CProgressChannel.h/cpp    # Thread-safe progress reporting
+│   └── CancellationToken.h       # Atomic cancellation flag
+│
+├── views/                        # View implementations (frm* files)
+│   ├── interfaces/               # Pure abstract view interfaces (14 files)
+│   │   ├── IMainFrameView.h, IFileTreeView.h, IRgdEditorView.h
+│   │   ├── IScarEditorView.h, IUcsEditorView.h, IImageView.h
+│   │   ├── IModuleSettingsView.h, ISgaMakeView.h, IMassExtractView.h
+│   │   ├── IRgdMacroView.h, IDpsCalculatorView.h, IUcsToDatView.h
+│   │   ├── ILuaInheritTreeView.h, IRefreshFilesView.h
+│   │   └── (use wxString + primitives only — no wx widget types)
+│   ├── frm*.h/cpp                # wxWidgets implementations (each implements I*View)
+│   └── CtrlStatusText.h/cpp      # Custom status text control
+│
+├── presenters/                   # Business logic (14 presenters, no wx dependency)
+│   ├── CModuleLoadPresenter, CSgaMakePresenter, CMassExtractPresenter
+│   ├── CRgdMacroPresenter, CDpsCalculatorPresenter, CLuaInheritTreePresenter
+│   ├── CUcsToDatPresenter, CRefreshFilesPresenter
+│   ├── CImagePresenter, CModuleSettingsPresenter, CUcsEditorPresenter
+│   ├── CScarEditorPresenter, CFileTreePresenter, CRgdEditorPresenter
+│   └── (testable with mock views + Google Test)
+│
+├── services/                     # Service / adapter layer (4 services)
+│   ├── Result.h, ModuleService, FileService, FormatService, HashService
+│   └── (wraps Rainman types → wx types via Result<T>)
+│
+├── actions/                      # File action handlers (32 files)
+├── common/                       # Shared utilities (Application, config, strconv, strings, Utility)
+├── frame/                        # Main frame infrastructure (Construct, ModuleManager, TabManager, etc.)
+├── tools/                        # ITool implementations (Tools, Tool_AESetup, Tool_AutoDPS)
+├── res/                          # Resources
+└── CMakeLists.txt                # GLOB-based source discovery
+```
+
 ---
 
 ## 5. Build System & Dependencies
@@ -538,11 +700,11 @@ CMakeLists.txt (top-level)
 │   ├── lua512 (STATIC library, 28 .c files, /FI lua512_rename.h, in vendor/lua512/)
 │   └── rainman (STATIC library, GLOB **/*.cpp **/*.c across subdirs, PCH pch_rainman.h)
 ├── src/cdms/CMakeLists.txt
-│   └── CorsixModStudio (WIN32 EXE, GLOB *.cpp *.c + actions/*.h + resource.rc)
+│   └── CorsixModStudio (WIN32 EXE, GLOB across 9 subdirs + root + resource.rc)
 ├── tests/rainman/CMakeLists.txt
 │   └── rainman_tests (EXE, explicit file list, gtest_discover_tests)
 └── tests/cdms/CMakeLists.txt
-    └── cdms_tests (EXE, explicit file list + CDMS sources compiled in)
+    └── cdms_tests (EXE, explicit file list + CDMS presenter sources compiled in)
 ```
 
 ### 5.2 Dependencies
@@ -612,7 +774,7 @@ Google Test with `gtest_discover_tests()` for auto-discovery. Single `test_main.
 | `md5_test.cpp` | `md5` | Good | RFC 1321 compliance |
 | `directorytraverser_test.cpp` | `IDirectoryTraverser` | Partial | Directory operations |
 
-**CDMS tests** (10 test files in `tests/cdms/`):
+**CDMS tests** (33 test files in `tests/cdms/`):
 
 | Test File | Tested Class | Depth | Pattern |
 |-----------|-------------|-------|---------|
@@ -625,12 +787,29 @@ Google Test with `gtest_discover_tests()` for auto-discovery. Single `test_main.
 | `strings_test.cpp` | UI strings | Partial | String constant checks |
 | `strconv_test.cpp` | `strconv` | Partial | String conversion |
 | `utility_test.cpp` | `Utility` | Partial | Helper functions |
+| `cancellationtoken_test.cpp` | `CCancellationToken` | Good | Atomic flag, cooperative cancel |
+| `progresschannel_test.cpp` | `CProgressChannel` | Good | Thread-safe progress, callback bridge |
+| `taskrunner_test.cpp` | `CTaskRunner` | Good | Background task execution, error propagation |
+| `moduleloadpresenter_test.cpp` | `CModuleLoadPresenter` | Good | Async module loading with mock view |
+| `sgamakepresenter_test.cpp` | `CSgaMakePresenter` | Good | SGA creation with mock view |
+| `ucstodatpresenter_test.cpp` | `CUcsToDatPresenter` | Good | UCS→DAT with mock view |
+| `dpscalculatorpresenter_test.cpp` | `CDpsCalculatorPresenter` | Good | DPS calc with mock view |
+| `luainherittreepresenter_test.cpp` | `CLuaInheritTreePresenter` | Good | Inherit tree with mock view |
+| `rgdmacropresenter_test.cpp` | `CRgdMacroPresenter` | Good | RGD macro with mock view |
+| `massextractpresenter_test.cpp` | `CMassExtractPresenter` | Good | Mass extraction with mock view |
+| `refreshfilespresenter_test.cpp` | `CRefreshFilesPresenter` | Good | File refresh with mock view |
+| `imagepresenter_test.cpp` | `CImagePresenter` | Good | Save path, DXT level, overwrite logic |
+| `modulesettingspresenter_test.cpp` | `CModuleSettingsPresenter` | Good | Folder/DLL filtering, exclusion lists |
+| `ucseditorphresenter_test.cpp` | `CUcsEditorPresenter` | Good | ID validation, path construction |
+| `scareditorpresenter_test.cpp` | `CScarEditorPresenter` | Good | Function parsing, Lua error parsing |
+| `filetreepresenter_test.cpp` | `CFileTreePresenter` | Good | File icons, source categorization |
+| `rgdeditorpresenter_test.cpp` | `CRgdEditorPresenter` | Good | Node names, hash computation, Lua2 paths |
 
-**Total: 338 tests passing** (36 test files: 26 Rainman + 10 CDMS).
+**Total: 532 tests passing** (59 test files: 26 Rainman + 33 CDMS).
 
 ### 6.3 Remaining Coverage Gaps
 
-Most Rainman classes now have test coverage (~85% class-level). The following remain untested:
+Most Rainman classes now have test coverage (~85% class-level). All CDMS presenters, services, and async infrastructure have test coverage (~90% of CDMS business logic). The following remain untested:
 
 | Class | Risk | Reason |
 |-------|------|--------|
@@ -715,6 +894,19 @@ Service layer:
   services/FormatService.h → Result.h + forward decls
   services/HashService.h → Result.h + forward decl: CRgdHashTable
 
+Async infrastructure:
+  async/CancellationToken.h → (standalone, header-only)
+  async/CProgressChannel.h → CancellationToken.h, Callbacks.h
+  async/CTaskRunner.h → (standalone, std::thread)
+  async/CWxTaskRunner.h → CTaskRunner.h, wxEvtHandler
+
+View interfaces:
+  views/interfaces/I*View.h → (wxString only, no Rainman deps)
+
+Presenters:
+  presenters/C*Presenter.h → I*View.h, services (some use CWxTaskRunner)
+  (no direct wxWidgets widget dependencies)
+
 Structural helpers:
   ITool.h → (standalone interface)
   ToolRegistry.h → ITool.h
@@ -726,7 +918,8 @@ Mid-level:
   frmLoading.h, frmLuaInheritTree.h → (no Rainman deps)
   frmFiles.h → frmLuaInheritTree.h
   Construct.h → frmLoading.h, TabManager.h, frmFiles.h, <rainman/module/CModuleFile.h>,
-                ModuleManager.h, ITool.h, ToolRegistry.h, MenuController.h
+                ModuleManager.h, ITool.h, ToolRegistry.h, MenuController.h,
+                CModuleLoadPresenter.h
 
 Common.h → Construct.h, Utility.h, strconv.h, strings.h
   (NO Rainman.h — each .cpp includes only the specific Rainman headers it needs)
@@ -743,6 +936,10 @@ Common.h → Construct.h, Utility.h, strconv.h, strings.h
 4. **No circular includes**: The dependency graph remains strictly acyclic. `CRgdFile` ↔ `CLuaFile` have a logical circular dependency (bidirectional conversion) but the include graph is one-way.
 
 5. **Service layer decouples CDMS from Rainman headers**: Service headers use forward declarations; only the `.cpp` files include the actual Rainman headers.
+
+6. **Presenter layer has zero wxWidgets widget dependency**: Presenters use view interfaces (`I*View.h`) that depend only on `wxString` and primitives. This makes all 14 presenters testable with mock views and Google Test.
+
+7. **Async layer cleanly separates threading concerns**: `CTaskRunner` handles the thread lifecycle; `CWxTaskRunner` handles the thread→UI bridge via `CallAfter()`. Presenters never touch thread primitives directly.
 
 ---
 
@@ -762,6 +959,10 @@ All structural issues from the original assessment have been resolved:
 | ~~S6~~ | No GUI↔Data abstraction layer | **Service layer added** (`ModuleService`, `FileService`, `FormatService`, `HashService`). |
 | ~~S7~~ | Forward declarations underused | **Fixed.** `CModuleFile.h`, `CLuaFromRgd.h`, `CFileMap.h`, `CRgdFileMacro.h` use forward declarations. |
 | ~~S8~~ | Flat directory structure | **Reorganized** into 8 subdirectories (`core/`, `io/`, `archive/`, `formats/`, `lua/`, `localization/`, `module/`, `util/`). |
+| ~~S9~~ | Single-threaded UI blocking | **Fixed.** `CTaskRunner`/`CWxTaskRunner` async infrastructure moves heavy operations off UI thread. 8 presenters use async. |
+| ~~S10~~ | No GUI architecture | **Fixed.** MVP pattern with 14 presenters + view interfaces. Business logic testable without wxWidgets. |
+| ~~S11~~ | Flat CDMS directory | **Reorganized** into 9 subdirectories (`async/`, `views/`, `views/interfaces/`, `presenters/`, `services/`, `common/`, `frame/`, `tools/`, `actions/`). |
+| ~~S12~~ | No Rainman thread safety | **Fixed.** `CFileMap` and `CLuaFileCache` have mutexes. `CResourceLoader` and `CSgaCreator` use `CThreadPool` for parallel operations. |
 
 ### 8.2 Memory & Safety Issues (Mostly Resolved)
 
@@ -781,7 +982,7 @@ All structural issues from the original assessment have been resolved:
 | Q2 | **No UTF-8 support** in string conversions | Medium | Remains — ANSI/Latin-1 assumed throughout. |
 | Q3 | **Bidirectional RGD↔Lua dependency** | Medium | Remains — `CRgdFile` ↔ `CLuaFile` logical circular dependency. Include graph is one-way. |
 | Q4 | **Windows-only APIs** (`LoadLibraryW`, `_wfopen`, etc.) | Low | Remains — acceptable, cross-platform is a non-goal. |
-| ~~Q5~~ | ~55% of classes untested | **Fixed.** ~85% class-level coverage (338 tests, 36 test files). |
+| ~~Q5~~ | ~55% of classes untested | **Fixed.** ~90% class-level coverage (532 tests, 59 test files). |
 
 ---
 

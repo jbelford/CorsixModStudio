@@ -606,10 +606,6 @@ src/cdms/
 │   ├── ProgressChannel.h/cpp     # Thread-safe progress reporting
 │   └── CancellationToken.h       # Atomic cancellation flag
 │
-├── models/                       # Data models (no wx dependency)
-│   ├── ModuleModel.h/cpp         # Module lifecycle (wraps ModuleManager)
-│   └── ... (future models)
-│
 ├── views/                        # View interfaces + implementations
 │   ├── interfaces/               # Pure abstract interfaces (no wx)
 │   │   ├── IMainFrameView.h
@@ -701,9 +697,9 @@ src/cdms/
 
 ```cmake
 file(GLOB CDMS_SOURCES
+    "*.cpp" "*.c"
     "common/*.cpp"
     "frame/*.cpp"
-    "models/*.cpp"
     "views/*.cpp"
     "presenters/*.cpp"
     "services/*.cpp"
@@ -791,7 +787,7 @@ Add parallelism within Rainman for archive loading and SGA compression.
 
 Reorganize the CDMS directory structure.
 
-1. ✅ Create directories: `async/`, `models/`, `views/`, `views/interfaces/`, `presenters/`, `common/`, `frame/`, `tools/`
+1. ✅ Create directories: `async/`, `views/`, `views/interfaces/`, `presenters/`, `common/`, `frame/`, `tools/`
 2. ✅ Move utility files to `common/` (Application, config, strconv, strings, Utility, ITool, TabDialog, Common.h)
 3. ✅ Move frame infrastructure to `frame/` (Construct, ModuleManager, TabManager, MenuController, ToolRegistry)
 4. ✅ Move tool implementations to `tools/` (Tools, Tool_AESetup, Tool_AutoDPS)
