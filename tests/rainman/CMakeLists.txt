@@ -28,6 +28,7 @@ add_executable(rainman_tests
     luafromrgd_test.cpp
     rgtfile_test.cpp
     exceptiondeleter_test.cpp
+    rgdfilemacro_test.cpp
 )
 
 target_link_libraries(rainman_tests

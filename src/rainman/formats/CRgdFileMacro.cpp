@@ -191,7 +191,7 @@ int CRgdFileMacro::_tCRgdFile::luaf_GET(lua_State *L)
     if ((pCurrentEntry->Type == IMetaNode::DT_Table) || (pCurrentEntry->Type == CRgdFile::sk_TableInt))
     {
         lua51_pushlightuserdata(L, (void *)self);          // pRgdFile
-        lua51_gettable(L, LUA_REGISTRYINDEX);              // RgdFileT
+        lua51_gettable(L, LUA51_REGISTRYINDEX);            // RgdFileT
         lua51_pushlightuserdata(L, (void *)pCurrentEntry); // RgdFileT pEntry
         lua51_gettable(L, -2);                             // RgdFileT oEntry
         lua51_remove(L, -2);                               // oEntry
@@ -291,7 +291,7 @@ int CRgdFileMacro::_tCRgdFile::luae_gc(lua_State *L)
     free(self->sFile);
     lua51_pushlightuserdata(L, (void *)self);
     lua51_pushnil(L);
-    lua51_settable(L, LUA_REGISTRYINDEX);
+    lua51_settable(L, LUA51_REGISTRYINDEX);
     return 0;
 }
 
@@ -300,7 +300,7 @@ int CRgdFileMacro::_tCRgdFile::luae_gc(lua_State *L)
 */
 int CRgdFileMacro::_tCRgdFile::luae_delayload(lua_State *L)
 {
-    auto *pThis = _fromLuaLight<_tCRgdFile>(L, lua_upvalueindex(1));
+    auto *pThis = _fromLuaLight<_tCRgdFile>(L, lua51_upvalueindex(1));
 
     if (pThis->pRgd == nullptr)
     {
@@ -349,7 +349,7 @@ int CRgdFileMacro::_tCRgdFile::luae_delayload(lua_State *L)
     // Fill children table
     lua51_pushstring(L, "GameData");                    // T K V Tmeta ChildrenT "GameData"
     lua51_pushlightuserdata(L, (void *)pThis);          // T K V Tmeta ChildrenT "GameData" pRgdFile
-    lua51_gettable(L, LUA_REGISTRYINDEX);               // T K V Tmeta ChildrenT "GameData" RgdFileT
+    lua51_gettable(L, LUA51_REGISTRYINDEX);             // T K V Tmeta ChildrenT "GameData" RgdFileT
     lua51_pushlightuserdata(L, (void *)pGameDataEntry); // T K V Tmeta ChildrenT "GameData" RgdFileT pEntry
     lua51_gettable(L, -2);                              // T K V Tmeta ChildrenT "GameData" RgdFileT oEntry
     lua51_remove(L, -2);                                // T K V Tmeta ChildrenT "GameData" oEntry
@@ -495,7 +495,7 @@ CRgdFileMacro::_tCRgdFile *CRgdFileMacro::_tCRgdFile::construct(lua_State *L, CR
     lua51_pushvalue(L, -4);                    // RGDF pUD TRGD pUD RGDF
     lua51_settable(L, -3);                     // RGDF pUD TRGD
 
-    lua51_settable(L, LUA_REGISTRYINDEX); // RGDF
+    lua51_settable(L, LUA51_REGISTRYINDEX); // RGDF
 
     return pThis;
 }
@@ -605,7 +605,7 @@ int CRgdFileMacro::_tCRgdTable::luaf_GET(lua_State *L)
     if ((pCurrentEntry->Type == IMetaNode::DT_Table) || (pCurrentEntry->Type == CRgdFile::sk_TableInt))
     {
         lua51_pushlightuserdata(L, (void *)self);          // pRgdFile
-        lua51_gettable(L, LUA_REGISTRYINDEX);              // RgdFileT
+        lua51_gettable(L, LUA51_REGISTRYINDEX);            // RgdFileT
         lua51_pushlightuserdata(L, (void *)pCurrentEntry); // RgdFileT pEntry
         lua51_gettable(L, -2);                             // RgdFileT oEntry
         lua51_remove(L, -2);                               // oEntry
@@ -838,11 +838,11 @@ int CRgdFileMacro::_tCRgdTable::luae_setindex(lua_State *L)
 
 int CRgdFileMacro::_tCRgdTable::luaf_construct(lua_State *L)
 {
-    auto *pRgdFile = _fromLuaLight<_tCRgdFile>(L, lua_upvalueindex(1));
-    auto *pEntry = _fromLuaLight<CRgdFile::_RgdEntry>(L, lua_upvalueindex(2));
+    auto *pRgdFile = _fromLuaLight<_tCRgdFile>(L, lua51_upvalueindex(1));
+    auto *pEntry = _fromLuaLight<CRgdFile::_RgdEntry>(L, lua51_upvalueindex(2));
 
     lua51_pushlightuserdata(L, (void *)pRgdFile); // P
-    lua51_gettable(L, LUA_REGISTRYINDEX);         // T
+    lua51_gettable(L, LUA51_REGISTRYINDEX);       // T
     lua51_pushlightuserdata(L, (void *)pEntry);   // T K
     lua51_gettable(L, -2);                        // T V
     if (lua51_type(L, -1) == LUA_TNIL)
@@ -858,7 +858,7 @@ int CRgdFileMacro::_tCRgdTable::luaf_construct(lua_State *L)
 */
 int CRgdFileMacro::_tCRgdTable::luae_delayload(lua_State *L)
 {
-    auto *pThis = _fromLuaLight<_tCRgdTable>(L, lua_upvalueindex(1));
+    auto *pThis = _fromLuaLight<_tCRgdTable>(L, lua51_upvalueindex(1));
     if (pThis->bLoaded == false)
         pThis->bLoaded = true;
 
@@ -892,7 +892,7 @@ int CRgdFileMacro::_tCRgdTable::luae_delayload(lua_State *L)
 
     // Put table object lookup table onto stack
     lua51_pushlightuserdata(L, (void *)pThis->pRgdFile); // T K V Tmeta ChildrenT pRgdFile
-    lua51_gettable(L, LUA_REGISTRYINDEX);                // T K V Tmeta ChildrenT RgdFileT
+    lua51_gettable(L, LUA51_REGISTRYINDEX);              // T K V Tmeta ChildrenT RgdFileT
 
     // Fill children table
     for (auto itr = pThis->pRgdData->Data.t->begin(); itr != pThis->pRgdData->Data.t->end(); ++itr)
@@ -942,7 +942,7 @@ int CRgdFileMacro::_tCRgdTable::luae_delayload(lua_State *L)
 
     lua51_pushstring(L, "userdata");             // "userdata"
     lua51_pushlightuserdata(L, pThis->pRgdFile); // "userdata" FileP
-    lua51_gettable(L, LUA_REGISTRYINDEX);        // "userdata" FileO
+    lua51_gettable(L, LUA51_REGISTRYINDEX);      // "userdata" FileO
     lua51_pushlightuserdata(L, pThis->pRgdData); // "userdata" FileO DataP
     lua51_gettable(L, -2);                       // "userdata" FileO DataO
     lua51_replace(L, -2);                        // "userdata" DataO
@@ -975,7 +975,7 @@ CRgdFileMacro::_tCRgdTable *CRgdFileMacro::_tCRgdTable::construct(lua_State *L, 
         pThis->construct(pRgdFile, pRgdData);
 
         lua51_pushlightuserdata(L, (void *)pRgdFile); // O P
-        lua51_gettable(L, LUA_REGISTRYINDEX);         // O T
+        lua51_gettable(L, LUA51_REGISTRYINDEX);       // O T
         lua51_pushlightuserdata(L, (void *)pRgdData); // O T K
         lua51_pushvalue(L, -3);                       // O T K O
         lua51_settable(L, -3);                        // O T
@@ -1092,7 +1092,7 @@ CRgdFileMacro::_tCRgdTable *CRgdFileMacro::_tCRgdTable::construct(lua_State *L, 
 
 int CRgdFileMacro::luaf_ucs(lua_State *L)
 {
-    auto *pThis = (CRgdFileMacro *)lua51_touserdata(L, lua_upvalueindex(1));
+    auto *pThis = (CRgdFileMacro *)lua51_touserdata(L, lua51_upvalueindex(1));
     lua51_settop(L, 1);
     if (lua51_type(L, 1) == LUA_TSTRING)
     {
@@ -1176,7 +1176,7 @@ int CRgdFileMacro::luaf_ucs(lua_State *L)
 
 int CRgdFileMacro::luaf_print(lua_State *L)
 {
-    auto *pThis = (CRgdFileMacro *)lua51_touserdata(L, lua_upvalueindex(1));
+    auto *pThis = (CRgdFileMacro *)lua51_touserdata(L, lua51_upvalueindex(1));
     int n = lua51_gettop(L); /* number of arguments */
     int i;
     lua51_getglobal(L, "tostring");
@@ -1326,7 +1326,7 @@ int CRgdFileMacro::luaf_xpcalle(lua_State *L)
             lua51_replace(L, i);
         }
     }
-    lua51_pushvalue(L, lua_upvalueindex(1));
+    lua51_pushvalue(L, lua51_upvalueindex(1));
     lua51_insert(L, 1);
     lua51_call(L, lua51_gettop(L) - 1, LUA_MULTRET);
     return lua51_gettop(L);
@@ -1345,7 +1345,7 @@ void CRgdFileMacro::setCallbackSecurity(bool (*pFunction)(void *, eSecurityTypes
 
 int CRgdFileMacro::luaf_loadrgd(lua_State *L)
 {
-    auto *pThis = (CRgdFileMacro *)lua51_touserdata(L, lua_upvalueindex(1));
+    auto *pThis = (CRgdFileMacro *)lua51_touserdata(L, lua51_upvalueindex(1));
     if (!pThis->_onLoad(lua51_tostring(L, 1)))
         return 0;
     _tCRgdFile::construct(L, pThis, lua51_tostring(L, 1), pThis->m_pUcsResolverModule);
@@ -1633,32 +1633,32 @@ void CRgdFileMacro::loadMacro(const char *sCode)
 
 int CRgdFileMacro::luaf_protect0(lua_State *L)
 {
-    auto *self = (CRgdFileMacro *)lua51_touserdata(L, lua_upvalueindex(2));
+    auto *self = (CRgdFileMacro *)lua51_touserdata(L, lua51_upvalueindex(2));
     if (self->m_fpOnSecurityCallback && self->m_fpOnSecurityCallback(self->m_pCallbackTag, ST_DebugLib) == false)
     {
         return 0;
     }
-    return lua51_tocfunction(L, lua_upvalueindex(1))(L);
+    return lua51_tocfunction(L, lua51_upvalueindex(1))(L);
 }
 
 int CRgdFileMacro::luaf_protect1(lua_State *L)
 {
-    auto *self = (CRgdFileMacro *)lua51_touserdata(L, lua_upvalueindex(2));
+    auto *self = (CRgdFileMacro *)lua51_touserdata(L, lua51_upvalueindex(2));
     if (self->m_fpOnSecurityCallback && self->m_fpOnSecurityCallback(self->m_pCallbackTag, ST_IOLib) == false)
     {
         return 0;
     }
-    return lua51_tocfunction(L, lua_upvalueindex(1))(L);
+    return lua51_tocfunction(L, lua51_upvalueindex(1))(L);
 }
 
 int CRgdFileMacro::luaf_protect2(lua_State *L)
 {
-    auto *self = (CRgdFileMacro *)lua51_touserdata(L, lua_upvalueindex(2));
+    auto *self = (CRgdFileMacro *)lua51_touserdata(L, lua51_upvalueindex(2));
     if (self->m_fpOnSecurityCallback && self->m_fpOnSecurityCallback(self->m_pCallbackTag, ST_OSLib) == false)
     {
         return 0;
     }
-    return lua51_tocfunction(L, lua_upvalueindex(1))(L);
+    return lua51_tocfunction(L, lua51_upvalueindex(1))(L);
 }
 
 void CRgdFileMacro::runAtEnd()
