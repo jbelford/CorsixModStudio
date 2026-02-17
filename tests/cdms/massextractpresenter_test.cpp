@@ -16,7 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "views/IMassExtractView.h"
+#include "views/interfaces/IMassExtractView.h"
 #include "presenters/CMassExtractPresenter.h"
 #include "async/CTaskRunner.h"
 #include <gtest/gtest.h>

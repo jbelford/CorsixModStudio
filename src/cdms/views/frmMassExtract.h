@@ -34,7 +34,7 @@
 #include <wx/treectrl.h>
 
 #include "presenters/CMassExtractPresenter.h"
-#include "views/IMassExtractView.h"
+#include "views/interfaces/IMassExtractView.h"
 #include <memory>
 
 class frmMassExtract : public wxDialog, public IMassExtractView

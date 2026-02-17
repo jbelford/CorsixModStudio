@@ -19,7 +19,7 @@
 #pragma once
 
 #include "async/CWxTaskRunner.h"
-#include "views/IRgdMacroView.h"
+#include "views/interfaces/IRgdMacroView.h"
 #include <rainman/formats/CRgdFileMacro.h>
 #include <string>
 #include <vector>

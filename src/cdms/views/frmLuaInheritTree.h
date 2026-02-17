@@ -13,7 +13,7 @@
 #endif
 // ----------------------------
 #include "presenters/CLuaInheritTreePresenter.h"
-#include "views/ILuaInheritTreeView.h"
+#include "views/interfaces/ILuaInheritTreeView.h"
 #include <rainman/lua/CInheritTable.h>
 #include <wx/treectrl.h>
 #include <memory>

@@ -19,7 +19,7 @@
 #pragma once
 
 #include "async/CWxTaskRunner.h"
-#include "views/IMainFrameView.h"
+#include "views/interfaces/IMainFrameView.h"
 #include <wx/string.h>
 
 //! Presenter for asynchronous module loading.

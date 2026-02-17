@@ -18,11 +18,11 @@
 
 #pragma once
 #include "frame/Construct.h"
-#include "frmUCSSelector.h"
+#include "views/frmUCSSelector.h"
 #include "presenters/CDpsCalculatorPresenter.h"
 #include "presenters/CRefreshFilesPresenter.h"
-#include "views/IDpsCalculatorView.h"
-#include "views/IRefreshFilesView.h"
+#include "views/interfaces/IDpsCalculatorView.h"
+#include "views/interfaces/IRefreshFilesView.h"
 #include <memory>
 
 class CLocaleTool : public ConstructFrame::ITool

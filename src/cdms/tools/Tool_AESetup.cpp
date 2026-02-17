@@ -19,8 +19,8 @@
 #include "common/strconv.h"
 #include "common/strings.h"
 #include "common/Utility.h"
-#include "CtrlStatusText.h"
-#include "frmMessage.h"
+#include "views/CtrlStatusText.h"
+#include "views/frmMessage.h"
 #include "Tool_AESetup.h"
 #include <algorithm>
 #include <vector>

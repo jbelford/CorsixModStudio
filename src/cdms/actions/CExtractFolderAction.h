@@ -18,8 +18,8 @@
 
 #pragma once
 
-#include "frmFiles.h"
-#include "frmMassExtract.h"
+#include "views/frmFiles.h"
+#include "views/frmMassExtract.h"
 
 class CExtractFolderAction : public frmFiles::IHandler
 {

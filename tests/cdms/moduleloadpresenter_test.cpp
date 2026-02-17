@@ -16,7 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "views/IMainFrameView.h"
+#include "views/interfaces/IMainFrameView.h"
 #include "presenters/CModuleLoadPresenter.h"
 #include "async/CTaskRunner.h"
 #include "async/CProgressChannel.h"

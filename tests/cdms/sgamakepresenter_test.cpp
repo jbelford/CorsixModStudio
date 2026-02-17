@@ -16,7 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "views/ISgaMakeView.h"
+#include "views/interfaces/ISgaMakeView.h"
 #include "presenters/CSgaMakePresenter.h"
 #include "async/CTaskRunner.h"
 #include "async/CProgressChannel.h"

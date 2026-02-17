@@ -30,46 +30,63 @@
 #include "wx/wx.h"
 #endif
 // ----------------------------
-
-#include "presenters/CSgaMakePresenter.h"
-#include "views/ISgaMakeView.h"
+#include "presenters/CRgdMacroPresenter.h"
+#include "views/interfaces/IRgdMacroView.h"
 #include <memory>
+#include <rainman/formats/CRgdFileMacro.h>
+#include <wx/stc/stc.h>
+#include <wx/treectrl.h>
 
-class frmSgaMake : public wxDialog, public ISgaMakeView
+class frmRgdMacro : public wxDialog, public IRgdMacroView
 {
   protected:
-    wxTextCtrl *m_pInDir;
-    wxComboBox *m_pOutFile, *m_pTocName;
-    wxButton *m_pGoBtn = nullptr;
-    wxButton *m_pCancelBtn = nullptr;
-    std::unique_ptr<CSgaMakePresenter> m_pPresenter;
+    wxStyledTextCtrl *m_pSTC;
+    wxTextCtrl *m_pTextbox;
+
+    wxStaticText *m_pCaption;
+    wxButton *m_pSaveBtn, *m_pLoadBtn, *m_pRunBtn, *m_pModeBtn;
+    wxBoxSizer *m_pFormMainSizer;
+
+    bool m_bShowingOutput;
+
+    unsigned long m_iPathHash;
+    unsigned long m_iPathLen;
+
+    wxString m_sPath;
+    wxTreeItemId &m_oFolder;
+
+    std::unique_ptr<CRgdMacroPresenter> m_pPresenter;
+
+    void _populateFileList(std::vector<char *> *lstFiles);
 
   public:
-    frmSgaMake();
+    frmRgdMacro(wxString sFile, wxTreeItemId &oFolder);
 
-    void OnBrowseInClick(wxCommandEvent &event);
-    void OnBrowseOutClick(wxCommandEvent &event);
-    void OnGoClick(wxCommandEvent &event);
+    void OnRunClick(wxCommandEvent &event);
+    void OnModeClick(wxCommandEvent &event);
+    void OnLoadClick(wxCommandEvent &event);
+    void OnSaveClick(wxCommandEvent &event);
     void OnCancelClick(wxCommandEvent &event);
-    void OnFileOutUpdated(wxCommandEvent &event);
+    void OnStyleNeeded(wxStyledTextEvent &event);
+    void OnCharAdded(wxStyledTextEvent &event);
 
-    // ISgaMakeView implementation
+    // IRgdMacroView implementation
     void ShowProgress(const wxString &sMessage) override;
     void HideProgress() override;
     void ShowError(const wxString &sMessage) override;
-    void OnSgaCreated() override;
+    void AppendOutput(const wxString &sText) override;
+    bool RequestPermission(const wxString &sQuestion) override;
+    void OnMacroComplete(const std::vector<wxString> &vFoldersToUpdate) override;
     void DisableControls() override;
     void EnableControls() override;
 
     enum
     {
-        IDC_DirIn = wxID_HIGHEST + 1,
-        IDC_BrowseIn,
-        IDC_FileOut,
-        IDC_BrowseOut,
-        IDC_TocName,
-        IDC_Go,
-        IDC_Cancel
+        IDC_Run = wxID_HIGHEST + 1,
+        IDC_Load,
+        IDC_Save,
+        IDC_Cancel,
+        IDC_Mode,
     };
 
     DECLARE_EVENT_TABLE()

@@ -30,15 +30,15 @@
 #include "wx/wx.h"
 #endif
 // ----------------------------
-#include "frmLoading.h"
+#include "views/frmLoading.h"
 #include "TabManager.h"
-#include "frmFiles.h"
+#include "views/frmFiles.h"
 #include <rainman/module/CModuleFile.h>
 #include "ModuleManager.h"
 #include "common/ITool.h"
 #include "ToolRegistry.h"
 #include "MenuController.h"
-#include "views/IMainFrameView.h"
+#include "views/interfaces/IMainFrameView.h"
 #include "presenters/CModuleLoadPresenter.h"
 
 class ConstructFrame : public wxFrame, public IMainFrameView

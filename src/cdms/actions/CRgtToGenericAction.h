@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "frmFiles.h"
+#include "views/frmFiles.h"
 #include "frame/Construct.h"
 #include "common/Utility.h"
 #include "common/strconv.h"

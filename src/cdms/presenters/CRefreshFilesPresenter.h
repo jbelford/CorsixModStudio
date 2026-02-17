@@ -19,7 +19,7 @@
 #pragma once
 
 #include "async/CWxTaskRunner.h"
-#include "views/IRefreshFilesView.h"
+#include "views/interfaces/IRefreshFilesView.h"
 #include <rainman/module/CModuleFile.h>
 
 //! Presenter for asynchronous resource reload and file tree refresh.

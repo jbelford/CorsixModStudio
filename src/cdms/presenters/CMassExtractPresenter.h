@@ -19,7 +19,7 @@
 #pragma once
 
 #include "async/CWxTaskRunner.h"
-#include "views/IMassExtractView.h"
+#include "views/interfaces/IMassExtractView.h"
 #include <string>
 #include <vector>
 #include <wx/string.h>

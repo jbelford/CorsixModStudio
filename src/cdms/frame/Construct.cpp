@@ -17,14 +17,14 @@
 */
 
 #include "Construct.h"
-#include "frmLoading.h"
-#include "frmWelcome.h"
-#include "frmNewMod.h"
-#include "frmFiles.h"
-#include "frmModule.h"
-#include "frmCredits.h"
-#include "frmLocaleSelector.h"
-#include "frmRgdEditor.h"
+#include "views/frmLoading.h"
+#include "views/frmWelcome.h"
+#include "views/frmNewMod.h"
+#include "views/frmFiles.h"
+#include "views/frmModule.h"
+#include "views/frmCredits.h"
+#include "views/frmLocaleSelector.h"
+#include "views/frmRgdEditor.h"
 #include "common/strconv.h"
 #include <memory>
 #include <rainman/io/CFileSystemStore.h>

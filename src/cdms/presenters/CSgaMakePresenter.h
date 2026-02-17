@@ -19,7 +19,7 @@
 #pragma once
 
 #include "async/CWxTaskRunner.h"
-#include "views/ISgaMakeView.h"
+#include "views/interfaces/ISgaMakeView.h"
 #include <wx/string.h>
 
 //! Presenter for asynchronous SGA archive creation.

@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "frmFiles.h"
+#include "views/frmFiles.h"
 
 class CNilAction : public CLuaAction
 {

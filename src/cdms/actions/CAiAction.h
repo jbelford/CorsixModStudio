@@ -18,8 +18,8 @@
 
 #pragma once
 
-#include "frmFiles.h"
-#include "frmScarEditor.h"
+#include "views/frmFiles.h"
+#include "views/frmScarEditor.h"
 #include "frame/Construct.h"
 #include "common/Utility.h"
 #include "actions/ActionUtil.h"

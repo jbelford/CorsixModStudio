@@ -47,7 +47,7 @@ add_executable(cdms_tests
     ${CDMS_SRC_DIR}/presenters/CRefreshFilesPresenter.cpp
     ${CDMS_SRC_DIR}/tools/Tool_AutoDPS.cpp
     ${CDMS_SRC_DIR}/tools/Tool_AESetup.cpp
-    ${CDMS_SRC_DIR}/CtrlStatusText.cpp
+    ${CDMS_SRC_DIR}/views/CtrlStatusText.cpp
 )
 
 target_include_directories(cdms_tests PRIVATE

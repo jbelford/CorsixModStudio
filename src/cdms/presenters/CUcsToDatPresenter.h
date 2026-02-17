@@ -19,7 +19,7 @@
 #pragma once
 
 #include "async/CWxTaskRunner.h"
-#include "views/IUcsToDatView.h"
+#include "views/interfaces/IUcsToDatView.h"
 #include <wx/string.h>
 
 class CModuleFile;

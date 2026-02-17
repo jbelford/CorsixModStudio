@@ -16,7 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "views/IRefreshFilesView.h"
+#include "views/interfaces/IRefreshFilesView.h"
 #include "presenters/CRefreshFilesPresenter.h"
 #include "async/CTaskRunner.h"
 #include <gtest/gtest.h>

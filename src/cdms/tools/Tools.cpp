@@ -19,17 +19,17 @@
 #include "Tools.h"
 #include "common/strings.h"
 
-#include "frmUCSEditor.h"
-#include "frmFileSelector.h"
-#include "frmLocaleSelector.h"
+#include "views/frmUCSEditor.h"
+#include "views/frmFileSelector.h"
+#include "views/frmLocaleSelector.h"
 #include "common/strconv.h"
-#include "frmSgaMake.h"
+#include "views/frmSgaMake.h"
 #include "Tool_AESetup.h"
 #include "Tool_AutoDPS.h"
 #include "presenters/CDpsCalculatorPresenter.h"
 #include "presenters/CRefreshFilesPresenter.h"
 #include "common/Utility.h"
-#include "frmMassExtract.h"
+#include "views/frmMassExtract.h"
 #include <memory>
 // Rainman_RGDDump.h removed; RgdDump usage is commented-out dead code
 #include <rainman/util/Util.h>

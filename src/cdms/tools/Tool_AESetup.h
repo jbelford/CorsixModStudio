@@ -35,7 +35,7 @@
 // ----------------------------
 
 #include "presenters/CUcsToDatPresenter.h"
-#include "views/IUcsToDatView.h"
+#include "views/interfaces/IUcsToDatView.h"
 #include <memory>
 
 class frmUCSToDAT : public wxDialog, public IUcsToDatView

@@ -19,7 +19,7 @@
 #pragma once
 
 #include "async/CWxTaskRunner.h"
-#include "views/IDpsCalculatorView.h"
+#include "views/interfaces/IDpsCalculatorView.h"
 #include <rainman/io/IDirectoryTraverser.h>
 #include <wx/string.h>
 

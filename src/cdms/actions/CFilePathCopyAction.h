@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "frmFiles.h"
+#include "views/frmFiles.h"
 #include <wx/clipbrd.h>
 
 class CFilePathCopyAction : public frmFiles::IHandler

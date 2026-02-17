@@ -18,8 +18,8 @@
 
 #pragma once
 
-#include "frmFiles.h"
-#include "frmRgdMacro.h"
+#include "views/frmFiles.h"
+#include "views/frmRgdMacro.h"
 
 class CRgdMacroAction : public frmFiles::IHandler
 {

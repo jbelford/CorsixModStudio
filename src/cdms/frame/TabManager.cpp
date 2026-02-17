@@ -17,8 +17,8 @@
 */
 
 #include "TabManager.h"
-#include "frmFiles.h"
-#include "frmWelcome.h"
+#include "views/frmFiles.h"
+#include "views/frmWelcome.h"
 #include "common/strings.h"
 #include "common/config.h"
 

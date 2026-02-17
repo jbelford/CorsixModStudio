@@ -16,7 +16,7 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "views/IDpsCalculatorView.h"
+#include "views/interfaces/IDpsCalculatorView.h"
 #include "async/CTaskRunner.h"
 #include "async/CProgressChannel.h"
 #include "services/Result.h"

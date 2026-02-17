@@ -19,7 +19,7 @@
 #pragma once
 
 #include "async/CWxTaskRunner.h"
-#include "views/ILuaInheritTreeView.h"
+#include "views/interfaces/ILuaInheritTreeView.h"
 #include <wx/string.h>
 
 class CInheritTable;
