@@ -26,6 +26,7 @@
 #include "common/config.h"
 #include "common/strings.h"
 #include "common/Utility.h"
+#include "presenters/CRgdEditorPresenter.h"
 #include <wx/clipbrd.h>
 #include <wx/propgrid/manager.h>
 #include <wx/toolbar.h>
@@ -430,26 +431,11 @@ void frmRGDEditor::DoSave()
     }
     else if (m_iObjectType == 3)
     {
-        size_t iChop = 0;
-        if (strnicmp(saNewFile.get(), "Generic\\Attrib\\", 15) == 0)
-            iChop = 15;
-        else if (strnicmp(saNewFile.get(), "Data\\Attrib\\", 12) == 0)
-            iChop = 12;
-        else if (strnicmp(saNewFile.get(), "Attrib\\Attrib\\", 14) == 0)
-            iChop = 14;
-        char *sSrc = saNewFile.get() + iChop - 1;
-        do
-        {
-            ++sSrc;
-            if (sSrc[0] >= 'A' && sSrc[0] <= 'Z')
-                sSrc[-iChop] = (sSrc[0] + 0x20);
-            else
-                sSrc[-iChop] = sSrc[0];
-        } while (*sSrc);
+        auto sNormPath = CRgdEditorPresenter::NormaliseLua2SavePath(saNewFile.get());
 
         try
         {
-            m_pLua2Object->saveFile(streamResult.value().get(), saNewFile.get());
+            m_pLua2Object->saveFile(streamResult.value().get(), sNormPath.c_str());
         }
         catch (CRainmanException *pE)
         {
@@ -547,15 +533,7 @@ frmRGDEditor::_NodeHelp::_NodeHelp()
 
 unsigned long frmRGDEditor::NodeNameToMultiHash(const wchar_t *sName)
 {
-    size_t iLen = wcslen(sName);
-    while ((sName[iLen - 1] >= '0') && (sName[iLen - 1] <= '9'))
-    {
-        --iLen;
-    }
-    char *s = UnicodeToAscii(sName);
-    unsigned long i = hash((ub1 *)s, (ub4)iLen, 0);
-    delete[] s;
-    return i;
+    return CRgdEditorPresenter::ComputeMultiHash(sName);
 }
 
 wxPGProperty *frmRGDEditor::GetMetaNodeEditor(IMetaNode *pNode, wxString sName, wxString sNameId)
@@ -804,11 +782,9 @@ void frmRGDEditor::OnTreeSelect(wxTreeEvent &event)
 wxString frmRGDEditor::GetMetaNodeName(IMetaNode *pNode)
 {
     if (pNode->VGetName())
-        return AsciiTowxString(pNode->VGetName());
+        return CRgdEditorPresenter::FormatNodeName(pNode->VGetName(), 0);
 
-    wxString S;
-    S = wxT("0x");
-    unsigned long iHash;
+    unsigned long iHash = 0;
     try
     {
         iHash = pNode->VGetNameHash();
@@ -818,22 +794,20 @@ wxString frmRGDEditor::GetMetaNodeName(IMetaNode *pNode)
         auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
         return wxT("[unknown name]");
     }
-    for (int iNibble = 7; iNibble >= 0; --iNibble)
-    {
-        S.Append("0123456789ABCDEF"[(iHash >> (iNibble << 2)) & 15]);
-    }
-    return S;
+    return CRgdEditorPresenter::FormatNodeName(nullptr, iHash);
 }
 
 wxString frmRGDEditor::GetMetaTableValue(IMetaNode::IMetaTable *pTable, IMetaNode *pNode)
 {
     wxString sRef;
+    bool bHasRef = true;
     try
     {
         switch (pTable->VGetReferenceType())
         {
         case IMetaNode::DT_NoData:
-            return wxT("{}");
+            bHasRef = false;
+            break;
 
         case IMetaNode::DT_WString:
             sRef = pTable->VGetReferenceWString();
@@ -848,11 +822,8 @@ wxString frmRGDEditor::GetMetaTableValue(IMetaNode::IMetaTable *pTable, IMetaNod
         auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
         return wxT("-- unknown name");
     }
-    if (pNode && GetMetaNodeName(pNode) == wxT("GameData"))
-    {
-        return wxString(wxT("Inherit([[")).Append(sRef).Append(wxT("]])"));
-    }
-    return wxString(wxT("Reference([[")).Append(sRef).Append(wxT("]])"));
+    bool bIsGameData = pNode && GetMetaNodeName(pNode) == wxT("GameData");
+    return CRgdEditorPresenter::FormatTableReference(sRef, bIsGameData, bHasRef);
 }
 
 bool frmRGDEditor::_SyncTreeView(IMetaNode *pNode, wxTreeItemId &oNode)

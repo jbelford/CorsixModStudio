@@ -32,6 +32,7 @@ add_executable(cdms_tests
     ucseditorphresenter_test.cpp
     scareditorpresenter_test.cpp
     filetreepresenter_test.cpp
+    rgdeditorpresenter_test.cpp
     ${CDMS_SRC_DIR}/common/strconv.cpp
     ${CDMS_SRC_DIR}/common/strings.cpp
     ${CDMS_SRC_DIR}/common/Utility.cpp
@@ -55,6 +56,7 @@ add_executable(cdms_tests
     ${CDMS_SRC_DIR}/presenters/CUcsEditorPresenter.cpp
     ${CDMS_SRC_DIR}/presenters/CScarEditorPresenter.cpp
     ${CDMS_SRC_DIR}/presenters/CFileTreePresenter.cpp
+    ${CDMS_SRC_DIR}/presenters/CRgdEditorPresenter.cpp
     ${CDMS_SRC_DIR}/tools/Tool_AutoDPS.cpp
     ${CDMS_SRC_DIR}/tools/Tool_AESetup.cpp
     ${CDMS_SRC_DIR}/views/CtrlStatusText.cpp
