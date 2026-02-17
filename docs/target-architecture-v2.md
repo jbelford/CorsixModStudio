@@ -774,7 +774,9 @@ Move remaining blocking operations to background threads.
 
 All `wxSafeYield` calls eliminated. `LoadModCallback` removed. 385 tests passing.
 
-### Phase J: Rainman Internal Parallelism
+### Phase J: Rainman Internal Parallelism ✅
+
+> **Status**: Complete — 414 total tests (6 new parallelism tests). `CFileMap` and `CLuaFileCache` are thread-safe via mutexes. `CResourceLoader::Load()` parallelizes SGA archive loading using `std::async` (DawnOfWar and CompanyOfHeroes paths). `CSgaCreator::CreateSga()` parallelizes per-file compression. CompanyOfHeroesEarly path remains sequential (callback-driven `Util_ForEach`). Timing logs added for benchmarking.
 
 Add parallelism within Rainman for archive loading and SGA compression.
 

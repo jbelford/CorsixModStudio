@@ -28,6 +28,7 @@ class CSgaFile;
 
 #include <vector>
 #include <map>
+#include <mutex>
 
 class RAINMAN_API CFileMap : public IFileStore, public IDirectoryTraverser
 {
@@ -241,6 +242,7 @@ class RAINMAN_API CFileMap : public IFileStore, public IDirectoryTraverser
     static bool _SortFolds(_Folder *a, _Folder *b);
     static bool _SortFiles(_File *a, _File *b);
 
+    std::recursive_mutex m_mtxMap; //!< Guards mutation of m_vDataSources, m_vTOCs, and the folder/file tree
     tAuxOutputSupply m_fAuxOutputSupply;
     void *m_pAuxOutputContext;
 

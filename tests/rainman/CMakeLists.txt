@@ -29,6 +29,8 @@ add_executable(rainman_tests
     rgtfile_test.cpp
     exceptiondeleter_test.cpp
     rgdfilemacro_test.cpp
+    filemap_parallel_test.cpp
+    luafilecache_parallel_test.cpp
 )
 
 target_link_libraries(rainman_tests

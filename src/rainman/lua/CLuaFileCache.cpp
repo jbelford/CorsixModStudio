@@ -38,6 +38,7 @@ CLuaFileCache::_tEntry::_tEntry(char *s, lua_State *L, bool b) : sName(s), L(L),
 
 lua_State *CLuaFileCache::MakeState()
 {
+    std::lock_guard<std::recursive_mutex> lock(m_mtx);
     lua_State *L = lua_newthread(m_pMother);     // {L -1}
     lua_newtable(L);                             // {L -2} {T -1}
     lua_replace(L, LUA_GLOBALSINDEX);            // {L -1}
@@ -51,6 +52,7 @@ lua_State *CLuaFileCache::MakeState()
 
 void CLuaFileCache::FreeState(lua_State *L)
 {
+    std::lock_guard<std::recursive_mutex> lock(m_mtx);
     _tEntry *pItr = m_oEntires.pNext, *pPrev = &m_oEntires;
     while (pItr)
     {
@@ -79,6 +81,7 @@ void CLuaFileCache::FreeState(lua_State *L)
 
 void CLuaFileCache::Clear()
 {
+    std::lock_guard<std::recursive_mutex> lock(m_mtx);
     _tEntry *pItr = m_oEntires.pNext, *pTmp;
     while (pItr)
     {
@@ -96,12 +99,14 @@ void CLuaFileCache::Clear()
 
 CLuaFileCache::~CLuaFileCache()
 {
+    std::lock_guard<std::recursive_mutex> lock(m_mtx);
     Clear();
     lua_close(m_pMother);
 }
 
 void CLuaFileCache::AddToCache(const char *sName, lua_State *L)
 {
+    std::lock_guard<std::recursive_mutex> lock(m_mtx);
     RAINMAN_LOG_DEBUG("CLuaFileCache::AddToCache(\"{}\")", sName ? sName : "(null)");
     _tEntry *pItr = m_oEntires.pNext;
     while (pItr)
@@ -120,6 +125,7 @@ void CLuaFileCache::AddToCache(const char *sName, lua_State *L)
 
 lua_State *CLuaFileCache::Fetch(const char *sName)
 {
+    std::lock_guard<std::recursive_mutex> lock(m_mtx);
     RAINMAN_LOG_DEBUG("CLuaFileCache::Fetch(\"{}\")", sName ? sName : "(null)");
     _tEntry *pItr = m_oEntires.pNext;
     while (pItr)
@@ -136,6 +142,7 @@ lua_State *CLuaFileCache::Fetch(const char *sName)
 
 void CLuaFileCache::GameDataToStack(const char *sRef, lua_State *L)
 {
+    std::lock_guard<std::recursive_mutex> lock(m_mtx);
     lua_State *Ls = Fetch(sRef);
     if (!Ls)
         throw new CRainmanException(nullptr, __FILE__, __LINE__, "No state found with name \'%s\'", sRef);
@@ -149,6 +156,7 @@ void CLuaFileCache::GameDataToStack(const char *sRef, lua_State *L)
 
 void CLuaFileCache::MetaDataToStack(const char *sRef, lua_State *L)
 {
+    std::lock_guard<std::recursive_mutex> lock(m_mtx);
     lua_State *Ls = Fetch(sRef);
     if (!Ls)
         throw new CRainmanException(nullptr, __FILE__, __LINE__, "No state found with name \'%s\'", sRef);

@@ -44,4 +44,14 @@ class CResourceLoader
     static void LoadDataGeneric(CModuleFile &module, CALLBACK_ARG);
     static void LoadCohEngine(CModuleFile &module, const char *sFolder, const char *sUiName, unsigned long iLoadWhat,
                               unsigned short iNum, CALLBACK_ARG);
+
+    // Phase J: parallel archive loading helpers
+    struct ArchiveTask;
+    struct SgaPreloadResult;
+    static SgaPreloadResult PreloadSga(CFileSystemStore *pFSS, const char *sFullPath,
+                                       CModuleFile::eModuleType eModuleType, const char *sCohThisModFolder,
+                                       const char *sApplicationPath, const char *saScenarioPackRootFolder);
+    static void RegisterPreloadedSga(SgaPreloadResult &result, CModuleFile &module, unsigned short iNum,
+                                     const char *sSlashChar, const char *sFullPath);
+    static void LoadArchivesParallel(std::vector<ArchiveTask> &tasks, CModuleFile &module, CALLBACK_ARG);
 };

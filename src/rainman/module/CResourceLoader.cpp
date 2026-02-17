@@ -25,7 +25,242 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "rainman/io/CFileSystemStore.h"
 #include "rainman/core/Internal_Util.h"
 #include "rainman/core/Exception.h"
+#include "rainman/core/RainmanLog.h"
+#include <future>
+#include <chrono>
 #include <memory>
+#include <string>
+
+// -- Parallel archive preloading infrastructure (Phase J) --
+
+//! Metadata for one archive to be loaded in parallel.
+struct CResourceLoader::ArchiveTask
+{
+    std::string archivePath;
+    std::string uiName;
+    unsigned short iNum;
+    CSgaFile **ppSgaOut; // Where to store the loaded CSgaFile*
+};
+
+//! Result of preloading an SGA file on a worker thread.
+struct CResourceLoader::SgaPreloadResult
+{
+    CSgaFile *pSga = nullptr;
+    bool bIsThisMod = true;
+    char *sActualModName = nullptr; // malloc'd if set; consumer must free
+
+    SgaPreloadResult() = default;
+    ~SgaPreloadResult()
+    {
+        if (sActualModName)
+            free(sActualModName); // NOLINT(clang-analyzer-unix.MismatchedDeallocator)
+    }
+    SgaPreloadResult(SgaPreloadResult &&o) noexcept
+        : pSga(o.pSga), bIsThisMod(o.bIsThisMod), sActualModName(o.sActualModName)
+    {
+        o.pSga = nullptr;
+        o.sActualModName = nullptr;
+    }
+    SgaPreloadResult &operator=(SgaPreloadResult &&o) noexcept
+    {
+        if (this != &o)
+        {
+            pSga = o.pSga;
+            bIsThisMod = o.bIsThisMod;
+            sActualModName = o.sActualModName;
+            o.pSga = nullptr;
+            o.sActualModName = nullptr;
+        }
+        return *this;
+    }
+    SgaPreloadResult(const SgaPreloadResult &) = delete;
+    SgaPreloadResult &operator=(const SgaPreloadResult &) = delete;
+};
+
+//! Loads and initializes a single SGA file without registering it in the file map.
+//! Safe to call concurrently for different archive paths — each call creates
+//! independent CSgaFile and IStream instances.
+CResourceLoader::SgaPreloadResult CResourceLoader::PreloadSga(CFileSystemStore *pFSS, const char *sFullPath,
+                                                              CModuleFile::eModuleType eModuleType,
+                                                              const char *sCohThisModFolder,
+                                                              const char *sApplicationPath,
+                                                              const char *saScenarioPackRootFolder)
+{
+    CResourceLoader::SgaPreloadResult result;
+    auto *pSga = CHECK_MEM(new CSgaFile);
+    std::unique_ptr<IFileStore::IStream> inputStream;
+    try
+    {
+        inputStream = std::unique_ptr<IFileStore::IStream>(pFSS->VOpenStream(sFullPath));
+    }
+    catch (CRainmanException *pE)
+    {
+        auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
+        delete pSga;
+        return result; // File not found — return empty result
+    }
+
+    // CoH-specific: determine if archive belongs to this mod or a dependency
+    if (eModuleType == CModuleFile::MT_CompanyOfHeroes)
+    {
+        if (strnicmp(sCohThisModFolder, sFullPath, strlen(sCohThisModFolder)) != 0)
+        {
+            if (saScenarioPackRootFolder &&
+                strnicmp(saScenarioPackRootFolder, sFullPath, strlen(saScenarioPackRootFolder)) == 0)
+            {
+                result.bIsThisMod = false;
+                result.sActualModName = strdup(sFullPath + strlen(saScenarioPackRootFolder) + 1);
+                char *sSlash = strrchr(result.sActualModName, '\\');
+                if (sSlash)
+                    *sSlash = 0;
+            }
+            else
+            {
+                result.bIsThisMod = false;
+                result.sActualModName = strdup(sFullPath + strlen(sApplicationPath));
+                char *sSlash = strrchr(result.sActualModName, '\\');
+                if (sSlash)
+                    *sSlash = 0;
+                sSlash = strrchr(result.sActualModName, '\\');
+                if (sSlash)
+                    *sSlash = 0;
+            }
+        }
+    }
+
+    try
+    {
+        pSga->Load(inputStream.get(), pFSS->VGetLastWriteTime(sFullPath));
+        pSga->VInit(inputStream.get());
+    }
+    catch (CRainmanException *pE)
+    {
+        pE = new CRainmanException(pE, __FILE__, __LINE__, "(rethrow for \'%s\')", sFullPath);
+        delete pSga;
+        if (result.sActualModName)
+        {
+            free(result.sActualModName); // NOLINT(clang-analyzer-unix.MismatchedDeallocator)
+            result.sActualModName = nullptr;
+        }
+        throw pE;
+    }
+
+    (void)inputStream.release(); // CSgaFile takes ownership of the stream
+    result.pSga = pSga;
+    return result;
+}
+
+//! Registers a preloaded SGA into the file map (must be called on the main thread).
+void CResourceLoader::RegisterPreloadedSga(SgaPreloadResult &result, CModuleFile &module, unsigned short iNum,
+                                           const char *sSlashChar, const char *sFullPath)
+{
+    IDirectoryTraverser::IIterator *pDirItr = nullptr;
+    try
+    {
+        pDirItr = result.pSga->VIterate(result.pSga->VGetEntryPoint(0));
+        if (pDirItr)
+        {
+            void *pSrc;
+            if (result.bIsThisMod)
+                pSrc = module.m_pNewFileMap->RegisterSource(module.m_iFileMapModNumber, true, iNum,
+                                                            module.GetFileMapName(), sSlashChar, result.pSga,
+                                                            result.pSga, false, false);
+            else
+                pSrc = module.m_pNewFileMap->RegisterSource(15000, true, iNum, result.sActualModName, sSlashChar,
+                                                            result.pSga, result.pSga, false, false);
+            module.m_pNewFileMap->MapSga(pSrc, result.pSga);
+        }
+        delete pDirItr;
+    }
+    catch (CRainmanException *pE)
+    {
+        pE = new CRainmanException(pE, __FILE__, __LINE__, "(rethrow for \'%s\')", sFullPath);
+        delete pDirItr;
+        delete result.pSga;
+        result.pSga = nullptr;
+        if (result.sActualModName)
+        {
+            free(result.sActualModName); // NOLINT(clang-analyzer-unix.MismatchedDeallocator)
+            result.sActualModName = nullptr;
+        }
+        throw pE;
+    }
+    if (result.sActualModName)
+    {
+        free(result.sActualModName); // NOLINT(clang-analyzer-unix.MismatchedDeallocator)
+        result.sActualModName = nullptr;
+    }
+}
+
+//! Loads archives in parallel (Phase 1: async preload, Phase 2: sequential registration).
+void CResourceLoader::LoadArchivesParallel(std::vector<ArchiveTask> &tasks, CModuleFile &module, CALLBACK_ARG)
+{
+    if (tasks.empty())
+        return;
+
+    auto tStart = std::chrono::steady_clock::now();
+
+    // Phase 1: Launch parallel SGA preloads
+    std::vector<std::future<SgaPreloadResult>> futures;
+    futures.reserve(tasks.size());
+    for (auto &task : tasks)
+    {
+        futures.push_back(std::async(std::launch::async, &CResourceLoader::PreloadSga, module.m_pFSS,
+                                     task.archivePath.c_str(), module.m_eModuleType, module.m_sCohThisModFolder,
+                                     module.m_sApplicationPath, module.m_saScenarioPackRootFolder));
+    }
+
+    // Phase 2: Collect results and register sequentially
+    CRainmanException *pFirstError = nullptr;
+    for (size_t i = 0; i < futures.size(); ++i)
+    {
+        SgaPreloadResult result;
+        try
+        {
+            result = futures[i].get();
+        }
+        catch (CRainmanException *pE)
+        {
+            if (!pFirstError)
+                pFirstError = pE;
+            else
+                pE->destroy();
+            continue;
+        }
+
+        if (!result.pSga)
+        {
+            *tasks[i].ppSgaOut = nullptr;
+            continue;
+        }
+
+        try
+        {
+            CallCallback(THE_CALLBACK, "Registering archive \'%s\' for mod \'%s\'", tasks[i].uiName.c_str(),
+                         module.m_sFileMapName);
+            RegisterPreloadedSga(result, module, tasks[i].iNum, tasks[i].uiName.c_str(), tasks[i].archivePath.c_str());
+        }
+        catch (CRainmanException *pE)
+        {
+            if (!pFirstError)
+                pFirstError = pE;
+            else
+                pE->destroy();
+            *tasks[i].ppSgaOut = nullptr;
+            continue;
+        }
+
+        *tasks[i].ppSgaOut = result.pSga;
+        result.pSga = nullptr; // Ownership transferred
+    }
+
+    auto tEnd = std::chrono::steady_clock::now();
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(tEnd - tStart).count();
+    RAINMAN_LOG_INFO("Parallel archive loading: {} archives in {}ms", tasks.size(), ms);
+
+    if (pFirstError)
+        throw pFirstError;
+}
 
 // -- Free-function callbacks used with Util_ForEach --
 // These are declared as friends of the relevant nested handler classes in CModuleFile.h,
@@ -350,18 +585,21 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
     {
         if (module.m_eModuleType == CModuleFile::MT_DawnOfWar)
         {
+            std::vector<ArchiveTask> tasks;
             for (auto *pArch : module.m_vArchives)
             {
                 char *sWithoutDynamics = module._DawnOfWarRemoveDynamics(pArch->m_sName);
-                char *sArchivePath = new char[strlen(module.m_sApplicationPath) +
-                                              strlen(module.m_metadata.m_sModFolder) + strlen(sWithoutDynamics) + 2];
-                sprintf(sArchivePath, "%s%s\\%s", module.m_sApplicationPath, module.m_metadata.m_sModFolder,
-                        sWithoutDynamics);
-                DoLoadArchive(module, sArchivePath, &pArch->m_pHandle, 15000 + pArch->m_iNumber, pArch->m_sName,
-                              THE_CALLBACK);
-                delete[] sArchivePath;
+                ArchiveTask task;
+                task.archivePath =
+                    std::string(module.m_sApplicationPath) + module.m_metadata.m_sModFolder + "\\" + sWithoutDynamics;
+                task.uiName = pArch->m_sName;
+                task.iNum = static_cast<unsigned short>(15000 + pArch->m_iNumber);
+                task.ppSgaOut = &pArch->m_pHandle;
+                tasks.push_back(std::move(task));
                 delete[] sWithoutDynamics;
             }
+            CallCallback(THE_CALLBACK, "Loading data archives for mod \'%s\'", module.m_sFileMapName);
+            LoadArchivesParallel(tasks, module, THE_CALLBACK);
         }
         else if (module.m_eModuleType == CModuleFile::MT_CompanyOfHeroesEarly)
         {
@@ -387,6 +625,7 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
         }
         else if (module.m_eModuleType == CModuleFile::MT_CompanyOfHeroes)
         {
+            std::vector<ArchiveTask> tasks;
             for (auto *pDS : module.m_vDataSources)
             {
                 pDS->m_bIsLoaded = IsToBeLoaded(module, pDS);
@@ -394,14 +633,17 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
                 {
                     for (auto *pArch : pDS->m_vArchives)
                     {
-                        char *sArchivePath = new char[strlen(module.m_sApplicationPath) + strlen(pArch->m_sName) + 1];
-                        sprintf(sArchivePath, "%s%s", module.m_sApplicationPath, pArch->m_sName);
-                        DoLoadArchive(module, sArchivePath, &pArch->m_pHandle,
-                                      15000 + (500 * pDS->m_iNumber) + pArch->m_iNumber, pArch->m_sName, THE_CALLBACK);
-                        delete[] sArchivePath;
+                        ArchiveTask task;
+                        task.archivePath = std::string(module.m_sApplicationPath) + pArch->m_sName;
+                        task.uiName = pArch->m_sName;
+                        task.iNum = static_cast<unsigned short>(15000 + (500 * pDS->m_iNumber) + pArch->m_iNumber);
+                        task.ppSgaOut = &pArch->m_pHandle;
+                        tasks.push_back(std::move(task));
                     }
                 }
             }
+            CallCallback(THE_CALLBACK, "Loading data archives for mod \'%s\'", module.m_sFileMapName);
+            LoadArchivesParallel(tasks, module, THE_CALLBACK);
         }
     }
     if (iReloadWhat & CModuleFile::RR_MapArchives)

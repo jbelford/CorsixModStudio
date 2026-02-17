@@ -529,6 +529,7 @@ void *CFileMap::CIterator::VGetTag(long iTag)
 
 void CFileMap::RewriteToC(const char *sOld, const char *sNew)
 {
+    std::lock_guard<std::recursive_mutex> lock(m_mtxMap);
     _TOC *pTocKey = nullptr;
 
     for (auto itr = m_vTOCs.begin(); itr != m_vTOCs.end(); ++itr)
@@ -732,6 +733,7 @@ void *CFileMap::RegisterSource(unsigned short iModNum, bool bIsSga, unsigned sho
                                const char *sSourceName, IFileStore *pStore, IDirectoryTraverser *pTraverser,
                                bool bIsWritable, bool bIsOutput, bool bIsPureOutput)
 {
+    std::lock_guard<std::recursive_mutex> lock(m_mtxMap);
     _DataSource *pSource = CHECK_MEM(new _DataSource);
 
     pSource->iSortNumber = 0;
@@ -753,6 +755,7 @@ void *CFileMap::RegisterSource(unsigned short iModNum, bool bIsSga, unsigned sho
 
 void CFileMap::MapSga(void *pSource, CSgaFile *pSga)
 {
+    std::lock_guard<std::recursive_mutex> lock(m_mtxMap);
     unsigned long iL = pSga->VGetEntryPointCount();
     for (unsigned long i = 0; i < iL; ++i)
     {
@@ -805,6 +808,7 @@ void CFileMap::_Clean()
 
 void CFileMap::MapSingleFile(void *pSource, const char *sTocName, const char *sFullPath, const char *sPathPartial)
 {
+    std::lock_guard<std::recursive_mutex> lock(m_mtxMap);
     // Get ToC
     _TOC *pToc = nullptr;
     for (auto itr = m_vTOCs.begin(); itr != m_vTOCs.end(); ++itr)
@@ -895,6 +899,7 @@ void CFileMap::MapSingleFile(void *pSource, const char *sTocName, const char *sF
 
 void CFileMap::MapIteratorDeep(void *pSource, const char *sPath, IDirectoryTraverser::IIterator *pItr)
 {
+    std::lock_guard<std::recursive_mutex> lock(m_mtxMap);
     const char *sPathSplit = strchr(sPath, '\\');
     size_t iPartLen = sPathSplit ? (sPathSplit - sPath) : strlen(sPath);
 
@@ -957,6 +962,7 @@ void CFileMap::MapIteratorDeep(void *pSource, const char *sPath, IDirectoryTrave
 
 void CFileMap::MapIterator(void *pSource, const char *sTocName, IDirectoryTraverser::IIterator *pItr)
 {
+    std::lock_guard<std::recursive_mutex> lock(m_mtxMap);
     _TOC *pToc = nullptr;
     for (auto itr = m_vTOCs.begin(); itr != m_vTOCs.end(); ++itr)
     {
@@ -998,6 +1004,7 @@ void CFileMap::_FolderSetupSourceNameFromSingleFileMap(_Folder *pFolder, _DataSo
 
 void CFileMap::EraseSource(void *_pSource)
 {
+    std::lock_guard<std::recursive_mutex> lock(m_mtxMap);
     auto *pSource = (_DataSource *)_pSource;
     for (auto itr = m_vTOCs.begin(); itr != m_vTOCs.end(); ++itr)
     {

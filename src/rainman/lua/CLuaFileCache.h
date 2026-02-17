@@ -24,6 +24,7 @@ extern "C"
 #include <lua.h>
 };
 #include "rainman/core/Api.h"
+#include <mutex>
 
 //! Cache for lua_State objects
 /*!
@@ -68,6 +69,7 @@ class RAINMAN_API CLuaFileCache
     void MetaDataToStack(const char *sRef, lua_State *L);
 
   protected:
+    mutable std::recursive_mutex m_mtx; //!< Guards all public methods for thread safety
     lua_State *m_pMother;
 
     struct _tEntry

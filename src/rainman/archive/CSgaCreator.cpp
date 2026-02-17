@@ -20,7 +20,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "rainman/archive/CSgaCreator.h"
 #include "rainman/core/Internal_Util.h"
 #include "rainman/io/CMemoryStore.h"
+#include <chrono>
+#include <future>
 #include <memory>
+#include <thread>
 #include <zlib.h>
 #include <ctime>
 extern "C"
@@ -182,6 +185,92 @@ endwhile:
 
     return pUs;
 }
+
+// -- Phase J: Parallel per-file compression infrastructure --
+
+namespace
+{
+
+//! Holds the result of compressing a single file (produced by worker threads).
+struct CompressedFileData
+{
+    std::unique_ptr<char[]> pData; // Compressed or uncompressed data buffer
+    unsigned long iDataSize = 0;   // Size of pData
+    unsigned long iUncompressedSize = 0;
+    unsigned long iUncompressedCRC = 0;
+    long iFlags = 0;
+};
+
+//! Reads, compresses, and CRC32-checksums a single file. Thread-safe — each call
+//! opens its own stream and allocates independent buffers.
+CompressedFileData CompressOneFile(IFileStore *pFileStore, const char *sFullPath, long iVersion)
+{
+    CompressedFileData result;
+
+    // Open and read the file
+    std::unique_ptr<IFileStore::IStream> fileStream;
+    try
+    {
+        fileStream = std::unique_ptr<IFileStore::IStream>(pFileStore->VOpenStream(sFullPath));
+    }
+    catch (CRainmanException *pE)
+    {
+        throw new CRainmanException(pE, __FILE__, __LINE__, "Could not open \'%s\'", sFullPath);
+    }
+    try
+    {
+        fileStream->VSeek(0, IFileStore::IStream::SL_End);
+        result.iUncompressedSize = static_cast<unsigned long>(fileStream->VTell());
+        fileStream->VSeek(0, IFileStore::IStream::SL_Root);
+        auto pFileBuffer = std::make_unique<char[]>(result.iUncompressedSize);
+        fileStream->VRead(result.iUncompressedSize, 1, pFileBuffer.get());
+
+        // CRC32 of uncompressed data
+        result.iUncompressedCRC =
+            crc32(crc32(0L, Z_NULL, 0), reinterpret_cast<const Bytef *>(pFileBuffer.get()), result.iUncompressedSize);
+
+        // Compress
+        unsigned long iCompBuffSize = compressBound(result.iUncompressedSize);
+        auto pCompressedBuffer = std::make_unique<char[]>(iCompBuffSize);
+        if (compress2(reinterpret_cast<Bytef *>(pCompressedBuffer.get()), &iCompBuffSize,
+                      reinterpret_cast<const Bytef *>(pFileBuffer.get()), result.iUncompressedSize,
+                      Z_BEST_COMPRESSION) != Z_OK)
+            throw new CRainmanException(__FILE__, __LINE__, "Compression error");
+
+        // Determine flags based on compression ratio
+        if (iCompBuffSize < result.iUncompressedSize)
+        {
+            if (iVersion == 4)
+                result.iFlags = 0x100;
+            else
+                result.iFlags = (result.iUncompressedSize < 4096 ? 0x20 : 0x10);
+        }
+        else
+        {
+            result.iFlags = 0;
+        }
+
+        // Keep the smaller buffer
+        if (result.iFlags == 0)
+        {
+            result.pData = std::move(pFileBuffer);
+            result.iDataSize = result.iUncompressedSize;
+        }
+        else
+        {
+            result.pData = std::move(pCompressedBuffer);
+            result.iDataSize = iCompBuffSize;
+        }
+    }
+    catch (CRainmanException *pE)
+    {
+        throw new CRainmanException(__FILE__, __LINE__, "File operation failed", pE);
+    }
+
+    return result;
+}
+
+} // namespace
 
 void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileStore *pStore, const char *_sTocName,
                             const char *sOutputFile, long iVersion, const char *sArchiveTitle, const char *sTocTitle)
@@ -415,72 +504,26 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
         if (fwrite(pOutStream->GetData(), 1, pOutStream->GetDataLength(), fOut) != pOutStream->GetDataLength())
             throw new CRainmanException(__FILE__, __LINE__, "Write operation failed");
 
-        // File headers properly phase 2
+        // Phase 1: Parallel per-file compression
+        auto tCompressStart = std::chrono::steady_clock::now();
+        std::vector<std::future<CompressedFileData>> compressionFutures;
+        compressionFutures.reserve(vFilesList.size());
+        for (auto itr = vFilesList.begin(); itr != vFilesList.end(); ++itr)
+        {
+            compressionFutures.push_back(
+                std::async(std::launch::async, CompressOneFile, (**itr).pFileStore, (**itr).sFullPath, iVersion));
+        }
+
+        // Phase 2: Sequential header writing and data output
         iFilesLoc = 24 + iTocOutLength + (iDirOutLength * iDirCount) + 4;
         long iDataLengthTotal = 0;
         long iPreDataSize = 0;
         if (iVersion == 4)
             iPreDataSize = 260;
-        for (auto itr = vFilesList.begin(); itr != vFilesList.end(); ++itr, iFilesLoc += iFileOutLength)
+        size_t iFileIdx = 0;
+        for (auto itr = vFilesList.begin(); itr != vFilesList.end(); ++itr, iFilesLoc += iFileOutLength, ++iFileIdx)
         {
-            std::unique_ptr<IFileStore::IStream> fileStream;
-            try
-            {
-                fileStream = std::unique_ptr<IFileStore::IStream>((**itr).pFileStore->VOpenStream((**itr).sFullPath));
-            }
-            catch (CRainmanException *pE)
-            {
-                throw new CRainmanException(pE, __FILE__, __LINE__, "Could not open \'%s\'", (**itr).sFullPath);
-            }
-            long iInputFileLength;
-            try
-            {
-                fileStream->VSeek(0, IFileStore::IStream::SL_End);
-                iInputFileLength = fileStream->VTell();
-                fileStream->VSeek(0, IFileStore::IStream::SL_Root);
-                pFileBuffer = new char[iInputFileLength];
-                fileStream->VRead(iInputFileLength, 1, pFileBuffer);
-            }
-            catch (CRainmanException *pE)
-            {
-                throw new CRainmanException(__FILE__, __LINE__, "File operation failed", pE);
-            }
-            unsigned long iUncompressedCRC = crc32(crc32(0L, Z_NULL, 0), (const Bytef *)pFileBuffer, iInputFileLength);
-            unsigned long iCompBuffSize = compressBound(iInputFileLength);
-            pCompressedBuffer = new char[iCompBuffSize];
-            if (compress2((Bytef *)pCompressedBuffer, &iCompBuffSize, (const Bytef *)pFileBuffer, iInputFileLength,
-                          Z_BEST_COMPRESSION) != Z_OK)
-                throw new CRainmanException(__FILE__, __LINE__, "Compression error");
-            long iFlags;
-            if (iCompBuffSize < (unsigned long)iInputFileLength)
-            {
-                if (iVersion == 4)
-                {
-                    /* if(iInputFileLength < 2048) iFlags = 0;
-                    else */
-                    iFlags = 0x100; //(iInputFileLength > 8192 ? 0x100 : 0x200);
-                }
-                else
-                {
-                    iFlags = (iInputFileLength < 4096 ? 0x20 : 0x10);
-                }
-            }
-            else
-            {
-                iFlags = 0;
-            }
-
-            if (iFlags == 0)
-            {
-                delete[] pCompressedBuffer;
-                pCompressedBuffer = pFileBuffer;
-                iCompBuffSize = iInputFileLength;
-            }
-            else
-            {
-                delete[] pFileBuffer;
-            }
-            pFileBuffer = nullptr;
+            CompressedFileData compressed = compressionFutures[iFileIdx].get();
 
             iDataLengthTotal += iPreDataSize;
             try
@@ -492,28 +535,28 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
                     dataHeader->VWrite(1, sizeof(uint32_t), &iDataLengthTotal);
 
                     // Size compressed / decompressed
-                    dataHeader->VWrite(1, sizeof(uint32_t), &iCompBuffSize);
-                    dataHeader->VWrite(1, sizeof(uint32_t), &iInputFileLength);
+                    dataHeader->VWrite(1, sizeof(uint32_t), &compressed.iDataSize);
+                    dataHeader->VWrite(1, sizeof(uint32_t), &compressed.iUncompressedSize);
 
                     // Time
                     iTmp = (unsigned long)(**itr).oLastWriteTime;
                     dataHeader->VWrite(1, sizeof(uint32_t), &iTmp);
 
                     // Flags
-                    iSTmp = (unsigned short)iFlags;
+                    iSTmp = (unsigned short)compressed.iFlags;
                     dataHeader->VWrite(1, (unsigned long)sizeof(unsigned short), &iSTmp);
                 }
                 else
                 {
                     // Flags
-                    dataHeader->VWrite(1, (unsigned long)sizeof(unsigned short), &iFlags);
+                    dataHeader->VWrite(1, (unsigned long)sizeof(unsigned short), &compressed.iFlags);
 
                     // Data offset
                     dataHeader->VWrite(1, sizeof(uint32_t), &iDataLengthTotal);
 
                     // Size compressed / decompressed
-                    dataHeader->VWrite(1, sizeof(uint32_t), &iCompBuffSize);
-                    dataHeader->VWrite(1, sizeof(uint32_t), &iInputFileLength);
+                    dataHeader->VWrite(1, sizeof(uint32_t), &compressed.iDataSize);
+                    dataHeader->VWrite(1, sizeof(uint32_t), &compressed.iUncompressedSize);
                 }
             }
             catch (CRainmanException *pE)
@@ -530,14 +573,18 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
 
                 if (fwrite(sPreDataName, 1, 256, fOut) != 256)
                     throw new CRainmanException(__FILE__, __LINE__, "Write operation failed");
-                if (fwrite(&iUncompressedCRC, sizeof(uint32_t), 1, fOut) != 1)
+                if (fwrite(&compressed.iUncompressedCRC, sizeof(uint32_t), 1, fOut) != 1)
                     throw new CRainmanException(__FILE__, __LINE__, "Write operation failed");
             }
-            if (fwrite(pCompressedBuffer, 1, iCompBuffSize, fOut) != iCompBuffSize)
+            if (fwrite(compressed.pData.get(), 1, compressed.iDataSize, fOut) != compressed.iDataSize)
                 throw new CRainmanException(__FILE__, __LINE__, "Write operation failed");
-            iDataLengthTotal += iCompBuffSize;
-            delete[] pCompressedBuffer;
-            pCompressedBuffer = nullptr;
+            iDataLengthTotal += compressed.iDataSize;
+        }
+
+        {
+            auto tCompressEnd = std::chrono::steady_clock::now();
+            auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(tCompressEnd - tCompressStart).count();
+            RAINMAN_LOG_INFO("Parallel SGA compression: {} files in {}ms", compressionFutures.size(), ms);
         }
 
         // Header MD5
