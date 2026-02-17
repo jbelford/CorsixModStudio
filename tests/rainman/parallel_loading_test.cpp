@@ -367,3 +367,217 @@ TEST(ParallelUcsLoading, ConcurrentLoadDoesNotCorruptOtherInstances)
         }
     }
 }
+
+// -- VRead direct-to-destination tests (P2) --
+
+TEST(VReadDirect, ReadsDirectlyIntoDestinationBuffer)
+{
+    // Verify that VRead reads into the provided destination buffer correctly
+    // (no intermediate temp buffer allocation)
+    auto tempDir = std::filesystem::temp_directory_path() /
+                   ("vread_test_" + std::to_string(_getpid()));
+    std::filesystem::create_directories(tempDir);
+
+    // Create a test file with known content
+    auto filePath = tempDir / "testdata.bin";
+    {
+        std::ofstream ofs(filePath, std::ios::binary);
+        const char data[] = "Hello, World! VRead test data 1234567890";
+        ofs.write(data, sizeof(data) - 1);
+    }
+
+    CFileSystemStore fsStore;
+    fsStore.VInit();
+
+    auto *pStream = fsStore.VOpenStream(filePath.string().c_str());
+    ASSERT_NE(pStream, nullptr);
+
+    // Read in several chunk sizes to exercise VRead
+    char buf1[5] = {};
+    pStream->VRead(5, 1, buf1);
+    EXPECT_EQ(std::string(buf1, 5), "Hello");
+
+    char buf2[8] = {};
+    pStream->VRead(8, 1, buf2);
+    EXPECT_EQ(std::string(buf2, 8), ", World!");
+
+    // Read with item size > 1 (simulating uint16_t reads)
+    char buf3[4] = {};
+    pStream->VRead(2, 2, buf3);
+    EXPECT_EQ(std::string(buf3, 4), " VRe");
+
+    delete pStream;
+    std::filesystem::remove_all(tempDir);
+}
+
+TEST(VReadDirect, LargeReadWorksCorrectly)
+{
+    auto tempDir = std::filesystem::temp_directory_path() /
+                   ("vread_large_" + std::to_string(_getpid()));
+    std::filesystem::create_directories(tempDir);
+
+    auto filePath = tempDir / "large.bin";
+    {
+        std::ofstream ofs(filePath, std::ios::binary);
+        // Write 64KB of sequential bytes
+        std::vector<char> data(65536);
+        for (size_t i = 0; i < data.size(); ++i)
+            data[i] = static_cast<char>(i & 0xFF);
+        ofs.write(data.data(), static_cast<std::streamsize>(data.size()));
+    }
+
+    CFileSystemStore fsStore;
+    fsStore.VInit();
+
+    auto *pStream = fsStore.VOpenStream(filePath.string().c_str());
+    ASSERT_NE(pStream, nullptr);
+
+    std::vector<char> result(65536);
+    pStream->VRead(65536, 1, result.data());
+
+    for (size_t i = 0; i < result.size(); ++i)
+    {
+        ASSERT_EQ(static_cast<unsigned char>(result[i]), static_cast<unsigned char>(i & 0xFF))
+            << "Mismatch at byte " << i;
+    }
+
+    delete pStream;
+    std::filesystem::remove_all(tempDir);
+}
+
+// -- Bulk UCS loading correctness tests (P1) --
+
+TEST(BulkUcsLoading, LoadProducesCorrectEntries)
+{
+    // Verify bulk loading parses UCS file correctly with multiple entries
+    auto *out = CMemoryStore::OpenOutputStreamExt();
+
+    unsigned short bom = 0xFEFF;
+    out->VWrite(1, sizeof(unsigned short), &bom);
+
+    // Write multiple UCS entries with varying content
+    struct TestEntry
+    {
+        unsigned long id;
+        std::wstring value;
+    };
+    std::vector<TestEntry> entries = {
+        {1, L"Hello World"},
+        {42, L"Test Value"},
+        {100, L"Unicode: \u00E9\u00E8\u00EA"}, // e-acute, e-grave, e-circumflex
+        {9999, L"Last entry"},
+    };
+
+    for (const auto &entry : entries)
+    {
+        std::wstring line = std::to_wstring(entry.id) + L"\t" + entry.value + L"\r\n";
+        out->VWrite(static_cast<unsigned long>(line.size()), sizeof(wchar_t), line.c_str());
+    }
+
+    CUcsFile ucs;
+    auto *stream = CMemoryStore::OpenStreamExt(const_cast<char*>(out->GetData()),
+                                                static_cast<unsigned long>(out->GetDataLength()), false);
+    ucs.Load(stream);
+    delete stream;
+    delete out;
+
+    // Verify all entries
+    for (const auto &entry : entries)
+    {
+        const wchar_t *val = ucs.ResolveStringID(entry.id);
+        ASSERT_NE(val, nullptr) << "Missing ID " << entry.id;
+        EXPECT_EQ(std::wstring(val), entry.value);
+    }
+
+    // Verify GetRawMap has correct count
+    ASSERT_NE(ucs.GetRawMap(), nullptr);
+    EXPECT_EQ(ucs.GetRawMap()->size(), entries.size());
+}
+
+TEST(BulkUcsLoading, LoadHandlesEmptyFile)
+{
+    // UCS file with only BOM, no entries
+    auto *out = CMemoryStore::OpenOutputStreamExt();
+
+    unsigned short bom = 0xFEFF;
+    out->VWrite(1, sizeof(unsigned short), &bom);
+
+    CUcsFile ucs;
+    auto *stream = CMemoryStore::OpenStreamExt(const_cast<char*>(out->GetData()),
+                                                static_cast<unsigned long>(out->GetDataLength()), false);
+    ucs.Load(stream);
+    delete stream;
+    delete out;
+
+    ASSERT_NE(ucs.GetRawMap(), nullptr);
+    EXPECT_EQ(ucs.GetRawMap()->size(), 0u);
+}
+
+TEST(BulkUcsLoading, LoadHandlesLineWithoutTab)
+{
+    // Lines without a tab should be skipped (no ID/value separator)
+    auto *out = CMemoryStore::OpenOutputStreamExt();
+
+    unsigned short bom = 0xFEFF;
+    out->VWrite(1, sizeof(unsigned short), &bom);
+
+    // Valid entry
+    std::wstring line1 = L"1\tValid Entry\r\n";
+    out->VWrite(static_cast<unsigned long>(line1.size()), sizeof(wchar_t), line1.c_str());
+
+    // Invalid line (no tab)
+    std::wstring line2 = L"NoTabHere\r\n";
+    out->VWrite(static_cast<unsigned long>(line2.size()), sizeof(wchar_t), line2.c_str());
+
+    // Another valid entry
+    std::wstring line3 = L"2\tAnother Entry\r\n";
+    out->VWrite(static_cast<unsigned long>(line3.size()), sizeof(wchar_t), line3.c_str());
+
+    CUcsFile ucs;
+    auto *stream = CMemoryStore::OpenStreamExt(const_cast<char*>(out->GetData()),
+                                                static_cast<unsigned long>(out->GetDataLength()), false);
+    ucs.Load(stream);
+    delete stream;
+    delete out;
+
+    EXPECT_NE(ucs.ResolveStringID(1), nullptr);
+    EXPECT_NE(ucs.ResolveStringID(2), nullptr);
+    // The invalid line should not crash or corrupt other entries
+    EXPECT_GE(ucs.GetRawMap()->size(), 2u);
+}
+
+TEST(BulkUcsLoading, LoadHandlesLargeFile)
+{
+    // Stress test: 10,000 entries to verify bulk reading at scale
+    constexpr int kNumEntries = 10000;
+
+    auto *out = CMemoryStore::OpenOutputStreamExt();
+
+    unsigned short bom = 0xFEFF;
+    out->VWrite(1, sizeof(unsigned short), &bom);
+
+    for (int i = 0; i < kNumEntries; ++i)
+    {
+        std::wstring line = std::to_wstring(i) + L"\tEntry number " + std::to_wstring(i) + L"\r\n";
+        out->VWrite(static_cast<unsigned long>(line.size()), sizeof(wchar_t), line.c_str());
+    }
+
+    CUcsFile ucs;
+    auto *stream = CMemoryStore::OpenStreamExt(const_cast<char*>(out->GetData()),
+                                                static_cast<unsigned long>(out->GetDataLength()), false);
+    ucs.Load(stream);
+    delete stream;
+    delete out;
+
+    ASSERT_NE(ucs.GetRawMap(), nullptr);
+    EXPECT_EQ(ucs.GetRawMap()->size(), static_cast<size_t>(kNumEntries));
+
+    // Spot-check a few entries
+    for (int i : {0, 1, 999, 5000, 9999})
+    {
+        const wchar_t *val = ucs.ResolveStringID(static_cast<unsigned long>(i));
+        ASSERT_NE(val, nullptr) << "Missing ID " << i;
+        std::wstring expected = L"Entry number " + std::to_wstring(i);
+        EXPECT_EQ(std::wstring(val), expected);
+    }
+}

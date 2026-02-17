@@ -30,6 +30,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include <chrono>
 #include <memory>
 #include <string>
+#include <thread>
 
 // -- Parallel archive preloading infrastructure (Phase J) --
 
@@ -372,7 +373,7 @@ void CResourceLoader::LoadUcsFilesParallel(CModuleFile &module, IDirectoryTraver
 
     auto startTime = std::chrono::steady_clock::now();
 
-    // Phase 2 (parallel): Load each CUcsFile on a worker thread
+    // Phase 2 (parallel): Load CUcsFile instances in batches to limit concurrency
     struct UcsLoadResult
     {
         CUcsFile *pHandle = nullptr;
@@ -380,61 +381,70 @@ void CResourceLoader::LoadUcsFilesParallel(CModuleFile &module, IDirectoryTraver
         CRainmanException *pError = nullptr;
     };
 
-    std::vector<std::future<UcsLoadResult>> futures;
-    futures.reserve(files.size());
+    const size_t maxConcurrency =
+        (std::max)(static_cast<size_t>(1), static_cast<size_t>(std::thread::hardware_concurrency()));
 
-    for (const auto &fileInfo : files)
-    {
-        futures.push_back(std::async(std::launch::async,
-                                     [&fileInfo, pFSS = module.m_pFSS]() -> UcsLoadResult
-                                     {
-                                         UcsLoadResult result;
-                                         result.name = fileInfo.name;
-                                         result.pHandle = new CUcsFile;
-                                         try
-                                         {
-                                             std::unique_ptr<IFileStore::IStream> stream(
-                                                 pFSS->VOpenStream(fileInfo.fullPath.c_str()));
-                                             if (fileInfo.isUcs)
-                                                 result.pHandle->Load(stream.get());
-                                             else
-                                                 result.pHandle->LoadDat(stream.get());
-                                         }
-                                         catch (CRainmanException *pE)
-                                         {
-                                             delete result.pHandle;
-                                             result.pHandle = nullptr;
-                                             result.pError = pE;
-                                         }
-                                         return result;
-                                     }));
-    }
-
-    // Phase 3 (serial): Collect results and register in module
+    // Phase 3 (serial, interleaved): Collect results and register in module
     CRainmanException *pFirstError = nullptr;
     std::string sFirstErrorFile;
 
-    for (auto &fut : futures)
+    for (size_t batchStart = 0; batchStart < files.size(); batchStart += maxConcurrency)
     {
-        UcsLoadResult result = fut.get();
-        if (result.pError != nullptr)
+        size_t batchEnd = (std::min)(batchStart + maxConcurrency, files.size());
+
+        std::vector<std::future<UcsLoadResult>> futures;
+        futures.reserve(batchEnd - batchStart);
+
+        for (size_t idx = batchStart; idx < batchEnd; ++idx)
         {
-            if (pFirstError == nullptr)
-            {
-                pFirstError = result.pError;
-                sFirstErrorFile = result.name;
-            }
-            else
-            {
-                result.pError->destroy();
-            }
-            continue;
+            const auto &fileInfo = files[idx];
+            futures.push_back(std::async(std::launch::async,
+                                         [&fileInfo, pFSS = module.m_pFSS]() -> UcsLoadResult
+                                         {
+                                             UcsLoadResult result;
+                                             result.name = fileInfo.name;
+                                             result.pHandle = new CUcsFile;
+                                             try
+                                             {
+                                                 std::unique_ptr<IFileStore::IStream> stream(
+                                                     pFSS->VOpenStream(fileInfo.fullPath.c_str()));
+                                                 if (fileInfo.isUcs)
+                                                     result.pHandle->Load(stream.get());
+                                                 else
+                                                     result.pHandle->LoadDat(stream.get());
+                                             }
+                                             catch (CRainmanException *pE)
+                                             {
+                                                 delete result.pHandle;
+                                                 result.pHandle = nullptr;
+                                                 result.pError = pE;
+                                             }
+                                             return result;
+                                         }));
         }
 
-        auto *pUcsEntry = new CModuleFile::CUcsHandler;
-        pUcsEntry->m_sName = strdup(result.name.c_str());
-        pUcsEntry->m_pHandle = result.pHandle;
-        module.m_vLocaleTexts.push_back(pUcsEntry);
+        for (auto &fut : futures)
+        {
+            UcsLoadResult result = fut.get();
+            if (result.pError != nullptr)
+            {
+                if (pFirstError == nullptr)
+                {
+                    pFirstError = result.pError;
+                    sFirstErrorFile = result.name;
+                }
+                else
+                {
+                    result.pError->destroy();
+                }
+                continue;
+            }
+
+            auto *pUcsEntry = new CModuleFile::CUcsHandler;
+            pUcsEntry->m_sName = strdup(result.name.c_str());
+            pUcsEntry->m_pHandle = result.pHandle;
+            module.m_vLocaleTexts.push_back(pUcsEntry);
+        }
     }
 
     auto endTime = std::chrono::steady_clock::now();
@@ -748,30 +758,52 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
     if (module.m_pNewFileMap == nullptr)
         module.m_pNewFileMap = new CFileMap;
 
-    if (iReloadWhat & CModuleFile::RR_LocalisedText)
+    // === Cross-phase parallelism: UCS, Folders, Archives ===
+    // These three phases are independent:
+    //   UCS writes to m_vLocaleTexts (no CFileMap interaction)
+    //   Folders and Archives write to m_pNewFileMap (mutex-protected)
+    // Run them concurrently when 2+ are active for maximum I/O overlap.
+
+    bool bRunUcs = (iReloadWhat & CModuleFile::RR_LocalisedText) != 0;
+    bool bRunFolders = (iReloadWhat & CModuleFile::RR_DataFolders) != 0;
+    bool bRunArchives = (iReloadWhat & CModuleFile::RR_DataArchives) != 0;
+
+    // Pre-compute CoH data source load flags to avoid write races between phases
+    if ((bRunFolders || bRunArchives) && module.m_eModuleType == CModuleFile::MT_CompanyOfHeroes)
     {
+        for (auto *pDS : module.m_vDataSources)
+        {
+            pDS->m_bIsLoaded = IsToBeLoaded(module, pDS);
+            pDS->m_bCanWriteToFolder = false;
+        }
+    }
+
+    // --- UCS phase lambda ---
+    auto ucsPhase = [&]() -> CRainmanException *
+    {
+        if (!bRunUcs)
+            return nullptr;
         auto tPhaseStart = std::chrono::steady_clock::now();
-        char *sUcsPath;
+
+        std::string sUcsPath;
         if (module.m_metadata.m_sLocFolder && *module.m_metadata.m_sLocFolder)
         {
-            sUcsPath = new char[strlen(module.m_sApplicationPath) + strlen(module.m_metadata.m_sLocFolder) +
-                                strlen(module.m_sLocale) + 2];
-            sprintf(sUcsPath, "%s%s\\%s", module.m_sApplicationPath, module.m_metadata.m_sLocFolder, module.m_sLocale);
+            sUcsPath =
+                std::string(module.m_sApplicationPath) + module.m_metadata.m_sLocFolder + "\\" + module.m_sLocale;
         }
         else
         {
-            sUcsPath = new char[strlen(module.m_sApplicationPath) + strlen(module.m_metadata.m_sModFolder) +
-                                strlen(module.m_sLocale) + 10];
-            sprintf(sUcsPath, "%s%s\\Locale\\%s", module.m_sApplicationPath, module.m_metadata.m_sModFolder,
-                    module.m_sLocale);
+            sUcsPath = std::string(module.m_sApplicationPath) + module.m_metadata.m_sModFolder + "\\Locale\\" +
+                       module.m_sLocale;
         }
 
         IDirectoryTraverser::IIterator *pItr = nullptr;
         try
         {
-            pItr = module.m_pFSS->VIterate(sUcsPath);
+            pItr = module.m_pFSS->VIterate(sUcsPath.c_str());
         }
         IGNORE_EXCEPTIONS
+
         if (pItr != nullptr)
         {
             try
@@ -781,162 +813,249 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
             }
             catch (CRainmanException *pE)
             {
-                PAUSE_THROW(pE, __FILE__, __LINE__, "Error loading UCS from \'%s\'", sUcsPath);
-                delete[] sUcsPath;
                 delete pItr;
-                UNPAUSE_THROW;
+                return new CRainmanException(pE, __FILE__, __LINE__, "Error loading UCS from \'%s\'", sUcsPath.c_str());
             }
             delete pItr;
         }
-        delete[] sUcsPath;
+
         auto tPhaseEnd = std::chrono::steady_clock::now();
         RAINMAN_LOG_INFO("Load phase: UCS files = {} ms",
                          std::chrono::duration_cast<std::chrono::milliseconds>(tPhaseEnd - tPhaseStart).count());
-    }
-    if (iReloadWhat & CModuleFile::RR_DataFolders)
-    {
-        auto tPhaseStart = std::chrono::steady_clock::now();
-        if (module.m_eModuleType == CModuleFile::MT_DawnOfWar)
-        {
-            char *sOutFolder = nullptr;
-            for (auto *pFolder : module.m_vFolders)
-            {
-                if (stricmp(pFolder->m_sName, "data") == 0)
-                {
-                    sOutFolder = pFolder->m_sName;
-                    break;
-                }
-            }
+        return nullptr;
+    };
 
-            if (!sOutFolder)
+    // --- Folders phase lambda ---
+    auto foldersPhase = [&]() -> CRainmanException *
+    {
+        if (!bRunFolders)
+            return nullptr;
+        auto tPhaseStart = std::chrono::steady_clock::now();
+
+        try
+        {
+            if (module.m_eModuleType == CModuleFile::MT_DawnOfWar)
             {
+                char *sOutFolder = nullptr;
                 for (auto *pFolder : module.m_vFolders)
                 {
-                    if (strchr(pFolder->m_sName, '%') == nullptr)
+                    if (stricmp(pFolder->m_sName, "data") == 0)
                     {
                         sOutFolder = pFolder->m_sName;
                         break;
                     }
                 }
-            }
-
-            std::vector<FolderTask> folderTasks;
-            for (auto *pFolder : module.m_vFolders)
-            {
-                char *sWithoutDynamics = module._DawnOfWarRemoveDynamics(pFolder->m_sName);
-                FolderTask task;
-                task.folderPath =
-                    std::string(module.m_sApplicationPath) + module.m_metadata.m_sModFolder + "\\" + sWithoutDynamics;
-                task.uiName = sWithoutDynamics;
-                task.tocName = "Data";
-                task.iNum = static_cast<unsigned short>(15000 + pFolder->m_iNumber);
-                task.bIsDefaultWrite = (sOutFolder == pFolder->m_sName);
-                folderTasks.push_back(std::move(task));
-                delete[] sWithoutDynamics;
-            }
-            LoadFoldersParallel(folderTasks, module, THE_CALLBACK);
-        }
-        else if (module.m_eModuleType == CModuleFile::MT_CompanyOfHeroesEarly)
-        {
-            std::string sBasePath = std::string(module.m_sApplicationPath) + module.m_metadata.m_sModFolder;
-            std::vector<FolderTask> folderTasks;
-            folderTasks.push_back({sBasePath + "\\Data", "", "Data", 15000, true});
-            folderTasks.push_back({sBasePath + "\\Movies", "", "Movies", 15000, true});
-            LoadFoldersParallel(folderTasks, module, THE_CALLBACK);
-        }
-        else if (module.m_eModuleType == CModuleFile::MT_CompanyOfHeroes)
-        {
-            std::vector<FolderTask> folderTasks;
-            for (auto *pDS : module.m_vDataSources)
-            {
-                pDS->m_bIsLoaded = IsToBeLoaded(module, pDS);
-                pDS->m_bCanWriteToFolder = false;
-                if (IsToBeLoaded(module, pDS) && pDS->m_sFolder && *pDS->m_sFolder)
+                if (!sOutFolder)
                 {
-                    FolderTask task;
-                    task.folderPath = std::string(module.m_sApplicationPath) + pDS->m_sFolder;
-                    task.uiName = pDS->m_sFolder;
-                    task.tocName = pDS->m_sToc;
-                    task.iNum = static_cast<unsigned short>(15000 + pDS->m_iNumber);
-                    task.bIsDefaultWrite = ((strcmp(pDS->m_sOption, "common") == 0) && (pDS->m_iNumber < 2));
-                    task.pDataSource = pDS;
-                    folderTasks.push_back(std::move(task));
+                    for (auto *pFolder : module.m_vFolders)
+                    {
+                        if (strchr(pFolder->m_sName, '%') == nullptr)
+                        {
+                            sOutFolder = pFolder->m_sName;
+                            break;
+                        }
+                    }
                 }
+
+                std::vector<FolderTask> folderTasks;
+                for (auto *pFolder : module.m_vFolders)
+                {
+                    char *sWithoutDynamics = module._DawnOfWarRemoveDynamics(pFolder->m_sName);
+                    FolderTask task;
+                    task.folderPath = std::string(module.m_sApplicationPath) + module.m_metadata.m_sModFolder + "\\" +
+                                      sWithoutDynamics;
+                    task.uiName = sWithoutDynamics;
+                    task.tocName = "Data";
+                    task.iNum = static_cast<unsigned short>(15000 + pFolder->m_iNumber);
+                    task.bIsDefaultWrite = (sOutFolder == pFolder->m_sName);
+                    folderTasks.push_back(std::move(task));
+                    delete[] sWithoutDynamics;
+                }
+                LoadFoldersParallel(folderTasks, module, THE_CALLBACK);
             }
-            LoadFoldersParallel(folderTasks, module, THE_CALLBACK);
+            else if (module.m_eModuleType == CModuleFile::MT_CompanyOfHeroesEarly)
+            {
+                std::string sBasePath = std::string(module.m_sApplicationPath) + module.m_metadata.m_sModFolder;
+                std::vector<FolderTask> folderTasks;
+                folderTasks.push_back({sBasePath + "\\Data", "", "Data", 15000, true});
+                folderTasks.push_back({sBasePath + "\\Movies", "", "Movies", 15000, true});
+                LoadFoldersParallel(folderTasks, module, THE_CALLBACK);
+            }
+            else if (module.m_eModuleType == CModuleFile::MT_CompanyOfHeroes)
+            {
+                std::vector<FolderTask> folderTasks;
+                for (auto *pDS : module.m_vDataSources)
+                {
+                    // m_bIsLoaded already pre-computed above
+                    if (pDS->m_bIsLoaded && pDS->m_sFolder && *pDS->m_sFolder)
+                    {
+                        FolderTask task;
+                        task.folderPath = std::string(module.m_sApplicationPath) + pDS->m_sFolder;
+                        task.uiName = pDS->m_sFolder;
+                        task.tocName = pDS->m_sToc;
+                        task.iNum = static_cast<unsigned short>(15000 + pDS->m_iNumber);
+                        task.bIsDefaultWrite = ((strcmp(pDS->m_sOption, "common") == 0) && (pDS->m_iNumber < 2));
+                        task.pDataSource = pDS;
+                        folderTasks.push_back(std::move(task));
+                    }
+                }
+                LoadFoldersParallel(folderTasks, module, THE_CALLBACK);
+            }
         }
+        catch (CRainmanException *pE)
+        {
+            auto tPhaseEnd = std::chrono::steady_clock::now();
+            RAINMAN_LOG_INFO("Load phase: Data folders = {} ms (FAILED)",
+                             std::chrono::duration_cast<std::chrono::milliseconds>(tPhaseEnd - tPhaseStart).count());
+            return pE;
+        }
+
         auto tPhaseEnd = std::chrono::steady_clock::now();
         RAINMAN_LOG_INFO("Load phase: Data folders = {} ms",
                          std::chrono::duration_cast<std::chrono::milliseconds>(tPhaseEnd - tPhaseStart).count());
-    }
-    if (iReloadWhat & CModuleFile::RR_DataArchives)
+        return nullptr;
+    };
+
+    // --- Archives phase lambda ---
+    auto archivesPhase = [&]() -> CRainmanException *
     {
+        if (!bRunArchives)
+            return nullptr;
         auto tPhaseStart = std::chrono::steady_clock::now();
-        if (module.m_eModuleType == CModuleFile::MT_DawnOfWar)
+
+        try
         {
-            std::vector<ArchiveTask> tasks;
-            for (auto *pArch : module.m_vArchives)
+            if (module.m_eModuleType == CModuleFile::MT_DawnOfWar)
             {
-                char *sWithoutDynamics = module._DawnOfWarRemoveDynamics(pArch->m_sName);
-                ArchiveTask task;
-                task.archivePath =
-                    std::string(module.m_sApplicationPath) + module.m_metadata.m_sModFolder + "\\" + sWithoutDynamics;
-                task.uiName = pArch->m_sName;
-                task.iNum = static_cast<unsigned short>(15000 + pArch->m_iNumber);
-                task.ppSgaOut = &pArch->m_pHandle;
-                tasks.push_back(std::move(task));
-                delete[] sWithoutDynamics;
-            }
-            CallCallback(THE_CALLBACK, "Loading data archives for mod \'%s\'", module.m_sFileMapName);
-            LoadArchivesParallel(tasks, module, THE_CALLBACK);
-        }
-        else if (module.m_eModuleType == CModuleFile::MT_CompanyOfHeroesEarly)
-        {
-            char *sArchivesPath =
-                new char[strlen(module.m_sApplicationPath) + strlen(module.m_metadata.m_sModFolder) + 10];
-            sprintf(sArchivesPath, "%s%s\\Archives", module.m_sApplicationPath, module.m_metadata.m_sModFolder);
-            IDirectoryTraverser::IIterator *pItr = nullptr;
-            try
-            {
-                pItr = module.m_pFSS->VIterate(sArchivesPath);
-                CallCallback(THE_CALLBACK, "Loading data archives for mod \'%s\'", module.m_sFileMapName);
-                Util_ForEach(pItr, CModuleFile_ArchiveForEach, static_cast<void *>(&module), false);
-            }
-            catch (CRainmanException *pE)
-            {
-                PAUSE_THROW(pE, __FILE__, __LINE__, "Error loading archives from \'%s\'", sArchivesPath);
-                delete[] sArchivesPath;
-                delete pItr;
-                UNPAUSE_THROW;
-            }
-            delete pItr;
-            delete[] sArchivesPath;
-        }
-        else if (module.m_eModuleType == CModuleFile::MT_CompanyOfHeroes)
-        {
-            std::vector<ArchiveTask> tasks;
-            for (auto *pDS : module.m_vDataSources)
-            {
-                pDS->m_bIsLoaded = IsToBeLoaded(module, pDS);
-                if (IsToBeLoaded(module, pDS))
+                std::vector<ArchiveTask> tasks;
+                for (auto *pArch : module.m_vArchives)
                 {
-                    for (auto *pArch : pDS->m_vArchives)
+                    char *sWithoutDynamics = module._DawnOfWarRemoveDynamics(pArch->m_sName);
+                    ArchiveTask task;
+                    task.archivePath = std::string(module.m_sApplicationPath) + module.m_metadata.m_sModFolder + "\\" +
+                                       sWithoutDynamics;
+                    task.uiName = pArch->m_sName;
+                    task.iNum = static_cast<unsigned short>(15000 + pArch->m_iNumber);
+                    task.ppSgaOut = &pArch->m_pHandle;
+                    tasks.push_back(std::move(task));
+                    delete[] sWithoutDynamics;
+                }
+                CallCallback(THE_CALLBACK, "Loading data archives for mod \'%s\'", module.m_sFileMapName);
+                LoadArchivesParallel(tasks, module, THE_CALLBACK);
+            }
+            else if (module.m_eModuleType == CModuleFile::MT_CompanyOfHeroesEarly)
+            {
+                char *sArchivesPath =
+                    new char[strlen(module.m_sApplicationPath) + strlen(module.m_metadata.m_sModFolder) + 10];
+                sprintf(sArchivesPath, "%s%s\\Archives", module.m_sApplicationPath, module.m_metadata.m_sModFolder);
+                IDirectoryTraverser::IIterator *pItr = nullptr;
+                try
+                {
+                    pItr = module.m_pFSS->VIterate(sArchivesPath);
+                    CallCallback(THE_CALLBACK, "Loading data archives for mod \'%s\'", module.m_sFileMapName);
+                    Util_ForEach(pItr, CModuleFile_ArchiveForEach, static_cast<void *>(&module), false);
+                }
+                catch (CRainmanException *pE)
+                {
+                    auto *pWrapped = new CRainmanException(pE, __FILE__, __LINE__, "Error loading archives from \'%s\'",
+                                                           sArchivesPath);
+                    delete[] sArchivesPath;
+                    delete pItr;
+                    throw pWrapped;
+                }
+                delete pItr;
+                delete[] sArchivesPath;
+            }
+            else if (module.m_eModuleType == CModuleFile::MT_CompanyOfHeroes)
+            {
+                std::vector<ArchiveTask> tasks;
+                for (auto *pDS : module.m_vDataSources)
+                {
+                    // m_bIsLoaded already pre-computed above
+                    if (pDS->m_bIsLoaded)
                     {
-                        ArchiveTask task;
-                        task.archivePath = std::string(module.m_sApplicationPath) + pArch->m_sName;
-                        task.uiName = pArch->m_sName;
-                        task.iNum = static_cast<unsigned short>(15000 + (500 * pDS->m_iNumber) + pArch->m_iNumber);
-                        task.ppSgaOut = &pArch->m_pHandle;
-                        tasks.push_back(std::move(task));
+                        for (auto *pArch : pDS->m_vArchives)
+                        {
+                            ArchiveTask task;
+                            task.archivePath = std::string(module.m_sApplicationPath) + pArch->m_sName;
+                            task.uiName = pArch->m_sName;
+                            task.iNum = static_cast<unsigned short>(15000 + (500 * pDS->m_iNumber) + pArch->m_iNumber);
+                            task.ppSgaOut = &pArch->m_pHandle;
+                            tasks.push_back(std::move(task));
+                        }
                     }
                 }
+                CallCallback(THE_CALLBACK, "Loading data archives for mod \'%s\'", module.m_sFileMapName);
+                LoadArchivesParallel(tasks, module, THE_CALLBACK);
             }
-            CallCallback(THE_CALLBACK, "Loading data archives for mod \'%s\'", module.m_sFileMapName);
-            LoadArchivesParallel(tasks, module, THE_CALLBACK);
         }
+        catch (CRainmanException *pE)
+        {
+            auto tPhaseEnd = std::chrono::steady_clock::now();
+            RAINMAN_LOG_INFO("Load phase: Data archives = {} ms (FAILED)",
+                             std::chrono::duration_cast<std::chrono::milliseconds>(tPhaseEnd - tPhaseStart).count());
+            return pE;
+        }
+
         auto tPhaseEnd = std::chrono::steady_clock::now();
         RAINMAN_LOG_INFO("Load phase: Data archives = {} ms",
                          std::chrono::duration_cast<std::chrono::milliseconds>(tPhaseEnd - tPhaseStart).count());
+        return nullptr;
+    };
+
+    // Execute phases — run concurrently if 2+ are active
+    {
+        int parallelCount = (bRunUcs ? 1 : 0) + (bRunFolders ? 1 : 0) + (bRunArchives ? 1 : 0);
+        CRainmanException *pUcsError = nullptr;
+        CRainmanException *pFoldersError = nullptr;
+        CRainmanException *pArchivesError = nullptr;
+
+        if (parallelCount >= 2)
+        {
+            RAINMAN_LOG_INFO("Cross-phase parallelism: launching {} phases concurrently", parallelCount);
+            auto tParStart = std::chrono::steady_clock::now();
+
+            std::future<CRainmanException *> ucsFut, foldersFut, archivesFut;
+            if (bRunUcs)
+                ucsFut = std::async(std::launch::async, ucsPhase);
+            if (bRunFolders)
+                foldersFut = std::async(std::launch::async, foldersPhase);
+            if (bRunArchives)
+                archivesFut = std::async(std::launch::async, archivesPhase);
+
+            if (bRunUcs)
+                pUcsError = ucsFut.get();
+            if (bRunFolders)
+                pFoldersError = foldersFut.get();
+            if (bRunArchives)
+                pArchivesError = archivesFut.get();
+
+            auto tParEnd = std::chrono::steady_clock::now();
+            RAINMAN_LOG_INFO("Cross-phase parallel: all {} phases completed in {} ms", parallelCount,
+                             std::chrono::duration_cast<std::chrono::milliseconds>(tParEnd - tParStart).count());
+        }
+        else
+        {
+            pUcsError = ucsPhase();
+            pFoldersError = foldersPhase();
+            pArchivesError = archivesPhase();
+        }
+
+        // Propagate first error, destroy the rest
+        CRainmanException *pErrors[] = {pUcsError, pFoldersError, pArchivesError};
+        CRainmanException *pFirstError = nullptr;
+        for (auto *pErr : pErrors)
+        {
+            if (pErr != nullptr)
+            {
+                if (pFirstError == nullptr)
+                    pFirstError = pErr;
+                else
+                    pErr->destroy();
+            }
+        }
+        if (pFirstError != nullptr)
+            throw pFirstError;
     }
     if (iReloadWhat & CModuleFile::RR_MapArchives)
     {

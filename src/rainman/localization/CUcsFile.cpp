@@ -20,6 +20,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "rainman/localization/CUcsFile.h"
 #include "rainman/core/memdebug.h"
 #include "rainman/core/Exception.h"
+#include "rainman/core/RainmanLog.h"
+#include <memory>
+#include <vector>
 
 CUcsFile::CUcsFile() {}
 
@@ -276,39 +279,83 @@ void CUcsFile::Load(IFileStore::IStream *pStream)
 
     if (iHeader != 0xFEFF)
     {
-        // UCS file has invalid header - what should I do?
-        // I'll do what relic do; throw an error!
         throw new CRainmanException(nullptr, __FILE__, __LINE__, "Invalid header (%u)", iHeader);
     }
 
-    wchar_t *sLine = nullptr;
-    while (sLine = readwideline(pStream)) // NOLINT(bugprone-assignment-in-if-condition)
+    // Bulk-read the entire file into memory after the BOM
+    long iStartPos = pStream->VTell();
+    pStream->VSeek(0, IFileStore::IStream::SL_End);
+    long iEndPos = pStream->VTell();
+    long iDataBytes = iEndPos - iStartPos;
+    pStream->VSeek(iStartPos, IFileStore::IStream::SL_Root);
+
+    if (iDataBytes <= 0)
+        return;
+
+    // Data is UTF-16LE: each character is 2 bytes (uint16_t)
+    auto iCharCount = static_cast<unsigned long>(iDataBytes / sizeof(uint16_t));
+    auto buffer = std::make_unique<uint16_t[]>(iCharCount);
+    try
     {
+        pStream->VRead(iCharCount, sizeof(uint16_t), buffer.get());
+    }
+    CATCH_THROW("Failed to bulk-read UCS file data")
+
+    // Parse lines from the in-memory buffer
+    uint16_t *pCur = buffer.get();
+    uint16_t *pEnd = pCur + iCharCount;
+
+    while (pCur < pEnd)
+    {
+        // Find end of line (scan for \n = 0x000A)
+        uint16_t *pLineStart = pCur;
+        while (pCur < pEnd && *pCur != 0x000A)
+            ++pCur;
+
+        // pCur now points at \n or past end
+        uint16_t *pLineEnd = pCur;
+        if (pCur < pEnd)
+            ++pCur; // skip \n
+
+        // Strip trailing \r (0x000D)
+        if (pLineEnd > pLineStart && *(pLineEnd - 1) == 0x000D)
+            --pLineEnd;
+
+        // Skip empty lines
+        if (pLineEnd == pLineStart)
+            continue;
+
+        // Parse: "<number>\t<string>"
         unsigned long iNumber = 0;
-        unsigned long i = 0;
-        while (sLine[i] && sLine[i] >= '0' && sLine[i] <= '9')
+        uint16_t *p = pLineStart;
+        bool hasDigits = false;
+        while (p < pLineEnd && *p >= '0' && *p <= '9')
         {
-            iNumber *= 10;
-            iNumber += (sLine[i] - '0');
-            ++i;
-        }
-        if (i != 0 && sLine[i] && sLine[i + 1] && m_mapValues[iNumber] == nullptr) // silenty ignore duplicate values
-        {
-            ++i;
-            wchar_t *sString = mywcsdup(sLine + i);
-            if (sString)
-            {
-                wchar_t *sTmp;
-                if (sTmp = wcschr(sString, 0x0D)) // NOLINT(bugprone-assignment-in-if-condition)
-                    *sTmp = 0;
-                if (sTmp = wcschr(sString, 0x0A)) // NOLINT(bugprone-assignment-in-if-condition)
-                    *sTmp = 0;
-
-                m_mapValues[iNumber] = sString;
-            }
+            iNumber = iNumber * 10 + (*p - '0');
+            ++p;
+            hasDigits = true;
         }
 
-        delete[] sLine;
+        if (!hasDigits || p >= pLineEnd || *(p) == 0)
+            continue;
+
+        ++p; // skip tab separator
+
+        if (p >= pLineEnd)
+            continue;
+
+        // Only store if not a duplicate
+        if (m_mapValues[iNumber] != nullptr)
+            continue;
+
+        // Copy the string value
+        size_t iLen = static_cast<size_t>(pLineEnd - p);
+        auto *sString = new wchar_t[iLen + 1];
+        for (size_t j = 0; j < iLen; ++j)
+            sString[j] = static_cast<wchar_t>(p[j]);
+        sString[iLen] = 0;
+
+        m_mapValues[iNumber] = sString;
     }
 }
 

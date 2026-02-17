@@ -311,25 +311,13 @@ void CFileSystemStore::CStream::VRead(unsigned long iItemCount, unsigned long iI
 {
     if (m_fFile == nullptr)
         throw new CRainmanException(__FILE__, __LINE__, "No file associated with stream");
-    unsigned long iByteCount = iItemCount * iItemSize;
-
-    auto *pTempDest = new unsigned char[iByteCount];
-    if (pTempDest == nullptr)
-        throw new CRainmanException(__FILE__, __LINE__, "Failed to allocate memory");
 
     long iOldPos = ftell(m_fFile);
-    size_t iItemsRead = fread(pTempDest, iItemSize, iItemCount, m_fFile);
+    size_t iItemsRead = fread(pDestination, iItemSize, iItemCount, m_fFile);
 
-    if (iItemsRead == iItemCount)
-    {
-        memcpy(pDestination, pTempDest, iByteCount);
-        delete[] pTempDest;
-        // return true;
-    }
-    else
+    if (iItemsRead != iItemCount)
     {
         fseek(m_fFile, iOldPos, SEEK_SET);
-        delete[] pTempDest;
         throw new CRainmanException(nullptr, __FILE__, __LINE__,
                                     "Failed to read items: got %zu of %lu items (%lu bytes each) at file offset %ld",
                                     iItemsRead, iItemCount, iItemSize, iOldPos);
