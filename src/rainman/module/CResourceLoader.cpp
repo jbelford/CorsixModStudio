@@ -464,6 +464,47 @@ struct CResourceLoader::FolderTask
     CModuleFile::CCohDataSource *pDataSource = nullptr;
 };
 
+//! Serial recursive directory scan (safe to call from pool worker threads).
+static CFileMap::DirEntry ScanDirectorySerial(IDirectoryTraverser::IIterator *pItr)
+{
+    CFileMap::DirEntry root;
+    root.isFile = false;
+    root.lastWriteTime = 0;
+    if (pItr == nullptr)
+        return root;
+
+    root.directoryPath = pItr->VGetDirectoryPath();
+
+    while (pItr->VGetType() != IDirectoryTraverser::IIterator::T_Nothing)
+    {
+        CFileMap::DirEntry entry;
+        entry.name = pItr->VGetName();
+
+        if (pItr->VGetType() == IDirectoryTraverser::IIterator::T_File)
+        {
+            entry.isFile = true;
+            entry.lastWriteTime = pItr->VGetLastWriteTime();
+        }
+        else
+        {
+            entry.isFile = false;
+            entry.lastWriteTime = 0;
+            auto *pSubItr = pItr->VOpenSubDir();
+            if (pSubItr)
+            {
+                entry = ScanDirectorySerial(pSubItr);
+                entry.name = pItr->VGetName();
+                delete pSubItr;
+            }
+        }
+        root.children.push_back(std::move(entry));
+
+        if (pItr->VNextItem() != IDirectoryTraverser::IIterator::E_OK)
+            break;
+    }
+    return root;
+}
+
 CFileMap::DirEntry CResourceLoader::ScanDirectory(IDirectoryTraverser::IIterator *pItr)
 {
     CFileMap::DirEntry root;
@@ -513,7 +554,9 @@ CFileMap::DirEntry CResourceLoader::ScanDirectory(IDirectoryTraverser::IIterator
             break;
     }
 
-    // Parallel scan: submit each subdirectory to the thread pool
+    // Parallel scan: submit each subdirectory to the thread pool.
+    // Each submitted task uses ScanDirectorySerial to avoid re-entering
+    // the pool recursively (which would cause deadlock).
     if (!subDirs.empty())
     {
         auto &pool = CThreadPool::Instance();
@@ -525,7 +568,7 @@ CFileMap::DirEntry CResourceLoader::ScanDirectory(IDirectoryTraverser::IIterator
             futures.push_back(pool.Submit(
                 [pSub = work.pSubItr]() -> CFileMap::DirEntry
                 {
-                    auto result = ScanDirectory(pSub);
+                    auto result = ScanDirectorySerial(pSub);
                     delete pSub;
                     return result;
                 }));
