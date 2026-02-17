@@ -801,25 +801,20 @@ Reorganize the CDMS directory structure.
 8. ✅ Update all `#include` paths
 9. ✅ Build and test after each group
 
-### Phase L: MVP Extraction (Per-Editor)
+### Phase L: MVP Extraction (Per-Editor) ✅
 
 Extract view interfaces and presenters for each editor. Do one editor at a time.
 
-1. **L.1 — RGD Editor MVP**: Extract `IRgdEditorView` interface, create `RgdEditorPresenter`, move business logic out of `frmRgdEditor`
-2. **L.2 — File Browser MVP**: Extract `IFileTreeView` interface, create `FileTreePresenter`
-3. **L.3 — SCAR Editor MVP**: Extract `IScarEditorView` interface, create `ScarEditorPresenter`
-4. **L.4 — UCS Editor MVP**: Extract `IUcsEditorView` interface, create `UcsEditorPresenter`
-5. **L.5 — Module Settings MVP**: Extract `IModuleSettingsView`, create `ModuleSettingsPresenter`
-6. **L.6 — Image Viewer MVP**: Extract `IImageView`, create `ImagePresenter`
-7. **L.7 — Remaining dialogs**: Mass extract, SGA make, RGD macro — extract as needed
+1. **L.1 — Image Viewer MVP** ✅: Extract `IImageView` interface, create `CImagePresenter` (save/transcode logic, 14 tests)
+2. **L.2 — Module Settings MVP** ✅: Extract `IModuleSettingsView`, create `CModuleSettingsPresenter` (folder/DLL filtering, 15 tests)
+3. **L.3 — UCS Editor MVP** ✅: Extract `IUcsEditorView`, create `CUcsEditorPresenter` (ID validation, path construction, 15 tests)
+4. **L.4 — SCAR Editor MVP** ✅: Extract `IScarEditorView`, create `CScarEditorPresenter` (function parsing, Lua error parsing, 17 tests)
+5. **L.5 — File Browser MVP** ✅: Extract `IFileTreeView`, create `CFileTreePresenter` (file classification, source categorization, 21 tests)
+6. **L.6 — RGD Editor MVP** ✅: Extract `IRgdEditorView`, create `CRgdEditorPresenter` (node name formatting, hash computation, Lua2 path normalisation, 17 tests)
+7. **L.7 — Remaining dialogs** ✅: Mass extract, SGA make, RGD macro already have presenters from Phase I. `frmRgmMaterialEditor` has minimal logic (no extraction needed). `frmNewMod` deferred (significant but primarily file I/O generation).
 
-Each sub-phase:
-- Define the view interface
-- Create the presenter with constructor-injected dependencies
-- Move business logic from frm* class to presenter
-- frm* class implements the view interface
-- Add presenter unit tests using mock view
-- Build and test
+Completed: 99 new tests across 6 presenters (532 total). Each editor's pure business logic
+is now testable without a running GUI. Reordered from simplest to most complex for incremental confidence.
 
 ---
 
