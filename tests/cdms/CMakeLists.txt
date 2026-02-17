@@ -27,6 +27,7 @@ add_executable(cdms_tests
     rgdmacropresenter_test.cpp
     massextractpresenter_test.cpp
     refreshfilespresenter_test.cpp
+    imagepresenter_test.cpp
     ${CDMS_SRC_DIR}/common/strconv.cpp
     ${CDMS_SRC_DIR}/common/strings.cpp
     ${CDMS_SRC_DIR}/common/Utility.cpp
@@ -45,6 +46,7 @@ add_executable(cdms_tests
     ${CDMS_SRC_DIR}/presenters/CRgdMacroPresenter.cpp
     ${CDMS_SRC_DIR}/presenters/CMassExtractPresenter.cpp
     ${CDMS_SRC_DIR}/presenters/CRefreshFilesPresenter.cpp
+    ${CDMS_SRC_DIR}/presenters/CImagePresenter.cpp
     ${CDMS_SRC_DIR}/tools/Tool_AutoDPS.cpp
     ${CDMS_SRC_DIR}/tools/Tool_AESetup.cpp
     ${CDMS_SRC_DIR}/views/CtrlStatusText.cpp

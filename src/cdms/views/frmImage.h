@@ -30,11 +30,13 @@
 #include "wx/wx.h"
 #endif
 // ----------------------------
+#include "interfaces/IImageView.h"
+#include "presenters/CImagePresenter.h"
 #include <rainman/formats/CRgtFile.h>
 #include <wx/treectrl.h>
 #include <wx/propgrid/propgrid.h>
 
-class frmImageViewer : public wxWindow
+class frmImageViewer : public wxWindow, public IImageView
 {
   protected:
     CRgtFile *m_pRgtFile;
@@ -58,10 +60,18 @@ class frmImageViewer : public wxWindow
 
     void OnRadioButtonSaveExt(wxCommandEvent &event);
 
+    // IImageView implementation
+    bool ConfirmOverwrite() override;
+    void ShowError(const wxString &sMessage) override;
+    void OnSaveComplete(const wxString &sNewFile) override;
+
     enum
     {
         IDC_SaveFileExt = wxID_HIGHEST + 1,
     };
 
     DECLARE_EVENT_TABLE()
+
+  private:
+    CImagePresenter m_presenter;
 };

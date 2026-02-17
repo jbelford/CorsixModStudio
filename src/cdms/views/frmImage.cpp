@@ -64,7 +64,7 @@ END_EVENT_TABLE()
 
 frmImageViewer::frmImageViewer(wxTreeItemId &oFileParent, wxString sFilename, wxWindow *parent, wxWindowID id,
                                CRgtFile *pImage, bool bOwnImage, const wxPoint &pos, const wxSize &size)
-    : m_oFileParent(oFileParent), m_sFilename(std::move(sFilename)), wxWindow(parent, id, pos, size)
+    : m_oFileParent(oFileParent), m_sFilename(std::move(sFilename)), wxWindow(parent, id, pos, size), m_presenter(*this)
 {
     auto *pTopSizer = new wxBoxSizer(wxVERTICAL);
 
@@ -269,30 +269,51 @@ void frmImageViewer::OnRadioButtonSaveExt(wxCommandEvent &event)
 void frmImageViewer::OnSave(wxCommandEvent &event)
 {
     UNUSED(event);
-    if (m_pSaveFileExt->GetSelection() == m_pCurrentExt->GetSelection())
+
+    auto eTargetFormat = static_cast<CImagePresenter::SaveFormat>(m_pSaveFileExt->GetSelection());
+
+    if (CImagePresenter::WouldOverwrite(m_pCurrentExt->GetSelection(), eTargetFormat))
     {
-        if (::wxMessageBox(wxT("The options selected will result in the original file being overwritten. Continue?"),
-                           wxT("Save"), wxOK | wxCANCEL) == wxCANCEL)
+        if (!ConfirmOverwrite())
             return;
     }
 
-    wxString sNewFile = m_sFilename.BeforeLast('.');
-    sNewFile.Append(wxT("."));
-    sNewFile.Append(m_pSaveFileExt->GetStringSelection().Lower());
+    wxString sNewFile = CImagePresenter::ComputeOutputPath(m_sFilename, eTargetFormat);
 
     // Open output stream via FileService
     auto streamResult = TheConstruct->GetFileService().OpenOutputStream(sNewFile, true);
     if (!streamResult)
     {
-        ErrorBoxS(streamResult.error());
+        ShowError(streamResult.error());
         return;
     }
 
+    IFileStore::IOutputStream *pStream = streamResult.value().get();
+
+    if (m_presenter.SaveToStream(m_pRgtFile, pStream, eTargetFormat, m_pSaveFileCompression->GetSelection(),
+                                 m_pSaveFileMips->GetValue()))
+    {
+        OnSaveComplete(sNewFile);
+    }
+}
+
+// --- IImageView implementation ---
+
+bool frmImageViewer::ConfirmOverwrite()
+{
+    return ::wxMessageBox(wxT("The options selected will result in the original file being overwritten. Continue?"),
+                          wxT("Save"), wxOK | wxCANCEL) != wxCANCEL;
+}
+
+void frmImageViewer::ShowError(const wxString &sMessage) { ErrorBoxS(sMessage); }
+
+void frmImageViewer::OnSaveComplete(const wxString &sNewFile)
+{
     wxString sDir = sNewFile.BeforeLast('\\');
     auto dirResult = TheConstruct->GetFileService().Iterate(sDir);
     if (!dirResult)
     {
-        ErrorBoxS(dirResult.error());
+        ShowError(dirResult.error());
         return;
     }
 
@@ -303,45 +324,5 @@ void frmImageViewer::OnSave(wxCommandEvent &event)
     catch (CRainmanException *pE)
     {
         ErrorBoxE(pE);
-        return;
-    }
-
-    IFileStore::IOutputStream *pStream = streamResult.value().get();
-
-    if (m_pSaveFileExt->GetSelection() == 0)
-    {
-        // RGT
-        if (m_pSaveFileCompression->GetSelection() == 1)
-        {
-            // RGT -> RGBA
-            CMemoryStore::COutStream *pTempOut = CMemoryStore::OpenOutputStreamExt();
-            m_pRgtFile->SaveTGA(pTempOut, true);
-            pTempOut->VSeek(0, IFileStore::IStream::SL_Root);
-            CRgtFile oRgtOut;
-            oRgtOut.LoadTGA(pTempOut, m_pSaveFileMips->GetValue());
-            delete pTempOut;
-            oRgtOut.Save(pStream);
-        }
-        else
-        {
-            // RGT -> DXTC
-            CMemoryStore::COutStream *pTempOut = CMemoryStore::OpenOutputStreamExt();
-            m_pRgtFile->SaveDDS(pTempOut, m_pSaveFileCompression->GetSelection() * 2 - 3, m_pSaveFileMips->GetValue());
-            pTempOut->VSeek(0, IFileStore::IStream::SL_Root);
-            CRgtFile oRgtOut;
-            oRgtOut.LoadDDS(pTempOut);
-            delete pTempOut;
-            oRgtOut.Save(pStream);
-        }
-    }
-    else if (m_pSaveFileExt->GetSelection() == 1)
-    {
-        // DDS
-        m_pRgtFile->SaveDDS(pStream, m_pSaveFileCompression->GetSelection() * 2 - 3, m_pSaveFileMips->GetValue());
-    }
-    else if (m_pSaveFileExt->GetSelection() == 2)
-    {
-        // TGA
-        m_pRgtFile->SaveTGA(pStream, m_pSaveFileCompression->GetSelection() == 1);
     }
 }
