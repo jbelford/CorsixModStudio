@@ -21,6 +21,7 @@
 #include "common/strconv.h"
 #include "common/strings.h"
 #include "common/Utility.h"
+#include "presenters/CScarEditorPresenter.h"
 extern "C"
 {
 #include <lua.h>
@@ -457,23 +458,18 @@ void frmScarEditor::OnCheckLua(wxCommandEvent &event)
     int iLuaError = pfn_luaL_loadbuffer(L, sLua.get(), strlen(sLua.get()), "");
     if (iLuaError)
     {
-        const char *sErr = pfn_lua_tolstring(L, -1, 0);
-        sErr = strchr(sErr, ':');
-        ++sErr;
-        unsigned long iLine = 0;
-        while (*sErr != ':')
+        const char *sRawErr = pfn_lua_tolstring(L, -1, 0);
+        CScarEditorPresenter::LuaError oError;
+        if (CScarEditorPresenter::ParseLuaError(sRawErr, oError))
         {
-            if ((*sErr >= '0') && (*sErr <= '9'))
-            {
-                iLine *= 10;
-                iLine += (*sErr - '0');
-            }
-            ++sErr;
+            wxString sError;
+            sError.Printf(AppStr(scar_bad), oError.iLine, oError.sMessage.c_str());
+            wxMessageBox(sError, AppStr(scar_checklua), wxICON_ERROR, this);
         }
-        ++sErr;
-        wxString sError;
-        sError.Printf(AppStr(scar_bad), iLine, sErr);
-        wxMessageBox(sError, AppStr(scar_checklua), wxICON_ERROR, this);
+        else
+        {
+            wxMessageBox(wxString::FromUTF8(sRawErr), AppStr(scar_checklua), wxICON_ERROR, this);
+        }
     }
     else
     {
@@ -494,11 +490,6 @@ char *frmScarEditor::_ReadNiceString(FILE *f)
     fread(s, iLen, 1, f);
     s[iLen] = 0;
     return s;
-}
-
-bool is_a_lt_b_function_drop(std::pair<wxString, void *> *a, std::pair<wxString, void *> *b)
-{
-    return a->first < b->first;
 }
 
 void frmScarEditor::OnFuncListChoose(wxCommandEvent &event)
@@ -523,48 +514,13 @@ int frmScarEditor::FillFunctionDrop(const wxString &sNameTarget)
     m_pFunctionDropdown->Append(AppStr(scar_funcdrop), (void *)0);
     m_pFunctionDropdown->SetSelection(0);
 
-    std::vector<std::pair<wxString, void *> *> oList;
+    auto aFunctions = CScarEditorPresenter::ParseFunctionDefinitions(m_pSTC->GetText());
 
-    wxString sContents = m_pSTC->GetText();
-    const wchar_t *pText = sContents.c_str(), *pRoot;
-    pRoot = pText;
-    pText = wcsstr(pText, L"function");
-    while (pText)
+    for (const auto &def : aFunctions)
     {
-        pText += 8;
-        while ((*pText == ' ') || (*pText == '\t') || (*pText == '\r') || (*pText == '\n'))
-            ++pText;
-        const wchar_t *pEnd = wcschr(pText, '('), *pTest;
-        if (pEnd)
-        {
-            --pEnd;
-            while ((*pEnd == ' ') || (*pEnd == '\t') || (*pEnd == '\r') || (*pEnd == '\n'))
-                --pEnd;
-
-            if (pEnd > pText)
-            {
-                for (pTest = pText; pTest <= pEnd; ++pTest)
-                {
-                    if (*pTest == ' ' || *pTest == '\r' || *pTest == '\n' || *pTest == '-')
-                        goto not_a_function_def;
-                }
-                oList.push_back(new std::pair<wxString, void *>(wxString(pText, 1 + (size_t)(pEnd - pText)),
-                                                                (void *)(pText - pRoot)));
-            }
-        }
-    not_a_function_def:
-        pText = wcsstr(pText, L"function");
-    }
-    std::sort(oList.begin(), oList.end(), is_a_lt_b_function_drop);
-    for (std::vector<std::pair<wxString, void *> *>::iterator itr = oList.begin(); itr != oList.end(); ++itr)
-    {
-        if (iRet == -1)
-        {
-            if (sNameTarget.IsSameAs((**itr).first, false))
-                iRet = (int)(**itr).second;
-        }
-        m_pFunctionDropdown->Append((**itr).first, (**itr).second);
-        delete *itr;
+        if (iRet == -1 && sNameTarget.IsSameAs(def.sName, false))
+            iRet = def.iPosition;
+        m_pFunctionDropdown->Append(def.sName, reinterpret_cast<void *>(static_cast<intptr_t>(def.iPosition)));
     }
     return iRet;
 }
