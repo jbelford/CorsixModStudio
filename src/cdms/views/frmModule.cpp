@@ -23,6 +23,7 @@
 #include "common/strings.h"
 #include <wx/notebook.h>
 #include "services/FileService.h"
+#include "presenters/CModuleSettingsPresenter.h"
 #include "common/Common.h"
 
 BEGIN_EVENT_TABLE(frmModule, wxWindow)
@@ -167,7 +168,6 @@ void frmModule::pgMain::OnTextureIconUpdate(wxCommandEvent &event)
 
 void frmModule::pgMain::InitModFolderList(wxControlWithItems *pList)
 {
-    wxArrayString oStrings;
     wxString sDoWFolder = TheConstruct->GetModuleFile().BeforeLast('\\');
     auto iterResult = FileService::IterateFileSystem(sDoWFolder);
     if (!iterResult)
@@ -175,35 +175,25 @@ void frmModule::pgMain::InitModFolderList(wxControlWithItems *pList)
     IDirectoryTraverser::IIterator *pItr = iterResult.value().release();
     IDirectoryTraverser::IIterator::eTypes eType;
     eType = pItr->VGetType();
+
+    wxArrayString aAllDirs;
     while (eType == IDirectoryTraverser::IIterator::T_Directory || eType == IDirectoryTraverser::IIterator::T_File)
     {
         if (eType == IDirectoryTraverser::IIterator::T_Directory)
-        {
-            wxString sThisFolder = AsciiTowxString(pItr->VGetName());
-            if (sThisFolder != wxT("Badges") && sThisFolder != wxT("Banners") && sThisFolder != wxT("BugReport") &&
-                sThisFolder != wxT("Drivers") && sThisFolder != wxT("Engine") &&
-                sThisFolder != wxT("GraphicsOptions") && sThisFolder != wxT("Logfiles") &&
-                sThisFolder != wxT("ModTools") && sThisFolder != wxT("Patch") && sThisFolder != wxT("Playback") &&
-                sThisFolder != wxT("Profiles") && sThisFolder != wxT("ScreenShots") && sThisFolder != wxT("Stats") &&
-                sThisFolder != wxT("Utils"))
-            {
-                oStrings.Add(sThisFolder);
-            }
-        }
+            aAllDirs.Add(AsciiTowxString(pItr->VGetName()));
         if (pItr->VNextItem() != IDirectoryTraverser::IIterator::E_OK)
             break;
         eType = pItr->VGetType();
     }
     delete pItr;
 
-    pList->Append(oStrings);
+    pList->Append(CModuleSettingsPresenter::FilterModFolders(aAllDirs));
     pList->SetStringSelection(TheConstruct->GetModuleService().GetModFolder());
 }
 
 void frmModule::pgMain::InitDllList(wxControlWithItems *pList)
 {
     wxString sTheDll = TheConstruct->GetModuleService().GetDllName();
-    wxArrayString oStrings;
     wxString sDoWFolder = TheConstruct->GetModuleFile().BeforeLast('\\');
     auto iterResult = FileService::IterateFileSystem(sDoWFolder);
     if (!iterResult)
@@ -211,33 +201,15 @@ void frmModule::pgMain::InitDllList(wxControlWithItems *pList)
     IDirectoryTraverser::IIterator *pItr = iterResult.value().release();
     IDirectoryTraverser::IIterator::eTypes eType;
     eType = pItr->VGetType();
+
+    wxArrayString aAllDlls;
     while (eType == IDirectoryTraverser::IIterator::T_Directory || eType == IDirectoryTraverser::IIterator::T_File)
     {
         if (eType == IDirectoryTraverser::IIterator::T_File)
         {
             wxString sThisFile = AsciiTowxString(pItr->VGetName());
             if (sThisFile.AfterLast('.') == wxT("dll"))
-            {
-                sThisFile = sThisFile.BeforeLast('.');
-                if (!(sThisFile.IsSameAs(sTheDll, false)) && !(sThisFile.IsSameAs(wxT("dbghelp"), false)) &&
-                    !(sThisFile.IsSameAs(wxT("Debug"), false)) && !(sThisFile.IsSameAs(wxT("divxdecoder"), false)) &&
-                    !(sThisFile.IsSameAs(wxT("divxmedialib"), false)) && !(sThisFile.IsSameAs(wxT("DllTie"), false)) &&
-                    !(sThisFile.IsSameAs(wxT("fileparser"), false)) &&
-                    !(sThisFile.IsSameAs(wxT("FileSystem"), false)) && !(sThisFile.IsSameAs(wxT("GSLobby"), false)) &&
-                    !(sThisFile.IsSameAs(wxT("ijl15"), false)) && !(sThisFile.IsSameAs(wxT("Localizer"), false)) &&
-                    !(sThisFile.IsSameAs(wxT("luabind"), false)) && !(sThisFile.IsSameAs(wxT("LuaConfig"), false)) &&
-                    !(sThisFile.IsSameAs(wxT("MathBox"), false)) && !(sThisFile.IsSameAs(wxT("Memory"), false)) &&
-                    !(sThisFile.IsSameAs(wxT("mfc71"), false)) && !(sThisFile.IsSameAs(wxT("msvcp71"), false)) &&
-                    !(sThisFile.IsSameAs(wxT("msvcr71"), false)) && !(sThisFile.IsSameAs(wxT("Patch"), false)) &&
-                    !(sThisFile.IsSameAs(wxT("Platform"), false)) && !(sThisFile.IsSameAs(wxT("PlatHook"), false)) &&
-                    !(sThisFile.IsSameAs(wxT("seInterface"), false)) &&
-                    !(sThisFile.IsSameAs(wxT("SimEngine"), false)) && !(sThisFile.IsSameAs(wxT("spDx9"), false)) &&
-                    !(sThisFile.IsSameAs(wxT("STLPort"), false)) &&
-                    !(sThisFile.IsSameAs(wxT("UserInterface"), false)) && !(sThisFile.IsSameAs(wxT("Util"), false)))
-                {
-                    oStrings.Add(sThisFile);
-                }
-            }
+                aAllDlls.Add(sThisFile.BeforeLast('.'));
         }
         if (pItr->VNextItem() != IDirectoryTraverser::IIterator::E_OK)
             break;
@@ -245,8 +217,7 @@ void frmModule::pgMain::InitDllList(wxControlWithItems *pList)
     }
     delete pItr;
 
-    oStrings.Add(sTheDll);
-    pList->Append(oStrings);
+    pList->Append(CModuleSettingsPresenter::FilterDllFiles(aAllDlls, sTheDll));
     pList->SetStringSelection(sTheDll);
 }
 
@@ -304,16 +275,7 @@ void frmModule::pgDataFolders::OnSize(wxSizeEvent &event)
 
 void frmModule::pgDataFolders::FillInitialValues(wxArrayString &aInitialValues)
 {
-    CModuleFile *pMod = TheConstruct->GetModule();
-    size_t iCount = pMod->GetFolderCount();
-    for (size_t i = 0; i < iCount; ++i)
-    {
-        CModuleFile::CFolderHandler *pFolder = pMod->GetFolder(i);
-        wxString S;
-        S.Printf(wxT("[%li] "), pFolder->GetNumber());
-        S.Append(AsciiTowxString(pFolder->GetName()));
-        aInitialValues.Add(S);
-    }
+    aInitialValues = CModuleSettingsPresenter::GetFolderEntries(TheConstruct->GetModule());
 }
 
 frmModule::pgDataArchives::pgDataArchives(wxWindow *parent, wxWindowID id, const wxPoint &pos, const wxSize &size)
@@ -324,16 +286,7 @@ frmModule::pgDataArchives::pgDataArchives(wxWindow *parent, wxWindowID id, const
 
 void frmModule::pgDataArchives::FillInitialValues(wxArrayString &aInitialValues)
 {
-    CModuleFile *pMod = TheConstruct->GetModule();
-    size_t iCount = pMod->GetArchiveCount();
-    for (size_t i = 0; i < iCount; ++i)
-    {
-        CModuleFile::CArchiveHandler *pArch = pMod->GetArchive(i);
-        wxString S;
-        S.Printf(wxT("[%li] "), pArch->GetNumber());
-        S.Append(AsciiTowxString(pArch->GetFileName()));
-        aInitialValues.Add(S);
-    }
+    aInitialValues = CModuleSettingsPresenter::GetArchiveEntries(TheConstruct->GetModule());
 }
 
 frmModule::pgRequiredMods::pgRequiredMods(wxWindow *parent, wxWindowID id, const wxPoint &pos, const wxSize &size)
@@ -344,16 +297,7 @@ frmModule::pgRequiredMods::pgRequiredMods(wxWindow *parent, wxWindowID id, const
 
 void frmModule::pgRequiredMods::FillInitialValues(wxArrayString &aInitialValues)
 {
-    CModuleFile *pMod = TheConstruct->GetModule();
-    size_t iCount = pMod->GetRequiredCount();
-    for (size_t i = 0; i < iCount; ++i)
-    {
-        CModuleFile::CRequiredHandler *pReq = pMod->GetRequired(i);
-        wxString S;
-        S.Printf(wxT("[%li] "), pReq->GetNumber());
-        S.Append(AsciiTowxString(pReq->GetFileName()));
-        aInitialValues.Add(S);
-    }
+    aInitialValues = CModuleSettingsPresenter::GetRequiredEntries(TheConstruct->GetModule());
 }
 
 frmModule::pgCompatibleMods::pgCompatibleMods(wxWindow *parent, wxWindowID id, const wxPoint &pos, const wxSize &size)
@@ -364,14 +308,5 @@ frmModule::pgCompatibleMods::pgCompatibleMods(wxWindow *parent, wxWindowID id, c
 
 void frmModule::pgCompatibleMods::FillInitialValues(wxArrayString &aInitialValues)
 {
-    CModuleFile *pMod = TheConstruct->GetModule();
-    size_t iCount = pMod->GetCompatibleCount();
-    for (size_t i = 0; i < iCount; ++i)
-    {
-        CModuleFile::CCompatibleHandler *pCompat = pMod->GetCompatible(i);
-        wxString S;
-        S.Printf(wxT("[%li] "), pCompat->GetNumber());
-        S.Append(AsciiTowxString(pCompat->GetFileName()));
-        aInitialValues.Add(S);
-    }
+    aInitialValues = CModuleSettingsPresenter::GetCompatibleEntries(TheConstruct->GetModule());
 }
