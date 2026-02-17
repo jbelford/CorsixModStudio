@@ -74,6 +74,13 @@ target_link_libraries(cdms_tests PRIVATE
     ${wxWidgets_LIBRARIES}
 )
 
+# wxWidgets STC requires lexilla when statically linked
+if(WXLEXILLA_LIB_RELEASE)
+    target_link_libraries(cdms_tests PRIVATE
+        $<IF:$<CONFIG:Debug>,${WXLEXILLA_LIB_DEBUG},${WXLEXILLA_LIB_RELEASE}>
+    )
+endif()
+
 target_compile_definitions(cdms_tests PRIVATE
     _CRT_SECURE_NO_WARNINGS
     _CRT_NONSTDC_NO_DEPRECATE

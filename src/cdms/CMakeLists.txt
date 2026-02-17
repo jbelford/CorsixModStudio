@@ -16,6 +16,16 @@ target_link_libraries(CorsixModStudio PRIVATE
     ${wxWidgets_LIBRARIES}
 )
 
+# wxWidgets STC requires lexilla when statically linked; the vcpkg
+# cmake wrapper doesn't discover it automatically.
+find_library(WXLEXILLA_LIB_RELEASE NAMES wxlexilla PATHS "${wxWidgets_ROOT_DIR}/lib" NO_DEFAULT_PATH)
+find_library(WXLEXILLA_LIB_DEBUG NAMES wxlexillad PATHS "${wxWidgets_ROOT_DIR}/debug/lib" NO_DEFAULT_PATH)
+if(WXLEXILLA_LIB_RELEASE)
+    target_link_libraries(CorsixModStudio PRIVATE
+        $<IF:$<CONFIG:Debug>,${WXLEXILLA_LIB_DEBUG},${WXLEXILLA_LIB_RELEASE}>
+    )
+endif()
+
 if(WIN32)
     target_link_libraries(CorsixModStudio PRIVATE
         winmm comctl32 rpcrt4 wsock32 oleacc odbc32

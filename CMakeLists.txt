@@ -16,9 +16,42 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Build performance: multi-processor compilation
+# ---------------------------------------------------------------------------
+# Release build optimizations (MSVC)
+#
+# /GL + /LTCG  — Whole Program Optimization / Link-Time Code Generation
+#                Enables cross-module inlining, const propagation, devirtualization.
+# /Gw          — Package global data in individual COMDATs so the linker can
+#                discard unreferenced globals.
+# /Zi + /DEBUG — Generate PDB debug info even in Release (zero runtime cost,
+#                enables post-mortem crash debugging).
+# /OPT:REF    — Remove unreferenced functions and data.
+# /OPT:ICF    — Fold identical COMDATs (reduces binary size).
+# ---------------------------------------------------------------------------
+
+# Link-Time Code Generation (maps to /GL compile + /LTCG link on MSVC)
+include(CheckIPOSupported)
+check_ipo_supported(RESULT ipo_supported OUTPUT ipo_error)
+if(ipo_supported)
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
+endif()
+
 if(MSVC)
+    # Build performance: multi-processor compilation
     add_compile_options(/MP)
+
+    # Release-only compiler flags
+    add_compile_options(
+        $<$<CONFIG:Release>:/Gw>
+        $<$<CONFIG:Release>:/Zi>
+    )
+
+    # Release-only linker flags
+    add_link_options(
+        $<$<CONFIG:Release>:/OPT:REF>
+        $<$<CONFIG:Release>:/OPT:ICF>
+        $<$<CONFIG:Release>:/DEBUG>
+    )
 endif()
 
 
