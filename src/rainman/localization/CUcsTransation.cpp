@@ -40,7 +40,7 @@ void CUcsTransaction::Save(const char *sFile)
     CATCH_THROW("Raw object failed to write")
 }
 
-std::map<unsigned long, wchar_t *> *CUcsTransaction::GetRawMap()
+CUcsFile::UcsMap *CUcsTransaction::GetRawMap()
 {
     if (m_mapValues.empty())
         return m_pRawFile->GetRawMap();

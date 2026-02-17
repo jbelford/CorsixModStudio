@@ -99,9 +99,9 @@ void CUcsFile::Save(const char *sFile)
     fclose(f);
 }
 
-std::map<unsigned long, wchar_t *> *CUcsFile::GetRawMap() { return &m_mapValues; }
+CUcsFile::UcsMap *CUcsFile::GetRawMap() { return &m_mapValues; }
 
-const std::map<unsigned long, wchar_t *> *CUcsFile::GetRawMap() const { return &m_mapValues; }
+const CUcsFile::UcsMap *CUcsFile::GetRawMap() const { return &m_mapValues; }
 
 static wchar_t *mywcsdup(const char *sStr)
 {

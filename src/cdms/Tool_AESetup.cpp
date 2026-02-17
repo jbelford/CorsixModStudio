@@ -22,6 +22,7 @@
 #include "CtrlStatusText.h"
 #include "frmMessage.h"
 #include "Tool_AESetup.h"
+#include <algorithm>
 #include <vector>
 #include <rainman/localization/CUcsFile.h>
 #include "Common.h"
@@ -264,14 +265,17 @@ void UCSToDATConvertor::doConvertion()
         AddUcsFilesToVector(m_pModule->GetEngine(i), vFiles);
 
     m_iUCSCount = vFiles.size();
-    m_aUCSFiles = new std::map<unsigned long, wchar_t *>::const_iterator[m_iUCSCount];
-    m_aUCSFileEnds = new std::map<unsigned long, wchar_t *>::const_iterator[m_iUCSCount];
+    m_vSortedMaps.resize(m_iUCSCount);
+    m_aUCSFiles = new SortedEntries::const_iterator[m_iUCSCount];
+    m_aUCSFileEnds = new SortedEntries::const_iterator[m_iUCSCount];
     for (size_t i = 0; i < m_iUCSCount; ++i)
     {
-        const std::map<unsigned long, wchar_t *> *pMap = vFiles[i]->GetRawMap();
-
-        m_aUCSFiles[i] = pMap->begin();
-        m_aUCSFileEnds[i] = pMap->end();
+        const auto *pMap = vFiles[i]->GetRawMap();
+        m_vSortedMaps[i].assign(pMap->begin(), pMap->end());
+        std::sort(m_vSortedMaps[i].begin(), m_vSortedMaps[i].end(),
+                  [](const SortedEntry &a, const SortedEntry &b) { return a.first < b.first; });
+        m_aUCSFiles[i] = m_vSortedMaps[i].cbegin();
+        m_aUCSFileEnds[i] = m_vSortedMaps[i].cend();
     }
 
     m_fDAT = fopen(m_sOutputName, "wt");

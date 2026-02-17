@@ -18,7 +18,8 @@
 #pragma once
 
 #include <rainman/module/CModuleFile.h>
-#include <map>
+#include <vector>
+#include <utility>
 // For compilers that support precompilation, includes "wx/wx.h".
 #include <wx/wxprec.h>
 
@@ -93,8 +94,12 @@ class UCSToDATConvertor
     void _endRange();
     bool _nextEntry(unsigned long *, wchar_t **);
 
+    using SortedEntry = std::pair<unsigned long, wchar_t *>;
+    using SortedEntries = std::vector<SortedEntry>;
+
     FILE *m_fDAT;
     size_t m_iUCSCount;
-    std::map<unsigned long, wchar_t *>::const_iterator *m_aUCSFiles;
-    std::map<unsigned long, wchar_t *>::const_iterator *m_aUCSFileEnds;
+    SortedEntries::const_iterator *m_aUCSFiles;
+    SortedEntries::const_iterator *m_aUCSFileEnds;
+    std::vector<SortedEntries> m_vSortedMaps;
 };

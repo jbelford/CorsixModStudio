@@ -27,6 +27,7 @@
 #include <wx/toolbar.h>
 #include <wx/tbarbase.h>
 #include <memory>
+#include <algorithm>
 #include "Common.h"
 
 BEGIN_EVENT_TABLE(frmUCSEditor, wxWindow)
@@ -157,7 +158,7 @@ void frmUCSEditor::FillFromCUcsFile(CUcsFile *pUcs, unsigned long iSelect)
 
     delete m_pUCS;
     m_pUCS = new CUcsTransaction(pUcs);
-    std::map<unsigned long, wchar_t *> *pEntries;
+    decltype(pUcs->GetRawMap()) pEntries;
     try
     {
         pEntries = pUcs->GetRawMap();
@@ -225,8 +226,13 @@ void frmUCSEditor::OnNewEntry(wxCommandEvent &event)
     sNumberBuffer[0] = '$';
     try
     {
-        if (!m_pUCS->GetRawMap()->empty())
-            _ultow((m_pUCS->GetRawMap()->rbegin()->first) + 1, sNumberBuffer + 1, 10);
+        auto *pMap = m_pUCS->GetRawMap();
+        if (!pMap->empty())
+        {
+            auto itMax = std::max_element(pMap->begin(), pMap->end(),
+                                          [](const auto &a, const auto &b) { return a.first < b.first; });
+            _ultow(itMax->first + 1, sNumberBuffer + 1, 10);
+        }
         else
             wcscpy(sNumberBuffer, AppStr(ucsedit_newentrydefault));
     }
@@ -262,7 +268,7 @@ void frmUCSEditor::OnNewEntry(wxCommandEvent &event)
                     delete pQuestion;
                 }
             }
-            std::map<unsigned long, wchar_t *> *pEntries;
+            decltype(m_pUCS->GetRawMap()) pEntries;
             try
             {
                 pEntries = m_pUCS->GetRawMap();

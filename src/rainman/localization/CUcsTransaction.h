@@ -23,7 +23,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 // UCS = unicode character string ?
 #include "rainman/io/IFileStore.h"
 #include <wchar.h>
-#include <map>
 #include "rainman/core/Api.h"
 #include "rainman/localization/CUcsFile.h"
 
@@ -63,11 +62,11 @@ class RAINMAN_API CUcsTransaction : public CUcsFile
         a std::map<unsigned long, wchar_t*>. Otherwise returns a pointer to the
         std::map<unsigned long, wchar_t*> object
     */
-    std::map<unsigned long, wchar_t *> *GetRawMap();
+    UcsMap *GetRawMap();
 
     CUcsFile *GetRawObject();
 
   protected:
     CUcsFile *m_pRawFile;
-    std::map<unsigned long, wchar_t *> m_mapCombinationValues;
+    UcsMap m_mapCombinationValues;
 };
