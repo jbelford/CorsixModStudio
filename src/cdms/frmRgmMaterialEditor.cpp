@@ -19,12 +19,12 @@
 #include "frmRgmMaterialEditor.h"
 
 #include <utility>
-#include "strconv.h"
+#include "common/strconv.h"
 #include "Construct.h"
-#include "config.h"
-#include "strings.h"
-#include "Utility.h"
-#include "Common.h"
+#include "common/config.h"
+#include "common/strings.h"
+#include "common/Utility.h"
+#include "common/Common.h"
 
 BEGIN_EVENT_TABLE(frmRgmMaterialEditor, wxWindow)
 EVT_SIZE(frmRgmMaterialEditor::OnSize)

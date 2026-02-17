@@ -30,7 +30,7 @@
 #include "wx/wx.h"
 #endif
 // ----------------------------
-#include "strings.h"
+#include "common/strings.h"
 
 class frmModule : public wxWindow
 {

@@ -35,7 +35,7 @@
 #include "frmFiles.h"
 #include <rainman/module/CModuleFile.h>
 #include "ModuleManager.h"
-#include "ITool.h"
+#include "common/ITool.h"
 #include "ToolRegistry.h"
 #include "MenuController.h"
 #include "views/IMainFrameView.h"

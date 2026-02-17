@@ -21,8 +21,8 @@
 #include "frmFiles.h"
 #include "frmRgdEditor.h"
 #include "Construct.h"
-#include "Utility.h"
-#include "strconv.h"
+#include "common/Utility.h"
+#include "common/strconv.h"
 #include "actions/ActionUtil.h"
 
 class CMuaAction : public frmFiles::IHandler

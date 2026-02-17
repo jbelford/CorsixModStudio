@@ -15,20 +15,20 @@
     along with Corsix's Mod Studio; if not, write to the Free Software
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
-#include "TabDialog.h"
+#include "common/TabDialog.h"
 #include "frmUCSEditor.h"
 #include "frmUCSOutRange.h"
 #include "Construct.h"
 #include "Tools.h"
-#include "strings.h"
-#include "config.h"
-#include "Utility.h"
+#include "common/strings.h"
+#include "common/config.h"
+#include "common/Utility.h"
 #include <wx/msgdlg.h>
 #include <wx/toolbar.h>
 #include <wx/tbarbase.h>
 #include <memory>
 #include <algorithm>
-#include "Common.h"
+#include "common/Common.h"
 
 BEGIN_EVENT_TABLE(frmUCSEditor, wxWindow)
 EVT_SIZE(frmUCSEditor::OnSize)

@@ -20,8 +20,8 @@
 
 #include "frmFiles.h"
 #include "Construct.h"
-#include "Utility.h"
-#include "strconv.h"
+#include "common/Utility.h"
+#include "common/strconv.h"
 
 class CMakeCopyAction : public frmFiles::IHandler
 {

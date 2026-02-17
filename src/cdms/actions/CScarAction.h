@@ -21,7 +21,7 @@
 #include "frmFiles.h"
 #include "frmScarEditor.h"
 #include "Construct.h"
-#include "Utility.h"
+#include "common/Utility.h"
 #include "actions/ActionUtil.h"
 
 class CScarAction : public frmFiles::IHandler

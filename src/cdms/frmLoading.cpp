@@ -18,7 +18,7 @@
 
 #include "frmLoading.h"
 #include "resource.h"
-#include "Common.h"
+#include "common/Common.h"
 
 BEGIN_EVENT_TABLE(frmLoading, wxFrame)
 EVT_CLOSE(frmLoading::OnQuit)
@@ -37,6 +37,18 @@ frmLoading::frmLoading(const wxString &sTitle)
     m_pCancelButton = nullptr;
 
     m_pLoadingImage = new wxBitmap(wxT("RIDB_LOADING"), wxBITMAP_TYPE_BMP_RESOURCE);
+    const wxSize originalSize(m_pLoadingImage->GetWidth(), m_pLoadingImage->GetHeight());
+    const wxSize scaledSize = FromDIP(originalSize);
+    if (scaledSize != originalSize)
+    {
+        wxImage scaledImage = m_pLoadingImage->ConvertToImage();
+        if (scaledImage.IsOk())
+        {
+            scaledImage.Rescale(scaledSize.GetWidth(), scaledSize.GetHeight(), wxIMAGE_QUALITY_HIGH);
+            *m_pLoadingImage = wxBitmap(scaledImage);
+        }
+    }
+
     m_pText = new wxStaticText(this, -1, sTitle, FromDIP(wxPoint(0, 317)), FromDIP(wxSize(384, 33)),
                                wxST_NO_AUTORESIZE | wxALIGN_CENTER);
     m_pText->Wrap(FromDIP(380));

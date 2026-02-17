@@ -18,7 +18,7 @@
 
 #include "MenuController.h"
 #include "Construct.h"
-#include "strings.h"
+#include "common/strings.h"
 #include "ToolRegistry.h"
 
 void MenuController::Build(wxFrame *pFrame, ToolRegistry &registry)

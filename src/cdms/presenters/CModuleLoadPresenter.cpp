@@ -19,7 +19,7 @@
 #include "CModuleLoadPresenter.h"
 #include "async/CProgressChannel.h"
 #include "services/ModuleService.h"
-#include "strconv.h"
+#include "common/strconv.h"
 
 CModuleLoadPresenter::CModuleLoadPresenter(IMainFrameView &view, wxEvtHandler *pHandler)
     : m_view(view), m_taskRunner(pHandler)

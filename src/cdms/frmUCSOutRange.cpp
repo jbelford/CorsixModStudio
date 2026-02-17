@@ -16,9 +16,9 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include "frmUCSOutRange.h"
-#include "strings.h"
-#include "config.h"
-#include "Common.h"
+#include "common/strings.h"
+#include "common/config.h"
+#include "common/Common.h"
 #include <wx/fileconf.h>
 
 BEGIN_EVENT_TABLE(frmUCSOutOfRange, wxDialog)

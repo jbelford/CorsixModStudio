@@ -18,7 +18,7 @@
 
 #include "CUcsToDatPresenter.h"
 #include "Tool_AESetup.h"
-#include "strconv.h"
+#include "common/strconv.h"
 
 CUcsToDatPresenter::CUcsToDatPresenter(IUcsToDatView &view, wxEvtHandler *pHandler)
     : m_view(view), m_taskRunner(pHandler)

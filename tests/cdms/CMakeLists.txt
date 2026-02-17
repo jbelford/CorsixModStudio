@@ -27,10 +27,10 @@ add_executable(cdms_tests
     rgdmacropresenter_test.cpp
     massextractpresenter_test.cpp
     refreshfilespresenter_test.cpp
-    ${CDMS_SRC_DIR}/strconv.cpp
-    ${CDMS_SRC_DIR}/strings.cpp
-    ${CDMS_SRC_DIR}/Utility.cpp
-    ${CDMS_SRC_DIR}/config.cpp
+    ${CDMS_SRC_DIR}/common/strconv.cpp
+    ${CDMS_SRC_DIR}/common/strings.cpp
+    ${CDMS_SRC_DIR}/common/Utility.cpp
+    ${CDMS_SRC_DIR}/common/config.cpp
     ${CDMS_SRC_DIR}/services/ModuleService.cpp
     ${CDMS_SRC_DIR}/services/FileService.cpp
     ${CDMS_SRC_DIR}/services/FormatService.cpp

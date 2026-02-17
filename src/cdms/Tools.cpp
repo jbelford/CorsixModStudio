@@ -17,25 +17,25 @@
 */
 
 #include "Tools.h"
-#include "strings.h"
+#include "common/strings.h"
 
 #include "frmUCSEditor.h"
 #include "frmFileSelector.h"
 #include "frmLocaleSelector.h"
-#include "strconv.h"
+#include "common/strconv.h"
 #include "frmSgaMake.h"
 #include "Tool_AESetup.h"
 #include "Tool_AutoDPS.h"
 #include "presenters/CDpsCalculatorPresenter.h"
 #include "presenters/CRefreshFilesPresenter.h"
-#include "Utility.h"
+#include "common/Utility.h"
 #include "frmMassExtract.h"
 #include <memory>
 // Rainman_RGDDump.h removed; RgdDump usage is commented-out dead code
 #include <rainman/util/Util.h>
 #include <rainman/io/CFileSystemStore.h>
 #include <rainman/io/IFileStore.h>
-#include "Common.h"
+#include "common/Common.h"
 #include "rainman/core/RainmanLog.h"
 
 wxString CLocaleTool::GetName() { return AppStr(locale); }

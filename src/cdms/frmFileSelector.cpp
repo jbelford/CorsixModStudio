@@ -17,13 +17,13 @@
 */
 
 #include "frmFileSelector.h"
-#include "strings.h"
-#include "strconv.h"
+#include "common/strings.h"
+#include "common/strconv.h"
 #include "Construct.h"
-#include "config.h"
+#include "common/config.h"
 #include <wx/textdlg.h>
 #include <list>
-#include "Common.h"
+#include "common/Common.h"
 
 BEGIN_EVENT_TABLE(frmFileSelector, wxDialog)
 EVT_SIZE(frmFileSelector::OnSize)

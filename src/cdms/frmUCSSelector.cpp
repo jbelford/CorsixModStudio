@@ -16,11 +16,11 @@ along with Corsix's Mod Studio; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include "frmUCSSelector.h"
-#include "strings.h"
-#include "strconv.h"
+#include "common/strings.h"
+#include "common/strconv.h"
 #include "Construct.h"
 #include <wx/textdlg.h>
-#include "Common.h"
+#include "common/Common.h"
 
 BEGIN_EVENT_TABLE(frmUCSSelector, wxDialog)
 EVT_SIZE(frmUCSSelector::OnSize)

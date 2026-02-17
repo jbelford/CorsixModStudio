@@ -18,7 +18,7 @@
 
 #include "CDpsCalculatorPresenter.h"
 #include "Tool_AutoDPS.h"
-#include "strconv.h"
+#include "common/strconv.h"
 
 CDpsCalculatorPresenter::CDpsCalculatorPresenter(IDpsCalculatorView &view, wxEvtHandler *pHandler)
     : m_view(view), m_taskRunner(pHandler)

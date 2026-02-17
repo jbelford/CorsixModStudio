@@ -19,7 +19,7 @@
 #include "CSgaMakePresenter.h"
 #include "async/CProgressChannel.h"
 #include "services/FileService.h"
-#include "strconv.h"
+#include "common/strconv.h"
 #include <rainman/archive/CSgaCreator.h>
 #include <rainman/io/CFileSystemStore.h>
 

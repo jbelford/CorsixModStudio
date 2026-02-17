@@ -17,7 +17,7 @@
 */
 
 #include "HashService.h"
-#include "../strconv.h"
+#include "common/strconv.h"
 #include <rainman/core/Exception.h>
 #include <rainman/formats/CRgdHashTable.h>
 #include <rainman/io/CFileSystemStore.h>

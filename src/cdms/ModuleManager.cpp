@@ -17,8 +17,8 @@
 */
 
 #include "ModuleManager.h"
-#include "strconv.h"
-#include "Utility.h"
+#include "common/strconv.h"
+#include "common/Utility.h"
 
 ModuleManager::ModuleManager() : m_pModule(nullptr), m_pRgdHashTable(nullptr), m_sRgdHashCustomOut(nullptr) {}
 

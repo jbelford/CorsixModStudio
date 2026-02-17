@@ -21,7 +21,7 @@
 #include "async/CTaskRunner.h"
 #include "async/CProgressChannel.h"
 #include "services/ModuleService.h"
-#include "strconv.h"
+#include "common/strconv.h"
 #include <rainman/module/CModuleFile.h>
 #include <rainman/core/Exception.h>
 #include <gtest/gtest.h>

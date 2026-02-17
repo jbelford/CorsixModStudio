@@ -35,7 +35,7 @@
 #include <list>
 #include <stack>
 #include <wx/treectrl.h>
-#include "strings.h"
+#include "common/strings.h"
 
 class frmScarEditor : public wxWindow
 {

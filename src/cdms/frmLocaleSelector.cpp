@@ -17,9 +17,9 @@
 */
 
 #include "frmLocaleSelector.h"
-#include "strings.h"
-#include "config.h"
-#include "Common.h"
+#include "common/strings.h"
+#include "common/config.h"
+#include "common/Common.h"
 #include <wx/fileconf.h>
 
 BEGIN_EVENT_TABLE(frmLocaleSelector, wxDialog)

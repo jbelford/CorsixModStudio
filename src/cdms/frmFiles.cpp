@@ -26,10 +26,10 @@
 #include "frmRgdMacro.h"
 #include "frmMessage.h"
 #include "Construct.h"
-#include "strconv.h"
-#include "strings.h"
-#include "config.h"
-#include "Utility.h"
+#include "common/strconv.h"
+#include "common/strings.h"
+#include "common/config.h"
+#include "common/Utility.h"
 #include <zlib.h>
 extern "C"
 {
@@ -44,7 +44,7 @@ extern "C"
 #include <rainman/lua/CLuaFromRgd.h>
 #include <rainman/formats/CBfxFile.h>
 #include <rainman/formats/CChunkyFile.h>
-#include "Common.h"
+#include "common/Common.h"
 #include <rainman/core/RainmanLog.h>
 
 BEGIN_EVENT_TABLE(frmFiles, wxWindow)

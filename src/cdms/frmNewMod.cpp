@@ -17,14 +17,14 @@
 */
 
 #include "frmNewMod.h"
-#include "strings.h"
-#include "strconv.h"
-#include "config.h"
+#include "common/strings.h"
+#include "common/strconv.h"
+#include "common/config.h"
 #include "Construct.h"
 #include "CtrlStatusText.h"
 #include <errno.h>
 #include <wx/textdlg.h>
-#include "Common.h"
+#include "common/Common.h"
 #include "rainman/core/RainmanLog.h"
 
 BEGIN_EVENT_TABLE(frmNewMod, wxDialog)

@@ -18,12 +18,12 @@
 
 #include "Construct.h"
 #include "frmRgdMacro.h"
-#include "strings.h"
-#include "strconv.h"
-#include "Utility.h"
+#include "common/strings.h"
+#include "common/strconv.h"
+#include "common/Utility.h"
 #include <wx/file.h>
 #include <rainman/util/Util.h>
-#include "Common.h"
+#include "common/Common.h"
 
 extern "C"
 {

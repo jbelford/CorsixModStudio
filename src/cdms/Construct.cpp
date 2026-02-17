@@ -25,7 +25,7 @@
 #include "frmCredits.h"
 #include "frmLocaleSelector.h"
 #include "frmRgdEditor.h"
-#include "strconv.h"
+#include "common/strconv.h"
 #include <memory>
 #include <rainman/io/CFileSystemStore.h>
 #include <rainman/module/CFileMap.h>
@@ -35,10 +35,10 @@ extern "C"
 #include "rainman/util/md5.h"
 }
 #include <wx/filedlg.h>
-#include "Utility.h"
-#include "strings.h"
-#include "config.h"
-#include "strconv.h"
+#include "common/Utility.h"
+#include "common/strings.h"
+#include "common/config.h"
+#include "common/strconv.h"
 // For ShellExecute :(
 #include <windows.h>
 #include <shellapi.h>
@@ -47,7 +47,7 @@ extern "C"
 #ifdef _DEBUG
 #include <crtdbg.h>
 #endif
-#include "Common.h"
+#include "common/Common.h"
 
 BEGIN_EVENT_TABLE(ConstructFrame, wxFrame)
 EVT_MENU(IDM_LoadModDoWWA, ConstructFrame::OnOpenModDoW)

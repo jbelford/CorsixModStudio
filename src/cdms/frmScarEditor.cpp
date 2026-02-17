@@ -18,9 +18,9 @@
 
 #include "frmScarEditor.h"
 #include "Construct.h"
-#include "strconv.h"
-#include "strings.h"
-#include "Utility.h"
+#include "common/strconv.h"
+#include "common/strings.h"
+#include "common/Utility.h"
 extern "C"
 {
 #include <lua.h>
@@ -30,7 +30,7 @@ extern "C"
 #include <wx/toolbar.h>
 #include <wx/tbarbase.h>
 #include <algorithm>
-#include "Common.h"
+#include "common/Common.h"
 #include <cstdint>
 #include <rainman/core/RainmanLog.h>
 

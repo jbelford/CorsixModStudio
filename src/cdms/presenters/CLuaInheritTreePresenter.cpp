@@ -18,7 +18,7 @@
 
 #include "CLuaInheritTreePresenter.h"
 #include "Tools.h"
-#include "strconv.h"
+#include "common/strconv.h"
 #include <rainman/lua/CInheritTable.h>
 
 CLuaInheritTreePresenter::CLuaInheritTreePresenter(ILuaInheritTreeView &view, wxEvtHandler *pHandler)

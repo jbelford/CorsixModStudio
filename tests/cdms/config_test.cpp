@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <wx/init.h>
 #include <wx/fileconf.h>
-#include "config.h"
+#include "common/config.h"
 
 class ConfigTest : public ::testing::Test {
 protected:

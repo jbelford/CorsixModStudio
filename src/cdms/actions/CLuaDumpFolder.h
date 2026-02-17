@@ -20,8 +20,8 @@
 
 #include "frmFiles.h"
 #include "Construct.h"
-#include "Utility.h"
-#include "strconv.h"
+#include "common/Utility.h"
+#include "common/strconv.h"
 #include "actions/CRgdToLuaDumpAction.h"
 #include <wx/progdlg.h>
 

@@ -17,7 +17,7 @@
 */
 #include "frmMessage.h"
 #include "resource.h"
-#include "Common.h"
+#include "common/Common.h"
 
 BEGIN_EVENT_TABLE(frmMessage, wxFrame)
 EVT_CLOSE(frmMessage::OnQuit)

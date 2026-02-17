@@ -17,9 +17,9 @@
 */
 #include "frmSgaMake.h"
 #include "frmMessage.h"
-#include "strings.h"
-#include "strconv.h"
-#include "config.h"
+#include "common/strings.h"
+#include "common/strconv.h"
+#include "common/config.h"
 #include "Construct.h"
 #include "CtrlStatusText.h"
 #include <cerrno>
@@ -27,7 +27,7 @@
 #include <wx/filename.h>
 #include <rainman/io/CFileSystemStore.h>
 #include <rainman/archive/CSgaCreator.h>
-#include "Common.h"
+#include "common/Common.h"
 #include "rainman/core/RainmanLog.h"
 
 BEGIN_EVENT_TABLE(frmSgaMake, wxDialog)

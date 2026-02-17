@@ -20,9 +20,9 @@
 
 #include "frmFiles.h"
 #include "Construct.h"
-#include "Utility.h"
-#include "strconv.h"
-#include "strings.h"
+#include "common/Utility.h"
+#include "common/strconv.h"
+#include "common/strings.h"
 #include <rainman/formats/CRgtFile.h>
 
 class CRgtToGenericAction : public frmFiles::IHandler

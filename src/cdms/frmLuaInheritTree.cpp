@@ -18,7 +18,7 @@
 #include "frmLuaInheritTree.h"
 #include "Tools.h"
 #include "frmRgdEditor.h"
-#include "Common.h"
+#include "common/Common.h"
 #include <rainman/core/RainmanLog.h>
 
 BEGIN_EVENT_TABLE(frmLuaInheritTree, wxWindow)

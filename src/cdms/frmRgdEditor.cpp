@@ -17,20 +17,20 @@
 */
 
 #include "frmRgdEditor.h"
-#include "TabDialog.h"
+#include "common/TabDialog.h"
 #include "Tools.h"
 #include "frmUCSEditor.h"
 #include "frmFileSelector.h"
-#include "strconv.h"
+#include "common/strconv.h"
 #include "Construct.h"
-#include "config.h"
-#include "strings.h"
-#include "Utility.h"
+#include "common/config.h"
+#include "common/strings.h"
+#include "common/Utility.h"
 #include <wx/clipbrd.h>
 #include <wx/propgrid/manager.h>
 #include <wx/toolbar.h>
 #include <wx/tbarbase.h>
-#include "Common.h"
+#include "common/Common.h"
 #include <cstdint>
 #include <memory>
 #include <rainman/io/IFileStore.h>

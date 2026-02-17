@@ -19,7 +19,7 @@
 #include "CtrlStatusText.h"
 #include <wx/tooltip.h>
 #include "Construct.h"
-#include "Common.h"
+#include "common/Common.h"
 
 class CStatText : public wxEvtHandler
 {

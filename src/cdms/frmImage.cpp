@@ -18,14 +18,14 @@
 
 #include "frmImage.h"
 #include "Construct.h"
-#include "strings.h"
-#include "config.h"
-#include "Utility.h"
+#include "common/strings.h"
+#include "common/config.h"
+#include "common/Utility.h"
 #include <wx/msgdlg.h>
 #include <wx/mstream.h>
 
 #include <utility>
-#include "Common.h"
+#include "common/Common.h"
 
 BEGIN_EVENT_TABLE(frmImageViewer, wxWindow)
 EVT_SIZE(frmImageViewer::OnSize)

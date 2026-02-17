@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <wx/init.h>
-#include "Utility.h"
+#include "common/Utility.h"
 #include <cstring>
 #include <string>
 

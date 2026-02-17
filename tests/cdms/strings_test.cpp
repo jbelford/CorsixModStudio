@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <wx/init.h>
-#include "strings.h"
+#include "common/strings.h"
 
 class StringsTest : public ::testing::Test {
 protected:

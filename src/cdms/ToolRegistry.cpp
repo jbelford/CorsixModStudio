@@ -17,7 +17,7 @@
 */
 
 #include "ToolRegistry.h"
-#include "Utility.h"
+#include "common/Utility.h"
 
 ToolRegistry::~ToolRegistry()
 {

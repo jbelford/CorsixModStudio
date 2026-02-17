@@ -18,7 +18,7 @@
 
 #include "frmCredits.h"
 #include "resource.h"
-#include "Common.h"
+#include "common/Common.h"
 
 BEGIN_EVENT_TABLE(frmCredits, wxDialog)
 EVT_PAINT(frmCredits::OnPaint)

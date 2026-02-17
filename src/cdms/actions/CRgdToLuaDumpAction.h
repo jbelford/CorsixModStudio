@@ -20,9 +20,9 @@
 
 #include "frmFiles.h"
 #include "Construct.h"
-#include "Utility.h"
-#include "strconv.h"
-#include "strings.h"
+#include "common/Utility.h"
+#include "common/strconv.h"
+#include "common/strings.h"
 #include <rainman/formats/CRgdFile.h>
 #include <rainman/lua/CLuaFromRgd.h>
 

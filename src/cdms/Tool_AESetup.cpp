@@ -16,16 +16,16 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include "Construct.h"
-#include "strconv.h"
-#include "strings.h"
-#include "Utility.h"
+#include "common/strconv.h"
+#include "common/strings.h"
+#include "common/Utility.h"
 #include "CtrlStatusText.h"
 #include "frmMessage.h"
 #include "Tool_AESetup.h"
 #include <algorithm>
 #include <vector>
 #include <rainman/localization/CUcsFile.h>
-#include "Common.h"
+#include "common/Common.h"
 #include "rainman/core/RainmanLog.h"
 
 BEGIN_EVENT_TABLE(frmUCSToDAT, wxDialog)

@@ -19,8 +19,8 @@
 #include "TabManager.h"
 #include "frmFiles.h"
 #include "frmWelcome.h"
-#include "strings.h"
-#include "config.h"
+#include "common/strings.h"
+#include "common/config.h"
 
 void TabManager::Init(wxWindow *parent, wxWindowID splitterId)
 {

@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "ITool.h"
+#include "common/ITool.h"
 #include <vector>
 
 class ToolRegistry

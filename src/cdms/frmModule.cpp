@@ -18,12 +18,12 @@
 
 #include "frmModule.h"
 #include "Construct.h"
-#include "strconv.h"
+#include "common/strconv.h"
 #include "CtrlStatusText.h"
-#include "strings.h"
+#include "common/strings.h"
 #include <wx/notebook.h>
 #include "services/FileService.h"
-#include "Common.h"
+#include "common/Common.h"
 
 BEGIN_EVENT_TABLE(frmModule, wxWindow)
 EVT_SIZE(frmModule::OnSize)

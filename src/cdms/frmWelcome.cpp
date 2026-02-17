@@ -17,10 +17,10 @@
 */
 #include "frmWelcome.h"
 #include "Construct.h"
-#include "config.h"
+#include "common/config.h"
 #include "CtrlStatusText.h"
-#include "strings.h"
-#include "Common.h"
+#include "common/strings.h"
+#include "common/Common.h"
 
 BEGIN_EVENT_TABLE(frmWelcome, wxWindow)
 EVT_SIZE(frmWelcome::OnSize)

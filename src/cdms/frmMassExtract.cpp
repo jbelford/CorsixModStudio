@@ -18,14 +18,14 @@
 
 #include "Construct.h"
 #include "frmMassExtract.h"
-#include "strings.h"
-#include "strconv.h"
-#include "Utility.h"
+#include "common/strings.h"
+#include "common/strconv.h"
+#include "common/Utility.h"
 #include <memory>
 #include <utility>
 #include <rainman/module/CFileMap.h>
 #include <rainman/io/CFileSystemStore.h>
-#include "Common.h"
+#include "common/Common.h"
 
 BEGIN_EVENT_TABLE(frmMassExtract, wxDialog)
 EVT_BUTTON(IDC_Go, frmMassExtract::OnGoClick)

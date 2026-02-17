@@ -21,7 +21,7 @@
 #include "frmFiles.h"
 #include "frmImage.h"
 #include "Construct.h"
-#include "Utility.h"
+#include "common/Utility.h"
 #include "actions/ActionUtil.h"
 #include <rainman/formats/CRgtFile.h>
 
