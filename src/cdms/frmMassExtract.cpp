@@ -218,7 +218,7 @@ frmMassExtract::frmMassExtract(wxString sFile, const wxTreeItemId &oFolder, bool
     pTopSizer->Add(pButtonSizer, 0, wxALIGN_RIGHT);
 
     pTopSizer->Add(m_pCheckList = new wxCheckListBox(this, -1, wxDefaultPosition, wxDefaultSize, oStrs), 0,
-                   wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL | wxALL, 3);
+                   wxALIGN_LEFT | wxALL, 3);
 
     SetSizer(pTopSizer);
     pTopSizer->SetSizeHints(this);
