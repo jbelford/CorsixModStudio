@@ -474,6 +474,15 @@ CFileMap::DirEntry CResourceLoader::ScanDirectory(IDirectoryTraverser::IIterator
 
     root.directoryPath = pItr->VGetDirectoryPath();
 
+    // First pass: collect immediate children, queueing subdirectories for parallel scan
+    struct SubDirWork
+    {
+        std::string name;
+        IDirectoryTraverser::IIterator *pSubItr = nullptr;
+        size_t childIndex = 0;
+    };
+    std::vector<SubDirWork> subDirs;
+
     while (pItr->VGetType() != IDirectoryTraverser::IIterator::T_Nothing)
     {
         CFileMap::DirEntry entry;
@@ -488,12 +497,14 @@ CFileMap::DirEntry CResourceLoader::ScanDirectory(IDirectoryTraverser::IIterator
         {
             entry.isFile = false;
             entry.lastWriteTime = 0;
-            IDirectoryTraverser::IIterator *pSubItr = pItr->VOpenSubDir();
+            auto *pSubItr = pItr->VOpenSubDir();
             if (pSubItr)
             {
-                entry = ScanDirectory(pSubItr);
-                entry.name = pItr->VGetName(); // restore name after recursive call
-                delete pSubItr;
+                SubDirWork work;
+                work.name = entry.name;
+                work.pSubItr = pSubItr;
+                work.childIndex = root.children.size();
+                subDirs.push_back(std::move(work));
             }
         }
         root.children.push_back(std::move(entry));
@@ -501,6 +512,34 @@ CFileMap::DirEntry CResourceLoader::ScanDirectory(IDirectoryTraverser::IIterator
         if (pItr->VNextItem() != IDirectoryTraverser::IIterator::E_OK)
             break;
     }
+
+    // Parallel scan: submit each subdirectory to the thread pool
+    if (!subDirs.empty())
+    {
+        auto &pool = CThreadPool::Instance();
+        std::vector<std::future<CFileMap::DirEntry>> futures;
+        futures.reserve(subDirs.size());
+
+        for (auto &work : subDirs)
+        {
+            futures.push_back(pool.Submit(
+                [pSub = work.pSubItr]() -> CFileMap::DirEntry
+                {
+                    auto result = ScanDirectory(pSub);
+                    delete pSub;
+                    return result;
+                }));
+        }
+
+        for (size_t i = 0; i < subDirs.size(); ++i)
+        {
+            CFileMap::DirEntry scanned = futures[i].get();
+            auto &placeholder = root.children[subDirs[i].childIndex];
+            scanned.name = placeholder.name; // preserve original name
+            placeholder = std::move(scanned);
+        }
+    }
+
     return root;
 }
 

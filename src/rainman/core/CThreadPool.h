@@ -17,8 +17,7 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _C_THREAD_POOL_H_
-#define _C_THREAD_POOL_H_
+#pragma once
 
 #include "rainman/core/Api.h"
 #include <condition_variable>
@@ -95,5 +94,3 @@ class RAINMAN_API CThreadPool
     std::condition_variable m_cvWork;
     bool m_bStopping = false;
 };
-
-#endif // _C_THREAD_POOL_H_
