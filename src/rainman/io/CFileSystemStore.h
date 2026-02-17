@@ -40,6 +40,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "rainman/core/Api.h"
 #include <stdio.h>
 #include <memory.h>
+#include <string>
 
 class RAINMAN_API CFileSystemStore : public IFileStore
 #ifdef EXTEND_FILESTORE_WITH_TRAVERSE
@@ -104,7 +105,8 @@ class RAINMAN_API CFileSystemStore : public IFileStore
         HANDLE m_HandFD;
 #endif
         char *m_sParentPath;
-        char *m_sFullPath;
+        size_t m_iParentPathLen;
+        std::string m_sFullPathBuf; // reusable buffer (avoids per-entry alloc)
         const CFileSystemStore *m_pStore;
 
       public:
@@ -118,6 +120,9 @@ class RAINMAN_API CFileSystemStore : public IFileStore
         virtual const char *VGetDirectoryPath();
         virtual tLastWriteTime VGetLastWriteTime();
         virtual IDirectoryTraverser::IIterator::eErrors VNextItem();
+
+      private:
+        void RebuildFullPath(const char *sFileName);
     };
 
     class RAINMAN_API CIteratorW : public IDirectoryTraverser::IIterator

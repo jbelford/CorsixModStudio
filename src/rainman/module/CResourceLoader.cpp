@@ -464,47 +464,6 @@ struct CResourceLoader::FolderTask
     CModuleFile::CCohDataSource *pDataSource = nullptr;
 };
 
-//! Serial recursive directory scan (safe to call from pool worker threads).
-static CFileMap::DirEntry ScanDirectorySerial(IDirectoryTraverser::IIterator *pItr)
-{
-    CFileMap::DirEntry root;
-    root.isFile = false;
-    root.lastWriteTime = 0;
-    if (pItr == nullptr)
-        return root;
-
-    root.directoryPath = pItr->VGetDirectoryPath();
-
-    while (pItr->VGetType() != IDirectoryTraverser::IIterator::T_Nothing)
-    {
-        CFileMap::DirEntry entry;
-        entry.name = pItr->VGetName();
-
-        if (pItr->VGetType() == IDirectoryTraverser::IIterator::T_File)
-        {
-            entry.isFile = true;
-            entry.lastWriteTime = pItr->VGetLastWriteTime();
-        }
-        else
-        {
-            entry.isFile = false;
-            entry.lastWriteTime = 0;
-            auto *pSubItr = pItr->VOpenSubDir();
-            if (pSubItr)
-            {
-                entry = ScanDirectorySerial(pSubItr);
-                entry.name = pItr->VGetName();
-                delete pSubItr;
-            }
-        }
-        root.children.push_back(std::move(entry));
-
-        if (pItr->VNextItem() != IDirectoryTraverser::IIterator::E_OK)
-            break;
-    }
-    return root;
-}
-
 CFileMap::DirEntry CResourceLoader::ScanDirectory(IDirectoryTraverser::IIterator *pItr)
 {
     CFileMap::DirEntry root;
@@ -515,15 +474,6 @@ CFileMap::DirEntry CResourceLoader::ScanDirectory(IDirectoryTraverser::IIterator
 
     root.directoryPath = pItr->VGetDirectoryPath();
 
-    // First pass: collect immediate children, queueing subdirectories for parallel scan
-    struct SubDirWork
-    {
-        std::string name;
-        IDirectoryTraverser::IIterator *pSubItr = nullptr;
-        size_t childIndex = 0;
-    };
-    std::vector<SubDirWork> subDirs;
-
     while (pItr->VGetType() != IDirectoryTraverser::IIterator::T_Nothing)
     {
         CFileMap::DirEntry entry;
@@ -541,11 +491,9 @@ CFileMap::DirEntry CResourceLoader::ScanDirectory(IDirectoryTraverser::IIterator
             auto *pSubItr = pItr->VOpenSubDir();
             if (pSubItr)
             {
-                SubDirWork work;
-                work.name = entry.name;
-                work.pSubItr = pSubItr;
-                work.childIndex = root.children.size();
-                subDirs.push_back(std::move(work));
+                entry = ScanDirectory(pSubItr);
+                entry.name = pItr->VGetName();
+                delete pSubItr;
             }
         }
         root.children.push_back(std::move(entry));
@@ -553,36 +501,6 @@ CFileMap::DirEntry CResourceLoader::ScanDirectory(IDirectoryTraverser::IIterator
         if (pItr->VNextItem() != IDirectoryTraverser::IIterator::E_OK)
             break;
     }
-
-    // Parallel scan: submit each subdirectory to the thread pool.
-    // Each submitted task uses ScanDirectorySerial to avoid re-entering
-    // the pool recursively (which would cause deadlock).
-    if (!subDirs.empty())
-    {
-        auto &pool = CThreadPool::Instance();
-        std::vector<std::future<CFileMap::DirEntry>> futures;
-        futures.reserve(subDirs.size());
-
-        for (auto &work : subDirs)
-        {
-            futures.push_back(pool.Submit(
-                [pSub = work.pSubItr]() -> CFileMap::DirEntry
-                {
-                    auto result = ScanDirectorySerial(pSub);
-                    delete pSub;
-                    return result;
-                }));
-        }
-
-        for (size_t i = 0; i < subDirs.size(); ++i)
-        {
-            CFileMap::DirEntry scanned = futures[i].get();
-            auto &placeholder = root.children[subDirs[i].childIndex];
-            scanned.name = placeholder.name; // preserve original name
-            placeholder = std::move(scanned);
-        }
-    }
-
     return root;
 }
 
