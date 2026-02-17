@@ -20,11 +20,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #pragma once
 
 #include "rainman/core/gnuc_defines.h"
-#include <stdio.h>
 #include <map>
+#include <optional>
+#include <string>
 #include <vector>
 #include "rainman/core/Api.h"
-// #include "rainman/io/IFileStore.h"
 
 class RAINMAN_API CRgdHashTable
 {
@@ -33,8 +33,8 @@ class RAINMAN_API CRgdHashTable
     /*!
         Will not throw a CRainmanException
     */
-    CRgdHashTable(void);
-    ~CRgdHashTable(void);
+    CRgdHashTable();
+    ~CRgdHashTable();
 
     //! Creates a new (empty) RGD hash table
     /*!
@@ -111,9 +111,8 @@ class RAINMAN_API CRgdHashTable
   protected:
     struct _Value
     {
-        const char *sString;
-        bool bCustom;
-        _Value();
+        std::optional<std::string> sString;
+        bool bCustom = false;
     };
     std::map<unsigned long, _Value> m_mHashTable;
 

@@ -93,3 +93,44 @@ TEST_F(RgdHashTableTest, SameStringProducesSameHash) {
     unsigned long h2 = table.ValueToHash("consistent_key");
     EXPECT_EQ(h1, h2);
 }
+
+TEST_F(RgdHashTableTest, UnknownHashReturnsNullptr) {
+    // A hash never inserted should return nullptr
+    const char* result = table.HashToValue(0xFFFFFFFFUL);
+    EXPECT_EQ(result, nullptr);
+}
+
+TEST_F(RgdHashTableTest, NewClearsAllEntries) {
+    table.ValueToHash("some_key_before_new");
+    table.New();
+    // After New(), previously registered keys should be gone
+    const char* result = table.HashToValue(table.ValueToHashStatic("some_key_before_new"));
+    EXPECT_EQ(result, nullptr);
+}
+
+TEST_F(RgdHashTableTest, HexStringTooShortHashes) {
+    // "0xABCD" is only 6 chars, not 10 — should be hashed, not parsed as hex literal
+    unsigned long h = table.ValueToHash("0xABCD");
+    // It should NOT equal the literal value 0x0000ABCD
+    EXPECT_NE(h, 0x0000ABCDUL);
+}
+
+TEST_F(RgdHashTableTest, HexStringWithInvalidCharHashes) {
+    // "0xGGGGGGGG" has invalid hex chars — should fall through to hash
+    unsigned long h = table.ValueToHash("0xGGGGGGGG");
+    EXPECT_NE(h, 0UL); // should produce some hash, not zero
+}
+
+TEST_F(RgdHashTableTest, FillUnknownListDoesNotDuplicate) {
+    table.HashToValue(0xAAAAAAAAUL);
+    table.HashToValue(0xBBBBBBBBUL);
+    std::vector<unsigned long> unknowns;
+    table.FillUnknownList(unknowns);
+    int countA = 0, countB = 0;
+    for (unsigned long h : unknowns) {
+        if (h == 0xAAAAAAAAUL) ++countA;
+        if (h == 0xBBBBBBBBUL) ++countB;
+    }
+    EXPECT_EQ(countA, 1);
+    EXPECT_EQ(countB, 1);
+}

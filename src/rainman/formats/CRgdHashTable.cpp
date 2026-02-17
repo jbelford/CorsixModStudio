@@ -20,6 +20,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "rainman/formats/CRgdHashTable.h"
 #include "rainman/core/memdebug.h"
 #include "rainman/core/Exception.h"
+#include <cstdio>
+#include <cstring>
 
 extern "C"
 {
@@ -29,92 +31,93 @@ extern "C"
     ub4 hash3(ub1 *k, ub4 length, ub4 initval);
 }
 
-static char *mystrdup(const char *sStr)
+namespace
 {
-    char *s = new char[strlen(sStr) + 1];
-    if (s == nullptr)
-        return nullptr;
-    strcpy(s, sStr);
-    return s;
+
+unsigned long ComputeHash(const char *sValue, size_t iLen)
+{
+    return hash(reinterpret_cast<ub1 *>(const_cast<char *>(sValue)), static_cast<ub4>(iLen), 0);
 }
+
+//! Try to parse "0xHHHHHHHH" (exactly iLen == 10) as a hex literal.
+bool TryParseHexLiteral(const char *sValue, size_t iLen, unsigned long &iHash)
+{
+    if (iLen != 10 || sValue[0] != '0' || (sValue[1] != 'x' && sValue[1] != 'X'))
+        return false;
+
+    unsigned long iKey = 0;
+    for (int i = 2; i < 10; ++i)
+    {
+        char c = sValue[i];
+        iKey <<= 4;
+        if (c >= '0' && c <= '9')
+            iKey |= static_cast<unsigned long>(c - '0');
+        else if (c >= 'a' && c <= 'f')
+            iKey |= static_cast<unsigned long>(c - 'a' + 10);
+        else if (c >= 'A' && c <= 'F')
+            iKey |= static_cast<unsigned long>(c - 'A' + 10);
+        else
+            return false;
+    }
+    iHash = iKey;
+    return true;
+}
+
+//! Read one line from a FILE*, stripping trailing CR/LF. Returns false at EOF.
+bool ReadLine(FILE *f, std::string &line)
+{
+    line.clear();
+    int ch = 0;
+    while ((ch = fgetc(f)) != EOF)
+    {
+        if (ch == '\n')
+            break;
+        line += static_cast<char>(ch);
+    }
+    while (!line.empty() && (line.back() == '\r' || line.back() == '\n'))
+        line.pop_back();
+    return ch != EOF || !line.empty();
+}
+
+//! Strip whitespace characters from a string portion.
+std::string StripWhitespace(const std::string &s, size_t pos)
+{
+    std::string result;
+    result.reserve(s.size() - pos);
+    for (size_t i = pos; i < s.size(); ++i)
+    {
+        char c = s[i];
+        if (c != ' ' && c != '\t' && c != '\r' && c != '\n')
+            result += c;
+    }
+    return result;
+}
+
+} // namespace
 
 CRgdHashTable::CRgdHashTable()
 {
     for (int i = 1; i < 10000; ++i)
     {
-        char sBuf[24];
-        _Value Val;
-        Val.bCustom = false;
-        Val.sString = CHECK_MEM(mystrdup(itoa(i, sBuf, 10)));
-        m_mHashTable[hash((ub1 *)sBuf, (ub4)strlen(sBuf), 0)] = Val;
+        auto sStr = std::to_string(i);
+        _Value val;
+        val.bCustom = false;
+        val.sString = sStr;
+        m_mHashTable[ComputeHash(sStr.c_str(), sStr.size())] = std::move(val);
     }
 }
 
-CRgdHashTable::~CRgdHashTable() { _Clean(); }
+CRgdHashTable::~CRgdHashTable() = default;
 
 void CRgdHashTable::New() { _Clean(); }
 
 void CRgdHashTable::FillUnknownList(std::vector<unsigned long> &oList)
 {
-    for (auto itr = m_mHashTable.begin(); itr != m_mHashTable.end(); ++itr)
+    for (const auto &[key, val] : m_mHashTable)
     {
-        if (itr->second.sString == nullptr)
-            oList.push_back(itr->first);
+        if (!val.sString.has_value())
+            oList.push_back(key);
     }
-}
-
-static char *fgetline(FILE *f, unsigned int iInitSize = 32)
-{
-    unsigned int iTotalLen;
-    if (f == nullptr)
-        throw new CRainmanException(__FILE__, __LINE__, "No file");
-    if (iInitSize < 4)
-        iInitSize = 4;
-    iTotalLen = iInitSize;
-    char *sBuffer = new char[iInitSize];
-    char *sReadTo = sBuffer;
-    if (sBuffer == nullptr)
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Failed to allocate %u", iInitSize);
-
-    do
-    {
-        if (fgets(sReadTo, iInitSize, f) == nullptr)
-        {
-            if (feof(f))
-            {
-                if (sReadTo[strlen(sReadTo) - 1] == '\n')
-                    sReadTo[strlen(sReadTo) - 1] = 0;
-                return sBuffer;
-            }
-            delete[] sBuffer;
-            throw new CRainmanException(__FILE__, __LINE__, "Failed to read string");
-        }
-        if (sReadTo[strlen(sReadTo) - 1] == '\n')
-        {
-            size_t n = strlen(sReadTo) - 1;
-            sReadTo[n] = 0;
-            while (n > 0)
-            {
-                --n;
-                if (sReadTo[n] == '\n' || sReadTo[n] == '\r')
-                    sReadTo[n] = 0;
-                else
-                    break;
-            }
-            return sBuffer;
-        }
-        iTotalLen += iInitSize;
-        char *sTmp = new char[iTotalLen];
-        if (sTmp == nullptr)
-        {
-            delete[] sBuffer;
-            throw new CRainmanException(nullptr, __FILE__, __LINE__, "Failed to allocate %u", iTotalLen);
-        }
-        strcpy(sTmp, sBuffer);
-        delete[] sBuffer;
-        sBuffer = sTmp;
-        sReadTo = sBuffer + strlen(sBuffer);
-    } while (1);
 }
 
 void CRgdHashTable::ExtendWithDictionary(const char *sFile, bool bCustom)
@@ -122,115 +125,81 @@ void CRgdHashTable::ExtendWithDictionary(const char *sFile, bool bCustom)
     FILE *fFile = fopen(sFile, "rb");
     if (fFile == nullptr)
         throw new CRainmanException(nullptr, __FILE__, __LINE__, "Failed to open file \'%s\'", sFile);
-    while (!feof(fFile))
+
+    std::string sLine;
+    while (ReadLine(fFile, sLine))
     {
-        char *sLine;
-        try
-        {
-            sLine = fgetline(fFile);
-        }
-        catch (CRainmanException *pE)
-        {
-            fclose(fFile);
-            throw new CRainmanException(__FILE__, __LINE__, "Failed to read line", pE);
-        }
-        char *sBaseLine = sLine;
         bool bUnk = false;
-        if ((strncmp(sLine, "# 0x", 4) == 0) && (strncmp(sLine + 12, " is an unknown value!!", 22) == 0))
+        if (sLine.size() >= 34 && sLine.compare(0, 4, "# 0x") == 0 &&
+            sLine.compare(12, 22, " is an unknown value!!") == 0)
         {
             bUnk = true;
             sLine[0] = ' ';
             sLine[12] = '=';
         }
-        if (sLine[0] != '#')
+
+        if (sLine.empty() || sLine[0] == '#')
+            continue;
+
+        // Parse hex key from "0xHHHHHHHH=..." format
+        unsigned long iKey = 0;
+        int iBitsRead = -8;
+        size_t pos = 0;
+        while (pos < sLine.size() && sLine[pos] != '=')
         {
-            unsigned long iKey = 0;
-            int iBitsRead = -8;
-            // Read in key
-            while ((*sLine != '=') && *sLine)
+            char c = sLine[pos];
+            if (iBitsRead == -8)
             {
-                if (iBitsRead == -8)
-                {
-                    if (*sLine == '0')
-                        iBitsRead = -4;
-                }
-                else if (iBitsRead == -4)
-                {
-                    if (*sLine == 'x' || *sLine == 'X')
-                        iBitsRead = 0;
-                }
-                else if (iBitsRead < 32)
-                {
-                    if (*sLine >= '0' && *sLine <= '9')
-                    {
-                        iKey <<= 4;
-                        iKey |= (*sLine - '0');
-                        iBitsRead += 4;
-                    }
-                    else if (*sLine >= 'a' && *sLine <= 'f')
-                    {
-                        iKey <<= 4;
-                        iKey |= (*sLine - 'a' + 10);
-                        iBitsRead += 4;
-                    }
-                    else if (*sLine >= 'A' && *sLine <= 'F')
-                    {
-                        iKey <<= 4;
-                        iKey |= (*sLine - 'A' + 10);
-                        iBitsRead += 4;
-                    }
-                }
-
-                ++sLine;
+                if (c == '0')
+                    iBitsRead = -4;
             }
-            if (*sLine && *sLine == '=')
+            else if (iBitsRead == -4)
             {
-                ++sLine;
-
-                // Read in value
-                char *sValue = nullptr;
-                if (!bUnk)
-                {
-                    sValue = new char[strlen(sLine) + 1];
-                    if (sValue == nullptr)
-                    {
-                        delete[] sBaseLine;
-                        fclose(fFile);
-                        throw new CRainmanException(__FILE__, __LINE__, "Failed to allocate memory");
-                    }
-                    char *sTmp = sValue;
-                    memset(sValue, 0, strlen(sLine) + 1);
-                    while (*sLine)
-                    {
-                        if ((*sLine != ' ') && (*sLine != '\t') && (*sLine != '\r') && (*sLine != '\n'))
-                        {
-                            *sTmp = *sLine;
-                            ++sTmp;
-                        }
-                        ++sLine;
-                    }
-                }
-                _Value Val;
-
-                Val = m_mHashTable[iKey];
-                if (Val.sString)
-                {
-                    Val.bCustom = Val.bCustom && bCustom;
-                    delete[] sValue;
-                }
-                else
-                {
-                    Val.sString = sValue;
-                    Val.bCustom = bCustom;
-                }
-                m_mHashTable[iKey] = Val;
+                if (c == 'x' || c == 'X')
+                    iBitsRead = 0;
             }
+            else if (iBitsRead < 32)
+            {
+                if (c >= '0' && c <= '9')
+                {
+                    iKey <<= 4;
+                    iKey |= static_cast<unsigned long>(c - '0');
+                    iBitsRead += 4;
+                }
+                else if (c >= 'a' && c <= 'f')
+                {
+                    iKey <<= 4;
+                    iKey |= static_cast<unsigned long>(c - 'a' + 10);
+                    iBitsRead += 4;
+                }
+                else if (c >= 'A' && c <= 'F')
+                {
+                    iKey <<= 4;
+                    iKey |= static_cast<unsigned long>(c - 'A' + 10);
+                    iBitsRead += 4;
+                }
+            }
+            ++pos;
+        }
 
-            delete[] sBaseLine;
+        if (pos >= sLine.size() || sLine[pos] != '=')
+            continue;
+        ++pos; // skip '='
+
+        // Parse value (strip whitespace)
+        std::optional<std::string> sValue;
+        if (!bUnk)
+            sValue = StripWhitespace(sLine, pos);
+
+        auto &existing = m_mHashTable[iKey];
+        if (existing.sString.has_value())
+        {
+            existing.bCustom = existing.bCustom && bCustom;
         }
         else
         {
-            delete[] sLine;
+            existing.sString = std::move(sValue);
+            existing.bCustom = bCustom;
         }
     }
 
@@ -242,30 +211,18 @@ void CRgdHashTable::XRefWithStringList(const char *sFile)
     FILE *fFile = fopen(sFile, "rb");
     if (fFile == nullptr)
         throw new CRainmanException(nullptr, __FILE__, __LINE__, "Failed to open file \'%s\'", sFile);
-    while (!feof(fFile))
+
+    std::string sLine;
+    while (ReadLine(fFile, sLine))
     {
-        char *sLine;
-        try
-        {
-            sLine = fgetline(fFile);
-        }
-        catch (CRainmanException *pE)
-        {
-            fclose(fFile);
-            throw new CRainmanException(__FILE__, __LINE__, "Failed to read line", pE);
-        }
+        unsigned long iKey = ComputeHash(sLine.c_str(), sLine.size());
 
-        unsigned long iKey = hash((ub1 *)sLine, (ub4)strlen(sLine), 0);
-
-        if (m_mHashTable.find(iKey) != m_mHashTable.end() && m_mHashTable[iKey].sString == nullptr)
+        auto it = m_mHashTable.find(iKey);
+        if (it != m_mHashTable.end() && !it->second.sString.has_value())
         {
-            _Value Val;
-            Val.bCustom = true;
-            Val.sString = CHECK_MEM(mystrdup(sLine));
-            m_mHashTable[iKey] = Val;
+            it->second.sString = sLine;
+            it->second.bCustom = true;
         }
-
-        delete[] sLine;
     }
     fclose(fFile);
 }
@@ -278,30 +235,30 @@ void CRgdHashTable::SaveCustomKeys(const char *sFile)
 
     fputs("#RGD_DIC\n# This dictionary is generated from any keys that are \'discovered\'\n", fFile);
 
-    for (auto itr = m_mHashTable.begin(); itr != m_mHashTable.end(); ++itr)
+    for (const auto &[iKey, val] : m_mHashTable)
     {
-        if (itr->second.bCustom)
+        if (val.bCustom)
         {
-            if (itr->second.sString == nullptr)
+            if (!val.sString.has_value())
                 fputs("# ", fFile);
             // Output key
             fputs("0x", fFile);
             unsigned long iMask = 0xF0000000;
             for (int i = 7; i >= 0; --i)
             {
-                fputc("0123456789ABCDEF"[(itr->first & iMask) >> (i << 2)], fFile);
+                fputc("0123456789ABCDEF"[(iKey & iMask) >> (i << 2)], fFile);
                 iMask >>= 4;
             }
 
             // Output value
-            if (itr->second.sString == nullptr)
+            if (!val.sString.has_value())
             {
                 fputs(" is an unknown value!!\n", fFile);
             }
             else
             {
                 fputc('=', fFile);
-                fputs(itr->second.sString, fFile);
+                fputs(val.sString->c_str(), fFile);
                 fputc('\n', fFile);
             }
         }
@@ -312,134 +269,52 @@ void CRgdHashTable::SaveCustomKeys(const char *sFile)
 
 const char *CRgdHashTable::HashToValue(unsigned long iHash)
 {
-    const char *s = m_mHashTable[iHash].sString;
-    if (s == nullptr)
+    auto &val = m_mHashTable[iHash];
+    if (!val.sString.has_value())
     {
-        m_mHashTable[iHash].bCustom = true;
+        val.bCustom = true;
         return nullptr;
     }
-    return s;
+    return val.sString->c_str();
 }
 
 unsigned long CRgdHashTable::ValueToHash(const char *sValue)
 {
-    if (sValue[0] == '0' && sValue[1] == 'x')
+    unsigned long iKey = 0;
+    if (TryParseHexLiteral(sValue, std::strlen(sValue), iKey))
+        return iKey;
+
+    iKey = ComputeHash(sValue, std::strlen(sValue));
+    auto &val = m_mHashTable[iKey];
+    if (!val.sString.has_value())
     {
-        for (int i = 2; i < 10; ++i)
+        // Non-numeric strings are flagged as custom
+        bool bIsNonNumeric = false;
+        for (const char *p = sValue; *p; ++p)
         {
-            if (!((sValue[i] >= '0' && sValue[i] <= '9') || (sValue[i] >= 'a' && sValue[i] <= 'f') ||
-                  (sValue[i] >= 'A' && sValue[i] <= 'F')))
-                goto nothex;
-        }
-        if (sValue[10] == 0)
-        {
-            unsigned long iKey = 0;
-            for (int i = 2; i < 10; ++i)
+            if (*p < '0' || *p > '9')
             {
-                iKey <<= 4;
-                if (sValue[i] >= '0' && sValue[i] <= '9')
-                    iKey |= (sValue[i] - '0');
-                if (sValue[i] >= 'a' && sValue[i] <= 'f')
-                    iKey |= (sValue[i] - 'a' + 10);
-                if (sValue[i] >= 'A' && sValue[i] <= 'F')
-                    iKey |= (sValue[i] - 'A' + 10);
-            }
-            return iKey;
-        }
-    }
-nothex:
-    unsigned long iKey = hash((ub1 *)sValue, (ub4)strlen(sValue), 0);
-    if (m_mHashTable[iKey].sString == nullptr)
-    {
-        _Value Val;
-        Val.bCustom = false;
-        const char *sTmp = sValue;
-        do
-        {
-            if (((*sTmp) < '0') || ((*sTmp) > '9'))
-            {
-                Val.bCustom = true;
+                bIsNonNumeric = true;
                 break;
             }
-            ++sTmp;
-        } while (*sTmp);
-
-        Val.sString = CHECK_MEM(mystrdup(sValue));
-        m_mHashTable[iKey] = Val;
+        }
+        val.bCustom = bIsNonNumeric;
+        val.sString = sValue;
     }
     return iKey;
 }
 
 unsigned long CRgdHashTable::ValueToHashStatic(const char *sValue, size_t iValueLen)
 {
-    if (sValue[0] == '0' && sValue[1] == 'x' && iValueLen == 10)
-    {
-        for (int i = 2; i < 10; ++i)
-        {
-            if (!((sValue[i] >= '0' && sValue[i] <= '9') || (sValue[i] >= 'a' && sValue[i] <= 'f') ||
-                  (sValue[i] >= 'A' && sValue[i] <= 'F')))
-                goto nothex;
-        }
-        unsigned long iKey = 0;
-        for (int i = 2; i < 10; ++i)
-        {
-            iKey <<= 4;
-            if (sValue[i] >= '0' && sValue[i] <= '9')
-                iKey |= (sValue[i] - '0');
-            if (sValue[i] >= 'a' && sValue[i] <= 'f')
-                iKey |= (sValue[i] - 'a' + 10);
-            if (sValue[i] >= 'A' && sValue[i] <= 'F')
-                iKey |= (sValue[i] - 'A' + 10);
-        }
+    unsigned long iKey = 0;
+    if (TryParseHexLiteral(sValue, iValueLen, iKey))
         return iKey;
-    }
-nothex:
-    unsigned long iKey = hash((ub1 *)sValue, (ub4)iValueLen, 0);
-    return iKey;
+    return ComputeHash(sValue, iValueLen);
 }
 
 unsigned long CRgdHashTable::ValueToHashStatic(const char *sValue)
 {
-    if (sValue[0] == '0' && sValue[1] == 'x')
-    {
-        for (int i = 2; i < 10; ++i)
-        {
-            if (!((sValue[i] >= '0' && sValue[i] <= '9') || (sValue[i] >= 'a' && sValue[i] <= 'f') ||
-                  (sValue[i] >= 'A' && sValue[i] <= 'F')))
-                goto nothex;
-        }
-        if (sValue[10] == 0)
-        {
-            unsigned long iKey = 0;
-            for (int i = 2; i < 10; ++i)
-            {
-                iKey <<= 4;
-                if (sValue[i] >= '0' && sValue[i] <= '9')
-                    iKey |= (sValue[i] - '0');
-                if (sValue[i] >= 'a' && sValue[i] <= 'f')
-                    iKey |= (sValue[i] - 'a' + 10);
-                if (sValue[i] >= 'A' && sValue[i] <= 'F')
-                    iKey |= (sValue[i] - 'A' + 10);
-            }
-            return iKey;
-        }
-    }
-nothex:
-    unsigned long iKey = hash((ub1 *)sValue, (ub4)strlen(sValue), 0);
-    return iKey;
+    return ValueToHashStatic(sValue, std::strlen(sValue));
 }
 
-CRgdHashTable::_Value::_Value()
-{
-    sString = nullptr;
-    bCustom = false;
-}
-
-void CRgdHashTable::_Clean()
-{
-    for (auto itr = m_mHashTable.begin(); itr != m_mHashTable.end(); ++itr)
-    {
-        if (itr->second.sString)
-            delete[] itr->second.sString;
-    }
-}
+void CRgdHashTable::_Clean() { m_mHashTable.clear(); }
