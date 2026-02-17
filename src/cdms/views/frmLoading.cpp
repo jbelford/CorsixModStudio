@@ -28,7 +28,7 @@ END_EVENT_TABLE()
 
 frmLoading::frmLoading(const wxString &sTitle)
     : wxFrame(wxTheApp->GetTopWindow(), -1, sTitle, wxPoint(0, 0),
-              wxWindow::FromDIP(wxSize(384, 420), wxTheApp->GetTopWindow()),
+              wxWindow::FromDIP(wxSize(384, 384), wxTheApp->GetTopWindow()),
               wxFRAME_FLOAT_ON_PARENT | wxFRAME_TOOL_WINDOW)
 {
     CentreOnParent();
@@ -37,17 +37,7 @@ frmLoading::frmLoading(const wxString &sTitle)
     m_pCancelButton = nullptr;
 
     m_pLoadingImage = new wxBitmap(wxT("RIDB_LOADING"), wxBITMAP_TYPE_BMP_RESOURCE);
-    const wxSize originalSize(m_pLoadingImage->GetWidth(), m_pLoadingImage->GetHeight());
-    const wxSize scaledSize = FromDIP(originalSize);
-    if (scaledSize != originalSize)
-    {
-        wxImage scaledImage = m_pLoadingImage->ConvertToImage();
-        if (scaledImage.IsOk())
-        {
-            scaledImage.Rescale(scaledSize.GetWidth(), scaledSize.GetHeight(), wxIMAGE_QUALITY_HIGH);
-            *m_pLoadingImage = wxBitmap(scaledImage);
-        }
-    }
+    wxBitmap::Rescale(*m_pLoadingImage, GetSize());
 
     m_pText = new wxStaticText(this, -1, sTitle, FromDIP(wxPoint(0, 317)), FromDIP(wxSize(384, 33)),
                                wxST_NO_AUTORESIZE | wxALIGN_CENTER);
@@ -58,8 +48,14 @@ frmLoading::frmLoading(const wxString &sTitle)
     f.SetWeight(wxFONTWEIGHT_BOLD);
     m_pText->SetFont(f);
 
-    m_pCancelButton =
-        new wxButton(this, wxID_CANCEL, wxT("Cancel"), FromDIP(wxPoint(142, 358)), FromDIP(wxSize(100, 28)));
+    m_pCancelButton = new wxButton(this, wxID_CANCEL, wxT("\u2715"), FromDIP(wxPoint(356, 4)), FromDIP(wxSize(24, 24)),
+                                   wxBU_EXACTFIT | wxBORDER_NONE);
+    m_pCancelButton->SetBackgroundColour(wxColour(255, 255, 255));
+    m_pCancelButton->SetForegroundColour(wxColour(100, 100, 100));
+    m_pCancelButton->SetCursor(wxCursor(wxCURSOR_HAND));
+    m_pCancelButton->SetToolTip(wxT("Cancel"));
+    m_pCancelButton->Bind(wxEVT_ENTER_WINDOW, &frmLoading::OnCancelMouseEnter, this);
+    m_pCancelButton->Bind(wxEVT_LEAVE_WINDOW, &frmLoading::OnCancelMouseLeave, this);
     m_pCancelButton->Hide();
 }
 
@@ -100,4 +96,20 @@ void frmLoading::OnCancel(wxCommandEvent &event)
         m_pCancelButton->Disable();
         m_fnOnCancel();
     }
+}
+
+void frmLoading::OnCancelMouseEnter(wxMouseEvent &event)
+{
+    m_pCancelButton->SetBackgroundColour(wxColour(232, 17, 35));
+    m_pCancelButton->SetForegroundColour(wxColour(255, 255, 255));
+    m_pCancelButton->Refresh();
+    event.Skip();
+}
+
+void frmLoading::OnCancelMouseLeave(wxMouseEvent &event)
+{
+    m_pCancelButton->SetBackgroundColour(wxColour(255, 255, 255));
+    m_pCancelButton->SetForegroundColour(wxColour(100, 100, 100));
+    m_pCancelButton->Refresh();
+    event.Skip();
 }

@@ -49,6 +49,8 @@ class frmLoading : public wxFrame
     void OnQuit(wxCloseEvent &event);
     void OnPaint(wxPaintEvent &event);
     void OnCancel(wxCommandEvent &event);
+    void OnCancelMouseEnter(wxMouseEvent &event);
+    void OnCancelMouseLeave(wxMouseEvent &event);
 
     void SetMessage(const wxString &sMsg);
 
