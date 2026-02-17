@@ -525,7 +525,7 @@ void CResourceLoader::LoadFoldersParallel(std::vector<FolderTask> &tasks, CModul
     for (const auto &task : tasks)
     {
         futures.push_back(pool.Submit(
-            [&task, &pool, pFSS = module.m_pFSS]() -> ScanResult
+            [&task, pFSS = module.m_pFSS]() -> ScanResult
             {
                 ScanResult result;
                 IDirectoryTraverser::IIterator *pDirItr = nullptr;
@@ -538,74 +538,12 @@ void CResourceLoader::LoadFoldersParallel(std::vector<FolderTask> &tasks, CModul
                     pE->destroy();
                     return result;
                 }
-                if (!pDirItr)
-                    return result;
-
-                // Parallel scan: list immediate children, then fan out
-                // subdirectory scans to the pool for concurrent I/O.
-                result.snapshot.isFile = false;
-                result.snapshot.lastWriteTime = 0;
-                result.snapshot.directoryPath = pDirItr->VGetDirectoryPath();
-
-                struct SubDirWork
+                if (pDirItr)
                 {
-                    IDirectoryTraverser::IIterator *pSubItr;
-                    size_t childIndex;
-                };
-                std::vector<SubDirWork> subDirs;
-
-                while (pDirItr->VGetType() != IDirectoryTraverser::IIterator::T_Nothing)
-                {
-                    CFileMap::DirEntry entry;
-                    entry.name = pDirItr->VGetName();
-
-                    if (pDirItr->VGetType() == IDirectoryTraverser::IIterator::T_File)
-                    {
-                        entry.isFile = true;
-                        entry.lastWriteTime = pDirItr->VGetLastWriteTime();
-                    }
-                    else
-                    {
-                        entry.isFile = false;
-                        entry.lastWriteTime = 0;
-                        auto *pSubItr = pDirItr->VOpenSubDir();
-                        if (pSubItr)
-                            subDirs.push_back({pSubItr, result.snapshot.children.size()});
-                    }
-                    result.snapshot.children.push_back(std::move(entry));
-
-                    if (pDirItr->VNextItem() != IDirectoryTraverser::IIterator::E_OK)
-                        break;
+                    result.snapshot = ScanDirectory(pDirItr);
+                    result.hasIterator = true;
+                    delete pDirItr;
                 }
-                delete pDirItr;
-
-                // Submit each subdirectory for parallel I/O.
-                // ScanDirectory is purely serial (no further pool submissions),
-                // so this cannot deadlock.
-                if (!subDirs.empty())
-                {
-                    std::vector<std::future<CFileMap::DirEntry>> subFutures;
-                    subFutures.reserve(subDirs.size());
-                    for (auto &work : subDirs)
-                    {
-                        subFutures.push_back(pool.Submit(
-                            [pSub = work.pSubItr]() -> CFileMap::DirEntry
-                            {
-                                auto scanned = ScanDirectory(pSub);
-                                delete pSub;
-                                return scanned;
-                            }));
-                    }
-                    for (size_t i = 0; i < subDirs.size(); ++i)
-                    {
-                        CFileMap::DirEntry scanned = subFutures[i].get();
-                        auto &placeholder = result.snapshot.children[subDirs[i].childIndex];
-                        scanned.name = placeholder.name;
-                        placeholder = std::move(scanned);
-                    }
-                }
-
-                result.hasIterator = true;
                 return result;
             }));
     }
