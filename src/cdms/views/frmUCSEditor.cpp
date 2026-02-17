@@ -23,6 +23,7 @@
 #include "common/strings.h"
 #include "common/config.h"
 #include "common/Utility.h"
+#include "presenters/CUcsEditorPresenter.h"
 #include <wx/msgdlg.h>
 #include <wx/toolbar.h>
 #include <wx/tbarbase.h>
@@ -221,7 +222,7 @@ void frmUCSEditor::OnNewEntry(wxCommandEvent &event)
         return;
     }
 
-    wxString sLastID;
+    wxString sDefaultId;
     wchar_t sNumberBuffer[34];
     sNumberBuffer[0] = '$';
     try
@@ -229,9 +230,8 @@ void frmUCSEditor::OnNewEntry(wxCommandEvent &event)
         auto *pMap = m_pUCS->GetRawMap();
         if (!pMap->empty())
         {
-            auto itMax = std::max_element(pMap->begin(), pMap->end(),
-                                          [](const auto &a, const auto &b) { return a.first < b.first; });
-            _ultow(itMax->first + 1, sNumberBuffer + 1, 10);
+            unsigned long iNext = CUcsEditorPresenter::SuggestNextId(*pMap);
+            _ultow(iNext, sNumberBuffer + 1, 10);
         }
         else
             wcscpy(sNumberBuffer, AppStr(ucsedit_newentrydefault));
@@ -245,75 +245,54 @@ void frmUCSEditor::OnNewEntry(wxCommandEvent &event)
     wxString sNewID;
     sNewID = wxGetTextFromUser(AppStr(ucsedit_newentrycaption), AppStr(ucsedit_newentry), sNumberBuffer, this,
                                wxDefaultCoord, wxDefaultCoord, false);
-    if (!sNewID.IsEmpty())
+    if (sNewID.IsEmpty())
+        return;
+
+    unsigned long iNewID = 0;
+    if (!CUcsEditorPresenter::ParseIdFromInput(sNewID, iNewID))
+        return;
+
+    if (!CUcsEditorPresenter::IsIdInRecommendedRange(iNewID))
     {
-        const wchar_t *pStr = sNewID;
-        while (*pStr && (*pStr < '0' || *pStr > '9'))
-            ++pStr;
-        if (*pStr)
+        bool bDontAsk;
+        TheConfig->Read(AppStr(config_mod_ucsrangeremember), &bDontAsk, false);
+        if (!bDontAsk)
         {
-            unsigned long iNewID = wcstoul(pStr, nullptr, 10);
-            if (iNewID < 15000000 || iNewID > 20000000)
+            auto *pQuestion = new frmUCSOutOfRange(AppStr(ucsrange_title), iNewID);
+            if (pQuestion->ShowModal() == wxID_NO)
             {
-                bool bDontAsk;
-                TheConfig->Read(AppStr(config_mod_ucsrangeremember), &bDontAsk, false);
-                if (!bDontAsk)
-                {
-                    auto *pQuestion = new frmUCSOutOfRange(AppStr(ucsrange_title), iNewID);
-                    if (pQuestion->ShowModal() == wxID_NO)
-                    {
-                        delete pQuestion;
-                        return;
-                    }
-                    delete pQuestion;
-                }
-            }
-            decltype(m_pUCS->GetRawMap()) pEntries;
-            try
-            {
-                pEntries = m_pUCS->GetRawMap();
-            }
-            catch (CRainmanException *pE)
-            {
-                ErrorBoxE(pE);
+                delete pQuestion;
                 return;
             }
-            for (auto itr = pEntries->begin(); itr != pEntries->end(); ++itr)
-            {
-                if (itr->second)
-                {
-                    if (itr->first == iNewID)
-                    {
-                        wxMessageBox(AppStr(ucsedit_newentrydupcaption), AppStr(ucsedit_newentryduptitle), wxICON_ERROR,
-                                     this);
-                        return;
-                    }
-                    else if (itr->first >= iNewID)
-                    {
-                        wchar_t sNumberBuffer[34];
-                        sNumberBuffer[0] = '$';
-                        _ultow(itr->first, sNumberBuffer + 1, 10);
-                        wxPGProperty *oEntry = m_pPropertyGrid->GetPropertyByLabel(sNumberBuffer);
-                        _ultow(iNewID, sNumberBuffer + 1, 10);
-                        try
-                        {
-                            m_pUCS->SetString(iNewID, L"");
-                            m_bNeedsSave = true;
-                        }
-                        catch (CRainmanException *pE)
-                        {
-                            ErrorBoxE(pE);
-                            return;
-                        }
-                        oEntry = m_pPropertyGrid->Insert(oEntry,
-                                                         new wxStringProperty(sNumberBuffer, sNumberBuffer, wxT("")));
-                        m_pPropertyGrid->Refresh();
-                        m_pPropertyGrid->EnsureVisible(oEntry);
-                        m_pPropertyGrid->SelectProperty(oEntry, true);
-                        return;
-                    }
-                }
-            }
+            delete pQuestion;
+        }
+    }
+
+    decltype(m_pUCS->GetRawMap()) pEntries;
+    try
+    {
+        pEntries = m_pUCS->GetRawMap();
+    }
+    catch (CRainmanException *pE)
+    {
+        ErrorBoxE(pE);
+        return;
+    }
+
+    if (CUcsEditorPresenter::ValidateNewId(iNewID, *pEntries) == CUcsEditorPresenter::IdValidation::Duplicate)
+    {
+        wxMessageBox(AppStr(ucsedit_newentrydupcaption), AppStr(ucsedit_newentryduptitle), wxICON_ERROR, this);
+        return;
+    }
+
+    // Find insertion point (sorted order)
+    for (auto itr = pEntries->begin(); itr != pEntries->end(); ++itr)
+    {
+        if (itr->second && itr->first >= iNewID)
+        {
+            sNumberBuffer[0] = '$';
+            _ultow(itr->first, sNumberBuffer + 1, 10);
+            wxPGProperty *oEntry = m_pPropertyGrid->GetPropertyByLabel(sNumberBuffer);
             _ultow(iNewID, sNumberBuffer + 1, 10);
             try
             {
@@ -325,16 +304,34 @@ void frmUCSEditor::OnNewEntry(wxCommandEvent &event)
                 ErrorBoxE(pE);
                 return;
             }
-            wxPGProperty *oEntry = m_pPropertyGrid->Append(new wxStringProperty(sNumberBuffer, sNumberBuffer, wxT("")));
+            oEntry = m_pPropertyGrid->Insert(oEntry, new wxStringProperty(sNumberBuffer, sNumberBuffer, wxT("")));
             m_pPropertyGrid->Refresh();
             m_pPropertyGrid->EnsureVisible(oEntry);
             m_pPropertyGrid->SelectProperty(oEntry, true);
-            if (m_pPropertyGrid->GetRoot()->GetChildCount() == 1)
-            {
-                m_pPropertyGrid->SetSplitterLeft();
-            }
             return;
         }
+    }
+
+    // Append at end
+    sNumberBuffer[0] = '$';
+    _ultow(iNewID, sNumberBuffer + 1, 10);
+    try
+    {
+        m_pUCS->SetString(iNewID, L"");
+        m_bNeedsSave = true;
+    }
+    catch (CRainmanException *pE)
+    {
+        ErrorBoxE(pE);
+        return;
+    }
+    wxPGProperty *oEntry = m_pPropertyGrid->Append(new wxStringProperty(sNumberBuffer, sNumberBuffer, wxT("")));
+    m_pPropertyGrid->Refresh();
+    m_pPropertyGrid->EnsureVisible(oEntry);
+    m_pPropertyGrid->SelectProperty(oEntry, true);
+    if (m_pPropertyGrid->GetRoot()->GetChildCount() == 1)
+    {
+        m_pPropertyGrid->SetSplitterLeft();
     }
 }
 
@@ -352,36 +349,19 @@ void frmUCSEditor::OnSaveFile(wxCommandEvent &event)
 
 void frmUCSEditor::DoSave()
 {
-    wxString sNewFile = TheConstruct->GetModuleFile().BeforeLast('\\');
-    sNewFile.Append(wxT("\\"));
+    wxString sModuleDir = TheConstruct->GetModuleFile().BeforeLast('\\');
+    wxString sNewFile;
     try
     {
-        if (TheConstruct->GetModuleService().GetModuleType() == CModuleFile::MT_CompanyOfHeroes)
-        {
-            sNewFile.Append(wxT("Engine\\Locale\\"));
-        }
-        else
-        {
-            wxString sLocFolder = TheConstruct->GetModuleService().GetLocaleFolder();
-            if (!sLocFolder.IsEmpty())
-            {
-                sNewFile.Append(sLocFolder);
-                sNewFile.Append(wxT("\\"));
-            }
-            else
-            {
-                sNewFile.Append(TheConstruct->GetModuleService().GetModFolder());
-                sNewFile.Append(wxT("\\Locale\\"));
-            }
-        }
-        sNewFile.Append(TheConstruct->GetModuleService().GetLocale());
+        auto &modSvc = TheConstruct->GetModuleService();
+        sNewFile = CUcsEditorPresenter::BuildLocaleBasePath(
+            sModuleDir, modSvc.GetModuleType(), modSvc.GetLocaleFolder(), modSvc.GetModFolder(), modSvc.GetLocale());
     }
     catch (CRainmanException *pE)
     {
         ErrorBoxE(pE);
         return;
     }
-    sNewFile.Append(wxT("\\"));
 
     try
     {
