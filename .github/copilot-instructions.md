@@ -82,6 +82,8 @@ All public Rainman classes use `RAINMAN_API` (defined in `rainman/core/Api.h`). 
 - Classes: `C` prefix for concrete (`CSgaFile`), `I` prefix for interfaces (`IFileStore`)
 - Members: `m_` prefix with Hungarian notation (`m_sMessage` = string, `m_iLine` = integer, `m_pPrecursor` = pointer, `m_bInited` = bool)
 - Virtual methods: `V` prefix (`VInit`, `VRead`, `VSeek`)
+- CDMS window classes: `frm` prefix (`frmRgdEditor`, `frmSgaMake`)
+- Event IDs: `ID_` prefix with uppercase (`ID_MY_BUTTON`)
 
 ### Tests
 Tests use Google Test in `tests/rainman/` and `tests/cdms/`. Test files are named `*_test.cpp` and must be **manually added** to the corresponding `CMakeLists.txt` — test files are **not** auto-discovered via glob.
@@ -90,6 +92,12 @@ CDMS tests must also list the specific CDMS `.cpp` source files they depend on i
 
 ### Source file discovery
 Rainman and CDMS **production** source files are auto-discovered via `file(GLOB)` — just create the file and rebuild. Test files must be explicitly listed.
+
+### Include order
+CDMS `.cpp` files should include `Common.h` first (pulls in wxWidgets core and debug helpers), then Rainman headers.
+
+### Concurrency
+Use `CThreadPool::Instance().Submit(callable, args...)` (from `rainman/core/CThreadPool.h`) instead of `std::async`. The pool is a process-wide singleton sized to `std::thread::hardware_concurrency()`.
 
 ### Stream ownership
 `VOpenStream()` / `VOpenOutputStream()` return heap-allocated streams. The **caller** owns the returned stream and must `delete` it. `Load()` / `Save()` methods on parser classes do **not** take ownership of the stream passed to them.
@@ -107,17 +115,6 @@ IFileStore::IStream* pStream = store.VOpenStream(pRange);
 
 ### Multi-inclusion headers
 `strings.h` uses a `S_CPP_` macro pattern to switch between `extern` declarations and definitions on re-inclusion. Do **not** add `#pragma once` to this file. `strings.cpp` pre-defines the include guard, includes `Common.h`, then undefines it and re-includes with `S_CPP_` defined.
-
-## Tool Usage
-
-### Documentation lookups
-Use **Context7** (`context7-resolve-library-id` → `context7-query-docs`) to look up documentation for libraries, frameworks, and general programming technologies (e.g., CMake, Google Test, wxWidgets, Lua, vcpkg).
-
-### Windows & Microsoft technologies
-Use **Microsoft Learn** (`microsoft-learn-microsoft_docs_search`, `microsoft-learn-microsoft_code_sample_search`, `microsoft-learn-microsoft_docs_fetch`) for Windows-specific APIs, MSVC compiler behavior, Win32, COM, DirectX, and any other Microsoft/Azure documentation.
-
-### Crash debugging
-Use **WinDbg** tools (`windbg-open_windbg_dump`, `windbg-run_windbg_cmd`, `windbg-open_windbg_remote`) to analyze crash dumps (`.dmp` files) and connect to remote debugging sessions. Use `windbg-list_windbg_dumps` to discover available dump files.
 
 ### Boy-scout modernization
 This is a 2006 codebase being ported to C++20/x64. Apply the **boy-scout rule**: when touching existing code, improve it toward modern C++ if the change is safe and localized. Examples:

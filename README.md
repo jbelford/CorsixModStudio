@@ -188,6 +188,15 @@ Rainman was originally a DLL (`__declspec(dllexport/import)`). We build it as a 
 
 ## Contributing
 
+### Conventions
+
+- **Naming**: `C` prefix for concrete classes, `I` for interfaces, `V` for virtual methods, `m_` with Hungarian prefixes for members. CDMS window classes use `frm` prefix (`frmRgdEditor`), event IDs use `ID_` prefix.
+- **Error handling**: Heap-allocated exceptions (`throw new CRainmanException(...)`), cleaned up with `destroy()`, never `delete`. In the service layer, convert to `Result<T>` via `ResultFromException()`.
+- **Include order**: CDMS `.cpp` files include `Common.h` first, then Rainman headers (with fully-qualified `rainman/` prefix).
+- **Concurrency**: Use `CThreadPool::Instance().Submit()` (`rainman/core/CThreadPool.h`) instead of `std::async`.
+- **Stream ownership**: `VOpenStream()` / `VOpenOutputStream()` return caller-owned heap-allocated streams — the caller must `delete` them.
+- **Source discovery**: Production sources are auto-discovered via `file(GLOB)`. Test files must be explicitly listed in their `CMakeLists.txt`.
+
 ### Modern C++ — Boy-Scout Rule
 
 This codebase follows a **boy-scout modernization** approach: when touching existing code, improve it toward modern C++20 if the change is safe and localized. Examples:
@@ -199,6 +208,8 @@ This codebase follows a **boy-scout modernization** approach: when touching exis
 - Add `const` to parameters and methods that don't mutate
 
 **Preserve** at API boundaries: `unsigned long` in existing virtual signatures, heap-allocated exceptions (`throw new CRainmanException`), `RAINMAN_API` macro, `C`/`I`/`V`/`m_` naming conventions, include guards, LGPL headers, and vendored Lua code.
+
+For detailed AI-assisted development guidelines, see [`.github/copilot-instructions.md`](.github/copilot-instructions.md).
 
 ## License
 - **CDMS Application**: GNU General Public License v2.0
