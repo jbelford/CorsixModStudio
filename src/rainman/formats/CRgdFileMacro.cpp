@@ -1268,9 +1268,9 @@ int CRgdFileMacro::luaf_pairs(lua_State *L)
     _lua_udat_to_table(L, 1);
     lua51L_checktype(L, 1, LUA_TTABLE);
     lua51_pushliteral(L, "next");
-    lua51_rawget(L, LUA_GLOBALSINDEX); /* return generator, */
-    lua51_pushvalue(L, 1);             /* state, */
-    lua51_pushnil(L);                  /* and initial value */
+    lua51_rawget(L, LUA51_GLOBALSINDEX); /* return generator, */
+    lua51_pushvalue(L, 1);               /* state, */
+    lua51_pushnil(L);                    /* and initial value */
     return 3;
 }
 
@@ -1452,30 +1452,30 @@ void CRgdFileMacro::loadMacro(const char *sCode)
     lua51_pushstring(m_pL, "print");
     lua51_pushlightuserdata(m_pL, (void *)this);
     lua51_pushcclosure(m_pL, luaf_print, 1);
-    lua51_settable(m_pL, LUA_GLOBALSINDEX);
+    lua51_settable(m_pL, LUA51_GLOBALSINDEX);
 
     lua51_pushstring(m_pL, "UCS");
     lua51_pushlightuserdata(m_pL, (void *)this);
     lua51_pushcclosure(m_pL, luaf_ucs, 1);
-    lua51_settable(m_pL, LUA_GLOBALSINDEX);
+    lua51_settable(m_pL, LUA51_GLOBALSINDEX);
 
     lua51_pushstring(m_pL, "loadRgd");
     lua51_pushlightuserdata(m_pL, (void *)this);
     lua51_pushcclosure(m_pL, luaf_loadrgd, 1);
-    lua51_settable(m_pL, LUA_GLOBALSINDEX);
+    lua51_settable(m_pL, LUA51_GLOBALSINDEX);
 
     lua51_pushstring(m_pL, "next");
     lua51_pushcclosure(m_pL, luaf_next, 0);
-    lua51_settable(m_pL, LUA_GLOBALSINDEX);
+    lua51_settable(m_pL, LUA51_GLOBALSINDEX);
     lua51_pushstring(m_pL, "pairs");
     lua51_pushcclosure(m_pL, luaf_pairs, 0);
-    lua51_settable(m_pL, LUA_GLOBALSINDEX);
+    lua51_settable(m_pL, LUA51_GLOBALSINDEX);
     lua51_pushstring(m_pL, "pcall");
     lua51_pushcclosure(m_pL, luaf_pcall, 0);
-    lua51_settable(m_pL, LUA_GLOBALSINDEX);
+    lua51_settable(m_pL, LUA51_GLOBALSINDEX);
     lua51_pushstring(m_pL, "xpcall");
     lua51_pushcclosure(m_pL, luaf_xpcall, 0);
-    lua51_settable(m_pL, LUA_GLOBALSINDEX);
+    lua51_settable(m_pL, LUA51_GLOBALSINDEX);
 
     lua51_getglobal(m_pL, "table");
     lua51_pushcfunction(m_pL, luaf_tfilter);
