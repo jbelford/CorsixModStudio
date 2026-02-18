@@ -21,6 +21,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "rainman/core/gnuc_defines.h"
 #include "rainman/formats/CChunkyFile.h"
+#include <memory>
+#include <string>
 
 class RAINMAN_API CRgmFile
 {
@@ -52,11 +54,13 @@ class RAINMAN_API CRgmFile
             void SetValueText(const char *sValue);
             void SetValueNumber(float fValue);
 
+          public:
+            ~CVariable();
+
           protected:
             friend class CRgmFile::CMaterial;
             CVariable(CChunkyFile::CChunk *pChunk);
             CVariable();
-            ~CVariable();
             void _Free();
             void _WriteChunk();
 
@@ -67,7 +71,7 @@ class RAINMAN_API CRgmFile
                 char *m_sValue;
                 float m_fValue;
             };
-            char *m_sName;
+            std::string m_sName;
         };
 
         size_t GetVariableCount() const;
@@ -75,15 +79,17 @@ class RAINMAN_API CRgmFile
         void DeleteVariable(size_t i);
         CVariable *NewVariable();
 
+      public:
+        ~CMaterial();
+
       protected:
         friend class CRgmFile;
-        char *m_sName;
-        char *m_sDxName;
-        std::vector<CVariable *> m_vVariables;
+        std::string m_sName;
+        std::string m_sDxName;
+        std::vector<std::unique_ptr<CVariable>> m_vVariables;
         CChunkyFile::CChunk *m_pOurChunk;
 
         CMaterial(CChunkyFile::CChunk *pChunk);
-        ~CMaterial();
 
         void _Free();
         void _ParseInfo(CChunkyFile::CChunk *pChunk);
@@ -100,8 +106,8 @@ class RAINMAN_API CRgmFile
     CMaterial *GetMaterial(size_t i);
 
   protected:
-    CChunkyFile *m_pChunky;
-    std::vector<CMaterial *> m_vMaterials;
+    std::unique_ptr<CChunkyFile> m_pChunky;
+    std::vector<std::unique_ptr<CMaterial>> m_vMaterials;
 
     void _Free();
     void _ParseChunk(CChunkyFile::CChunk *pChunk);

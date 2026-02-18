@@ -21,7 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "rainman/core/Internal_Util.h"
 #include "rainman/core/memdebug.h"
 
-CRgmFile::CRgmFile() { m_pChunky = nullptr; }
+CRgmFile::CRgmFile() = default;
 
 CRgmFile::~CRgmFile() { _Free(); }
 
@@ -29,7 +29,7 @@ void CRgmFile::Load(IFileStore::IStream *pStream)
 {
     RAINMAN_LOG_INFO("CRgmFile::Load() — parsing RGM model file");
     _Free();
-    m_pChunky = CHECK_MEM(new CChunkyFile);
+    m_pChunky = std::make_unique<CChunkyFile>();
 
     try
     {
@@ -231,7 +231,7 @@ void CRgmFile::Save(IFileStore::IOutputStream *pStream)
 
 void CRgmFile::CMaterial::_WriteChunk()
 {
-    m_pOurChunk->SetDescriptor(m_sName);
+    m_pOurChunk->SetDescriptor(m_sName.c_str());
 
     size_t iC = m_pOurChunk->GetChildCount();
     for (size_t i = 0; i < iC; ++i)
@@ -242,9 +242,9 @@ void CRgmFile::CMaterial::_WriteChunk()
             try
             {
                 CMemoryStore::COutStream *pData = CMemoryStore::OpenOutputStreamExt();
-                auto iL = (unsigned long)strlen(m_sDxName);
+                auto iL = (unsigned long)m_sDxName.size();
                 pData->VWrite(1, sizeof(uint32_t), &iL);
-                pData->VWrite(iL, 1, m_sDxName);
+                pData->VWrite(iL, 1, m_sDxName.c_str());
                 pChild->SetData(pData);
                 delete pData;
             }
@@ -268,14 +268,14 @@ void CRgmFile::_ParseChunk(CChunkyFile::CChunk *pChunk)
     {
         if (strcmp(pChunk->GetName(), "MTRL") == 0)
         {
-            CMaterial *pNewMat = nullptr;
+            std::unique_ptr<CMaterial> pNewMat;
             try
             {
-                pNewMat = new CMaterial(pChunk);
+                pNewMat.reset(new CMaterial(pChunk));
             }
             CATCH_THROW("Cannot parse material")
 
-            m_vMaterials.push_back(pNewMat);
+            m_vMaterials.push_back(std::move(pNewMat));
         }
         else
         {
@@ -306,12 +306,10 @@ CRgmFile::CMaterial::CMaterial(CChunkyFile::CChunk *pChunk)
                                 pChunk->GetVersion());
 
     // Initialise members
-    m_sName = nullptr;
-    m_sDxName = nullptr;
     m_pOurChunk = pChunk;
 
     // Parse
-    m_sName = Util_mystrdup(pChunk->GetDescriptor());
+    m_sName = pChunk->GetDescriptor();
     size_t iC = pChunk->GetChildCount();
     for (size_t i = 0; i < iC; ++i)
     {
@@ -330,10 +328,10 @@ CRgmFile::CMaterial::CMaterial(CChunkyFile::CChunk *pChunk)
         }
         else if (memcmp(pChild->GetName(), "\0VAR", 5) == 0)
         {
-            CVariable *pVar;
+            std::unique_ptr<CVariable> pVar;
             try
             {
-                pVar = new CVariable(pChild);
+                pVar.reset(new CVariable(pChild));
             }
             catch (const CRainmanException &e)
             {
@@ -341,7 +339,7 @@ CRgmFile::CMaterial::CMaterial(CChunkyFile::CChunk *pChunk)
                 throw CRainmanException(e, __FILE__, __LINE__, "Error parsing variable");
             }
 
-            m_vVariables.push_back(pVar);
+            m_vVariables.push_back(std::move(pVar));
         }
     }
 }
@@ -350,12 +348,8 @@ CRgmFile::CMaterial::~CMaterial() { _Free(); }
 
 void CRgmFile::CMaterial::_Free()
 {
-    delete[] m_sName;
-    delete[] m_sDxName;
-    for (auto itr = m_vVariables.begin(); itr != m_vVariables.end(); ++itr)
-    {
-        delete *itr;
-    }
+    m_sName.clear();
+    m_sDxName.clear();
     m_vVariables.clear();
 }
 
@@ -378,31 +372,20 @@ void CRgmFile::CMaterial::_ParseInfo(CChunkyFile::CChunk *pChunk)
     unsigned long iStrLen;
     pData->VRead(1, sizeof(uint32_t), &iStrLen);
 
-    m_sDxName = new char[iStrLen + 1];
-    m_sDxName[iStrLen] = 0;
+    m_sDxName.resize(iStrLen);
 
-    pData->VRead(iStrLen, 1, m_sDxName);
+    pData->VRead(iStrLen, 1, m_sDxName.data());
 
     delete pData;
 }
 
-const char *CRgmFile::CMaterial::CVariable::GetName() const { return m_sName; }
+const char *CRgmFile::CMaterial::CVariable::GetName() const { return m_sName.c_str(); }
 
-const char *CRgmFile::CMaterial::GetDxName() const { return m_sDxName; }
+const char *CRgmFile::CMaterial::GetDxName() const { return m_sDxName.c_str(); }
 
-void CRgmFile::CMaterial::SetName(const char *sValue)
-{
-    if (m_sName)
-        delete[] m_sName;
-    m_sName = Util_mystrdup(sValue);
-}
+void CRgmFile::CMaterial::SetName(const char *sValue) { m_sName = sValue; }
 
-void CRgmFile::CMaterial::SetDxName(const char *sValue)
-{
-    if (m_sDxName)
-        delete[] m_sDxName;
-    m_sDxName = Util_mystrdup(sValue);
-}
+void CRgmFile::CMaterial::SetDxName(const char *sValue) { m_sDxName = sValue; }
 
 CRgmFile::CMaterial::CVariable::eValTypes CRgmFile::CMaterial::CVariable::GetType() const { return m_eValType; }
 
@@ -420,11 +403,7 @@ float CRgmFile::CMaterial::CVariable::GetValueNumber() const
     return m_fValue;
 }
 
-void CRgmFile::CMaterial::CVariable::SetName(const char *sName)
-{
-    delete[] m_sName;
-    m_sName = Util_mystrdup(sName);
-}
+void CRgmFile::CMaterial::CVariable::SetName(const char *sName) { m_sName = sName; }
 
 void CRgmFile::CMaterial::CVariable::SetValueText(const char *sValue)
 {
@@ -447,9 +426,9 @@ void CRgmFile::CMaterial::CVariable::_WriteChunk()
     CMemoryStore::COutStream *pData = CMemoryStore::OpenOutputStreamExt();
 
     unsigned long iL;
-    iL = (unsigned long)strlen(m_sName);
+    iL = (unsigned long)m_sName.size();
     pData->VWrite(1, sizeof(uint32_t), &iL);
-    pData->VWrite(iL, 1, m_sName);
+    pData->VWrite(iL, 1, m_sName.c_str());
 
     switch (m_eValType)
     {
@@ -503,10 +482,9 @@ CRgmFile::CMaterial::CVariable::CVariable(CChunkyFile::CChunk *pChunk)
     unsigned long iStrLen, iDataType, iDataLen;
     pData->VRead(1, sizeof(uint32_t), &iStrLen);
 
-    m_sName = new char[iStrLen + 1];
-    m_sName[iStrLen] = 0;
+    m_sName.resize(iStrLen);
 
-    pData->VRead(iStrLen, 1, m_sName);
+    pData->VRead(iStrLen, 1, m_sName.data());
 
     pData->VRead(1, sizeof(uint32_t), &iDataType);
     pData->VRead(1, sizeof(uint32_t), &iDataLen);
@@ -554,38 +532,29 @@ CRgmFile::CMaterial::CVariable::CVariable()
     m_pOurChunk = nullptr;
     m_eValType = VT_Number;
     m_fValue = 0.0;
-    m_sName = Util_mystrdup("New Variable");
+    m_sName = "New Variable";
 }
 
 CRgmFile::CMaterial::CVariable::~CVariable() { _Free(); }
 
 void CRgmFile::CMaterial::CVariable::_Free()
 {
-    delete[] m_sName;
     if (m_eValType == VT_Text)
         delete[] m_sValue;
 }
 
 void CRgmFile::_Free()
 {
-    for (auto itr = m_vMaterials.begin(); itr != m_vMaterials.end(); ++itr)
-    {
-        delete *itr;
-    }
-    if (m_pChunky)
-    {
-        delete m_pChunky;
-        m_pChunky = nullptr;
-    }
     m_vMaterials.clear();
+    m_pChunky.reset();
 }
 
 size_t CRgmFile::GetMaterialCount() const { return m_vMaterials.size(); }
 
-CRgmFile::CMaterial *CRgmFile::GetMaterial(size_t i) { return m_vMaterials[i]; }
+CRgmFile::CMaterial *CRgmFile::GetMaterial(size_t i) { return m_vMaterials[i].get(); }
 
-const char *CRgmFile::CMaterial::GetName() const { return m_sName; }
+const char *CRgmFile::CMaterial::GetName() const { return m_sName.c_str(); }
 
 size_t CRgmFile::CMaterial::GetVariableCount() const { return m_vVariables.size(); }
 
-CRgmFile::CMaterial::CVariable *CRgmFile::CMaterial::GetVariable(size_t i) { return m_vVariables[i]; }
+CRgmFile::CMaterial::CVariable *CRgmFile::CMaterial::GetVariable(size_t i) { return m_vVariables[i].get(); }
