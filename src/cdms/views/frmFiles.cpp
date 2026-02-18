@@ -71,7 +71,6 @@ CFilesTreeItemData::CFilesTreeItemData(IDirectoryTraverser::IIterator *pItr)
 {
     sMod = nullptr;
     sSource = nullptr;
-    pToFillWith = nullptr;
     if (pItr->VGetType() == IDirectoryTraverser::IIterator::T_File)
     {
         try
@@ -91,7 +90,7 @@ CFilesTreeItemData::CFilesTreeItemData(IDirectoryTraverser::IIterator *pItr, IDi
 {
     sMod = nullptr;
     sSource = nullptr;
-    pToFillWith = pSubDirItr;
+    pToFillWith.reset(pSubDirItr);
     if (pItr->VGetType() == IDirectoryTraverser::IIterator::T_File)
     {
         try
@@ -107,7 +106,7 @@ CFilesTreeItemData::CFilesTreeItemData(IDirectoryTraverser::IIterator *pItr, IDi
     }
 }
 
-CFilesTreeItemData::~CFilesTreeItemData() { delete pToFillWith; }
+CFilesTreeItemData::~CFilesTreeItemData() = default;
 
 // Handlers — CLuaAction method implementations (declared in frmFiles.h)
 
@@ -784,11 +783,10 @@ void frmFiles::PopulateChildren(const wxTreeItemId &oParent)
         return;
 
     m_pTree->Freeze();
-    _FillOneLevelFromIterator(oParent, pData->pToFillWith);
+    _FillOneLevelFromIterator(oParent, pData->pToFillWith.get());
 
     // Iterator consumed — release it
-    delete pData->pToFillWith;
-    pData->pToFillWith = nullptr;
+    pData->pToFillWith.reset();
     m_pTree->Thaw();
 }
 

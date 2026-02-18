@@ -40,6 +40,7 @@
 #include <wx/aui/auibook.h>
 #include <wx/listctrl.h>
 #include <vector>
+#include <memory>
 #include "frmLuaInheritTree.h"
 
 class CFilesTreeItemData : public wxTreeItemData
@@ -57,7 +58,7 @@ class CFilesTreeItemData : public wxTreeItemData
     const char *sSource;
 
     //! Sub-directory iterator for lazy child population; owned by this object
-    IDirectoryTraverser::IIterator *pToFillWith;
+    std::unique_ptr<IDirectoryTraverser::IIterator> pToFillWith;
 };
 
 class frmFiles : public wxWindow

@@ -32,11 +32,12 @@
 #endif
 // ----------------------------
 #include <wx/bitmap.h>
+#include <memory>
 
 class frmCredits : public wxDialog
 {
   protected:
-    wxBitmap *m_pLoadingImage;
+    std::unique_ptr<wxBitmap> m_pLoadingImage;
     wxStaticText *m_pText;
 
   public:

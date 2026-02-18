@@ -37,6 +37,7 @@
 #include "presenters/CUcsToDatPresenter.h"
 #include "views/interfaces/IUcsToDatView.h"
 #include <memory>
+#include <string>
 
 class frmUCSToDAT : public wxDialog, public IUcsToDatView
 {
@@ -85,7 +86,7 @@ class UCSToDATConvertor
     void doConvertion();
 
   protected:
-    char *m_sOutputName;
+    std::string m_sOutputName;
     unsigned long m_iRangeStart, m_iRangeEnd;
     const CModuleFile *m_pModule;
 

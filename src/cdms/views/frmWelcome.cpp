@@ -41,7 +41,7 @@ frmWelcome::frmWelcome(wxWindow *parent, wxWindowID id, const wxPoint &pos, cons
 {
     bFirstMouseEvent = true;
 
-    m_pDonateBitmap = new wxBitmap(wxT("IDB_DONATE"), wxBITMAP_TYPE_BMP_RESOURCE);
+    m_pDonateBitmap = std::make_unique<wxBitmap>(wxT("IDB_DONATE"), wxBITMAP_TYPE_BMP_RESOURCE);
     m_pDonateBitmap->SetMask(new wxMask(*m_pDonateBitmap, wxColour(255, 0, 255)));
 
     SetBackgroundStyle(wxBG_STYLE_SYSTEM);
@@ -192,4 +192,4 @@ void frmWelcome::OnLoadModCoH(wxCommandEvent &event)
     TheConstruct->DoLoadMod(wxT(""), ConstructFrame::LM_CoH_OF);
 }
 
-frmWelcome::~frmWelcome() { delete m_pDonateBitmap; }
+frmWelcome::~frmWelcome() = default;

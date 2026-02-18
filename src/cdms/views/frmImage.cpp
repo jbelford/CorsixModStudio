@@ -25,6 +25,7 @@
 #include <wx/mstream.h>
 
 #include <utility>
+#include <memory>
 #include "common/Common.h"
 
 BEGIN_EVENT_TABLE(frmImageViewer, wxWindow)
@@ -41,19 +42,19 @@ class wxMyScrolledWindow : public wxScrolledWindow
                        const wxString &name = wxT("scrolledWindow"))
         : wxScrolledWindow(parent, id, pos, size, style, name), m_pBitmap(pBitmap)
     {
-        m_pDC = new wxMemoryDC(*m_pBitmap);
+        m_pDC = std::make_unique<wxMemoryDC>(*m_pBitmap);
 
         SetVirtualSize(pBitmap->GetWidth(), pBitmap->GetHeight());
         SetScrollRate(8, 8);
     }
 
-    ~wxMyScrolledWindow() override { delete m_pDC; }
+    ~wxMyScrolledWindow() override = default;
 
-    void OnDraw(wxDC &dc) override { dc.Blit(0, 0, m_pBitmap->GetWidth(), m_pBitmap->GetHeight(), m_pDC, 0, 0); }
+    void OnDraw(wxDC &dc) override { dc.Blit(0, 0, m_pBitmap->GetWidth(), m_pBitmap->GetHeight(), m_pDC.get(), 0, 0); }
 
   protected:
     wxBitmap *m_pBitmap;
-    wxMemoryDC *m_pDC;
+    std::unique_ptr<wxMemoryDC> m_pDC;
 };
 
 /*

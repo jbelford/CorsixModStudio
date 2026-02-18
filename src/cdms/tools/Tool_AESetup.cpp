@@ -172,7 +172,6 @@ void frmUCSToDAT::EnableControls()
 
 UCSToDATConvertor::UCSToDATConvertor()
 {
-    m_sOutputName = nullptr;
     m_iRangeStart = 0;
     m_iRangeEnd = 0;
     m_pModule = nullptr;
@@ -180,16 +179,9 @@ UCSToDATConvertor::UCSToDATConvertor()
     // doConvertion()
 }
 
-UCSToDATConvertor::~UCSToDATConvertor() { delete[] m_sOutputName; }
+UCSToDATConvertor::~UCSToDATConvertor() = default;
 
-void UCSToDATConvertor::setOutputFilename(const char *sFilename)
-{
-    delete[] m_sOutputName;
-    m_sOutputName = nullptr;
-    size_t iLength = strlen(CHECK_STR(sFilename)) + 1;
-    m_sOutputName = CHECK_MEM(new char[iLength]);
-    memcpy(m_sOutputName, sFilename, iLength);
-}
+void UCSToDATConvertor::setOutputFilename(const char *sFilename) { m_sOutputName = CHECK_STR(sFilename); }
 
 void UCSToDATConvertor::setRange(unsigned long iStart, unsigned long iEnd)
 {
@@ -254,7 +246,7 @@ static void AddUcsFilesToVector(const CModuleFile *pModule, std::vector<const CU
 
 void UCSToDATConvertor::doConvertion()
 {
-    if (m_sOutputName == nullptr || m_pModule == nullptr)
+    if (m_sOutputName.empty() || m_pModule == nullptr)
         QUICK_THROW("Convertion parameters not set");
 
     std::vector<const CUcsFile *> vFiles;
@@ -278,12 +270,12 @@ void UCSToDATConvertor::doConvertion()
         m_aUCSFileEnds[i] = m_vSortedMaps[i].cend();
     }
 
-    m_fDAT = fopen(m_sOutputName, "wt");
+    m_fDAT = fopen(m_sOutputName.c_str(), "wt");
     if (m_fDAT == nullptr)
     {
         delete[] m_aUCSFiles;
         delete[] m_aUCSFileEnds;
-        throw CModStudioException(nullptr, __FILE__, __LINE__, "Cannot open output file \'%s\'", m_sOutputName);
+        throw CModStudioException(nullptr, __FILE__, __LINE__, "Cannot open output file \'%s\'", m_sOutputName.c_str());
     }
 
     fprintf(m_fDAT, "/////////////////////////////////////////////////////////////////////\n");

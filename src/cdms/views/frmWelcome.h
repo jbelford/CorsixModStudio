@@ -30,11 +30,12 @@
 #include "wx/wx.h"
 #endif
 // ----------------------------
+#include <memory>
 
 class frmWelcome : public wxWindow
 {
   protected:
-    wxBitmap *m_pDonateBitmap;
+    std::unique_ptr<wxBitmap> m_pDonateBitmap;
     bool bFirstMouseEvent;
 
   public:

@@ -30,7 +30,6 @@ frmCredits::frmCredits()
                wxFRAME_FLOAT_ON_PARENT | wxDEFAULT_DIALOG_STYLE)
 {
     CentreOnParent();
-    m_pLoadingImage = nullptr;
     m_pText = nullptr;
 
     wxString sCredits;
@@ -44,7 +43,7 @@ frmCredits::frmCredits()
     sCredits.Append(
         wxT("\nThis program is free software licensed under the GNU GPL. Email modstudio@corsix.org for details"));
 
-    m_pLoadingImage = new wxBitmap(wxT("RIDB_LOADING"), wxBITMAP_TYPE_BMP_RESOURCE);
+    m_pLoadingImage = std::make_unique<wxBitmap>(wxT("RIDB_LOADING"), wxBITMAP_TYPE_BMP_RESOURCE);
     m_pText = new wxStaticText(this, -1, sCredits, FromDIP(wxPoint(0, 317)), FromDIP(wxSize(384, 167)),
                                wxST_NO_AUTORESIZE | wxALIGN_LEFT);
     // m_pText->Wrap(384);
@@ -55,7 +54,7 @@ frmCredits::frmCredits()
     m_pText->SetFont(f);
 }
 
-frmCredits::~frmCredits() { delete m_pLoadingImage; }
+frmCredits::~frmCredits() = default;
 
 void frmCredits::OnPaint(wxPaintEvent &event)
 {
