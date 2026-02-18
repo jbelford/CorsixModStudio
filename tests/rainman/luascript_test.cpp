@@ -37,7 +37,7 @@ TEST(LuaScriptEmpty, DefaultConstructor)
 {
 	CLuaScript s;
 	// No lua state loaded yet — GetLuaError should be null
-	EXPECT_EQ(s.GetLuaError(), nullptr);
+	EXPECT_STREQ(s.GetLuaError(), "");
 }
 
 TEST_F(LuaScriptTest, LoadAndExecuteSimpleScript)
@@ -74,7 +74,7 @@ TEST_F(LuaScriptTest, LoadNonexistentFileThrows)
 	}
 	ASSERT_TRUE(caught.has_value());
 	// GetLuaError should be populated
-	EXPECT_NE(script.GetLuaError(), nullptr);
+	EXPECT_STRNE(script.GetLuaError(), "");
 }
 
 TEST_F(LuaScriptTest, ExecuteWithoutLoadThrows)
@@ -104,7 +104,7 @@ TEST_F(LuaScriptTest, ExecuteWithSyntaxErrorThrows)
 		caught = ex;
 	}
 	ASSERT_TRUE(caught.has_value());
-	EXPECT_NE(script.GetLuaError(), nullptr);
+	EXPECT_STRNE(script.GetLuaError(), "");
 }
 
 TEST_F(LuaScriptTest, ExecuteWithRuntimeErrorThrows)
@@ -122,7 +122,7 @@ TEST_F(LuaScriptTest, ExecuteWithRuntimeErrorThrows)
 		caught = ex;
 	}
 	ASSERT_TRUE(caught.has_value());
-	EXPECT_NE(script.GetLuaError(), nullptr);
+	EXPECT_STRNE(script.GetLuaError(), "");
 }
 
 TEST_F(LuaScriptTest, LoadReplacesState)

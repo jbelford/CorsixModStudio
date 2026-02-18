@@ -26,6 +26,7 @@ extern "C"
 };
 #include "rainman/lua/CLuaScript_Interface.h"
 #include "rainman/core/Api.h"
+#include <string>
 
 class RAINMAN_API CLuaScript
 {
@@ -35,10 +36,11 @@ class RAINMAN_API CLuaScript
 
     void Load(const char *sFile);
     void Execute();
-    const char *GetLuaError(); // Obsolete?
+    const char *GetLuaError();
+
   protected:
-    lua_State *m_pLua;
-    char *m_sLuaError;
+    lua_State *m_pLua = nullptr;
+    std::string m_sLuaError;
 
     void _Clean();
 };

@@ -31,11 +31,7 @@ extern "C"
 #include <cstring>
 #include <cstdlib>
 
-CLuaScript::CLuaScript()
-{
-    m_pLua = nullptr;
-    m_sLuaError = nullptr;
-}
+CLuaScript::CLuaScript() { m_pLua = nullptr; }
 
 CLuaScript::~CLuaScript() { _Clean(); }
 
@@ -45,16 +41,17 @@ void CLuaScript::Load(const char *sFile)
     m_pLua = lua_open();
     if (!m_pLua)
     {
-        m_sLuaError = strdup("Unable to create lua state");
+        m_sLuaError = "Unable to create lua state";
         throw CRainmanException(__FILE__, __LINE__, "Unable to create Lua state");
     }
 
     if (luaL_loadfile(m_pLua, sFile))
     {
-        char *sLuaError = strdup(lua_tostring(m_pLua, -1));
+        m_sLuaError = lua_tostring(m_pLua, -1);
+        auto sErr = m_sLuaError;
         _Clean();
-        m_sLuaError = sLuaError;
-        throw CRainmanException(nullptr, __FILE__, __LINE__, "Lua error: %s", sLuaError);
+        m_sLuaError = std::move(sErr);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Lua error: %s", m_sLuaError.c_str());
     }
 
     // LuaBind_Globals(m_pLua);
@@ -65,7 +62,7 @@ void CLuaScript::Execute()
     RAINMAN_LOG_DEBUG("CLuaScript::Execute() — running Lua script");
     if (!m_pLua)
     {
-        m_sLuaError = strdup("No lua state");
+        m_sLuaError = "No lua state";
         throw CRainmanException(__FILE__, __LINE__, "No state");
     }
 
@@ -84,24 +81,25 @@ void CLuaScript::Execute()
         {
         case LUA_TSTRING:
         {
-            char *sLuaError = strdup(lua_tostring(m_pLua, -1));
+            m_sLuaError = lua_tostring(m_pLua, -1);
+            auto sErr = m_sLuaError;
             _Clean();
-            m_sLuaError = sLuaError;
-            throw CRainmanException(nullptr, __FILE__, __LINE__, "Lua error: %s", sLuaError);
+            m_sLuaError = std::move(sErr);
+            throw CRainmanException(nullptr, __FILE__, __LINE__, "Lua error: %s", m_sLuaError.c_str());
         }
         case LUA_TLIGHTUSERDATA:
         {
             auto *e = (CRainmanException *)lua_touserdata(m_pLua, -1);
-            char *sLuaError = strdup(e->getMessage());
+            m_sLuaError = e->getMessage();
+            auto sErr = m_sLuaError;
             _Clean();
-            m_sLuaError = sLuaError;
+            m_sLuaError = std::move(sErr);
             throw CRainmanException(*e, __FILE__, __LINE__, "Lua error");
         }
         default:
         {
-            char *sLuaError = strdup("Unknown error");
             _Clean();
-            m_sLuaError = sLuaError;
+            m_sLuaError = "Unknown error";
             throw CRainmanException(nullptr, __FILE__, __LINE__, "Lua unknown error");
         }
         };
@@ -110,15 +108,11 @@ void CLuaScript::Execute()
     // End
 }
 
-const char *CLuaScript::GetLuaError() { return m_sLuaError; }
+const char *CLuaScript::GetLuaError() { return m_sLuaError.c_str(); }
 
 void CLuaScript::_Clean()
 {
-    if (m_sLuaError)
-    {
-        free(m_sLuaError);
-        m_sLuaError = nullptr;
-    }
+    m_sLuaError.clear();
     if (m_pLua)
     {
         lua_close(m_pLua);
