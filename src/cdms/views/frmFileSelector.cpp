@@ -323,9 +323,8 @@ void frmFileSelector::MakeChildren(const wxTreeItemId &parent)
                     pChildren = 0;
                 }
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
-                auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
                 pChildren = 0;
             }
             wxTreeItemId oChild = m_pTree->AppendItem(parent, AsciiTowxString(pData->pToFillWith->VGetName()), 4, 4,
@@ -340,9 +339,8 @@ void frmFileSelector::MakeChildren(const wxTreeItemId &parent)
             if (pData->pToFillWith->VNextItem() != IDirectoryTraverser::IIterator::E_OK)
                 break;
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
-            auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
             break;
         }
     }

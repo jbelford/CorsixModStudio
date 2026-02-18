@@ -192,7 +192,7 @@ TEST(CSgaMakePresenterAsyncTest, InvalidInputDir_ReportsError)
 
             auto itrResult = FileService::IterateFileSystem(sInputDir);
             if (!itrResult)
-                throw new CRainmanException(__FILE__, __LINE__, "Cannot iterate input directory");
+                throw CRainmanException(__FILE__, __LINE__, "Cannot iterate input directory");
 
             auto *pItr = itrResult.value().release();
             auto saOutput = wxStringToAscii(sOutputFile);

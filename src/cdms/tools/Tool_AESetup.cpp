@@ -194,7 +194,7 @@ void UCSToDATConvertor::setOutputFilename(const char *sFilename)
 void UCSToDATConvertor::setRange(unsigned long iStart, unsigned long iEnd)
 {
     if (iEnd < iStart)
-        throw new CModStudioException(nullptr, __FILE__, __LINE__, "Range %lu -> %lu is invalid", iStart, iEnd);
+        throw CModStudioException(nullptr, __FILE__, __LINE__, "Range %lu -> %lu is invalid", iStart, iEnd);
     m_iRangeStart = iStart;
     m_iRangeEnd = iEnd;
 }
@@ -283,7 +283,7 @@ void UCSToDATConvertor::doConvertion()
     {
         delete[] m_aUCSFiles;
         delete[] m_aUCSFileEnds;
-        throw new CModStudioException(nullptr, __FILE__, __LINE__, "Cannot open output file \'%s\'", m_sOutputName);
+        throw CModStudioException(nullptr, __FILE__, __LINE__, "Cannot open output file \'%s\'", m_sOutputName);
     }
 
     fprintf(m_fDAT, "/////////////////////////////////////////////////////////////////////\n");

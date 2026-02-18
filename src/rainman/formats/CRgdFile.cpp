@@ -119,7 +119,7 @@ void CRgdFile::New(long iVersion)
     if (m_pDataChunk == nullptr)
     {
         _Clean();
-        throw new CRainmanException(__FILE__, __LINE__, "Memory allocation error");
+        throw CRainmanException(__FILE__, __LINE__, "Memory allocation error");
     }
     m_vRgdChunks.push_back(m_pDataChunk);
     m_pDataChunk->RootEntry.Type = DT_Bool;
@@ -139,7 +139,7 @@ void CRgdFile::New(long iVersion)
     if (m_pDataChunk->sChunkyType == nullptr)
     {
         _Clean();
-        throw new CRainmanException(__FILE__, __LINE__, "Memory allocation error");
+        throw CRainmanException(__FILE__, __LINE__, "Memory allocation error");
     }
     strcpy(m_pDataChunk->sChunkyType, "DATAAEGD");
 
@@ -147,7 +147,7 @@ void CRgdFile::New(long iVersion)
     if (m_pDataChunk->sString == nullptr)
     {
         _Clean();
-        throw new CRainmanException(__FILE__, __LINE__, "Memory allocation error");
+        throw CRainmanException(__FILE__, __LINE__, "Memory allocation error");
     }
     strcpy(m_pDataChunk->sString, "");
 
@@ -159,7 +159,7 @@ void CRgdFile::New(long iVersion)
     if (m_pDataChunk->RootEntry.Data.t == nullptr)
     {
         _Clean();
-        throw new CRainmanException(__FILE__, __LINE__, "Memory allocation error");
+        throw CRainmanException(__FILE__, __LINE__, "Memory allocation error");
     }
 }
 
@@ -170,7 +170,7 @@ void CRgdFile::Save(IFileStore::IOutputStream *pStream)
     RAINMAN_LOG_INFO("CRgdFile::Save() — writing RGD to stream");
     // Write RGD Header
     if (pStream == nullptr)
-        throw new CRainmanException(__FILE__, __LINE__, "No stream present");
+        throw CRainmanException(__FILE__, __LINE__, "No stream present");
 
     try
     {
@@ -184,9 +184,9 @@ void CRgdFile::Save(IFileStore::IOutputStream *pStream)
             pStream->VWrite(1, 4, (void *)&m_RgdHeader.iUnknown6);
         }
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CRainmanException(__FILE__, __LINE__, "Write error", pE);
+        throw CRainmanException(e, __FILE__, __LINE__, "Write error");
     }
 
     // Write chunks
@@ -202,18 +202,18 @@ void CRgdFile::Save(IFileStore::IOutputStream *pStream)
                 pDataStr = (CMemoryStore::COutStream *)CMem.VOpenOutputStream(
                     nullptr, false); // I _know_ that it WILL be a CMemoryStore::COutStream
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
-                throw new CRainmanException(__FILE__, __LINE__, "Cannot open memory stream", pE);
+                throw CRainmanException(e, __FILE__, __LINE__, "Cannot open memory stream");
             }
             try
             {
                 _WriteRawRgdData(pDataStr, &(**itr).RootEntry);
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
                 delete pDataStr;
-                throw new CRainmanException(__FILE__, __LINE__, "Cannot write raw data", pE);
+                throw CRainmanException(e, __FILE__, __LINE__, "Cannot write raw data");
             }
             try
             {
@@ -221,24 +221,24 @@ void CRgdFile::Save(IFileStore::IOutputStream *pStream)
                 delete[] (**itr).pData;
                 (**itr).pData = new char[pDataStr->GetDataLength()];
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
                 delete pDataStr;
-                throw new CRainmanException(__FILE__, __LINE__, "Cannot get data length", pE);
+                throw CRainmanException(e, __FILE__, __LINE__, "Cannot get data length");
             }
             if ((**itr).pData == nullptr)
             {
                 delete pDataStr;
-                throw new CRainmanException(__FILE__, __LINE__, "Memory allocation error");
+                throw CRainmanException(__FILE__, __LINE__, "Memory allocation error");
             }
             try
             {
                 memcpy((**itr).pData, pDataStr->GetData(), pDataStr->GetDataLength());
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
                 delete pDataStr;
-                throw new CRainmanException(__FILE__, __LINE__, "Cannot copy data", pE);
+                throw CRainmanException(e, __FILE__, __LINE__, "Cannot copy data");
             }
             delete pDataStr;
             (**itr).iChunkLength = (**itr).iStringLength + sizeof(uint32_t) + sizeof(uint32_t) + (**itr).iDataLength;
@@ -260,9 +260,9 @@ void CRgdFile::Save(IFileStore::IOutputStream *pStream)
             pStream->VWrite(1, 4, (void *)&(**itr).iDataLength);
             pStream->VWrite((**itr).iDataLength, 1, (void *)(**itr).pData);
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
-            throw new CRainmanException(__FILE__, __LINE__, "Cannot write values", pE);
+            throw CRainmanException(e, __FILE__, __LINE__, "Cannot write values");
         }
     }
 }
@@ -274,9 +274,9 @@ void CRgdFile::Load(CLuaFile *pLuaFile, long iVersion)
     {
         New(iVersion);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CRainmanException(__FILE__, __LINE__, "Cannot create new", pE);
+        throw CRainmanException(e, __FILE__, __LINE__, "Cannot create new");
     }
 
     lua_State *L = pLuaFile->m_pLua;
@@ -292,7 +292,7 @@ void CRgdFile::Load(CLuaFile *pLuaFile, long iVersion)
         {
             _Clean();
             lua_pop(L, 1);
-            throw new CRainmanException(__FILE__, __LINE__, "No GameData in lua file");
+            throw CRainmanException(__FILE__, __LINE__, "No GameData in lua file");
         }
     }
     delete m_pDataChunk->RootEntry.Data.t;
@@ -302,11 +302,11 @@ void CRgdFile::Load(CLuaFile *pLuaFile, long iVersion)
     {
         _LoadLua(L, &m_pDataChunk->RootEntry, true);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
         _Clean();
         lua_pop(L, 1);
-        throw new CRainmanException(__FILE__, __LINE__, "Cannot create load raw lua", pE);
+        throw CRainmanException(e, __FILE__, __LINE__, "Cannot create load raw lua");
     }
     lua_pop(L, 1);
 }
@@ -409,7 +409,7 @@ void CRgdFile::_LoadLua(lua_State *L, _RgdEntry *pDest, bool bSkipThisLevelRef)
     {
     case LUA_TNONE:
     case LUA_TNIL:
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Data type %i not supported", lua_type(L, -1));
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Data type %i not supported", lua_type(L, -1));
 
     case LUA_TBOOLEAN:
         pDest->Type = IMetaNode::DT_Bool;
@@ -417,7 +417,7 @@ void CRgdFile::_LoadLua(lua_State *L, _RgdEntry *pDest, bool bSkipThisLevelRef)
         break;
 
     case LUA_TLIGHTUSERDATA:
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Data type %i not supported", lua_type(L, -1));
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Data type %i not supported", lua_type(L, -1));
 
     case LUA_TNUMBER:
         pDest->Type = IMetaNode::DT_Float;
@@ -469,12 +469,12 @@ void CRgdFile::_LoadLua(lua_State *L, _RgdEntry *pDest, bool bSkipThisLevelRef)
     {
         auto *pTmp = (tLuaTableProtector *)lua_touserdata(L, -1);
         if (pTmp->iMagic != 0x7291BEEF)
-            throw new CRainmanException(__FILE__, __LINE__, "Data type not supported");
+            throw CRainmanException(__FILE__, __LINE__, "Data type not supported");
         lua_pushlightuserdata(L, (void *)pTmp);
         lua_remove(L, -2);
         lua_gettable(L, LUA_REGISTRYINDEX);
         if (lua_type(L, -1) != LUA_TTABLE)
-            throw new CRainmanException(__FILE__, __LINE__, "Data type not supported");
+            throw CRainmanException(__FILE__, __LINE__, "Data type not supported");
         // flow onward / no break
     }
     case LUA_TTABLE:
@@ -525,28 +525,28 @@ void CRgdFile::_LoadLua(lua_State *L, _RgdEntry *pDest, bool bSkipThisLevelRef)
                 default:
                     delete pNew;
                     lua_pop(L, 2);
-                    throw new CRainmanException(__FILE__, __LINE__, "Data type not supported");
+                    throw CRainmanException(__FILE__, __LINE__, "Data type not supported");
                 };
                 try
                 {
                     pNew->sName = m_pHashTable->HashToValue(pNew->iHash = m_pHashTable->ValueToHash(sNameTmp));
                 }
-                catch (CRainmanException *pE)
+                catch (const CRainmanException &e)
                 {
                     delete pNew;
                     lua_pop(L, 2);
-                    throw new CRainmanException(__FILE__, __LINE__, "Hash table problem", pE);
+                    throw CRainmanException(e, __FILE__, __LINE__, "Hash table problem");
                 }
             }
             try
             {
                 _LoadLua(L, pNew);
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
                 delete pNew;
                 lua_pop(L, 2);
-                throw new CRainmanException(__FILE__, __LINE__, "Cannot load child", pE);
+                throw CRainmanException(e, __FILE__, __LINE__, "Cannot load child");
             }
             pTab->push_back(pNew);
             if (pNew->iHash == 0x49D60FAE)
@@ -564,7 +564,7 @@ void CRgdFile::_LoadLua(lua_State *L, _RgdEntry *pDest, bool bSkipThisLevelRef)
 
     case LUA_TFUNCTION:
     case LUA_TTHREAD:
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Data type %i not supported", lua_type(L, -1));
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Data type %i not supported", lua_type(L, -1));
     default:
         break;
     };
@@ -576,11 +576,11 @@ void CRgdFile::Load(IFileStore::IStream *pStream)
     // Load RGD Header
     _Clean();
     if (pStream == nullptr)
-        throw new CRainmanException(__FILE__, __LINE__, "No stream present");
+        throw CRainmanException(__FILE__, __LINE__, "No stream present");
 
     m_RgdHeader.sHeader = new char[16];
     if (m_RgdHeader.sHeader == nullptr)
-        throw new CRainmanException(__FILE__, __LINE__, "Memory allocation error");
+        throw CRainmanException(__FILE__, __LINE__, "Memory allocation error");
     memset((void *)m_RgdHeader.sHeader, 0, 16);
 
     try
@@ -595,18 +595,18 @@ void CRgdFile::Load(IFileStore::IStream *pStream)
             pStream->VRead(1, 4, (void *)&m_RgdHeader.iUnknown6);
         }
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
         _Clean();
-        throw new CRainmanException(__FILE__, __LINE__, "Input error", pE);
+        throw CRainmanException(e, __FILE__, __LINE__, "Input error");
     }
 
     if ((strcmp(m_RgdHeader.sHeader, "Relic Chunky\x0D\x0A\x1A") != 0) ||
         !(m_RgdHeader.iVersion == 1 || m_RgdHeader.iVersion == 3) || m_RgdHeader.iUnknown3 != 1)
     {
         _Clean();
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Unrecognised header (%s,%li,%li)",
-                                    m_RgdHeader.sHeader, m_RgdHeader.iVersion, m_RgdHeader.iUnknown3);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Unrecognised header (%s,%li,%li)", m_RgdHeader.sHeader,
+                                m_RgdHeader.iVersion, m_RgdHeader.iUnknown3);
     }
 
     // Attempt to read chunks
@@ -614,7 +614,7 @@ void CRgdFile::Load(IFileStore::IStream *pStream)
     if (sChunkHeadTempBuffer == nullptr)
     {
         _Clean();
-        throw new CRainmanException(__FILE__, __LINE__, "Memory allocation error");
+        throw CRainmanException(__FILE__, __LINE__, "Memory allocation error");
     }
     memset(sChunkHeadTempBuffer, 0, 9);
 
@@ -624,9 +624,8 @@ void CRgdFile::Load(IFileStore::IStream *pStream)
         {
             pStream->VRead(8, 1, sChunkHeadTempBuffer);
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
-            auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
             break;
         }
         auto *pChunk = new _RgdChunk;
@@ -634,7 +633,7 @@ void CRgdFile::Load(IFileStore::IStream *pStream)
         {
             delete[] sChunkHeadTempBuffer;
             _Clean();
-            throw new CRainmanException(__FILE__, __LINE__, "Memory allocation error");
+            throw CRainmanException(__FILE__, __LINE__, "Memory allocation error");
         }
         pChunk->sChunkyType = nullptr;
         pChunk->sString = nullptr;
@@ -652,7 +651,7 @@ void CRgdFile::Load(IFileStore::IStream *pStream)
         {
             delete[] sChunkHeadTempBuffer;
             _Clean();
-            throw new CRainmanException(__FILE__, __LINE__, "Memory allocation error");
+            throw CRainmanException(__FILE__, __LINE__, "Memory allocation error");
         }
         strcpy(pChunk->sChunkyType, sChunkHeadTempBuffer);
 
@@ -662,11 +661,11 @@ void CRgdFile::Load(IFileStore::IStream *pStream)
             pStream->VRead(1, 4, (void *)&pChunk->iChunkLength);
             pStream->VRead(1, 4, (void *)&pChunk->iStringLength);
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             delete[] sChunkHeadTempBuffer;
             _Clean();
-            throw new CRainmanException(__FILE__, __LINE__, "Input error", pE);
+            throw CRainmanException(e, __FILE__, __LINE__, "Input error");
         }
 
         pChunk->sString = new char[pChunk->iStringLength + 1]; // n bytes + 1
@@ -674,7 +673,7 @@ void CRgdFile::Load(IFileStore::IStream *pStream)
         {
             delete[] sChunkHeadTempBuffer;
             _Clean();
-            throw new CRainmanException(__FILE__, __LINE__, "Memory allocation error");
+            throw CRainmanException(__FILE__, __LINE__, "Memory allocation error");
         }
         memset((void *)pChunk->sString, 0, pChunk->iStringLength + 1);
 
@@ -689,11 +688,11 @@ void CRgdFile::Load(IFileStore::IStream *pStream)
             pStream->VRead(1, 4, (void *)&pChunk->iCRC);
             pStream->VRead(1, 4, (void *)&pChunk->iDataLength);
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             delete[] sChunkHeadTempBuffer;
             _Clean();
-            throw new CRainmanException(__FILE__, __LINE__, "Input error", pE);
+            throw CRainmanException(e, __FILE__, __LINE__, "Input error");
         }
 
         pChunk->pData = new char[pChunk->iDataLength]; // n bytes
@@ -701,18 +700,18 @@ void CRgdFile::Load(IFileStore::IStream *pStream)
         {
             delete[] sChunkHeadTempBuffer;
             _Clean();
-            throw new CRainmanException(__FILE__, __LINE__, "Memory allocation error");
+            throw CRainmanException(__FILE__, __LINE__, "Memory allocation error");
         }
 
         try
         {
             pStream->VRead(pChunk->iDataLength, 1, (void *)pChunk->pData);
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             delete[] sChunkHeadTempBuffer;
             _Clean();
-            throw new CRainmanException(__FILE__, __LINE__, "Input error", pE);
+            throw CRainmanException(e, __FILE__, __LINE__, "Input error");
         }
     }
 
@@ -721,7 +720,7 @@ void CRgdFile::Load(IFileStore::IStream *pStream)
     if (m_pDataChunk == nullptr)
     {
         _Clean();
-        throw new CRainmanException(__FILE__, __LINE__, "No DATAAEGD found");
+        throw CRainmanException(__FILE__, __LINE__, "No DATAAEGD found");
     }
 
     // Process binary data into table
@@ -749,7 +748,7 @@ void CRgdFile::Load(IFileStore::IStream *pStream)
     if (m_pDataChunk->RootEntry.Data.t == nullptr)
     {
         _Clean();
-        throw new CRainmanException(__FILE__, __LINE__, "Memory allocation error");
+        throw CRainmanException(__FILE__, __LINE__, "Memory allocation error");
     }
 
     CMemoryStore MemStore;
@@ -760,34 +759,34 @@ void CRgdFile::Load(IFileStore::IStream *pStream)
         memStream = std::unique_ptr<IFileStore::IStream>(
             MemStore.VOpenStream(MemStore.MemoryRange(m_pDataChunk->pData, m_pDataChunk->iDataLength)));
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
         _Clean();
-        throw new CRainmanException(__FILE__, __LINE__, "Memory buffer error", pE);
+        throw CRainmanException(e, __FILE__, __LINE__, "Memory buffer error");
     }
 
     try
     {
         _ProcessRawRgdData(memStream.get(), &m_pDataChunk->RootEntry);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
         _Clean();
-        throw new CRainmanException(__FILE__, __LINE__, "Could not process DATAAEGD data", pE);
+        throw CRainmanException(e, __FILE__, __LINE__, "Could not process DATAAEGD data");
     }
 }
 
 const char *CRgdFile::GetDescriptorString()
 {
     if (m_pDataChunk == nullptr)
-        throw new CRainmanException(__FILE__, __LINE__, "No main chunk present for string");
+        throw CRainmanException(__FILE__, __LINE__, "No main chunk present for string");
     return m_pDataChunk->sString;
 }
 
 void CRgdFile::SetDescriptorString(const char *sString)
 {
     if (m_pDataChunk == nullptr)
-        throw new CRainmanException(__FILE__, __LINE__, "No main chunk present for string");
+        throw CRainmanException(__FILE__, __LINE__, "No main chunk present for string");
     if (sString == nullptr)
         sString = ""; // The blank string is a const char* to the res section and thus can be used
 
@@ -807,14 +806,14 @@ void CRgdFile::SetDescriptorString(const char *sString)
 long CRgdFile::GetChunkVersion()
 {
     if (m_pDataChunk == nullptr)
-        throw new CRainmanException(__FILE__, __LINE__, "No main chunk present for version");
+        throw CRainmanException(__FILE__, __LINE__, "No main chunk present for version");
     return m_pDataChunk->iVersion;
 }
 
 void CRgdFile::SetChunkVersion(long iVersion)
 {
     if (m_pDataChunk == nullptr)
-        throw new CRainmanException(__FILE__, __LINE__, "No main chunk present for version");
+        throw CRainmanException(__FILE__, __LINE__, "No main chunk present for version");
     m_pDataChunk->iVersion = iVersion;
     return;
 }
@@ -907,7 +906,7 @@ bool CRgdFile::_SortOutEntriesNum(_RgdEntry *a, _RgdEntry *b)
 void CRgdFile::_WriteRawRgdData(IFileStore::IOutputStream *pStream, _RgdEntry *pSource, bool bTable101)
 {
     if (pSource->Type != DT_Table && pSource->Type != sk_TableInt)
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Source is not a table (%i)", (int)pSource->Type);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Source is not a table (%i)", (int)pSource->Type);
     std::vector<_RgdEntry *> vEntries;
     for (auto itr = pSource->Data.t->begin(); itr != pSource->Data.t->end(); ++itr)
     {
@@ -1219,10 +1218,10 @@ void CRgdFile::_ProcessRawRgdData(IFileStore::IStream *pStream, _RgdEntry *pDest
                 {
                     pStream->VRead(1, 1, sTmp + iLen);
                 }
-                catch (CRainmanException *pE)
+                catch (const CRainmanException &e)
                 {
                     delete[] sTmp;
-                    throw new CRainmanException(__FILE__, __LINE__, "Input error", pE);
+                    throw CRainmanException(e, __FILE__, __LINE__, "Input error");
                 }
                 ++iLen;
                 if (iLen == iStrLen)
@@ -1257,10 +1256,10 @@ void CRgdFile::_ProcessRawRgdData(IFileStore::IStream *pStream, _RgdEntry *pDest
                 {
                     pStream->VRead(1, sizeof(uint16_t), sTmp + iLen);
                 }
-                catch (CRainmanException *pE)
+                catch (const CRainmanException &e)
                 {
                     delete[] sTmp;
-                    throw new CRainmanException(__FILE__, __LINE__, "Input error", pE);
+                    throw CRainmanException(e, __FILE__, __LINE__, "Input error");
                 }
                 ++iLen;
                 if (iLen == iStrLen)
@@ -1292,9 +1291,9 @@ void CRgdFile::_ProcessRawRgdData(IFileStore::IStream *pStream, _RgdEntry *pDest
             {
                 _ProcessRawRgdData(pStream, pEntry);
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
-                throw new CRainmanException(__FILE__, __LINE__, "Processing of child failed", pE);
+                throw CRainmanException(e, __FILE__, __LINE__, "Processing of child failed");
             }
             if (m_bConvertTableIntToTable)
                 pEntry->Type = DT_Table;
@@ -1618,14 +1617,13 @@ void CRgdFile::CMetaNode::VSetName(const char *sName)
             m_pData->iHash = m_pData->pParentFile->m_pHashTable->ValueToHash(sName);
             m_pData->sName = m_pData->pParentFile->m_pHashTable->HashToValue(m_pData->iHash);
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
-            throw new CRainmanException(pE, __FILE__, __LINE__, "Error setting name to \'%s\' (dictinary problem)",
-                                        sName);
+            throw CRainmanException(e, __FILE__, __LINE__, "Error setting name to \'%s\' (dictinary problem)", sName);
         }
         return;
     }
-    throw new CRainmanException(nullptr, __FILE__, __LINE__, "Error setting name to \'%s\' (no dictionary)", sName);
+    throw CRainmanException(nullptr, __FILE__, __LINE__, "Error setting name to \'%s\' (no dictionary)", sName);
 }
 
 void CRgdFile::CMetaNode::VSetNameHash(unsigned long iHash)
@@ -1764,7 +1762,7 @@ unsigned long CRgdFile::CMetaTable::VGetChildCount() { return static_cast<unsign
 IMetaNode *CRgdFile::CMetaTable::VGetChild(unsigned long iIndex)
 {
     if (iIndex >= VGetChildCount())
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Index %lu beyond %lu", iIndex, VGetChildCount());
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Index %lu beyond %lu", iIndex, VGetChildCount());
     return new CRgdFile::CMetaNode(m_vecChildren[iIndex]);
 }
 
@@ -1896,7 +1894,7 @@ IMetaNode *CRgdFile::CMetaTable::VAddChild(const char *sName)
 void CRgdFile::CMetaTable::VDeleteChild(unsigned long iIndex)
 {
     if (iIndex >= VGetChildCount())
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Index %lu beyond %lu", iIndex, VGetChildCount());
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Index %lu beyond %lu", iIndex, VGetChildCount());
     _RgdEntry *pToDelete = m_vecChildren[iIndex];
     for (auto itr = m_pData->Data.t->begin(); itr != m_pData->Data.t->end(); ++itr)
     {
@@ -1950,7 +1948,7 @@ void CRgdFile::_ReadRainmanRgdData(IFileStore::IStream *pInput, CRgdFile::_RgdEn
             if (pDestination->pParentFile == nullptr || pDestination->pParentFile->m_pHashTable == nullptr)
             {
                 delete[] sName;
-                throw new CRainmanException(__FILE__, __LINE__, "Cannot paste data as hash table missing");
+                throw CRainmanException(__FILE__, __LINE__, "Cannot paste data as hash table missing");
             }
             if (iHash == 0)
             {
@@ -2013,8 +2011,8 @@ void CRgdFile::_ReadRainmanRgdData(IFileStore::IStream *pInput, CRgdFile::_RgdEn
         }
         else
         {
-            throw new CRainmanException(nullptr, __FILE__, __LINE__, "Data length of %lu unsupported for float data",
-                                        iDataLen);
+            throw CRainmanException(nullptr, __FILE__, __LINE__, "Data length of %lu unsupported for float data",
+                                    iDataLen);
         }
         break;
     }
@@ -2032,8 +2030,8 @@ void CRgdFile::_ReadRainmanRgdData(IFileStore::IStream *pInput, CRgdFile::_RgdEn
         }
         else
         {
-            throw new CRainmanException(nullptr, __FILE__, __LINE__, "Data length of %lu unsupported for integer data",
-                                        iDataLen);
+            throw CRainmanException(nullptr, __FILE__, __LINE__, "Data length of %lu unsupported for integer data",
+                                    iDataLen);
         }
         break;
     }
@@ -2045,8 +2043,8 @@ void CRgdFile::_ReadRainmanRgdData(IFileStore::IStream *pInput, CRgdFile::_RgdEn
         }
         else
         {
-            throw new CRainmanException(nullptr, __FILE__, __LINE__, "Data length of %lu unsupported for boolean data",
-                                        iDataLen);
+            throw CRainmanException(nullptr, __FILE__, __LINE__, "Data length of %lu unsupported for boolean data",
+                                    iDataLen);
         }
         break;
     }

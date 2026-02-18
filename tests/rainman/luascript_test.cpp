@@ -6,6 +6,7 @@
 #include <fstream>
 #include <process.h>
 #include <string>
+#include <optional>
 
 class LuaScriptTest : public ::testing::Test {
 protected:
@@ -62,70 +63,66 @@ TEST_F(LuaScriptTest, LoadAndExecuteMathScript)
 TEST_F(LuaScriptTest, LoadNonexistentFileThrows)
 {
 	auto path = (tempDir / "nonexistent.lua").string();
-	CRainmanException* caught = nullptr;
+	std::optional<CRainmanException> caught;
 	try
 	{
 		script.Load(path.c_str());
 	}
-	catch (CRainmanException* ex)
+	catch (const CRainmanException &ex)
 	{
 		caught = ex;
 	}
-	ASSERT_NE(caught, nullptr);
-	caught->destroy();
+	ASSERT_TRUE(caught.has_value());
 	// GetLuaError should be populated
 	EXPECT_NE(script.GetLuaError(), nullptr);
 }
 
 TEST_F(LuaScriptTest, ExecuteWithoutLoadThrows)
 {
-	CRainmanException* caught = nullptr;
+	std::optional<CRainmanException> caught;
 	try
 	{
 		script.Execute();
 	}
-	catch (CRainmanException* ex)
+	catch (const CRainmanException &ex)
 	{
 		caught = ex;
 	}
-	ASSERT_NE(caught, nullptr);
-	caught->destroy();
+	ASSERT_TRUE(caught.has_value());
 }
 
 TEST_F(LuaScriptTest, ExecuteWithSyntaxErrorThrows)
 {
 	auto path = writeLuaFile("bad.lua", "this is not valid lua !!!");
-	CRainmanException* caught = nullptr;
+	std::optional<CRainmanException> caught;
 	try
 	{
 		script.Load(path.c_str());
 	}
-	catch (CRainmanException* ex)
+	catch (const CRainmanException &ex)
 	{
 		caught = ex;
 	}
-	ASSERT_NE(caught, nullptr);
+	ASSERT_TRUE(caught.has_value());
 	EXPECT_NE(script.GetLuaError(), nullptr);
-	caught->destroy();
 }
 
 TEST_F(LuaScriptTest, ExecuteWithRuntimeErrorThrows)
 {
 	// Valid syntax but will error at runtime (calling nil as function)
 	auto path = writeLuaFile("runtime_err.lua", "local f = nil\nf()");
-	CRainmanException* caught = nullptr;
+	std::optional<CRainmanException> caught;
 	try
 	{
 		script.Load(path.c_str());
 		script.Execute();
 	}
-	catch (CRainmanException* ex)
+	catch (const CRainmanException &ex)
 	{
 		caught = ex;
 	}
-	ASSERT_NE(caught, nullptr);
+	ASSERT_TRUE(caught.has_value());
 	EXPECT_NE(script.GetLuaError(), nullptr);
-	caught->destroy();
 }
 
 TEST_F(LuaScriptTest, LoadReplacesState)

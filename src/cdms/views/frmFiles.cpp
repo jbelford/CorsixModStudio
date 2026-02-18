@@ -131,9 +131,9 @@ CLuaFile *CLuaAction::DoLoad(IFileStore::IStream *pStream, const char *sFile, CL
     {
         pLua->Load(pStream, TheConstruct->GetModuleService().GetModule(), sFile);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        ErrorBoxE(new CModStudioException(pE, __FILE__, __LINE__, "Cannot load Lua file \'%s\'", sFile));
+        ErrorBoxE(CModStudioException(e, __FILE__, __LINE__, "Cannot load Lua file \'%s\'", sFile));
         delete pLua;
         return 0;
     }
@@ -162,9 +162,9 @@ CLuaFile2 *CLuaAction::DoLoad2(IFileStore::IStream *pStream, const char *sFile, 
     {
         pLua->loadFile(pStream, TheConstruct->GetModuleService().GetModule(), sFile);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        ErrorBoxE(pE);
+        ErrorBoxE(e);
         delete pLua;
         return 0;
     }
@@ -475,9 +475,9 @@ void frmFiles::OnNodeActivate(wxTreeEvent &event)
                 {
                     (*itr)->VHandle(sPath, oParent, oCurrent);
                 }
-                catch (CRainmanException *pE)
+                catch (const CRainmanException &e)
                 {
-                    _ErrorBox(pE, __FILE__, __LINE__, false);
+                    _ErrorBox(e, __FILE__, __LINE__, false);
                 }
                 return;
             }
@@ -562,9 +562,9 @@ void frmFiles::OnMenu(wxCommandEvent &event)
                 m_vHandlers[event.GetId() - (wxID_HIGHEST + 1337)]->VHandle(m_sPopupFileName, m_oPopupTreeParent,
                                                                             m_oPopupTreeItem);
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
-            ErrorBoxE(pE);
+            ErrorBoxE(e);
         }
     }
 }

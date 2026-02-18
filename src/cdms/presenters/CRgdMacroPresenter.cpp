@@ -222,10 +222,10 @@ bool CRgdMacroPresenter::RunMacro(const wxString &sMacroText, std::vector<std::s
                 {
                     oMacro.runMacro(sFile.c_str(), pFileStore);
                 }
-                catch (CRainmanException *pE)
+                catch (const CRainmanException &e)
                 {
                     wxString sMsg;
-                    const CRainmanException *pCur = pE;
+                    const CRainmanException *pCur = &e;
                     while (pCur)
                     {
                         if (!sMsg.empty())
@@ -233,7 +233,6 @@ bool CRgdMacroPresenter::RunMacro(const wxString &sMacroText, std::vector<std::s
                         sMsg += wxString::FromUTF8(pCur->getMessage());
                         pCur = pCur->getPrecursor();
                     }
-                    pE->destroy();
                     vErrors.push_back(std::move(sMsg));
                 }
             }
@@ -242,10 +241,10 @@ bool CRgdMacroPresenter::RunMacro(const wxString &sMacroText, std::vector<std::s
             {
                 oMacro.runAtEnd();
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
                 wxString sMsg;
-                const CRainmanException *pCur = pE;
+                const CRainmanException *pCur = &e;
                 while (pCur)
                 {
                     if (!sMsg.empty())
@@ -253,7 +252,6 @@ bool CRgdMacroPresenter::RunMacro(const wxString &sMacroText, std::vector<std::s
                     sMsg += wxString::FromUTF8(pCur->getMessage());
                     pCur = pCur->getPrecursor();
                 }
-                pE->destroy();
                 vErrors.push_back(std::move(sMsg));
             }
 

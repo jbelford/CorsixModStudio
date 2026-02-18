@@ -68,28 +68,32 @@ Hungarian prefixes: `s` = string/char*, `i` = integer/unsigned long, `p` = point
 
 ## Error Handling
 
-This codebase uses **heap-allocated exception objects**, not stack-based C++ exceptions. Exceptions are created with `new` and cleaned up with `destroy()`, **never** `delete`.
+This codebase uses **stack-based exceptions** thrown and caught by reference. No heap allocation
+or manual cleanup is needed.
 
 ### Throwing
 ```cpp
 // Simple throw
-throw new CRainmanException(__FILE__, __LINE__, "message");
+throw CRainmanException(__FILE__, __LINE__, "message");
+
+// With precursor (for chaining context):
+throw CRainmanException(e, __FILE__, __LINE__, "context: %s", detail);
 
 // Or use macros:
-QUICK_THROW("message");                    // throw new CRainmanException(...)
+QUICK_THROW("message");                    // throw CRainmanException(...)
 CATCH_THROW("context message");            // catch + re-throw with precursor
 ```
 
-### Catching and Cleanup
+### Catching
 ```cpp
 try {
     SomeOperation();
-} catch (CRainmanException* pE) {
-    pE->destroy();  // CRITICAL: always destroy(), never delete
+} catch (const CRainmanException &e) {
+    // use e.getMessage(), e.getPrecursor()
 }
 
 // Or use macros:
-try { SomeOperation(); } IGNORE_EXCEPTIONS  // catch + destroy
+try { SomeOperation(); } IGNORE_EXCEPTIONS  // catch + discard
 try { SomeOperation(); } CATCH_THROW("Failed during X")  // catch + re-throw
 ```
 
@@ -122,10 +126,6 @@ call site — never hold a raw owning pointer across more than one statement:
 auto pStream = std::unique_ptr<IFileStore::IStream>(store.VOpenStream("path"));
 pStream->VRead(1, sizeof(unsigned long), &iValue);
 // stream is automatically deleted on scope exit or exception
-
-// CRainmanException* uses destroy(), not delete — use custom deleter
-auto pEx = std::unique_ptr<CRainmanException, decltype(&CRainmanException::destroy)>(
-    pCaught, &CRainmanException::destroy);
 
 // Heap buffers — use make_unique instead of new[]
 auto pBuffer = std::make_unique<char[]>(1024);
@@ -193,7 +193,6 @@ boundaries where changing would cascade.
 - Use `std::shared_ptr` / `std::make_shared` when ownership is genuinely shared.
 - Wrap raw-pointer returns from legacy APIs (e.g., `VOpenStream()`) in `std::unique_ptr`
   **immediately** at the call site — never hold a raw owning pointer.
-- For `CRainmanException*`, use a `unique_ptr` with a custom deleter that calls `destroy()`.
 - When overriding virtual methods that return raw pointers, build internally with
   `std::unique_ptr` and call `.release()` at the return statement.
 - **Boy-scout**: When touching code with raw `new`/`delete`, migrate to smart pointers
@@ -262,8 +261,6 @@ boundaries where changing would cascade.
 
 ### What NOT to modernize
 These legacy patterns must be preserved for compatibility — do not change them:
-- **Heap-allocated exceptions** (`throw new CRainmanException`) — this is a project-wide
-  convention, not a mistake.
 - **`RAINMAN_API` macro** on public classes.
 - **Hungarian-prefixed member names** (`m_sName`, `m_pStream`).
 - **`C`/`I` class prefixes** and **`V` virtual-method prefix**.

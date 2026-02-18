@@ -3,6 +3,7 @@
 #include "rainman/io/CMemoryStore.h"
 #include "rainman/core/Exception.h"
 #include <cstring>
+#include <optional>
 
 class ChunkyFileTest : public ::testing::Test {
 protected:
@@ -161,14 +162,13 @@ TEST_F(ChunkyFileTest, LoadInvalidHeaderThrows) {
         const_cast<char*>(garbage), sizeof(garbage) - 1, false);
 
     CChunkyFile cf;
-    CRainmanException* caught = nullptr;
+    std::optional<CRainmanException> caught;
     try {
         cf.Load(stream);
-    } catch (CRainmanException* ex) {
+    } catch (const CRainmanException &ex) {
         caught = ex;
     }
-    ASSERT_NE(caught, nullptr);
-    caught->destroy();
+    ASSERT_TRUE(caught.has_value());
     delete stream;
 }
 

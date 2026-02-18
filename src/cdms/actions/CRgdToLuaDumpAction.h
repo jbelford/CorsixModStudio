@@ -41,9 +41,9 @@ class CRgdToLuaDumpAction : public frmFiles::IHandler
         {
             DoConvert(saFile.get());
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
-            ErrorBoxE(pE);
+            ErrorBoxE(e);
             return;
         }
 
@@ -65,7 +65,7 @@ class CRgdToLuaDumpAction : public frmFiles::IHandler
     {
         char *saOutFile = strdup(saFile);
         if (!saOutFile)
-            throw new CModStudioException(__FILE__, __LINE__, "Memory allocation error");
+            throw CModStudioException(__FILE__, __LINE__, "Memory allocation error");
         strcpy(strchr(saOutFile, '.'), ".lua");
 
         IFileStore::IStream *pIn = 0;
@@ -75,23 +75,23 @@ class CRgdToLuaDumpAction : public frmFiles::IHandler
         {
             auto inResult = TheConstruct->GetFileService().OpenStream(AsciiTowxString(saFile));
             if (!inResult)
-                throw new CModStudioException(0, __FILE__, __LINE__, "Cannot open streams for \'%s\'", saFile);
+                throw CModStudioException(0, __FILE__, __LINE__, "Cannot open streams for \'%s\'", saFile);
             pIn = inResult.value().release();
             auto outResult = TheConstruct->GetFileService().OpenOutputStream(AsciiTowxString(saOutFile), true);
             if (!outResult)
             {
                 delete pIn;
                 pIn = 0;
-                throw new CModStudioException(0, __FILE__, __LINE__, "Cannot open streams for \'%s\'", saFile);
+                throw CModStudioException(0, __FILE__, __LINE__, "Cannot open streams for \'%s\'", saFile);
             }
             pOut = outResult.value().release();
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             delete pIn;
             delete pOut;
             free(saOutFile);
-            throw new CModStudioException(pE, __FILE__, __LINE__, "Cannot open streams for \'%s\'", saFile);
+            throw CModStudioException(e, __FILE__, __LINE__, "Cannot open streams for \'%s\'", saFile);
         }
 
         CRgdFile oRgd;
@@ -100,12 +100,12 @@ class CRgdToLuaDumpAction : public frmFiles::IHandler
         {
             oRgd.Load(pIn);
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             delete pIn;
             delete pOut;
             free(saOutFile);
-            throw new CModStudioException(pE, __FILE__, __LINE__, "Cannot load file \'%s\'", saFile);
+            throw CModStudioException(e, __FILE__, __LINE__, "Cannot load file \'%s\'", saFile);
         }
 
         try
@@ -113,12 +113,12 @@ class CRgdToLuaDumpAction : public frmFiles::IHandler
             // MakeLuaFromRgdQuickly(&oRgd, pOut);
             MakeLuaFromRgdAndNil(&oRgd, 0, pMod, pOut, pMod);
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             delete pIn;
             delete pOut;
             free(saOutFile);
-            throw new CModStudioException(pE, __FILE__, __LINE__, "Cannot turn file into lua \'%s\'", saFile);
+            throw CModStudioException(e, __FILE__, __LINE__, "Cannot turn file into lua \'%s\'", saFile);
         }
 
         delete pIn;

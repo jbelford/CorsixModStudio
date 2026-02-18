@@ -50,11 +50,11 @@ Result<void> HashService::Initialize(const wxString &sDictionaryPath)
     {
         pItr = oStore.VIterate(sDicPath.get());
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
         delete m_pHashTable;
         m_pHashTable = nullptr;
-        return ResultFromException(pE);
+        return ResultFromException(e);
     }
 
     if (!pItr)
@@ -75,7 +75,7 @@ Result<void> HashService::Initialize(const wxString &sDictionaryPath)
             }
         } while (pItr->VNextItem() == IDirectoryTraverser::IIterator::E_OK);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
         delete pItr;
         if (m_sCustomOutPath)
@@ -85,7 +85,7 @@ Result<void> HashService::Initialize(const wxString &sDictionaryPath)
         }
         delete m_pHashTable;
         m_pHashTable = nullptr;
-        return ResultFromException(pE);
+        return ResultFromException(e);
     }
     delete pItr;
 
@@ -118,9 +118,9 @@ Result<void> HashService::CrossRefWithStringList(const wxString &sFile)
     {
         m_pHashTable->XRefWithStringList(s.get());
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        return ResultFromException(pE);
+        return ResultFromException(e);
     }
 
     return Result<void>::Ok();

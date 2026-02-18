@@ -22,40 +22,44 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "rainman/core/gnuc_defines.h"
 #include "rainman/core/Api.h"
 #include <memory>
+#include <string>
 
 class RAINMAN_API CRainmanException
 {
   public:
-    CRainmanException(const char *sFile, unsigned long iLine, const char *sMessage, CRainmanException *pPrecursor = 0);
+    //! Simple message, no precursor.
+    CRainmanException(const char *sFile, unsigned long iLine, const char *sMessage);
+
+    //! Formatted message (printf-style), deep-copies precursor.
+    CRainmanException(const CRainmanException &precursor, const char *sFile, unsigned long iLine, const char *sFormat,
+                      ...);
+
+    //! Formatted message (printf-style), no precursor (pass \c nullptr).
     CRainmanException(CRainmanException *pPrecursor, const char *sFile, unsigned long iLine, const char *sFormat, ...);
 
-    virtual void destroy();
+    //! Deep-copy constructor (recursively copies precursor chain).
+    CRainmanException(const CRainmanException &other);
+    CRainmanException &operator=(const CRainmanException &other);
 
-    inline const char *getFile() const { return m_sFile; }
-    inline unsigned long getLine() const { return m_iLine; }
-    inline const char *getMessage() const { return m_sMessage; }
+    CRainmanException(CRainmanException &&) noexcept = default;
+    CRainmanException &operator=(CRainmanException &&) noexcept = default;
 
-    inline const CRainmanException *getPrecursor() const { return m_pPrecursor; }
+    virtual ~CRainmanException() = default;
+
+    const char *getFile() const { return m_sFile; }
+    unsigned long getLine() const { return m_iLine; }
+    const char *getMessage() const { return m_sMessage.c_str(); }
+
+    const CRainmanException *getPrecursor() const { return m_pPrecursor.get(); }
 
   protected:
-    CRainmanException();
-    ~CRainmanException(); //!< DO NOT CALL THIS, use destroy() instead.
+    CRainmanException() = default;
 
-    char *m_sMessage;
-    unsigned long m_iLine;
-    const char *m_sFile;
+    std::string m_sMessage;
+    unsigned long m_iLine = 0;
+    const char *m_sFile = nullptr;
 
-    CRainmanException *m_pPrecursor;
-};
-
-//! Custom deleter for use with std::unique_ptr<CRainmanException, ExceptionDeleter>.
-struct ExceptionDeleter
-{
-    void operator()(CRainmanException *p) const noexcept
-    {
-        if (p)
-            p->destroy();
-    }
+    std::unique_ptr<CRainmanException> m_pPrecursor;
 };
 
 #ifndef EXCEPTION_CLASS
@@ -64,28 +68,31 @@ struct ExceptionDeleter
 
 //! Macro for easy CRainmanException re-throwing
 #define CATCH_THROW(msg)                                                                                               \
-    catch (CRainmanException * pE) { throw new EXCEPTION_CLASS(__FILE__, __LINE__, msg, pE); }
+    catch (const CRainmanException &_rainmanPrecursor)                                                                 \
+    {                                                                                                                  \
+        throw EXCEPTION_CLASS(_rainmanPrecursor, __FILE__, __LINE__, msg);                                             \
+    }
 
 //! Macro for easily throwing a simple error
-#define QUICK_THROW(msg) throw new EXCEPTION_CLASS(__FILE__, __LINE__, msg);
+#define QUICK_THROW(msg) throw EXCEPTION_CLASS(__FILE__, __LINE__, msg);
 
 //! Macro for ignoring all RainmanExceptions from a try{} block
 #define IGNORE_EXCEPTIONS                                                                                              \
-    catch (CRainmanException * pE) { std::unique_ptr<CRainmanException, ExceptionDeleter> _ignored(pE); }
+    catch (const CRainmanException &) {}
 
 //! Will throw an exception if pointer is invalid, returns the value passed otherwise
 template <class T> __inline T CheckMem(T pObj, const char *sFile, unsigned long iLine)
 {
-    if (pObj == 0)
-        throw new EXCEPTION_CLASS(sFile, iLine, "Memory allocation error");
+    if (pObj == nullptr)
+        throw EXCEPTION_CLASS(sFile, iLine, "Memory allocation error");
     return pObj;
 }
 
 //! Will throw an exception if pointer is invalid, returns the value passed otherwise
 template <class T> __inline T CheckString(T pObj, const char *sFile, unsigned long iLine)
 {
-    if (pObj == 0)
-        throw new EXCEPTION_CLASS(sFile, iLine, "No string");
+    if (pObj == nullptr)
+        throw EXCEPTION_CLASS(sFile, iLine, "No string");
     return pObj;
 }
 
@@ -103,5 +110,5 @@ template <class T> __inline T CheckString(T pObj, const char *sFile, unsigned lo
 //! Macro to check string return values
 #define CHECK_STR(ptr) CheckString(ptr, __FILE__, __LINE__)
 
-#define PAUSE_THROW CRainmanException *pPausedException = new EXCEPTION_CLASS
-#define UNPAUSE_THROW throw pPausedException
+#define PAUSE_THROW auto _pausedEx = EXCEPTION_CLASS
+#define UNPAUSE_THROW throw std::move(_pausedEx)

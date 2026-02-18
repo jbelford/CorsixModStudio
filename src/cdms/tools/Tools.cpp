@@ -130,10 +130,10 @@ void CUcsTool::HandleSelectorResponse(frmUCSSelector *pSelector, wxAuiNotebook *
         {
             pNewUcs->Save(saNewFile.get());
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             delete pSelector;
-            ErrorBoxE(pE);
+            ErrorBoxE(e);
             return;
         }
         {
@@ -232,7 +232,7 @@ void CDpsCalculatorTool::DoAction()
     auto itrResult = TheConstruct->GetFileService().Iterate(wxT("data\\attrib\\weapon"));
     if (!itrResult)
     {
-        ErrorBoxE(new CModStudioException(__FILE__, __LINE__, "Cannot iterate over weapon files"));
+        ErrorBoxE(CModStudioException(__FILE__, __LINE__, "Cannot iterate over weapon files"));
         return;
     }
     auto *pItr = itrResult.value().release();
@@ -295,9 +295,8 @@ void CMakeLuaInheritTree::_DoLua(IDirectoryTraverser::IIterator *pItr)
     {
         sRef = oLua.GetReferencedFile(pStream.get());
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
         sRef = 0;
     }
 
@@ -310,9 +309,9 @@ void CMakeLuaInheritTree::_DoLua(IDirectoryTraverser::IIterator *pItr)
             oLua.Load(pStream.get(), TheConstruct->GetModuleService().GetModule(), pItr->VGetFullPath());
             iChildCount = oLua.VGetChildCount();
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
-            ErrorBoxE(pE);
+            ErrorBoxE(e);
             return;
         }
 
@@ -350,11 +349,11 @@ void CMakeLuaInheritTree::_DoLua(IDirectoryTraverser::IIterator *pItr)
                     sRef = strdup("");
                 }
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
                 delete pChild;
                 delete pTable;
-                ErrorBoxE(pE);
+                ErrorBoxE(e);
                 return;
             }
             delete pChild;
@@ -384,7 +383,7 @@ void CMakeLuaInheritTree::Do(const char *sAttrib)
     {
         auto itrResult = TheConstruct->GetFileService().Iterate(AsciiTowxString(sAttrib));
         if (!itrResult)
-            throw new CModStudioException(__FILE__, __LINE__, "Cannot iterate attrib");
+            throw CModStudioException(__FILE__, __LINE__, "Cannot iterate attrib");
         pItr = itrResult.value().release();
     }
 
@@ -392,10 +391,10 @@ void CMakeLuaInheritTree::Do(const char *sAttrib)
     {
         Rainman_ForEach(pItr, _ForEach, (void *)this, true);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
         delete pItr;
-        throw new CModStudioException(__FILE__, __LINE__, "Error processing luas", pE);
+        throw CModStudioException(e, __FILE__, __LINE__, "Error processing luas");
     }
 
     pTable->assignOrphansTo(pTable->getRoot());
@@ -411,9 +410,9 @@ void CMakeLuaInheritTree::DoAction()
     {
         Do(sAttrib);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        ErrorBoxE(pE);
+        ErrorBoxE(e);
         delete pTable;
         return;
     }
@@ -433,9 +432,9 @@ void CRedButtonTool::DoAction()
         std::unique_ptr<IFileStore::IOutputStream> guard(
             oFSO.VOpenOutputStream("I:\\j\\k\\l\\m\\n\\o\\p\\q.test", true));
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        ErrorBoxE(pE);
+        ErrorBoxE(e);
     }
     /*
     CIniConfigFile oConfig;

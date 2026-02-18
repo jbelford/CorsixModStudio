@@ -6,6 +6,7 @@
 #include "rainman/core/Exception.h"
 #include <cstring>
 #include <string>
+#include <optional>
 
 class LuaFile2Test : public ::testing::Test {
 protected:
@@ -178,32 +179,30 @@ TEST_F(LuaFile2Test, SetRootFolder)
 TEST_F(LuaFile2Test, LoadInvalidSyntaxThrows)
 {
 	const char *badScript = "GameData = { this is not valid lua !!!";
-	CRainmanException *caught = nullptr;
+	std::optional<CRainmanException> caught;
 	try
 	{
 		loadScript(badScript);
 	}
-	catch (CRainmanException *ex)
+	catch (const CRainmanException &ex)
 	{
 		caught = ex;
 	}
-	ASSERT_NE(caught, nullptr);
-	caught->destroy();
+	ASSERT_TRUE(caught.has_value());
 }
 
 TEST_F(LuaFile2Test, LoadNullStreamThrows)
 {
-	CRainmanException *caught = nullptr;
+	std::optional<CRainmanException> caught;
 	try
 	{
 		lua.loadFile(nullptr, &store, "test.lua");
 	}
-	catch (CRainmanException *ex)
+	catch (const CRainmanException &ex)
 	{
 		caught = ex;
 	}
-	ASSERT_NE(caught, nullptr);
-	caught->destroy();
+	ASSERT_TRUE(caught.has_value());
 }
 
 TEST_F(LuaFile2Test, LoadNullStoreThrows)
@@ -212,17 +211,16 @@ TEST_F(LuaFile2Test, LoadNullStoreThrows)
 	std::unique_ptr<IFileStore::IStream> inStream(CMemoryStore::OpenStreamExt(
 	    const_cast<char *>(script), (unsigned long)strlen(script), false));
 
-	CRainmanException *caught = nullptr;
+	std::optional<CRainmanException> caught;
 	try
 	{
 		lua.loadFile(inStream.get(), nullptr, "test.lua");
 	}
-	catch (CRainmanException *ex)
+	catch (const CRainmanException &ex)
 	{
 		caught = ex;
 	}
-	ASSERT_NE(caught, nullptr);
-	caught->destroy();
+	ASSERT_TRUE(caught.has_value());
 }
 
 TEST_F(LuaFile2Test, LoadBoolAndStringTypes)

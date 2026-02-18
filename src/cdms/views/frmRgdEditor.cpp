@@ -420,10 +420,10 @@ void frmRGDEditor::DoSave()
         {
             m_pNodeObject->Save(streamResult.value().get());
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             RestoreBackupFile(TheConstruct->GetModuleService().GetModule(), m_sFilename);
-            ErrorBoxE(pE);
+            ErrorBoxE(e);
             return;
         }
         m_bDataNeedsSaving = false;
@@ -437,10 +437,10 @@ void frmRGDEditor::DoSave()
         {
             m_pLua2Object->saveFile(streamResult.value().get(), sNormPath.c_str());
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             RestoreBackupFile(TheConstruct->GetModuleService().GetModule(), m_sFilename);
-            ErrorBoxE(pE);
+            ErrorBoxE(e);
             return;
         }
         m_bDataNeedsSaving = false;
@@ -603,9 +603,8 @@ wxPGProperty *frmRGDEditor::GetMetaNodeEditor(IMetaNode *pNode, wxString sName, 
         }
         }
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
         return 0;
     }
     wxPGProperty *pTmp = new wxStringProperty(sName, sNameId, wxT(""));
@@ -735,9 +734,9 @@ void frmRGDEditor::_DoFillRightSide(IMetaNode *pNode, IMetaNode::IMetaTable *pTa
                 }
             }
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
-            ErrorBoxE(pE);
+            ErrorBoxE(e);
         }
     }
     else
@@ -789,9 +788,8 @@ wxString frmRGDEditor::GetMetaNodeName(IMetaNode *pNode)
     {
         iHash = pNode->VGetNameHash();
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
         return wxT("[unknown name]");
     }
     return CRgdEditorPresenter::FormatNodeName(nullptr, iHash);
@@ -817,9 +815,8 @@ wxString frmRGDEditor::GetMetaTableValue(IMetaNode::IMetaTable *pTable, IMetaNod
             sRef = AsciiTowxString(pTable->VGetReferenceString());
         }
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
         return wxT("-- unknown name");
     }
     bool bIsGameData = pNode && GetMetaNodeName(pNode) == wxT("GameData");
@@ -1116,11 +1113,11 @@ void frmRGDEditor::OnPropertyChange(wxPropertyGridEvent &event)
                 // oE.SetItem(m_pTables->GetSelection());
                 // OnTreeSelect(oE);
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
                 m_pTables->SetItemText(m_pTables->GetSelection(), event.GetPropertyValue().GetString());
                 m_pPropertyGrid->SetPropertyHelpString(wxT("Name"), GetMetaNodeHelp(pData->pNode));
-                ErrorBoxE(pE);
+                ErrorBoxE(e);
             }
         }
         else
@@ -1163,9 +1160,9 @@ void frmRGDEditor::OnPropertyChange(wxPropertyGridEvent &event)
                 m_pPropertyGrid->Refresh();
                 m_pTables->Refresh();
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
-                ErrorBoxE(pE);
+                ErrorBoxE(e);
                 event.GetProperty()->SetValue(wxVariant(iOld));
                 m_pPropertyGrid->Refresh();
             }
@@ -1203,10 +1200,10 @@ void frmRGDEditor::_DoValueChange(wxTreeItemId oTreeItem, wxPropertyGridEvent &e
         {
             pData->pNode->VSetValueBool(event.GetPropertyValue().GetBool() ? true : false);
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             event.GetProperty()->SetValueFromInt(pData->pNode->VGetValueBool() ? 1 : 0);
-            ErrorBoxE(pE);
+            ErrorBoxE(e);
         }
         break;
     case IMetaNode::DT_Integer:
@@ -1216,14 +1213,14 @@ void frmRGDEditor::_DoValueChange(wxTreeItemId oTreeItem, wxPropertyGridEvent &e
             pData->pNode->VSetValueInteger(wcstoul(event.GetPropertyValue().GetString().c_str(), 0, 10));
             m_pPropertyGrid->SetPropertyHelpString(oPropItem, GetMetaNodeHelp(pData->pNode));
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             wchar_t sNumberBuffer[34];
             sNumberBuffer[0] = 0;
             _ultow(pData->pNode->VGetValueInteger(), sNumberBuffer, 10);
 
             event.GetProperty()->SetValue(wxVariant(wxString(sNumberBuffer)));
-            ErrorBoxE(pE);
+            ErrorBoxE(e);
         }
         break;
     }
@@ -1232,10 +1229,10 @@ void frmRGDEditor::_DoValueChange(wxTreeItemId oTreeItem, wxPropertyGridEvent &e
         {
             pData->pNode->VSetValueFloat((float)event.GetPropertyValue().GetDouble());
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             event.GetProperty()->SetValue(wxVariant((double)pData->pNode->VGetValueFloat()));
-            ErrorBoxE(pE);
+            ErrorBoxE(e);
         }
         break;
     case IMetaNode::DT_String:
@@ -1245,10 +1242,10 @@ void frmRGDEditor::_DoValueChange(wxTreeItemId oTreeItem, wxPropertyGridEvent &e
         {
             pData->pNode->VSetValueString(saValue.get());
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             event.GetProperty()->SetValueFromString(AsciiTowxString(pData->pNode->VGetValueString()));
-            ErrorBoxE(pE);
+            ErrorBoxE(e);
         }
         break;
     }
@@ -1258,10 +1255,10 @@ void frmRGDEditor::_DoValueChange(wxTreeItemId oTreeItem, wxPropertyGridEvent &e
             pData->pNode->VSetValueWString(event.GetPropertyValue().GetString());
             m_pPropertyGrid->SetPropertyHelpString(oPropItem, GetMetaNodeHelp(pData->pNode));
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             event.GetProperty()->SetValueFromString(pData->pNode->VGetValueWString());
-            ErrorBoxE(pE);
+            ErrorBoxE(e);
         }
         break;
     case IMetaNode::DT_Table:
@@ -1277,10 +1274,10 @@ void frmRGDEditor::_DoValueChange(wxTreeItemId oTreeItem, wxPropertyGridEvent &e
             {
                 pData->pTable->VSetReferenceString(saValue.get());
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
                 event.GetProperty()->SetValueFromString(AsciiTowxString(pData->pTable->VGetReferenceString()));
-                ErrorBoxE(pE);
+                ErrorBoxE(e);
             }
             break;
         }
@@ -1289,10 +1286,10 @@ void frmRGDEditor::_DoValueChange(wxTreeItemId oTreeItem, wxPropertyGridEvent &e
             {
                 pData->pTable->VSetReferenceWString(event.GetPropertyValue().GetString());
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
                 event.GetProperty()->SetValueFromString(pData->pTable->VGetReferenceWString());
-                ErrorBoxE(pE);
+                ErrorBoxE(e);
             }
             break;
         };
@@ -1487,9 +1484,9 @@ void frmRGDEditor::OnAddChild(wxCommandEvent &event)
             {
                 pNode = pData->pTable->VAddChild(saName.get());
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
-                ErrorBoxE(pE);
+                ErrorBoxE(e);
                 return;
             }
 
@@ -1573,9 +1570,9 @@ void frmRGDEditor::OnDelete(wxCommandEvent &event)
                 m_pTables->Delete(oThis);
                 m_pPropManager->ClearPage(m_pPropManager->GetSelectedPage());
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
-                ErrorBoxE(pE);
+                ErrorBoxE(e);
             }
             delete pNode;
             return;

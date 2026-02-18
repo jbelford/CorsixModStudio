@@ -40,9 +40,9 @@ class CRGODeBurnAction : public frmFiles::IHandler
         {
             DoDeBurn(saFile.get());
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
-            ErrorBoxE(pE);
+            ErrorBoxE(e);
             return;
         }
 
@@ -63,23 +63,23 @@ class CRGODeBurnAction : public frmFiles::IHandler
         {
             auto inResult = TheConstruct->GetFileService().OpenStream(AsciiTowxString(saFile));
             if (!inResult)
-                throw new CModStudioException(0, __FILE__, __LINE__, "Unable to open streams for \'%s\'", saFile);
+                throw CModStudioException(0, __FILE__, __LINE__, "Unable to open streams for \'%s\'", saFile);
             pIn = inResult.value().release();
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             delete pIn;
-            throw new CModStudioException(pE, __FILE__, __LINE__, "Unable to open streams for \'%s\'", saFile);
+            throw CModStudioException(e, __FILE__, __LINE__, "Unable to open streams for \'%s\'", saFile);
         }
         CChunkyFile oChunky;
         try
         {
             oChunky.Load(pIn);
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             delete pIn;
-            throw new CModStudioException(pE, __FILE__, __LINE__, "Unable to load \'%s\' as chunky", saFile);
+            throw CModStudioException(e, __FILE__, __LINE__, "Unable to load \'%s\' as chunky", saFile);
         }
         delete pIn;
         pIn = 0;
@@ -115,22 +115,22 @@ class CRGODeBurnAction : public frmFiles::IHandler
         {
             auto outResult = TheConstruct->GetFileService().OpenOutputStream(AsciiTowxString(saFile), true);
             if (!outResult)
-                throw new CModStudioException(0, __FILE__, __LINE__, "Unable to open output stream for \'%s\'", saFile);
+                throw CModStudioException(0, __FILE__, __LINE__, "Unable to open output stream for \'%s\'", saFile);
             pOut = outResult.value().release();
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             delete pOut;
-            throw new CModStudioException(pE, __FILE__, __LINE__, "Unable to open output stream for \'%s\'", saFile);
+            throw CModStudioException(e, __FILE__, __LINE__, "Unable to open output stream for \'%s\'", saFile);
         }
         try
         {
             oChunky.Save(pOut);
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             delete pOut;
-            throw new CModStudioException(pE, __FILE__, __LINE__, "Unable to save \'%s\' as chunky", saFile);
+            throw CModStudioException(e, __FILE__, __LINE__, "Unable to save \'%s\' as chunky", saFile);
         }
         delete pOut;
     }

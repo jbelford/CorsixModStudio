@@ -78,9 +78,9 @@ class CLuaBurnAction : public frmFiles::IHandler
                 {
                     pRgd->Load(pLua.get(), iRGDVersion);
                 }
-                catch (CRainmanException *pE)
+                catch (const CRainmanException &e)
                 {
-                    ErrorBoxE(pE);
+                    ErrorBoxE(e);
                     goto after_rgd_loaded_cleany_code;
                 }
                 {
@@ -107,9 +107,9 @@ class CLuaBurnAction : public frmFiles::IHandler
                             pRgd->Save(outStream.get());
                             wxMessageBox(AppStr(rgd_burngood), VGetAction(), wxICON_INFORMATION, TheConstruct);
                         }
-                        catch (CRainmanException *pE)
+                        catch (const CRainmanException &e)
                         {
-                            ErrorBoxE(pE);
+                            ErrorBoxE(e);
                             RestoreBackupFile(TheConstruct->GetModuleService().GetModule(),
                                               AsciiTowxString(saFile.get()));
                         }

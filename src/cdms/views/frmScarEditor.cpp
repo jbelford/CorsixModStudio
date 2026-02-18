@@ -210,10 +210,10 @@ void frmScarEditor::DoSave()
     {
         streamResult.value()->VWrite((unsigned long)sContent.Length(), 1, saContent.get());
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
         RestoreBackupFile(TheConstruct->GetModuleService().GetModule(), m_sFilename);
-        ErrorBoxE(pE);
+        ErrorBoxE(e);
         return;
     }
     m_bNeedsSaving = false;
@@ -384,9 +384,9 @@ void frmScarEditor::Load(IFileStore::IStream *pFile)
         iLength = pFile->VTell();
         pFile->VSeek(0, IFileStore::IStream::SL_Root);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        ErrorBoxE(pE);
+        ErrorBoxE(e);
         return;
     }
 
@@ -395,9 +395,9 @@ void frmScarEditor::Load(IFileStore::IStream *pFile)
     {
         pFile->VRead(iLength, 1, sBuffer);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        ErrorBoxE(pE);
+        ErrorBoxE(e);
         delete[] sBuffer;
         return;
     }

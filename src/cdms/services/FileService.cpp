@@ -35,9 +35,9 @@ Result<std::unique_ptr<IFileStore::IStream>> FileService::OpenStream(const wxStr
     {
         pStream = m_pStore->VOpenStream(sFile.get());
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        return ResultFromExceptionT<std::unique_ptr<IFileStore::IStream>>(pE);
+        return ResultFromExceptionT<std::unique_ptr<IFileStore::IStream>>(e);
     }
 
     if (!pStream)
@@ -58,9 +58,9 @@ Result<std::unique_ptr<IFileStore::IOutputStream>> FileService::OpenOutputStream
     {
         pStream = m_pStore->VOpenOutputStream(sFile.get(), bEraseIfPresent);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        return ResultFromExceptionT<std::unique_ptr<IFileStore::IOutputStream>>(pE);
+        return ResultFromExceptionT<std::unique_ptr<IFileStore::IOutputStream>>(e);
     }
 
     if (!pStream)
@@ -82,9 +82,9 @@ Result<IteratorGuard> FileService::Iterate(const wxString &sPath)
     {
         pItr = m_pTraverser->VIterate(sDir.get());
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        return ResultFromExceptionT<IteratorGuard>(pE);
+        return ResultFromExceptionT<IteratorGuard>(e);
     }
 
     return Result<IteratorGuard>::Ok(IteratorGuard(pItr));
@@ -109,9 +109,9 @@ Result<bool> FileService::DirectoryExists(const wxString &sPath)
     {
         bExists = m_pTraverser->VDirectoryExists(sDir.get());
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        return ResultFromExceptionT<bool>(pE);
+        return ResultFromExceptionT<bool>(e);
     }
 
     return Result<bool>::Ok(bExists);
@@ -128,9 +128,9 @@ Result<tLastWriteTime> FileService::GetLastWriteTime(const wxString &sPath)
     {
         t = m_pTraverser->VGetLastWriteTime(sFile.get());
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        return ResultFromExceptionT<tLastWriteTime>(pE);
+        return ResultFromExceptionT<tLastWriteTime>(e);
     }
 
     return Result<tLastWriteTime>::Ok(t);
@@ -150,9 +150,9 @@ Result<IteratorGuard> FileService::IterateFileSystem(const wxString &sPath)
     {
         pItr = oStore.VIterate(sDir.get());
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        return ResultFromExceptionT<IteratorGuard>(pE);
+        return ResultFromExceptionT<IteratorGuard>(e);
     }
 
     return Result<IteratorGuard>::Ok(IteratorGuard(pItr));
@@ -177,9 +177,9 @@ Result<void> FileService::CopyStream(IFileStore::IStream *pIn, IFileStore::IOutp
             iLen -= iChunk;
         }
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        return ResultFromException(pE);
+        return ResultFromException(e);
     }
 
     return Result<void>::Ok();

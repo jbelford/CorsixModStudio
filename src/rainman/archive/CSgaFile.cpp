@@ -62,14 +62,14 @@ void CSgaFile::VCreateFolderIn(const char *sPath, const char *sNewFolderName)
     /*
         SGA files simply cannot be modified, but this method is reqiured by IDirectoryTraverser.
     */
-    throw new CRainmanException(__FILE__, __LINE__, "Cannot modify SGA files with this class; use CSgaCreator instead");
+    throw CRainmanException(__FILE__, __LINE__, "Cannot modify SGA files with this class; use CSgaCreator instead");
 }
 
 IFileStore::IStream *CSgaFile::GetInputStream()
 {
     if (m_pFileStoreInputStream)
         return m_pFileStoreInputStream;
-    throw new CRainmanException(__FILE__, __LINE__, "No file store given");
+    throw CRainmanException(__FILE__, __LINE__, "No file store given");
 }
 
 static char *mystrdup(const char *sStr)
@@ -112,10 +112,10 @@ static int __cdecl CompareDirHash(const void *elem1, const void *elem2)
     Quick "Catch, Clean, Throw"
 */
 #define QCCT(msg)                                                                                                      \
-    catch (CRainmanException * pE)                                                                                     \
+    catch (const CRainmanException &e)                                                                                 \
     {                                                                                                                  \
         _Clean();                                                                                                      \
-        throw new CRainmanException(__FILE__, __LINE__, msg, pE);                                                      \
+        throw CRainmanException(e, __FILE__, __LINE__, msg);                                                           \
     }
 
 #endif
@@ -150,8 +150,8 @@ void CSgaFile::Load(IFileStore::IStream *pStream, tLastWriteTime oWriteTime)
     if (strcmp(m_SgaHeader.sIdentifier, "_ARCHIVE") != 0)
     {
         _Clean();
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "File identifier is \"%s\", should be \"_ARCHIVE\"",
-                                    m_SgaHeader.sIdentifier);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "File identifier is \"%s\", should be \"_ARCHIVE\"",
+                                m_SgaHeader.sIdentifier);
     }
 
     try
@@ -167,8 +167,8 @@ void CSgaFile::Load(IFileStore::IStream *pStream, tLastWriteTime oWriteTime)
             An early version of CoH or DoW:DC may have used version 3 - only Relic knows :/
         */
         _Clean();
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Version %lu is not supported (only 2 and 4 are)",
-                                    m_SgaHeader.iVersion);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Version %lu is not supported (only 2 and 4 are)",
+                                m_SgaHeader.iVersion);
     }
 
     m_SgaHeader.iToolMD5 = new long[4];
@@ -225,7 +225,7 @@ void CSgaFile::Load(IFileStore::IStream *pStream, tLastWriteTime oWriteTime)
             we should throw an error, as it may change several things.
         */
         _Clean();
-        throw new CRainmanException(
+        throw CRainmanException(
             nullptr, __FILE__, __LINE__,
             "Platform #%lu is not supported (only platform #1 is supported, so please show this to programmers)",
             m_SgaHeader.iPlatform);
@@ -241,20 +241,20 @@ void CSgaFile::Load(IFileStore::IStream *pStream, tLastWriteTime oWriteTime)
     if (pDataHeader == nullptr)
     {
         _Clean();
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Cannot allocate %lu bytes for data header",
-                                    m_SgaHeader.iDataHeaderSize);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Cannot allocate %lu bytes for data header",
+                                m_SgaHeader.iDataHeaderSize);
     }
 
     try
     {
         pStream->VRead(m_SgaHeader.iDataHeaderSize, 1, (void *)pDataHeader);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
         delete[] pDataHeader;
         _Clean();
-        throw new CRainmanException(pE, __FILE__, __LINE__, "Cannot read %lu bytes of data header",
-                                    m_SgaHeader.iDataHeaderSize);
+        throw CRainmanException(e, __FILE__, __LINE__, "Cannot read %lu bytes of data header",
+                                m_SgaHeader.iDataHeaderSize);
     }
 
     /*
@@ -276,7 +276,7 @@ void CSgaFile::Load(IFileStore::IStream *pStream, tLastWriteTime oWriteTime)
     {
         delete[] pDataHeader;
         _Clean();
-        throw new CRainmanException(__FILE__, __LINE__, "Header MD5 does not match");
+        throw CRainmanException(__FILE__, __LINE__, "Header MD5 does not match");
     }
 
     /*
@@ -495,17 +495,17 @@ void CSgaFile::VInit(void *pInitData)
     m_pFileStoreInputStream = (IFileStore::IStream *)pInitData;
     m_bInited = m_pFileStoreInputStream ? true : false;
     if (!m_bInited)
-        throw new CRainmanException(__FILE__, __LINE__, "No stream passed");
+        throw CRainmanException(__FILE__, __LINE__, "No stream passed");
 }
 
 IFileStore::IStream *CSgaFile::VOpenStream(const char *sIdentifier)
 {
     if (sIdentifier == nullptr)
-        throw new CRainmanException(__FILE__, __LINE__, "Identifier required");
+        throw CRainmanException(__FILE__, __LINE__, "Identifier required");
     if (m_pFileStoreInputStream == nullptr)
-        throw new CRainmanException(__FILE__, __LINE__, "Input stream must have been set in VInit");
+        throw CRainmanException(__FILE__, __LINE__, "Input stream must have been set in VInit");
     if (m_pDataHeaderInfo == nullptr)
-        throw new CRainmanException(__FILE__, __LINE__, "No data header loaded");
+        throw CRainmanException(__FILE__, __LINE__, "No data header loaded");
 
     size_t iDirNameLength = 0;
     unsigned short iDirID = -1;
@@ -517,7 +517,7 @@ IFileStore::IStream *CSgaFile::VOpenStream(const char *sIdentifier)
     */
     const char *sTmp = strchr(sIdentifier, '\\');
     if (sTmp == nullptr)
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "ToC could not be seperated - %s", sIdentifier);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "ToC could not be seperated - %s", sIdentifier);
     long iToCLength = (long)(sTmp - sIdentifier);
     long iToC = -1;
     if (iToCLength == 4 && m_SgaHeader.iVersion == 4)
@@ -540,7 +540,7 @@ IFileStore::IStream *CSgaFile::VOpenStream(const char *sIdentifier)
             }
         }
         if (iToC == -1)
-            throw new CRainmanException(nullptr, __FILE__, __LINE__, "ToC could not be found - %s", sIdentifier);
+            throw CRainmanException(nullptr, __FILE__, __LINE__, "ToC could not be found - %s", sIdentifier);
     }
     sIdentifier += (iToCLength + 1);
     const char *sFileNameBegin = strrchr(sIdentifier, '\\');
@@ -582,7 +582,7 @@ IFileStore::IStream *CSgaFile::VOpenStream(const char *sIdentifier)
         }
         if (iDirID == -1)
         {
-            throw new CRainmanException(nullptr, __FILE__, __LINE__, "Directory could not be found - %s", sIdentifier);
+            throw CRainmanException(nullptr, __FILE__, __LINE__, "Directory could not be found - %s", sIdentifier);
         }
     }
     else
@@ -625,7 +625,7 @@ IFileStore::IStream *CSgaFile::VOpenStream(const char *sIdentifier)
         }
     }
 
-    throw new CRainmanException(nullptr, __FILE__, __LINE__, "File could not be found - %s", sIdentifier);
+    throw CRainmanException(nullptr, __FILE__, __LINE__, "File could not be found - %s", sIdentifier);
 gotfile:
 
     /*
@@ -654,11 +654,11 @@ gotfile:
         m_pFileStoreInputStream->VSeek(m_SgaHeader.iDataOffset + iDataOffset - iPreDataSize,
                                        IFileStore::IStream::SL_Root);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
         delete[] pData;
-        throw new CRainmanException(pE, __FILE__, __LINE__, "Cannot seek to %lu for \'%s\'",
-                                    m_SgaHeader.iDataOffset + iDataOffset, sIdentifier);
+        throw CRainmanException(e, __FILE__, __LINE__, "Cannot seek to %lu for \'%s\'",
+                                m_SgaHeader.iDataOffset + iDataOffset, sIdentifier);
     }
 
     char sName[256];
@@ -672,11 +672,11 @@ gotfile:
         m_pFileStoreInputStream->VRead(4, 1, &iPreDataCrc);
         m_pFileStoreInputStream->VRead(iDataLengthCompressed, 1, pData);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
         delete[] pData;
-        throw new CRainmanException(pE, __FILE__, __LINE__, "Cannot read %lu bytes for \'%s\'", iDataLengthCompressed,
-                                    sIdentifier);
+        throw CRainmanException(e, __FILE__, __LINE__, "Cannot read %lu bytes for \'%s\'", iDataLengthCompressed,
+                                sIdentifier);
     }
 
     // CRC computed for potential future verification
@@ -688,8 +688,8 @@ gotfile:
         if (pDecompressedData == nullptr)
         {
             delete[] pData;
-            throw new CRainmanException(nullptr, __FILE__, __LINE__,
-                                        "Cannot allocate %lu bytes for decompressed \'%s\'", iDataLength, sIdentifier);
+            throw CRainmanException(nullptr, __FILE__, __LINE__, "Cannot allocate %lu bytes for decompressed \'%s\'",
+                                    iDataLength, sIdentifier);
         }
 
         unsigned long iTmp = iDataLength;
@@ -697,7 +697,7 @@ gotfile:
         {
             delete[] pData;
             delete[] pDecompressedData;
-            throw new CRainmanException(nullptr, __FILE__, __LINE__, "Cannot decompress \'%s\'", sIdentifier);
+            throw CRainmanException(nullptr, __FILE__, __LINE__, "Cannot decompress \'%s\'", sIdentifier);
         }
 
         delete[] pData;
@@ -718,9 +718,9 @@ gotfile:
     {
         pOutStream->m_pRawStream = CMS.VOpenStream(CMS.MemoryRange(pData, iDataLength));
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CRainmanException(__FILE__, __LINE__, "Cannot open memory stream", pE);
+        throw CRainmanException(e, __FILE__, __LINE__, "Cannot open memory stream");
     }
 
     return pOutStream.release();
@@ -740,11 +740,10 @@ void CSgaFile::CStream::VRead(unsigned long iItemCount, unsigned long iItemSize,
     {
         m_pRawStream->VRead(iItemCount, iItemSize, pDestination);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CRainmanException(pE, __FILE__, __LINE__,
-                                    "Error reading %lu items (%lu bytes each) from SGA raw stream", iItemCount,
-                                    iItemSize);
+        throw CRainmanException(e, __FILE__, __LINE__, "Error reading %lu items (%lu bytes each) from SGA raw stream",
+                                iItemCount, iItemSize);
     }
 }
 
@@ -769,7 +768,7 @@ long CSgaFile::CStream::VTell()
 IDirectoryTraverser::IIterator *CSgaFile::VIterate(const char *sPath)
 {
     if (!m_pDataHeaderInfo)
-        throw new CRainmanException(__FILE__, __LINE__, "No data header present");
+        throw CRainmanException(__FILE__, __LINE__, "No data header present");
 
     const char *sPathRemember = sPath;
     const char *sTmp;
@@ -797,7 +796,7 @@ IDirectoryTraverser::IIterator *CSgaFile::VIterate(const char *sPath)
         }
     }
     if (iToC == -1)
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Cannot iterate \'%s\' - ToC not found", sPath);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Cannot iterate \'%s\' - ToC not found", sPath);
 
     sPath += iPartLength + (sTmp ? 1 : 0);
     sTmp = strchr(sPath, '\\');
@@ -823,8 +822,8 @@ IDirectoryTraverser::IIterator *CSgaFile::VIterate(const char *sPath)
             }
         }
         if (iSubDir == -1)
-            throw new CRainmanException(nullptr, __FILE__, __LINE__, "Cannot iterate \'%s\' - cannot find \'%s\'",
-                                        sPathRemember, sPath);
+            throw CRainmanException(nullptr, __FILE__, __LINE__, "Cannot iterate \'%s\' - cannot find \'%s\'",
+                                    sPathRemember, sPath);
         iDir = iSubDir;
 
         sPath += iPartLength + (sTmp ? 1 : 0);
@@ -835,27 +834,27 @@ IDirectoryTraverser::IIterator *CSgaFile::VIterate(const char *sPath)
     {
         return CHECK_MEM(new CIterator(iDir, (CSgaFile *)this));
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CRainmanException(pE, __FILE__, __LINE__, "Cannot iterate \'%s\' (%li) due to constructor error",
-                                    sPathRemember, iDir);
+        throw CRainmanException(e, __FILE__, __LINE__, "Cannot iterate \'%s\' (%li) due to constructor error",
+                                sPathRemember, iDir);
     }
 }
 
 unsigned long CSgaFile::VGetEntryPointCount()
 {
     if (!m_pDataHeaderInfo)
-        throw new CRainmanException(__FILE__, __LINE__, "No data header present");
+        throw CRainmanException(__FILE__, __LINE__, "No data header present");
     return (unsigned long)m_pDataHeaderInfo->iToCCount;
 }
 
 const char *CSgaFile::VGetEntryPoint(unsigned long iID)
 {
     if (!m_pDataHeaderInfo)
-        throw new CRainmanException(__FILE__, __LINE__, "No data header present");
+        throw CRainmanException(__FILE__, __LINE__, "No data header present");
     if (iID < 0 || iID >= (unsigned long)m_pDataHeaderInfo->iToCCount)
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0 -> %lu", iID,
-                                    m_pDataHeaderInfo->iToCCount);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0 -> %lu", iID,
+                                m_pDataHeaderInfo->iToCCount);
     return m_pSgaToCs[iID].sAlias;
 }
 
@@ -895,7 +894,7 @@ CSgaFile::CIterator::CIterator(long iDir, CSgaFile *pSga)
         }
     }
     if (iToC == -1)
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Directory %li does not fit into any ToC", iDir);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Directory %li does not fit into any ToC", iDir);
 
     m_sParentPath = CHECK_MEM(
         new char[strlen(m_pSga->m_pSgaToCs[iToC].sAlias) + 4 + strlen(m_pSga->m_pSgaDirExts[iDir].sName) + 3]);
@@ -922,7 +921,7 @@ CSgaFile::CIterator::CIterator(long iDir, CSgaFile *pSga)
         {
             delete[] m_sParentPath;
             m_sParentPath = nullptr;
-            throw new CRainmanException(__FILE__, __LINE__, "Memory allocate error");
+            throw CRainmanException(__FILE__, __LINE__, "Memory allocate error");
         }
         strcpy(m_sFullPath, m_sParentPath);
         strcat(m_sFullPath, m_pSga->m_pSgaDirExts[m_iCurrentItem].sShortName);
@@ -934,7 +933,7 @@ CSgaFile::CIterator::CIterator(long iDir, CSgaFile *pSga)
         {
             delete[] m_sParentPath;
             m_sParentPath = nullptr;
-            throw new CRainmanException(__FILE__, __LINE__, "Memory allocate error");
+            throw CRainmanException(__FILE__, __LINE__, "Memory allocate error");
         }
         strcpy(m_sFullPath, m_sParentPath);
         strcat(m_sFullPath, m_pSga->m_pSgaFileExts[m_iCurrentItem].sName);
@@ -952,7 +951,7 @@ tLastWriteTime CSgaFile::VGetLastWriteTime(const char *)
     //! \todo Update this method to work with version 4 SGA files
     if (IsValidWriteTime(m_oSgaWriteTime))
         return m_oSgaWriteTime;
-    throw new CRainmanException(__FILE__, __LINE__, "No modification date present");
+    throw CRainmanException(__FILE__, __LINE__, "No modification date present");
 }
 
 tLastWriteTime CSgaFile::CIterator::VGetLastWriteTime()
@@ -960,7 +959,7 @@ tLastWriteTime CSgaFile::CIterator::VGetLastWriteTime()
     //! \todo Update this method to work with version 4 SGA files
     if (IsValidWriteTime(m_pSga->m_oSgaWriteTime))
         return m_pSga->m_oSgaWriteTime;
-    throw new CRainmanException(__FILE__, __LINE__, "No modification date present");
+    throw CRainmanException(__FILE__, __LINE__, "No modification date present");
 }
 
 IDirectoryTraverser::IIterator::eTypes CSgaFile::CIterator::VGetType()
@@ -993,9 +992,9 @@ IFileStore::IStream *CSgaFile::CIterator::VOpenFile()
         {
             return m_pSga->VOpenStream(m_sFullPath);
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
-            throw new CRainmanException(pE, __FILE__, __LINE__, "Unable to open \'%s\'", m_sFullPath);
+            throw CRainmanException(e, __FILE__, __LINE__, "Unable to open \'%s\'", m_sFullPath);
         }
     }
     QUICK_THROW("Current item is not a file")

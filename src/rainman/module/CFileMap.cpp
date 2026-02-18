@@ -44,20 +44,19 @@ void CFileMap::VInit(void *pUnused) {}
 IFileStore::IStream *CFileMap::_OpenFile(CFileMap::_File *pFile, CFileMap::_Folder *pFolder, const char *sFile)
 {
     if (pFile == nullptr)
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Could not find \'%s\'", sFile);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Could not find \'%s\'", sFile);
     if (pFolder == nullptr)
         pFolder = pFile->pParent;
     if (pFolder == nullptr)
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Found \'%s\', but did not find folder", sFile);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Found \'%s\', but did not find folder", sFile);
 
     if (pFile->mapSources.empty())
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Found \'%s\', but it is not mapped to a source",
-                                    sFile);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Found \'%s\', but it is not mapped to a source", sFile);
     _DataSource *pSrc = pFile->mapSources.begin()->first;
     char *sSourceFolder = pFolder->mapSourceNames[pSrc];
     if (sSourceFolder == nullptr)
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Found \'%s\', but folder is not mapped to the source",
-                                    sFile);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Found \'%s\', but folder is not mapped to the source",
+                                sFile);
 
     char *sFullPath = new char[strlen(sSourceFolder) + strlen(pFile->sName) + 2];
 
@@ -72,10 +71,10 @@ IFileStore::IStream *CFileMap::_OpenFile(CFileMap::_File *pFile, CFileMap::_Fold
     {
         pStream = pSrc->pStore->VOpenStream(sFullPath);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
         delete[] sFullPath;
-        throw new CRainmanException(pE, __FILE__, __LINE__, "Error opening \'%s\' from file source", sFile);
+        throw CRainmanException(e, __FILE__, __LINE__, "Error opening \'%s\' from file source", sFile);
     }
 
     delete[] sFullPath;
@@ -84,7 +83,7 @@ IFileStore::IStream *CFileMap::_OpenFile(CFileMap::_File *pFile, CFileMap::_Fold
 
 void CFileMap::VCreateFolderIn(const char *sPath, const char *sNewFolderName)
 {
-    throw new CRainmanException(__FILE__, __LINE__, "Not coded yet ^.^");
+    throw CRainmanException(__FILE__, __LINE__, "Not coded yet ^.^");
 }
 
 tLastWriteTime CFileMap::VGetLastWriteTime(const char *sFile)
@@ -94,15 +93,14 @@ tLastWriteTime CFileMap::VGetLastWriteTime(const char *sFile)
     {
         pFile = _FindFile(sFile, nullptr);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CRainmanException(pE, __FILE__, __LINE__, "Could not find \'%s\'", sFile);
+        throw CRainmanException(e, __FILE__, __LINE__, "Could not find \'%s\'", sFile);
     }
     if (!pFile)
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Could not find \'%s\'", sFile);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Could not find \'%s\'", sFile);
     if (pFile->mapSources.empty())
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Found \'%s\', but it is not mapped to anything",
-                                    sFile);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Found \'%s\', but it is not mapped to anything", sFile);
 
     return pFile->mapSources.begin()->second;
 }
@@ -142,10 +140,10 @@ CFileMap::_DataSource *CFileMap::_MakeFolderWritable(CFileMap::_Folder *pFolder,
         {
             pDS = _MakeFolderWritable(pFolder->pParent, pFile);
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
-            throw new CRainmanException(pE, __FILE__, __LINE__, "Unable to make \'%s\' writable for \'%s\'",
-                                        pFolder->sFullName, pFile->sName);
+            throw CRainmanException(e, __FILE__, __LINE__, "Unable to make \'%s\' writable for \'%s\'",
+                                    pFolder->sFullName, pFile->sName);
         }
 
         char *sSourceName = pFolder->pParent->mapSourceNames[pDS];
@@ -154,11 +152,11 @@ CFileMap::_DataSource *CFileMap::_MakeFolderWritable(CFileMap::_Folder *pFolder,
         {
             pDS->pTraverser->VCreateFolderIn(sSourceName, pFolder->sName);
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
-            throw new CRainmanException(pE, __FILE__, __LINE__,
-                                        "Cannot create folder in \'%s\' to make \'%s\' writable for \'%s\'",
-                                        sSourceName, pFolder->sFullName, pFile->sName);
+            throw CRainmanException(e, __FILE__, __LINE__,
+                                    "Cannot create folder in \'%s\' to make \'%s\' writable for \'%s\'", sSourceName,
+                                    pFolder->sFullName, pFile->sName);
         }
 
         size_t iL = strlen(sSourceName);
@@ -177,8 +175,8 @@ CFileMap::_DataSource *CFileMap::_MakeFolderWritable(CFileMap::_Folder *pFolder,
         return pDS;
     }
 
-    throw new CRainmanException(nullptr, __FILE__, __LINE__, "Unable to make \'%s\' writable for \'%s\'",
-                                pFolder->sFullName, pFile->sName);
+    throw CRainmanException(nullptr, __FILE__, __LINE__, "Unable to make \'%s\' writable for \'%s\'",
+                            pFolder->sFullName, pFile->sName);
 }
 
 IFileStore::IOutputStream *CFileMap::VOpenOutputStream(const char *sFile, bool bEraseIfPresent)
@@ -191,13 +189,13 @@ IFileStore::IOutputStream *CFileMap::VOpenOutputStream(const char *sFile, bool b
     {
         pFile = _FindFile(sFile, &pFolder);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CRainmanException(pE, __FILE__, __LINE__, "Could not find \'%s\'", sFile);
+        throw CRainmanException(e, __FILE__, __LINE__, "Could not find \'%s\'", sFile);
     }
 
     if (pFolder == nullptr)
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "No folder found for \'%s\'", sFile);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "No folder found for \'%s\'", sFile);
 
     if (pFile == nullptr)
     {
@@ -214,9 +212,8 @@ IFileStore::IOutputStream *CFileMap::VOpenOutputStream(const char *sFile, bool b
     {
         pDS = _MakeFolderWritable(pFolder, pFile);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
         if (bFileWasCreated)
         {
             free(pFile->sName);
@@ -235,13 +232,13 @@ IFileStore::IOutputStream *CFileMap::VOpenOutputStream(const char *sFile, bool b
             IGNORE_EXCEPTIONS
         }
         if (strnicmp(sFile, "data", 4) == 0)
-            throw new CRainmanException(
-                guard.release(), __FILE__, __LINE__,
+            throw CRainmanException(
+                nullptr, __FILE__, __LINE__,
                 "Could not find suitable output location for \'%s\' (could be because the Data folder is missing)",
                 sFile);
         else
-            throw new CRainmanException(
-                guard.release(), __FILE__, __LINE__,
+            throw CRainmanException(
+                nullptr, __FILE__, __LINE__,
                 "Could not find suitable output location for \'%s\' (could be because you\'re trying to mod RelicCOH)",
                 sFile);
     }
@@ -255,9 +252,9 @@ IFileStore::IOutputStream *CFileMap::VOpenOutputStream(const char *sFile, bool b
                 free(pFile->sName);
                 delete pFile;
             }
-            throw new CRainmanException(
-                nullptr, __FILE__, __LINE__,
-                "The output location for \'%s\' is incompatible with \'bEraseIfPresent = false\'", sFile);
+            throw CRainmanException(nullptr, __FILE__, __LINE__,
+                                    "The output location for \'%s\' is incompatible with \'bEraseIfPresent = false\'",
+                                    sFile);
         }
     }
 
@@ -286,9 +283,9 @@ IFileStore::IOutputStream *CFileMap::VOpenOutputStream(const char *sFile, bool b
         bFileWasCreated = false;
         std::sort(pFolder->vChildFiles.begin(), pFolder->vChildFiles.end(), _SortFiles);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        PAUSE_THROW(pE, __FILE__, __LINE__, "Error opening \'%s\' from file store (\'%s\')", sFile, sFullFilePath);
+        PAUSE_THROW(e, __FILE__, __LINE__, "Error opening \'%s\' from file store (\'%s\')", sFile, sFullFilePath);
 
         delete[] sFullFilePath;
 
@@ -316,9 +313,9 @@ IFileStore::IStream *CFileMap::VOpenStream(const char *sFile)
         pFile = _FindFile(sFile, &pFolder);
         return _OpenFile(pFile, pFolder, sFile);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CRainmanException(pE, __FILE__, __LINE__, "Could not find \'%s\'", sFile);
+        throw CRainmanException(e, __FILE__, __LINE__, "Could not find \'%s\'", sFile);
     }
 }
 
@@ -327,8 +324,8 @@ unsigned long CFileMap::VGetEntryPointCount() { return static_cast<unsigned long
 const char *CFileMap::VGetEntryPoint(unsigned long iID)
 {
     if (iID >= VGetEntryPointCount())
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "TOC %lu is beyond maximum of %lu", iID,
-                                    VGetEntryPointCount());
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "TOC %lu is beyond maximum of %lu", iID,
+                                VGetEntryPointCount());
     return m_vTOCs[iID]->sName;
 }
 
@@ -353,9 +350,9 @@ void CFileMap::CIterator::_MakeFullName()
 CFileMap::CIterator::CIterator(CFileMap::_Folder *pFolder, CFileMap *pFileMap)
 {
     if (!pFolder)
-        throw new CRainmanException(__FILE__, __LINE__, "No folder specified");
+        throw CRainmanException(__FILE__, __LINE__, "No folder specified");
     if (!pFileMap)
-        throw new CRainmanException(__FILE__, __LINE__, "No file map specified");
+        throw CRainmanException(__FILE__, __LINE__, "No file map specified");
     m_pDirectory = pFolder;
     m_pFileMap = pFileMap;
     m_sFullPath = nullptr;
@@ -403,28 +400,28 @@ IDirectoryTraverser::IIterator::eTypes CFileMap::CIterator::VGetType()
 IDirectoryTraverser::IIterator *CFileMap::CIterator::VOpenSubDir()
 {
     if (m_eWhat != IW_Folders)
-        throw new CRainmanException(__FILE__, __LINE__, "Current item is not a folder");
+        throw CRainmanException(__FILE__, __LINE__, "Current item is not a folder");
     try
     {
         return new CIterator(*m_FoldIter, m_pFileMap);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CRainmanException(__FILE__, __LINE__, "Unable to iterate sub-folder", pE);
+        throw CRainmanException(e, __FILE__, __LINE__, "Unable to iterate sub-folder");
     }
 }
 
 IFileStore::IStream *CFileMap::CIterator::VOpenFile()
 {
     if (m_eWhat != IW_Files)
-        throw new CRainmanException(__FILE__, __LINE__, "Current item is not a file");
+        throw CRainmanException(__FILE__, __LINE__, "Current item is not a file");
     try
     {
         return m_pFileMap->_OpenFile(*m_FileIter, m_pDirectory, m_sFullPath);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CRainmanException(__FILE__, __LINE__, "Unable to open file", pE);
+        throw CRainmanException(e, __FILE__, __LINE__, "Unable to open file");
     }
 }
 
@@ -435,12 +432,12 @@ IDirectoryTraverser::IIterator *CFileMap::VIterate(const char *sPath)
     {
         _FindFile(sPath, &pFold, true);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CRainmanException(pE, __FILE__, __LINE__, "Could not find folder \'%s\'", sPath);
+        throw CRainmanException(e, __FILE__, __LINE__, "Could not find folder \'%s\'", sPath);
     }
     if (pFold == nullptr)
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Folder \'%s\' not found (resolved to null)", sPath);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Folder \'%s\' not found (resolved to null)", sPath);
 
     return new CIterator(pFold, (CFileMap *)this);
 }
@@ -456,7 +453,7 @@ const char *CFileMap::CIterator::VGetName()
         return (**m_FileIter).sName;
 
     default:
-        throw new CRainmanException(__FILE__, __LINE__, "Only files and folders can have names");
+        throw CRainmanException(__FILE__, __LINE__, "Only files and folders can have names");
     }
 }
 
@@ -499,9 +496,9 @@ IDirectoryTraverser::IIterator::eErrors CFileMap::CIterator::VNextItem()
 tLastWriteTime CFileMap::CIterator::VGetLastWriteTime()
 {
     if (m_eWhat != IW_Files)
-        throw new CRainmanException(__FILE__, __LINE__, "Current item is not a file");
+        throw CRainmanException(__FILE__, __LINE__, "Current item is not a file");
     if ((**m_FileIter).mapSources.empty())
-        throw new CRainmanException(__FILE__, __LINE__, "File is not mapped");
+        throw CRainmanException(__FILE__, __LINE__, "File is not mapped");
     return (**m_FileIter).mapSources.begin()->second;
 }
 
@@ -591,7 +588,7 @@ CFileMap::_File *CFileMap::_FindFile(const char *sName, CFileMap::_Folder **ppFo
     const char *sSlashLoc = strchr(sName, '\\');
     if (sSlashLoc == nullptr)
         sSlashLoc = strchr(sName, '/');
-    // if(sSlashLoc == 0) throw new CRainmanException(0, __FILE__, __LINE__, "No TOC in path \'%s\'", sName);
+    // if(sSlashLoc == 0) throw CRainmanException(0, __FILE__, __LINE__, "No TOC in path \'%s\'", sName);
 
     size_t iPartLen = sSlashLoc ? sSlashLoc - sName : strlen(sName);
     _TOC *pToc = nullptr;
@@ -617,9 +614,8 @@ CFileMap::_File *CFileMap::_FindFile(const char *sName, CFileMap::_Folder **ppFo
                 sAvailable += ", ";
             sAvailable += (**itr).sName;
         }
-        throw new CRainmanException(nullptr, __FILE__, __LINE__,
-                                    "Unknown TOC \'%.*s\' in path \'%s\' (available TOCs: %s)", (int)iPartLen, sName,
-                                    sName, sAvailable.empty() ? "(none)" : sAvailable.c_str());
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Unknown TOC \'%.*s\' in path \'%s\' (available TOCs: %s)",
+                                (int)iPartLen, sName, sName, sAvailable.empty() ? "(none)" : sAvailable.c_str());
     }
 
     _Folder *pFolder = pToc->pRootFolder;
@@ -1198,10 +1194,10 @@ void CFileMap::_RawMap(_DataSource *pSource, IDirectoryTraverser::IIterator *pIt
             {
                 _RawMap(pSource, pSubItr, pTheFolder);
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
                 delete pSubItr;
-                throw new CRainmanException(pE, __FILE__, __LINE__, "Raw map of \'%s\' failed", pFolder->sFullName);
+                throw CRainmanException(e, __FILE__, __LINE__, "Raw map of \'%s\' failed", pFolder->sFullName);
             }
             delete pSubItr;
         }

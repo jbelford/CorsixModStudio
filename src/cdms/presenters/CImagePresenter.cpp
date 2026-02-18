@@ -108,11 +108,10 @@ bool CImagePresenter::SaveToStream(CRgtFile *pRgtFile, IFileStore::IOutputStream
         }
         }
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
         wxString sMsg = wxT("Failed to save image: ");
-        sMsg += wxString::FromUTF8(pE->getMessage());
-        pE->destroy();
+        sMsg += wxString::FromUTF8(e.getMessage());
         m_view.ShowError(sMsg);
         return false;
     }

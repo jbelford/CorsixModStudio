@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <fstream>
 #include <process.h>
+#include <optional>
 
 class ModuleFileTest : public ::testing::Test {
 protected:
@@ -47,14 +48,13 @@ TEST_F(ModuleFileTest, SetAndGetLocale) {
 
 TEST_F(ModuleFileTest, LoadNonexistentFileThrows) {
     CModuleFile mod;
-    CRainmanException* caught = nullptr;
+    std::optional<CRainmanException> caught;
     try {
         mod.LoadModuleFile("C:\\nonexistent\\path\\fake.module");
-    } catch (CRainmanException* ex) {
+    } catch (const CRainmanException &ex) {
         caught = ex;
     }
-    ASSERT_NE(caught, nullptr);
-    caught->destroy();
+    ASSERT_TRUE(caught.has_value());
 }
 
 TEST_F(ModuleFileTest, LoadEmptyFileClassifiesAsCohEarly) {
@@ -511,28 +511,26 @@ TEST_F(ModuleFileTest, ResolveUcsNonDollarStringThrows) {
     CModuleFile mod;
     mod.NewUCS("test.ucs");
 
-    CRainmanException* caught = nullptr;
+    std::optional<CRainmanException> caught;
     try {
         mod.ResolveUCS("notdollar");
-    } catch (CRainmanException* ex) {
+    } catch (const CRainmanException &ex) {
         caught = ex;
     }
-    ASSERT_NE(caught, nullptr);
-    caught->destroy();
+    ASSERT_TRUE(caught.has_value());
 }
 
 TEST_F(ModuleFileTest, ResolveUcsWcharNonDollarStringThrows) {
     CModuleFile mod;
     mod.NewUCS("test.ucs");
 
-    CRainmanException* caught = nullptr;
+    std::optional<CRainmanException> caught;
     try {
         mod.ResolveUCS(L"notdollar");
-    } catch (CRainmanException* ex) {
+    } catch (const CRainmanException &ex) {
         caught = ex;
     }
-    ASSERT_NE(caught, nullptr);
-    caught->destroy();
+    ASSERT_TRUE(caught.has_value());
 }
 
 TEST_F(ModuleFileTest, ResolveUcsMultipleFiles) {
@@ -588,40 +586,37 @@ TEST_F(ModuleFileTest, DeleteUcsOutOfRangeThrows) {
     CModuleFile mod;
     mod.NewUCS("only.ucs");
 
-    CRainmanException* caught = nullptr;
+    std::optional<CRainmanException> caught;
     try {
         mod.DeleteUcs(5);
-    } catch (CRainmanException* ex) {
+    } catch (const CRainmanException &ex) {
         caught = ex;
     }
-    ASSERT_NE(caught, nullptr);
-    caught->destroy();
+    ASSERT_TRUE(caught.has_value());
 }
 
 TEST_F(ModuleFileTest, GetUcsOutOfRangeThrows) {
     CModuleFile mod;
 
-    CRainmanException* caught = nullptr;
+    std::optional<CRainmanException> caught;
     try {
         mod.GetUcs(0);
-    } catch (CRainmanException* ex) {
+    } catch (const CRainmanException &ex) {
         caught = ex;
     }
-    ASSERT_NE(caught, nullptr);
-    caught->destroy();
+    ASSERT_TRUE(caught.has_value());
 }
 
 TEST_F(ModuleFileTest, GetEngineOutOfRangeThrows) {
     CModuleFile mod;
 
-    CRainmanException* caught = nullptr;
+    std::optional<CRainmanException> caught;
     try {
         mod.GetEngine(0);
-    } catch (CRainmanException* ex) {
+    } catch (const CRainmanException &ex) {
         caught = ex;
     }
-    ASSERT_NE(caught, nullptr);
-    caught->destroy();
+    ASSERT_TRUE(caught.has_value());
 }
 
 // ==========================================================================
@@ -729,14 +724,13 @@ TEST_F(ModuleFileTest, GetArchiveFullPathOutOfRangeThrows) {
     CModuleFile mod;
     mod.LoadModuleFile(path.c_str());
 
-    CRainmanException* caught = nullptr;
+    std::optional<CRainmanException> caught;
     try {
         mod.GetArchiveFullPath(0, nullptr);
-    } catch (CRainmanException* ex) {
+    } catch (const CRainmanException &ex) {
         caught = ex;
     }
-    ASSERT_NE(caught, nullptr);
-    caught->destroy();
+    ASSERT_TRUE(caught.has_value());
 }
 
 // ==========================================================================
@@ -755,15 +749,14 @@ TEST_F(ModuleFileTest, HeuristicTiedScoreThrows) {
     auto path = writeModuleFile("tied.module", content);
 
     CModuleFile mod;
-    CRainmanException* caught = nullptr;
+    std::optional<CRainmanException> caught;
     try {
         mod.LoadModuleFile(path.c_str());
-    } catch (CRainmanException* ex) {
+    } catch (const CRainmanException &ex) {
         caught = ex;
     }
-    ASSERT_NE(caught, nullptr);
+    ASSERT_TRUE(caught.has_value());
     EXPECT_NE(std::strstr(caught->getMessage(), "Unable to determine"), nullptr);
-    caught->destroy();
 }
 
 TEST_F(ModuleFileTest, HeuristicMixedDirectivesDowWins) {
@@ -828,27 +821,25 @@ TEST_F(ModuleFileTest, VDirectoryExistsEmptyPath) {
 
 TEST_F(ModuleFileTest, VIterateEmptyThrows) {
     CModuleFile mod;
-    CRainmanException* caught = nullptr;
+    std::optional<CRainmanException> caught;
     try {
         mod.VIterate("");
-    } catch (CRainmanException* ex) {
+    } catch (const CRainmanException &ex) {
         caught = ex;
     }
     // Expect an error since there's no data loaded
-    ASSERT_NE(caught, nullptr);
-    caught->destroy();
+    ASSERT_TRUE(caught.has_value());
 }
 
 TEST_F(ModuleFileTest, VOpenStreamNonexistentThrows) {
     CModuleFile mod;
-    CRainmanException* caught = nullptr;
+    std::optional<CRainmanException> caught;
     try {
         mod.VOpenStream("nonexistent\\file.txt");
-    } catch (CRainmanException* ex) {
+    } catch (const CRainmanException &ex) {
         caught = ex;
     }
-    ASSERT_NE(caught, nullptr);
-    caught->destroy();
+    ASSERT_TRUE(caught.has_value());
 }
 
 // ==========================================================================
@@ -1011,14 +1002,13 @@ TEST_F(ModuleFileTest, MultipleDataSourceSections) {
 
 TEST_F(ModuleFileTest, GetDataSourceOutOfRangeThrows) {
     CModuleFile mod;
-    CRainmanException* caught = nullptr;
+    std::optional<CRainmanException> caught;
     try {
         mod.GetDataSource(0);
-    } catch (CRainmanException* ex) {
+    } catch (const CRainmanException &ex) {
         caught = ex;
     }
-    ASSERT_NE(caught, nullptr);
-    caught->destroy();
+    ASSERT_TRUE(caught.has_value());
 }
 
 TEST_F(ModuleFileTest, CompatibleModParsing) {
@@ -1045,48 +1035,44 @@ TEST_F(ModuleFileTest, CompatibleModParsing) {
 
 TEST_F(ModuleFileTest, GetCompatibleOutOfRangeThrows) {
     CModuleFile mod;
-    CRainmanException* caught = nullptr;
+    std::optional<CRainmanException> caught;
     try {
         mod.GetCompatible(0);
-    } catch (CRainmanException* ex) {
+    } catch (const CRainmanException &ex) {
         caught = ex;
     }
-    ASSERT_NE(caught, nullptr);
-    caught->destroy();
+    ASSERT_TRUE(caught.has_value());
 }
 
 TEST_F(ModuleFileTest, GetFolderOutOfRangeThrows) {
     CModuleFile mod;
-    CRainmanException* caught = nullptr;
+    std::optional<CRainmanException> caught;
     try {
         mod.GetFolder(0);
-    } catch (CRainmanException* ex) {
+    } catch (const CRainmanException &ex) {
         caught = ex;
     }
-    ASSERT_NE(caught, nullptr);
-    caught->destroy();
+    ASSERT_TRUE(caught.has_value());
 }
 
 TEST_F(ModuleFileTest, GetArchiveOutOfRangeThrows) {
     CModuleFile mod;
-    CRainmanException* caught = nullptr;
+    std::optional<CRainmanException> caught;
     try {
         mod.GetArchive(0);
-    } catch (CRainmanException* ex) {
+    } catch (const CRainmanException &ex) {
         caught = ex;
     }
-    ASSERT_NE(caught, nullptr);
-    caught->destroy();
+    ASSERT_TRUE(caught.has_value());
 }
 
 TEST_F(ModuleFileTest, GetRequiredOutOfRangeThrows) {
     CModuleFile mod;
-    CRainmanException* caught = nullptr;
+    std::optional<CRainmanException> caught;
     try {
         mod.GetRequired(0);
-    } catch (CRainmanException* ex) {
+    } catch (const CRainmanException &ex) {
         caught = ex;
     }
-    ASSERT_NE(caught, nullptr);
-    caught->destroy();
+    ASSERT_TRUE(caught.has_value());
 }

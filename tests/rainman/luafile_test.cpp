@@ -5,6 +5,7 @@
 #include "rainman/core/Exception.h"
 #include <cstring>
 #include <string>
+#include <optional>
 
 class LuaFileTest : public ::testing::Test {
 protected:
@@ -151,65 +152,61 @@ TEST_F(LuaFileTest, LoadMultipleGlobals)
 
 TEST_F(LuaFileTest, LoadNullStreamThrows)
 {
-	CRainmanException* caught = nullptr;
+	std::optional<CRainmanException> caught;
 	try
 	{
 		lua.Load(nullptr, &store, "test.lua");
 	}
-	catch (CRainmanException* ex)
+	catch (const CRainmanException &ex)
 	{
 		caught = ex;
 	}
-	ASSERT_NE(caught, nullptr);
-	caught->destroy();
+	ASSERT_TRUE(caught.has_value());
 }
 
 TEST_F(LuaFileTest, LoadInvalidSyntaxThrows)
 {
-	CRainmanException* caught = nullptr;
+	std::optional<CRainmanException> caught;
 	try
 	{
 		loadScript("GameData = { this is not valid !!!");
 	}
-	catch (CRainmanException* ex)
+	catch (const CRainmanException &ex)
 	{
 		caught = ex;
 	}
-	ASSERT_NE(caught, nullptr);
-	caught->destroy();
+	ASSERT_TRUE(caught.has_value());
 }
 
 TEST_F(LuaFileTest, VAddChildThrows)
 {
 	lua.New();
-	CRainmanException* caught = nullptr;
+	std::optional<CRainmanException> caught;
 	try
 	{
 		lua.VAddChild("test");
 	}
-	catch (CRainmanException* ex)
+	catch (const CRainmanException &ex)
 	{
 		caught = ex;
 	}
 	// VAddChild is not implemented — it throws
-	ASSERT_NE(caught, nullptr);
-	caught->destroy();
+	ASSERT_TRUE(caught.has_value());
 }
 
 TEST_F(LuaFileTest, VDeleteChildThrows)
 {
 	lua.New();
-	CRainmanException* caught = nullptr;
+	std::optional<CRainmanException> caught;
 	try
 	{
 		lua.VDeleteChild(0);
 	}
-	catch (CRainmanException* ex)
+	catch (const CRainmanException &ex)
 	{
 		caught = ex;
 	}
-	ASSERT_NE(caught, nullptr);
-	caught->destroy();
+	ASSERT_TRUE(caught.has_value());
 }
 
 TEST_F(LuaFileTest, GetChildOutOfRangeThrows)
@@ -217,17 +214,16 @@ TEST_F(LuaFileTest, GetChildOutOfRangeThrows)
 	loadScript("GameData = {}");
 	unsigned long count = lua.VGetChildCount();
 
-	CRainmanException* caught = nullptr;
+	std::optional<CRainmanException> caught;
 	try
 	{
 		lua.VGetChild(count);
 	}
-	catch (CRainmanException* ex)
+	catch (const CRainmanException &ex)
 	{
 		caught = ex;
 	}
-	ASSERT_NE(caught, nullptr);
-	caught->destroy();
+	ASSERT_TRUE(caught.has_value());
 }
 
 TEST_F(LuaFileTest, ReferenceTypeIsNoData)

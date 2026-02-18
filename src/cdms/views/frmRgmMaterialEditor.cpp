@@ -104,10 +104,10 @@ void frmRgmMaterialEditor::OnSave(wxCommandEvent &event)
     {
         m_pRgmFile->Save(streamResult.value().get());
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
         RestoreBackupFile(TheConstruct->GetModuleService().GetModule(), m_sFilename);
-        ErrorBoxE(pE);
+        ErrorBoxE(e);
         return;
     }
     wxMessageBox(AppStr(rgd_savegood), AppStr(rgd_save), wxICON_INFORMATION, this);
@@ -157,9 +157,8 @@ wxPGProperty *frmRgmMaterialEditor::GetVariableEditor(CRgmFile::CMaterial::CVari
             return new wxStringProperty(sName, sName, AsciiTowxString(pVar->GetValueText()));
         }
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
         return nullptr;
     }
     wxPGProperty *pTmp = new wxStringProperty(sName, sName, wxT("This property cannot be edited"));

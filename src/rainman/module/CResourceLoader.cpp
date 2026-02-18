@@ -28,6 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "rainman/core/Exception.h"
 #include "rainman/core/RainmanLog.h"
 #include <future>
+#include <optional>
 #include <chrono>
 #include <memory>
 #include <string>
@@ -94,9 +95,8 @@ CResourceLoader::SgaPreloadResult CResourceLoader::PreloadSga(CFileSystemStore *
     {
         inputStream = std::unique_ptr<IFileStore::IStream>(pFSS->VOpenStream(sFullPath));
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
         delete pSga;
         return result; // File not found — return empty result
     }
@@ -134,16 +134,15 @@ CResourceLoader::SgaPreloadResult CResourceLoader::PreloadSga(CFileSystemStore *
         pSga->Load(inputStream.get(), pFSS->VGetLastWriteTime(sFullPath));
         pSga->VInit(inputStream.get());
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        pE = new CRainmanException(pE, __FILE__, __LINE__, "(rethrow for \'%s\')", sFullPath);
         delete pSga;
         if (result.sActualModName)
         {
             free(result.sActualModName); // NOLINT(clang-analyzer-unix.MismatchedDeallocator)
             result.sActualModName = nullptr;
         }
-        throw pE;
+        throw CRainmanException(e, __FILE__, __LINE__, "(rethrow for \'%s\')", sFullPath);
     }
 
     (void)inputStream.release(); // CSgaFile takes ownership of the stream
@@ -173,9 +172,8 @@ void CResourceLoader::RegisterPreloadedSga(SgaPreloadResult &result, CModuleFile
         }
         delete pDirItr;
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        pE = new CRainmanException(pE, __FILE__, __LINE__, "(rethrow for \'%s\')", sFullPath);
         delete pDirItr;
         delete result.pSga;
         result.pSga = nullptr;
@@ -184,7 +182,7 @@ void CResourceLoader::RegisterPreloadedSga(SgaPreloadResult &result, CModuleFile
             free(result.sActualModName); // NOLINT(clang-analyzer-unix.MismatchedDeallocator)
             result.sActualModName = nullptr;
         }
-        throw pE;
+        throw CRainmanException(e, __FILE__, __LINE__, "(rethrow for \'%s\')", sFullPath);
     }
     if (result.sActualModName)
     {
@@ -213,7 +211,7 @@ void CResourceLoader::LoadArchivesParallel(std::vector<ArchiveTask> &tasks, CMod
     }
 
     // Phase 2: Collect results and register sequentially
-    CRainmanException *pFirstError = nullptr;
+    std::optional<CRainmanException> pFirstError;
     for (size_t i = 0; i < futures.size(); ++i)
     {
         SgaPreloadResult result;
@@ -221,12 +219,10 @@ void CResourceLoader::LoadArchivesParallel(std::vector<ArchiveTask> &tasks, CMod
         {
             result = futures[i].get();
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             if (!pFirstError)
-                pFirstError = pE;
-            else
-                pE->destroy();
+                pFirstError = e;
             continue;
         }
 
@@ -242,12 +238,10 @@ void CResourceLoader::LoadArchivesParallel(std::vector<ArchiveTask> &tasks, CMod
                          module.m_sFileMapName);
             RegisterPreloadedSga(result, module, tasks[i].iNum, tasks[i].uiName.c_str(), tasks[i].archivePath.c_str());
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             if (!pFirstError)
-                pFirstError = pE;
-            else
-                pE->destroy();
+                pFirstError = e;
             *tasks[i].ppSgaOut = nullptr;
             continue;
         }
@@ -261,7 +255,7 @@ void CResourceLoader::LoadArchivesParallel(std::vector<ArchiveTask> &tasks, CMod
     RAINMAN_LOG_INFO("Parallel archive loading: {} archives in {}ms", tasks.size(), ms);
 
     if (pFirstError)
-        throw pFirstError;
+        throw *pFirstError;
 }
 
 // -- Free-function callbacks used with Util_ForEach --
@@ -290,9 +284,8 @@ void CModuleFile_ArchiveForEachNoErrors(IDirectoryTraverser::IIterator *pItr, vo
     {
         CResourceLoader::DoLoadArchive(*pThis, pItr->VGetFullPath(), &pFile, 15000, s);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
         free(s);
         return;
     }
@@ -324,11 +317,11 @@ void CModuleFile_UcsForEach(IDirectoryTraverser::IIterator *pItr, void *pModuleF
             else
                 pUcsEntry->m_pHandle->LoadDat(stream.get());
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             free(pUcsEntry->m_sName);
             delete pUcsEntry;
-            throw new CRainmanException(pE, __FILE__, __LINE__, "Error loading UCS file \'%s\'", sName);
+            throw CRainmanException(e, __FILE__, __LINE__, "Error loading UCS file \'%s\'", sName);
         }
 
         pThis->m_vLocaleTexts.push_back(pUcsEntry);
@@ -378,7 +371,7 @@ void CResourceLoader::LoadUcsFilesParallel(CModuleFile &module, IDirectoryTraver
     {
         std::shared_ptr<CUcsFile> pHandle;
         std::string name;
-        CRainmanException *pError = nullptr;
+        std::optional<CRainmanException> pError;
     };
 
     auto &pool = CThreadPool::Instance();
@@ -401,32 +394,28 @@ void CResourceLoader::LoadUcsFilesParallel(CModuleFile &module, IDirectoryTraver
                     else
                         result.pHandle->LoadDat(stream.get());
                 }
-                catch (CRainmanException *pE)
+                catch (const CRainmanException &e)
                 {
                     result.pHandle.reset();
-                    result.pError = pE;
+                    result.pError = e;
                 }
                 return result;
             }));
     }
 
     // Phase 3 (serial): Collect results and register in module
-    CRainmanException *pFirstError = nullptr;
+    std::optional<CRainmanException> pFirstError;
     std::string sFirstErrorFile;
 
     for (auto &fut : futures)
     {
         UcsLoadResult result = fut.get();
-        if (result.pError != nullptr)
+        if (result.pError)
         {
-            if (pFirstError == nullptr)
+            if (!pFirstError)
             {
-                pFirstError = result.pError;
+                pFirstError = std::move(result.pError);
                 sFirstErrorFile = result.name;
-            }
-            else
-            {
-                result.pError->destroy();
             }
             continue;
         }
@@ -441,10 +430,10 @@ void CResourceLoader::LoadUcsFilesParallel(CModuleFile &module, IDirectoryTraver
     auto elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
     RAINMAN_LOG_INFO("Parallel UCS loading: {} files in {} ms", files.size(), elapsedMs);
 
-    if (pFirstError != nullptr)
+    if (pFirstError)
     {
-        throw new CRainmanException(pFirstError, __FILE__, __LINE__, "Error loading UCS file '%s'",
-                                    sFirstErrorFile.c_str());
+        throw CRainmanException(*pFirstError, __FILE__, __LINE__, "Error loading UCS file '%s'",
+                                sFirstErrorFile.c_str());
     }
 }
 
@@ -535,9 +524,8 @@ void CResourceLoader::LoadFoldersParallel(std::vector<FolderTask> &tasks, CModul
                 {
                     pDirItr = pFSS->VIterate(task.folderPath.c_str());
                 }
-                catch (CRainmanException *pE)
+                catch (const CRainmanException &e)
                 {
-                    pE->destroy();
                     return result;
                 }
                 if (pDirItr)
@@ -649,7 +637,7 @@ void CResourceLoader::LoadDataGeneric(CModuleFile &module, CALLBACK_ARG)
             delete[] sSectionName;
             if (sDataGenericValue)
                 free(sDataGenericValue);
-            throw new CRainmanException(__FILE__, __LINE__, "Error reading from file");
+            throw CRainmanException(__FILE__, __LINE__, "Error reading from file");
         }
         char *sCommentBegin = strchr(sLine, ';');
         if (sCommentBegin)
@@ -673,14 +661,14 @@ void CResourceLoader::LoadDataGeneric(CModuleFile &module, CALLBACK_ARG)
                         sDataGenericValue = CHECK_MEM(strdup(sValue));
                     }
                 }
-                catch (CRainmanException *pE)
+                catch (const CRainmanException &e)
                 {
                     delete[] sLine;
                     delete[] sSectionName;
                     if (sDataGenericValue)
                         free(sDataGenericValue);
                     fclose(fModule);
-                    throw pE;
+                    throw e;
                 }
             }
         }
@@ -774,10 +762,10 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
     }
 
     // --- UCS phase lambda ---
-    auto ucsPhase = [&]() -> CRainmanException *
+    auto ucsPhase = [&]() -> std::optional<CRainmanException>
     {
         if (!bRunUcs)
-            return nullptr;
+            return std::nullopt;
         auto tPhaseStart = std::chrono::steady_clock::now();
 
         std::string sUcsPath;
@@ -806,10 +794,10 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
                 CallCallback(THE_CALLBACK, "Loading UCS files for mod \'%s\'", module.m_sFileMapName);
                 LoadUcsFilesParallel(module, pItr);
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
                 delete pItr;
-                return new CRainmanException(pE, __FILE__, __LINE__, "Error loading UCS from \'%s\'", sUcsPath.c_str());
+                return CRainmanException(e, __FILE__, __LINE__, "Error loading UCS from \'%s\'", sUcsPath.c_str());
             }
             delete pItr;
         }
@@ -817,14 +805,14 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
         auto tPhaseEnd = std::chrono::steady_clock::now();
         RAINMAN_LOG_INFO("Load phase: UCS files = {} ms",
                          std::chrono::duration_cast<std::chrono::milliseconds>(tPhaseEnd - tPhaseStart).count());
-        return nullptr;
+        return std::nullopt;
     };
 
     // --- Folders phase lambda ---
-    auto foldersPhase = [&]() -> CRainmanException *
+    auto foldersPhase = [&]() -> std::optional<CRainmanException>
     {
         if (!bRunFolders)
-            return nullptr;
+            return std::nullopt;
         auto tPhaseStart = std::chrono::steady_clock::now();
 
         try
@@ -897,25 +885,25 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
                 LoadFoldersParallel(folderTasks, module, THE_CALLBACK);
             }
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             auto tPhaseEnd = std::chrono::steady_clock::now();
             RAINMAN_LOG_INFO("Load phase: Data folders = {} ms (FAILED)",
                              std::chrono::duration_cast<std::chrono::milliseconds>(tPhaseEnd - tPhaseStart).count());
-            return pE;
+            return e;
         }
 
         auto tPhaseEnd = std::chrono::steady_clock::now();
         RAINMAN_LOG_INFO("Load phase: Data folders = {} ms",
                          std::chrono::duration_cast<std::chrono::milliseconds>(tPhaseEnd - tPhaseStart).count());
-        return nullptr;
+        return std::nullopt;
     };
 
     // --- Archives phase lambda ---
-    auto archivesPhase = [&]() -> CRainmanException *
+    auto archivesPhase = [&]() -> std::optional<CRainmanException>
     {
         if (!bRunArchives)
-            return nullptr;
+            return std::nullopt;
         auto tPhaseStart = std::chrono::steady_clock::now();
 
         try
@@ -950,13 +938,13 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
                     CallCallback(THE_CALLBACK, "Loading data archives for mod \'%s\'", module.m_sFileMapName);
                     Util_ForEach(pItr, CModuleFile_ArchiveForEach, static_cast<void *>(&module), false);
                 }
-                catch (CRainmanException *pE)
+                catch (const CRainmanException &e)
                 {
-                    auto *pWrapped = new CRainmanException(pE, __FILE__, __LINE__, "Error loading archives from \'%s\'",
-                                                           sArchivesPath);
+                    CRainmanException wrapped(e, __FILE__, __LINE__, "Error loading archives from \'%s\'",
+                                              sArchivesPath);
                     delete[] sArchivesPath;
                     delete pItr;
-                    throw pWrapped;
+                    throw wrapped;
                 }
                 delete pItr;
                 delete[] sArchivesPath;
@@ -984,26 +972,26 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
                 LoadArchivesParallel(tasks, module, THE_CALLBACK);
             }
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             auto tPhaseEnd = std::chrono::steady_clock::now();
             RAINMAN_LOG_INFO("Load phase: Data archives = {} ms (FAILED)",
                              std::chrono::duration_cast<std::chrono::milliseconds>(tPhaseEnd - tPhaseStart).count());
-            return pE;
+            return e;
         }
 
         auto tPhaseEnd = std::chrono::steady_clock::now();
         RAINMAN_LOG_INFO("Load phase: Data archives = {} ms",
                          std::chrono::duration_cast<std::chrono::milliseconds>(tPhaseEnd - tPhaseStart).count());
-        return nullptr;
+        return std::nullopt;
     };
 
     // Execute phases — run concurrently if 2+ are active
     {
         int parallelCount = (bRunUcs ? 1 : 0) + (bRunFolders ? 1 : 0) + (bRunArchives ? 1 : 0);
-        CRainmanException *pUcsError = nullptr;
-        CRainmanException *pFoldersError = nullptr;
-        CRainmanException *pArchivesError = nullptr;
+        std::optional<CRainmanException> pUcsError;
+        std::optional<CRainmanException> pFoldersError;
+        std::optional<CRainmanException> pArchivesError;
 
         if (parallelCount >= 2)
         {
@@ -1011,7 +999,7 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
             auto tParStart = std::chrono::steady_clock::now();
 
             auto &crossPool = CThreadPool::Instance();
-            std::future<CRainmanException *> ucsFut, foldersFut, archivesFut;
+            std::future<std::optional<CRainmanException>> ucsFut, foldersFut, archivesFut;
             if (bRunUcs)
                 ucsFut = crossPool.Submit(ucsPhase);
             if (bRunFolders)
@@ -1037,21 +1025,16 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
             pArchivesError = archivesPhase();
         }
 
-        // Propagate first error, destroy the rest
-        CRainmanException *pErrors[] = {pUcsError, pFoldersError, pArchivesError};
-        CRainmanException *pFirstError = nullptr;
+        // Propagate first error
+        std::optional<CRainmanException> *pErrors[] = {&pUcsError, &pFoldersError, &pArchivesError};
         for (auto *pErr : pErrors)
         {
-            if (pErr != nullptr)
+            if (*pErr)
             {
-                if (pFirstError == nullptr)
-                    pFirstError = pErr;
-                else
-                    pErr->destroy();
+                CRainmanException toThrow = std::move(**pErr);
+                throw toThrow;
             }
         }
-        if (pFirstError != nullptr)
-            throw pFirstError;
     }
     if (iReloadWhat & CModuleFile::RR_MapArchives)
     {
@@ -1067,9 +1050,8 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
             {
                 pItr = module.m_pFSS->IterateW(sArchivesPath);
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
-                auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
                 pItr = nullptr;
             }
             if (pItr)
@@ -1079,9 +1061,9 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
                     CallCallback(THE_CALLBACK, "Loading map archives for mod \'%s\'", module.m_sFileMapName);
                     Util_ForEach(pItr, CModuleFile_ArchiveForEachNoErrors, static_cast<void *>(&module), false);
                 }
-                catch (CRainmanException *pE)
+                catch (const CRainmanException &e)
                 {
-                    PAUSE_THROW(pE, __FILE__, __LINE__, "Error loading map archives from \'%S\'", sArchivesPath);
+                    PAUSE_THROW(e, __FILE__, __LINE__, "Error loading map archives from \'%S\'", sArchivesPath);
                     delete pItr;
                     delete[] sArchivesPath;
                     UNPAUSE_THROW;
@@ -1274,9 +1256,8 @@ void CResourceLoader::DoLoadArchive(CModuleFile &module, const char *sFullPath, 
     {
         inputStream = std::unique_ptr<IFileStore::IStream>(module.m_pFSS->VOpenStream(sFullPath));
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
         delete pSga;
         pSga = nullptr;
         return;
@@ -1332,14 +1313,13 @@ void CResourceLoader::DoLoadArchive(CModuleFile &module, const char *sFullPath, 
         delete pDirItr;
         (void)inputStream.release();
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        pE = new CRainmanException(pE, __FILE__, __LINE__, "(rethrow for \'%s\')", sFullPath);
         delete pDirItr;
         delete pSga;
         if (sActualModName)
             free(sActualModName); // NOLINT(clang-analyzer-unix.MismatchedDeallocator) -- strdup uses malloc
-        throw pE;
+        throw CRainmanException(e, __FILE__, __LINE__, "(rethrow for \'%s\')", sFullPath);
     }
     *ppSga = pSga;
     if (sActualModName)

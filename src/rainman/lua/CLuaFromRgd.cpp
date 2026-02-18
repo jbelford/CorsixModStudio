@@ -68,7 +68,7 @@ void Recursive_Quick_Dump(IMetaNode *pNode, IFileStore::IOutputStream *pOut, con
     sNewPrefix = new char[strlen(sPrefix) + 5 + (pNode->VGetName() ? strlen(pNode->VGetName()) : 10)];
 
     if (!sNewPrefix)
-        throw new CRainmanException(__FILE__, __LINE__, "Memory allocation error");
+        throw CRainmanException(__FILE__, __LINE__, "Memory allocation error");
 
     strcpy(sNewPrefix, sPrefix);
     if (!bG)
@@ -94,10 +94,10 @@ void Recursive_Quick_Dump(IMetaNode *pNode, IFileStore::IOutputStream *pOut, con
         if (!bG)
             strcat(sNewPrefix, "\"]");
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
         delete[] sNewPrefix;
-        throw new CRainmanException(__FILE__, __LINE__, "pNode problem", pE);
+        throw CRainmanException(e, __FILE__, __LINE__, "pNode problem");
     }
 
     try
@@ -105,10 +105,10 @@ void Recursive_Quick_Dump(IMetaNode *pNode, IFileStore::IOutputStream *pOut, con
         pOut->VWrite(strlen(sNewPrefix), 1, sNewPrefix);
         pOut->VWrite(3, 1, " = ");
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
         delete[] sNewPrefix;
-        throw new CRainmanException(__FILE__, __LINE__, "pOut problem", pE);
+        throw CRainmanException(e, __FILE__, __LINE__, "pOut problem");
     }
 
     try
@@ -123,17 +123,17 @@ void Recursive_Quick_Dump(IMetaNode *pNode, IFileStore::IOutputStream *pOut, con
             {
                 sprintf((char *)sFpBuffer, "%.14g", pNode->VGetValueFloat());
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
-                throw new CRainmanException(__FILE__, __LINE__, "Error getting value", pE);
+                throw CRainmanException(e, __FILE__, __LINE__, "Error getting value");
             }
             try
             {
                 pOut->VWrite(strlen(sFpBuffer), 1, sFpBuffer);
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
-                throw new CRainmanException(__FILE__, __LINE__, "Error writing value", pE);
+                throw CRainmanException(e, __FILE__, __LINE__, "Error writing value");
             }
             break;
         }
@@ -144,17 +144,17 @@ void Recursive_Quick_Dump(IMetaNode *pNode, IFileStore::IOutputStream *pOut, con
             {
                 sprintf((char *)sFpBuffer, "%lu", pNode->VGetValueInteger());
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
-                throw new CRainmanException(__FILE__, __LINE__, "Error getting value", pE);
+                throw CRainmanException(e, __FILE__, __LINE__, "Error getting value");
             }
             try
             {
                 pOut->VWrite(strlen(sFpBuffer), 1, sFpBuffer);
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
-                throw new CRainmanException(__FILE__, __LINE__, "Error writing value", pE);
+                throw CRainmanException(e, __FILE__, __LINE__, "Error writing value");
             }
             break;
         }
@@ -165,9 +165,9 @@ void Recursive_Quick_Dump(IMetaNode *pNode, IFileStore::IOutputStream *pOut, con
             {
                 pOut->VWrite(5, 1, pNode->VGetValueBool() ? "true " : "false");
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
-                throw new CRainmanException(__FILE__, __LINE__, "Error", pE);
+                throw CRainmanException(e, __FILE__, __LINE__, "Error");
             }
             break;
 
@@ -179,9 +179,9 @@ void Recursive_Quick_Dump(IMetaNode *pNode, IFileStore::IOutputStream *pOut, con
                 pOut->VWrite(strlen(pNode->VGetValueString()), 1, pNode->VGetValueString());
                 pOut->VWrite(2, 1, "]]");
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
-                throw new CRainmanException(__FILE__, __LINE__, "Error with DT_String", pE);
+                throw CRainmanException(e, __FILE__, __LINE__, "Error with DT_String");
             }
             break;
 
@@ -196,9 +196,9 @@ void Recursive_Quick_Dump(IMetaNode *pNode, IFileStore::IOutputStream *pOut, con
                 pOut->VWrite(2, 1, "]]");
                 delete[] sAsc;
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
-                throw new CRainmanException(__FILE__, __LINE__, "Error with DT_WString", pE);
+                throw CRainmanException(e, __FILE__, __LINE__, "Error with DT_WString");
             }
             break;
         }
@@ -211,9 +211,9 @@ void Recursive_Quick_Dump(IMetaNode *pNode, IFileStore::IOutputStream *pOut, con
             {
                 pTable = pNode->VGetValueMetatable();
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
-                throw new CRainmanException(__FILE__, __LINE__, "Cannot get metatable", pE);
+                throw CRainmanException(e, __FILE__, __LINE__, "Cannot get metatable");
             }
             switch (pTable->VGetReferenceType())
             {
@@ -224,10 +224,10 @@ void Recursive_Quick_Dump(IMetaNode *pNode, IFileStore::IOutputStream *pOut, con
                     pOut->VWrite(strlen(pTable->VGetReferenceString()), 1, pTable->VGetReferenceString());
                     pOut->VWrite(3, 1, "]])");
                 }
-                catch (CRainmanException *pE)
+                catch (const CRainmanException &e)
                 {
                     delete pTable;
-                    throw new CRainmanException(__FILE__, __LINE__, "Error with DT_String", pE);
+                    throw CRainmanException(e, __FILE__, __LINE__, "Error with DT_String");
                 }
                 break;
             case IMetaNode::DT_WString:
@@ -240,10 +240,10 @@ void Recursive_Quick_Dump(IMetaNode *pNode, IFileStore::IOutputStream *pOut, con
                     pOut->VWrite(3, 1, "]])");
                     delete[] sAsc;
                 }
-                catch (CRainmanException *pE)
+                catch (const CRainmanException &e)
                 {
                     delete pTable;
-                    throw new CRainmanException(__FILE__, __LINE__, "Error with DT_WString", pE);
+                    throw CRainmanException(e, __FILE__, __LINE__, "Error with DT_WString");
                 }
                 break;
             }
@@ -252,10 +252,10 @@ void Recursive_Quick_Dump(IMetaNode *pNode, IFileStore::IOutputStream *pOut, con
                 {
                     pOut->VWrite(15, 1, bG ? "Inherit([[]])  " : "Reference([[]])");
                 }
-                catch (CRainmanException *pE)
+                catch (const CRainmanException &e)
                 {
                     delete pTable;
-                    throw new CRainmanException(__FILE__, __LINE__, "Output error", pE);
+                    throw CRainmanException(e, __FILE__, __LINE__, "Output error");
                 }
                 break;
             }
@@ -265,19 +265,19 @@ void Recursive_Quick_Dump(IMetaNode *pNode, IFileStore::IOutputStream *pOut, con
             {
                 iChildC = pTable->VGetChildCount();
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
                 delete pTable;
-                throw new CRainmanException(__FILE__, __LINE__, "Table error", pE);
+                throw CRainmanException(e, __FILE__, __LINE__, "Table error");
             }
             try
             {
                 pOut->VWrite(1, 1, "\n");
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
                 delete pTable;
-                throw new CRainmanException(__FILE__, __LINE__, "Output error", pE);
+                throw CRainmanException(e, __FILE__, __LINE__, "Output error");
             }
             for (unsigned long i = 0; i < iChildC; ++i)
             {
@@ -286,20 +286,20 @@ void Recursive_Quick_Dump(IMetaNode *pNode, IFileStore::IOutputStream *pOut, con
                 {
                     pNodeC = pTable->VGetChild(i);
                 }
-                catch (CRainmanException *pE)
+                catch (const CRainmanException &e)
                 {
                     delete pTable;
-                    throw new CRainmanException(__FILE__, __LINE__, "Cannot get child", pE);
+                    throw CRainmanException(e, __FILE__, __LINE__, "Cannot get child");
                 }
                 try
                 {
                     Recursive_Quick_Dump(pNodeC, pOut, sNewPrefix, false);
                 }
-                catch (CRainmanException *pE)
+                catch (const CRainmanException &e)
                 {
                     delete pNodeC;
                     delete pTable;
-                    throw new CRainmanException(__FILE__, __LINE__, "Cannot dump child", pE);
+                    throw CRainmanException(e, __FILE__, __LINE__, "Cannot dump child");
                 }
                 delete pNodeC;
             }
@@ -314,10 +314,10 @@ void Recursive_Quick_Dump(IMetaNode *pNode, IFileStore::IOutputStream *pOut, con
             break;
         }
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
         delete[] sNewPrefix;
-        throw new CRainmanException(__FILE__, __LINE__, "Error", pE);
+        throw CRainmanException(e, __FILE__, __LINE__, "Error");
     }
 
     try
@@ -325,10 +325,10 @@ void Recursive_Quick_Dump(IMetaNode *pNode, IFileStore::IOutputStream *pOut, con
         if (pNode->VGetType() != IMetaNode::DT_Table)
             pOut->VWrite(1, 1, "\n");
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
         delete[] sNewPrefix;
-        throw new CRainmanException(__FILE__, __LINE__, "Error", pE);
+        throw CRainmanException(e, __FILE__, __LINE__, "Error");
     }
     delete[] sNewPrefix;
 }
@@ -339,9 +339,9 @@ RAINMAN_API void MakeLuaFromRgdQuickly(CRgdFile *pRgd, IFileStore::IOutputStream
     {
         Recursive_Quick_Dump(pRgd, pOut, "");
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CRainmanException(__FILE__, __LINE__, "Failed to dump file", pE);
+        throw CRainmanException(e, __FILE__, __LINE__, "Failed to dump file");
     }
 }
 
@@ -429,7 +429,7 @@ IMetaNode::IMetaTable *MakeLuaFromRgdAndNil_LoadTable(IMetaNode::IMetaTable *pSr
                     {
                         pLua->Load(pInStream.get(), pStore, sFullpath);
                     }
-                    catch (CRainmanException *pE)
+                    catch (const CRainmanException &e)
                     {
                         delete pLua;
                         delete[] sFullpath;
@@ -439,7 +439,7 @@ IMetaNode::IMetaTable *MakeLuaFromRgdAndNil_LoadTable(IMetaNode::IMetaTable *pSr
                             return MakeLuaFromRgdAndNil_LoadTable(pSrc, pStore, pHashTable, pRgdOut, pLuaOut, false);
                         }
                         IGNORE_EXCEPTIONS
-                        throw pE;
+                        throw e;
                     }
                     unsigned long iN = pLua->VGetChildCount();
                     for (unsigned long i = 0; i < iN; ++i)
@@ -469,11 +469,11 @@ IMetaNode::IMetaTable *MakeLuaFromRgdAndNil_LoadTable(IMetaNode::IMetaTable *pSr
                         pRgd->SetHashTable(pHashTable);
                         pRgd->Load(pInStream.get());
                     }
-                    catch (CRainmanException *pE)
+                    catch (const CRainmanException &e)
                     {
                         delete pRgd;
                         delete[] sFullpath;
-                        throw pE;
+                        throw e;
                     }
                     pRet = pRgd->VGetValueMetatable();
                     *pRgdOut = pRgd;
@@ -784,13 +784,13 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
         if (pNilIn && pNilIn->VGetType() == IMetaNode::DT_Table)
             pTableNil = pNilIn->VGetValueMetatable();
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
         if (pTableRgd)
             delete pTableRgd;
         if (pTableNil)
             delete pTableNil;
-        throw new CRainmanException(__FILE__, __LINE__, "Unable to fetch metatable", pE);
+        throw CRainmanException(e, __FILE__, __LINE__, "Unable to fetch metatable");
     }
 
     // Determine if we need to print this node
@@ -812,7 +812,7 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
         else
         {
             // If there is no RGD or LUA/NIL node, we have a problem.
-            throw new CRainmanException(__FILE__, __LINE__, "RGD node and LUA/NIL node are both NULL");
+            throw CRainmanException(__FILE__, __LINE__, "RGD node and LUA/NIL node are both NULL");
         }
     }
     else
@@ -840,9 +840,9 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
                         bEchoVal = true;
                     }
                 }
-                catch (CRainmanException *pE)
+                catch (const CRainmanException &e)
                 {
-                    throw new CRainmanException(__FILE__, __LINE__, "Error fetching FP values", pE);
+                    throw CRainmanException(e, __FILE__, __LINE__, "Error fetching FP values");
                 }
                 break;
             }
@@ -854,9 +854,9 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
                         bEchoVal = true;
                     }
                 }
-                catch (CRainmanException *pE)
+                catch (const CRainmanException &e)
                 {
-                    throw new CRainmanException(__FILE__, __LINE__, "Error fetching integer values", pE);
+                    throw CRainmanException(e, __FILE__, __LINE__, "Error fetching integer values");
                 }
                 break;
             case IMetaNode::DT_Bool:
@@ -867,9 +867,9 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
                         bEchoVal = true;
                     }
                 }
-                catch (CRainmanException *pE)
+                catch (const CRainmanException &e)
                 {
-                    throw new CRainmanException(__FILE__, __LINE__, "Error fetching boolean values", pE);
+                    throw CRainmanException(e, __FILE__, __LINE__, "Error fetching boolean values");
                 }
                 break;
             case IMetaNode::DT_String:
@@ -880,9 +880,9 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
                         bEchoVal = true;
                     }
                 }
-                catch (CRainmanException *pE)
+                catch (const CRainmanException &e)
                 {
-                    throw new CRainmanException(__FILE__, __LINE__, "Error fetching string values", pE);
+                    throw CRainmanException(e, __FILE__, __LINE__, "Error fetching string values");
                 }
                 break;
             case IMetaNode::DT_WString:
@@ -893,9 +893,9 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
                         bEchoVal = true;
                     }
                 }
-                catch (CRainmanException *pE)
+                catch (const CRainmanException &e)
                 {
-                    throw new CRainmanException(__FILE__, __LINE__, "Error fetching wstring values", pE);
+                    throw CRainmanException(e, __FILE__, __LINE__, "Error fetching wstring values");
                 }
                 break;
             case IMetaNode::DT_Table:
@@ -926,13 +926,13 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
                         };
                     }
                 }
-                catch (CRainmanException *pE)
+                catch (const CRainmanException &e)
                 {
                     if (pTableRgd)
                         delete pTableRgd;
                     if (pTableNil)
                         delete pTableNil;
-                    throw new CRainmanException(__FILE__, __LINE__, "Error fetching table values", pE);
+                    throw CRainmanException(e, __FILE__, __LINE__, "Error fetching table values");
                 }
             }
             break;
@@ -960,13 +960,13 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
                 sprintf((char *)sFpBuffer, "%.10g", pRgdIn->VGetValueFloat());
                 pLuaOut->VWrite(strlen(sFpBuffer), 1, sFpBuffer);
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
                 if (pTableRgd)
                     delete pTableRgd;
                 if (pTableNil)
                     delete pTableNil;
-                throw new CRainmanException(__FILE__, __LINE__, "Error printing FP value", pE);
+                throw CRainmanException(e, __FILE__, __LINE__, "Error printing FP value");
             }
             break;
         }
@@ -978,13 +978,13 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
                 sprintf((char *)sFpBuffer, "\"$%lu\"", pRgdIn->VGetValueInteger());
                 pLuaOut->VWrite(strlen(sFpBuffer), 1, sFpBuffer);
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
                 if (pTableRgd)
                     delete pTableRgd;
                 if (pTableNil)
                     delete pTableNil;
-                throw new CRainmanException(__FILE__, __LINE__, "Error printing integer value", pE);
+                throw CRainmanException(e, __FILE__, __LINE__, "Error printing integer value");
             }
             char *sAsc = nullptr;
             try
@@ -1007,13 +1007,13 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
             {
                 pLuaOut->VWrite(5, 1, pRgdIn->VGetValueBool() ? "true " : "false");
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
                 if (pTableRgd)
                     delete pTableRgd;
                 if (pTableNil)
                     delete pTableNil;
-                throw new CRainmanException(__FILE__, __LINE__, "Error printing boolean value", pE);
+                throw CRainmanException(e, __FILE__, __LINE__, "Error printing boolean value");
             }
             break;
 
@@ -1025,13 +1025,13 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
                 pLuaOut->VWrite(strlen(pRgdIn->VGetValueString()), 1, pRgdIn->VGetValueString());
                 pLuaOut->VWrite(2, 1, "]]");
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
                 if (pTableRgd)
                     delete pTableRgd;
                 if (pTableNil)
                     delete pTableNil;
-                throw new CRainmanException(__FILE__, __LINE__, "Error printing string value", pE);
+                throw CRainmanException(e, __FILE__, __LINE__, "Error printing string value");
             }
             break;
 
@@ -1048,13 +1048,13 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
                 pLuaOut->VWrite(2, 1, "]]");
                 delete[] sAsc;
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
                 if (pTableRgd)
                     delete pTableRgd;
                 if (pTableNil)
                     delete pTableNil;
-                throw new CRainmanException(__FILE__, __LINE__, "Error printing w-string value", pE);
+                throw CRainmanException(e, __FILE__, __LINE__, "Error printing w-string value");
             }
             sAsc = nullptr;
             try
@@ -1085,13 +1085,13 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
                     pLuaOut->VWrite(strlen(pTableRgd->VGetReferenceString()), 1, pTableRgd->VGetReferenceString());
                     pLuaOut->VWrite(3, 1, "]])");
                 }
-                catch (CRainmanException *pE)
+                catch (const CRainmanException &e)
                 {
                     if (pTableRgd)
                         delete pTableRgd;
                     if (pTableNil)
                         delete pTableNil;
-                    throw new CRainmanException(__FILE__, __LINE__, "Error printing string reference value", pE);
+                    throw CRainmanException(e, __FILE__, __LINE__, "Error printing string reference value");
                 }
                 break;
 
@@ -1105,13 +1105,13 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
                     pLuaOut->VWrite(3, 1, "]])");
                     delete[] sAsc;
                 }
-                catch (CRainmanException *pE)
+                catch (const CRainmanException &e)
                 {
                     if (pTableRgd)
                         delete pTableRgd;
                     if (pTableNil)
                         delete pTableNil;
-                    throw new CRainmanException(__FILE__, __LINE__, "Error printing w-string reference value", pE);
+                    throw CRainmanException(e, __FILE__, __LINE__, "Error printing w-string reference value");
                 }
                 break;
             }
@@ -1121,13 +1121,13 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
                 {
                     pLuaOut->VWrite(bG ? 13 : 15, 1, bG ? "Inherit([[]])" : "Reference([[]])");
                 }
-                catch (CRainmanException *pE)
+                catch (const CRainmanException &e)
                 {
                     if (pTableRgd)
                         delete pTableRgd;
                     if (pTableNil)
                         delete pTableNil;
-                    throw new CRainmanException(__FILE__, __LINE__, "Error printing empty reference value", pE);
+                    throw CRainmanException(e, __FILE__, __LINE__, "Error printing empty reference value");
                 }
                 break;
             };
@@ -1140,13 +1140,13 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
             {
                 pLuaOut->VWrite(50, 1, "nil -- *** WARNING: unknown data type :WARNING ***");
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
                 if (pTableRgd)
                     delete pTableRgd;
                 if (pTableNil)
                     delete pTableNil;
-                throw new CRainmanException(__FILE__, __LINE__, "Error printing empty value", pE);
+                throw CRainmanException(e, __FILE__, __LINE__, "Error printing empty value");
             }
             break;
         };
@@ -1168,13 +1168,13 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
             {
                 pInhTable = MakeLuaFromRgdAndNil_LoadTable(pTableRgd, pStore, pHashTable, &pDelRgd, &pDelLua);
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
                 if (pTableRgd)
                     delete pTableRgd;
                 if (pTableNil)
                     delete pTableNil;
-                throw new CRainmanException(__FILE__, __LINE__, "Error loading Reference()d file", pE);
+                throw CRainmanException(e, __FILE__, __LINE__, "Error loading Reference()d file");
             }
         }
         else
@@ -1198,7 +1198,7 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
                 if (pEntry->pRgdNode->VGetName())
                     pEntry->sName = strdup(pEntry->pRgdNode->VGetName());
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
                 delete pEntry;
                 if (pTableRgd)
@@ -1209,7 +1209,7 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
                     delete pDelRgd;
                 if (pDelLua)
                     delete pDelLua;
-                throw new CRainmanException(pE, __FILE__, __LINE__, "Error importing RGD child %lu", i);
+                throw CRainmanException(e, __FILE__, __LINE__, "Error importing RGD child %lu", i);
             }
             m_vTableEntries.push_back(pEntry);
         }
@@ -1221,7 +1221,7 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
             {
                 pNode = pInhTable->VGetChild(i);
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
                 if (pTableRgd)
                     delete pTableRgd;
@@ -1231,7 +1231,7 @@ void MakeLuaFromRgdAndNil_Node(CModuleFile *pUcsResolver, IMetaNode *pRgdIn, IMe
                     delete pDelRgd;
                 if (pDelLua)
                     delete pDelLua;
-                throw new CRainmanException(pE, __FILE__, __LINE__, "Error fetching LUA/NIL child %lu", i);
+                throw CRainmanException(e, __FILE__, __LINE__, "Error fetching LUA/NIL child %lu", i);
             }
 
             const char *sName = nullptr;

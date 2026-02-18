@@ -42,10 +42,10 @@ Result<CModuleFile *> ModuleService::LoadModuleFile(const wxString &sPath, pfnSt
     {
         pMod->LoadModuleFile(sFile.get(), pfnCallback, pCallbackTag);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
         delete pMod;
-        return ResultFromExceptionT<CModuleFile *>(pE);
+        return ResultFromExceptionT<CModuleFile *>(e);
     }
 
     return Result<CModuleFile *>::Ok(pMod);
@@ -68,10 +68,10 @@ Result<CModuleFile *> ModuleService::LoadSgaAsMod(const wxString &sPath, pfnStat
     {
         pMod->LoadSgaAsMod(sFile.get(), pfnCallback, pCallbackTag);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
         delete pMod;
-        return ResultFromExceptionT<CModuleFile *>(pE);
+        return ResultFromExceptionT<CModuleFile *>(e);
     }
 
     return Result<CModuleFile *>::Ok(pMod);
@@ -89,9 +89,9 @@ Result<void> ModuleService::SetLocale(const wxString &sLocale)
     {
         m_pModule->SetLocale(sVal.get());
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        return ResultFromException(pE);
+        return ResultFromException(e);
     }
 
     return Result<void>::Ok();
@@ -105,9 +105,9 @@ Result<void> ModuleService::ReloadResources(unsigned long iReloadWhat, unsigned 
     {
         m_pModule->ReloadResources(iReloadWhat, iReloadWhatRequired, iReloadWhatEngines, pfnCallback, pCallbackTag);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        return ResultFromException(pE);
+        return ResultFromException(e);
     }
 
     return Result<void>::Ok();
@@ -210,9 +210,9 @@ Result<void> ModuleService::NewUCS(const wxString &sName)
     {
         m_pModule->NewUCS(s.get());
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        return ResultFromException(pE);
+        return ResultFromException(e);
     }
 
     return Result<void>::Ok();
@@ -228,9 +228,9 @@ Result<void> ModuleService::NewUCS(const wxString &sName, std::shared_ptr<CUcsFi
     {
         m_pModule->NewUCS(s.get(), std::move(pUcs));
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        return ResultFromException(pE);
+        return ResultFromException(e);
     }
 
     return Result<void>::Ok();

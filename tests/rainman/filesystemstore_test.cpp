@@ -3,6 +3,7 @@
 #include "rainman/core/Exception.h"
 #include <cstring>
 #include <filesystem>
+#include <optional>
 #include <process.h>
 #include <string>
 
@@ -136,13 +137,12 @@ TEST_F(FileSystemStoreTest, SeekFromEnd) {
 
 TEST_F(FileSystemStoreTest, OpenNonexistentFileThrows) {
     std::string bad = filePath("does_not_exist.bin");
-    CRainmanException* caught = nullptr;
+    std::optional<CRainmanException> caught;
     try {
         store.VOpenStream(bad.c_str());
-    } catch (CRainmanException* ex) {
+    } catch (const CRainmanException &ex) {
         caught = ex;
     }
-    ASSERT_NE(caught, nullptr);
+    ASSERT_TRUE(caught.has_value());
     EXPECT_NE(std::strstr(caught->getMessage(), "Could not open"), nullptr);
-    caught->destroy();
 }

@@ -34,9 +34,9 @@ Result<void> FormatService::LoadRgd(CRgdFile *pRgd, IFileStore::IStream *pStream
     {
         pRgd->Load(pStream);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        return ResultFromException(pE);
+        return ResultFromException(e);
     }
     return Result<void>::Ok();
 }
@@ -47,9 +47,9 @@ Result<void> FormatService::SaveRgd(CRgdFile *pRgd, IFileStore::IOutputStream *p
     {
         pRgd->Save(pStream);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        return ResultFromException(pE);
+        return ResultFromException(e);
     }
     return Result<void>::Ok();
 }
@@ -62,9 +62,9 @@ Result<void> FormatService::LoadChunky(CChunkyFile *pChunky, IFileStore::IStream
     {
         pChunky->Load(pStream);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        return ResultFromException(pE);
+        return ResultFromException(e);
     }
     return Result<void>::Ok();
 }
@@ -75,9 +75,9 @@ Result<void> FormatService::SaveChunky(CChunkyFile *pChunky, IFileStore::IOutput
     {
         pChunky->Save(pStream);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        return ResultFromException(pE);
+        return ResultFromException(e);
     }
     return Result<void>::Ok();
 }
@@ -90,9 +90,9 @@ Result<void> FormatService::LoadRgt(CRgtFile *pRgt, IFileStore::IStream *pStream
     {
         pRgt->Load(pStream);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        return ResultFromException(pE);
+        return ResultFromException(e);
     }
     return Result<void>::Ok();
 }
@@ -103,9 +103,9 @@ Result<void> FormatService::SaveRgtAsGeneric(CRgtFile *pRgt, IFileStore::IOutput
     {
         pRgt->SaveGeneric(pStream);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        return ResultFromException(pE);
+        return ResultFromException(e);
     }
     return Result<void>::Ok();
 }
@@ -116,9 +116,9 @@ Result<void> FormatService::SaveRgtAsTga(CRgtFile *pRgt, IFileStore::IOutputStre
     {
         pRgt->SaveTGA(pStream, bIncludeAlpha);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        return ResultFromException(pE);
+        return ResultFromException(e);
     }
     return Result<void>::Ok();
 }
@@ -130,9 +130,9 @@ Result<void> FormatService::SaveRgtAsDds(CRgtFile *pRgt, IFileStore::IOutputStre
     {
         pRgt->SaveDDS(pStream, iCompression, bMipLevels);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        return ResultFromException(pE);
+        return ResultFromException(e);
     }
     return Result<void>::Ok();
 }
@@ -145,9 +145,9 @@ Result<void> FormatService::LoadRgm(CRgmFile *pRgm, IFileStore::IStream *pStream
     {
         pRgm->Load(pStream);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        return ResultFromException(pE);
+        return ResultFromException(e);
     }
     return Result<void>::Ok();
 }
@@ -158,9 +158,9 @@ Result<void> FormatService::SaveRgm(CRgmFile *pRgm, IFileStore::IOutputStream *p
     {
         pRgm->Save(pStream);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        return ResultFromException(pE);
+        return ResultFromException(e);
     }
     return Result<void>::Ok();
 }
@@ -173,9 +173,9 @@ Result<void> FormatService::LoadBfx(CBfxFile *pBfx, IFileStore::IStream *pStream
     {
         pBfx->Load(pStream);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        return ResultFromException(pE);
+        return ResultFromException(e);
     }
     return Result<void>::Ok();
 }
@@ -186,9 +186,9 @@ Result<void> FormatService::SaveBfxAsLua(CBfxFile *pBfx, IFileStore::IOutputStre
     {
         pBfx->SaveAsBfxLua(pStream, pLmap);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        return ResultFromException(pE);
+        return ResultFromException(e);
     }
     return Result<void>::Ok();
 }
@@ -201,9 +201,9 @@ Result<void> FormatService::LoadUcs(CUcsFile *pUcs, IFileStore::IStream *pStream
     {
         pUcs->Load(pStream);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        return ResultFromException(pE);
+        return ResultFromException(e);
     }
     return Result<void>::Ok();
 }
@@ -214,9 +214,9 @@ Result<void> FormatService::SaveUcs(CUcsFile *pUcs, const char *sFile)
     {
         pUcs->Save(sFile);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        return ResultFromException(pE);
+        return ResultFromException(e);
     }
     return Result<void>::Ok();
 }

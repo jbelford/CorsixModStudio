@@ -5,6 +5,7 @@
 #include "rainman/core/Exception.h"
 #include <cstring>
 #include <vector>
+#include <optional>
 
 // Helper to build binary data for a material INFO chunk (DxName)
 static CMemoryStore::COutStream *BuildMaterialInfoData(const char *sDxName)
@@ -180,15 +181,14 @@ TEST_F(RgmFileTest, LoadInvalidDataThrows)
 	std::unique_ptr<IFileStore::IStream> stream(CMemoryStore::OpenStreamExt(
 	    const_cast<char *>(garbage), sizeof(garbage) - 1, false));
 
-	CRainmanException *caught = nullptr;
+	std::optional<CRainmanException> caught;
 	try
 	{
 		rgm.Load(stream.get());
 	}
-	catch (CRainmanException *ex)
+	catch (const CRainmanException &ex)
 	{
 		caught = ex;
 	}
-	ASSERT_NE(caught, nullptr);
-	caught->destroy();
+	ASSERT_TRUE(caught.has_value());
 }

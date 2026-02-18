@@ -41,9 +41,9 @@ class CDdsToRgtAction : public frmFiles::IHandler
         {
             DoConvert(saFile.get());
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
-            ErrorBoxE(pE);
+            ErrorBoxE(e);
             return;
         }
 
@@ -71,13 +71,13 @@ class CDdsToRgtAction : public frmFiles::IHandler
         {
             auto inResult = TheConstruct->GetFileService().OpenStream(AsciiTowxString(saFile));
             if (!inResult)
-                throw new CModStudioException(0, __FILE__, __LINE__, "Cannot open input stream for \'%s\'", saFile);
+                throw CModStudioException(0, __FILE__, __LINE__, "Cannot open input stream for \'%s\'", saFile);
             pIn = inResult.value().release();
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             delete pIn;
-            throw new CModStudioException(pE, __FILE__, __LINE__, "Cannot open input stream for \'%s\'", saFile);
+            throw CModStudioException(e, __FILE__, __LINE__, "Cannot open input stream for \'%s\'", saFile);
         }
 
         CRgtFile oRgt;
@@ -85,41 +85,41 @@ class CDdsToRgtAction : public frmFiles::IHandler
         {
             oRgt.LoadDDS(pIn);
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             delete pIn;
-            throw new CModStudioException(pE, __FILE__, __LINE__, "Cannot load file \'%s\'", saFile);
+            throw CModStudioException(e, __FILE__, __LINE__, "Cannot load file \'%s\'", saFile);
         }
 
         char *saOutFile = strdup(saFile);
         if (!saOutFile)
-            throw new CModStudioException(__FILE__, __LINE__, "Memory allocation error");
+            throw CModStudioException(__FILE__, __LINE__, "Memory allocation error");
         strcpy(strchr(saOutFile, '.'), ".rgt");
 
         try
         {
             auto outResult = TheConstruct->GetFileService().OpenOutputStream(AsciiTowxString(saOutFile), true);
             if (!outResult)
-                throw new CModStudioException(0, __FILE__, __LINE__, "Cannot open output stream for \'%s\'", saFile);
+                throw CModStudioException(0, __FILE__, __LINE__, "Cannot open output stream for \'%s\'", saFile);
             pOut = outResult.value().release();
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             delete pIn;
             free(saOutFile);
-            throw new CModStudioException(pE, __FILE__, __LINE__, "Cannot open output stream for \'%s\'", saFile);
+            throw CModStudioException(e, __FILE__, __LINE__, "Cannot open output stream for \'%s\'", saFile);
         }
 
         try
         {
             oRgt.Save(pOut);
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             delete pIn;
             delete pOut;
             free(saOutFile);
-            throw new CModStudioException(pE, __FILE__, __LINE__, "Cannot save file \'%s\'", saFile);
+            throw CModStudioException(e, __FILE__, __LINE__, "Cannot save file \'%s\'", saFile);
         }
 
         delete pIn;

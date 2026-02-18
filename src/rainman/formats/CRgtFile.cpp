@@ -215,10 +215,10 @@ void CRgtFile::_MakeDxtcData(CMemoryStore::COutStream *pTMAN, CMemoryStore::COut
     {
         pDDS->VRead((unsigned long)iDataSizeUncompressed, 1, pData + 16);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
         delete[] pData;
-        throw new CRainmanException(pE, __FILE__, __LINE__, "Error loading image %lux%lu", iWidth, iHeight);
+        throw CRainmanException(e, __FILE__, __LINE__, "Error loading image %lux%lu", iWidth, iHeight);
     }
 
     iDataSizeUncompressed += 16;
@@ -234,10 +234,10 @@ void CRgtFile::_MakeDxtcData(CMemoryStore::COutStream *pTMAN, CMemoryStore::COut
             _MakeDxtcData(pTMAN, pTDAT, pDDS, std::max(iWidth / 2, (unsigned long)1),
                           std::max(iHeight / 2, (unsigned long)1), iDxtN, true, iThisMipLevel + 1);
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             delete[] pData;
-            throw new CRainmanException(pE, __FILE__, __LINE__, "Error doing mip-map of %lux%lu", iWidth, iHeight);
+            throw CRainmanException(e, __FILE__, __LINE__, "Error doing mip-map of %lux%lu", iWidth, iHeight);
         }
     }
 
@@ -249,7 +249,7 @@ void CRgtFile::_MakeDxtcData(CMemoryStore::COutStream *pTMAN, CMemoryStore::COut
     {
         delete[] pCompressedData;
         delete[] pData;
-        throw new CRainmanException(__FILE__, __LINE__, "Compression error");
+        throw CRainmanException(__FILE__, __LINE__, "Compression error");
     }
 
     if (iCompressedSize < iDataSizeUncompressed)
@@ -333,9 +333,9 @@ void CRgtFile::LoadTGA(IFileStore::IStream *pFile, bool bMakeMips, bool *pIs32Bi
         pFile->VRead(1, 1, &iTga_BPP);
         pFile->VRead(1, 1, &iTga_Flags);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CRainmanException(__FILE__, __LINE__, "Error reading TGA header", pE);
+        throw CRainmanException(e, __FILE__, __LINE__, "Error reading TGA header");
     }
 
     if (iTga_DataT != 2 || (iTga_BPP != 24 && iTga_BPP != 32) || (iTga_Flags & 0xC0)
@@ -343,8 +343,8 @@ void CRgtFile::LoadTGA(IFileStore::IStream *pFile, bool bMakeMips, bool *pIs32Bi
                                                          // fools.
     )
     {
-        throw new CRainmanException(__FILE__, __LINE__,
-                                    "TGA file must be uncompressed, non-interleaved 24 bit RGB or 32 bit RGBA data");
+        throw CRainmanException(__FILE__, __LINE__,
+                                "TGA file must be uncompressed, non-interleaved 24 bit RGB or 32 bit RGBA data");
     }
     if (pIs32Bit)
         *pIs32Bit = (iTga_BPP == 32);
@@ -355,9 +355,9 @@ void CRgtFile::LoadTGA(IFileStore::IStream *pFile, bool bMakeMips, bool *pIs32Bi
         if (iTga_ColourMapT)
             pFile->VSeek(iTga_ColourMapL * (iTga_ColourMapD >> 3));
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CRainmanException(__FILE__, __LINE__, "Error seeking over TGA predata", pE);
+        throw CRainmanException(e, __FILE__, __LINE__, "Error seeking over TGA predata");
     }
 
     // Make some more chunkiness
@@ -493,19 +493,19 @@ void CRgtFile::LoadDDS(IFileStore::IStream *pFile)
     if (strncmp(sDDS_Magic, "DDS ", 4) != 0)
     {
         _Clean();
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Not a valid DDS file (\"%.4s\")", sDDS_Magic);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Not a valid DDS file (\"%.4s\")", sDDS_Magic);
     }
     pFile->VRead(1, sizeof(uint32_t), &iDDS_HeaderLen);
     if (iDDS_HeaderLen != 124)
     {
         _Clean();
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Not a valid DDS file (L %lu)", iDDS_HeaderLen);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Not a valid DDS file (L %lu)", iDDS_HeaderLen);
     }
     pFile->VRead(1, sizeof(uint32_t), &iDDS_Flags);
     if (((iDDS_Flags & 1) == 0) || ((iDDS_Flags & 2) == 0) || ((iDDS_Flags & 4) == 0))
     {
         _Clean();
-        throw new CRainmanException(
+        throw CRainmanException(
             nullptr, __FILE__, __LINE__,
             "Unsupported DDS File; flags must contain at least DDSD_CAPS, DDSD_WIDTH and DDSD_HEIGHT (%lu)",
             iDDS_Flags);
@@ -527,16 +527,15 @@ void CRgtFile::LoadDDS(IFileStore::IStream *pFile)
     if (iDDSPF_Size != 32)
     {
         _Clean();
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Pixel format invalid; length is %lu", iDDSPF_Size);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Pixel format invalid; length is %lu", iDDSPF_Size);
     }
 
     pFile->VRead(1, sizeof(uint32_t), &iDDSPF_Flags);
     if (((iDDSPF_Flags & 4) == 0))
     {
         _Clean();
-        throw new CRainmanException(nullptr, __FILE__, __LINE__,
-                                    "Pixel format invalid; flags (%lu) must contain at least DDPF_FOURCC",
-                                    iDDSPF_Flags);
+        throw CRainmanException(nullptr, __FILE__, __LINE__,
+                                "Pixel format invalid; flags (%lu) must contain at least DDPF_FOURCC", iDDSPF_Flags);
     }
 
     pFile->VRead(4, 1, sDDSPF_FourCC);
@@ -548,8 +547,8 @@ void CRgtFile::LoadDDS(IFileStore::IStream *pFile)
     else
     {
         _Clean();
-        throw new CRainmanException(nullptr, __FILE__, __LINE__,
-                                    "Only DXT1,3,5 images are supported. Use TGA for raw RGBA data.");
+        throw CRainmanException(nullptr, __FILE__, __LINE__,
+                                "Only DXT1,3,5 images are supported. Use TGA for raw RGBA data.");
     }
     pFile->VSeek(
         5 *
@@ -560,8 +559,8 @@ void CRgtFile::LoadDDS(IFileStore::IStream *pFile)
     if ((iDDSC_Caps1 & 0x1000) == 0)
     {
         _Clean();
-        throw new CRainmanException(nullptr, __FILE__, __LINE__,
-                                    "DDS Caps invalid; Cap1 (%lu) must contain at least DDSCAPS_TEXTURE", iDDSC_Caps1);
+        throw CRainmanException(nullptr, __FILE__, __LINE__,
+                                "DDS Caps invalid; Cap1 (%lu) must contain at least DDSCAPS_TEXTURE", iDDSC_Caps1);
     }
     pFile->VRead(1, sizeof(uint32_t), &iDDSC_Caps2);
 
@@ -608,9 +607,9 @@ void CRgtFile::Save(IFileStore::IOutputStream *pFile)
     {
         m_pChunky->Save(pFile);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CRainmanException(__FILE__, __LINE__, "Error writing raw chunky file", pE);
+        throw CRainmanException(e, __FILE__, __LINE__, "Error writing raw chunky file");
     }
 }
 
@@ -621,10 +620,10 @@ void CRgtFile::_LoadFromChunky()
 
     CChunkyFile::CChunk *pChunk = m_pChunky->GetChildByName("TSET", CChunkyFile::CChunk::T_Folder);
     if (!pChunk)
-        throw new CRainmanException(__FILE__, __LINE__, "Cannot identify image type (No FOLDTSET)");
+        throw CRainmanException(__FILE__, __LINE__, "Cannot identify image type (No FOLDTSET)");
     pChunk = pChunk->GetChildByName("TXTR", CChunkyFile::CChunk::T_Folder);
     if (!pChunk)
-        throw new CRainmanException(__FILE__, __LINE__, "Cannot identify image type (No FOLDTXTR)");
+        throw CRainmanException(__FILE__, __LINE__, "Cannot identify image type (No FOLDTXTR)");
     size_t iN = pChunk->GetChildCount();
     for (size_t i = 0; i < iN; ++i)
     {
@@ -645,7 +644,7 @@ void CRgtFile::_LoadFromChunky()
     }
 
     if (m_eFormat == IF_None)
-        throw new CRainmanException(__FILE__, __LINE__, "Cannot identify image type");
+        throw CRainmanException(__FILE__, __LINE__, "Cannot identify image type");
 
     // Load image
     switch (m_eFormat)
@@ -668,9 +667,9 @@ void CRgtFile::Load(IFileStore::IStream *pFile)
     {
         m_pChunky->Load(pFile);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CRainmanException(__FILE__, __LINE__, "Error reading raw chunky file", pE);
+        throw CRainmanException(e, __FILE__, __LINE__, "Error reading raw chunky file");
     }
 
     _LoadFromChunky();
@@ -689,7 +688,7 @@ void CRgtFile::SaveGeneric(IFileStore::IOutputStream *pFile)
         break;
 
     default:
-        throw new CRainmanException(__FILE__, __LINE__, "Image format cannot be saved to a generic format");
+        throw CRainmanException(__FILE__, __LINE__, "Image format cannot be saved to a generic format");
         break;
     };
 }
@@ -705,8 +704,8 @@ void CRgtFile::SaveDDS(IFileStore::IOutputStream *pFile, int iCompression, bool 
     {
         if (m_fnDecompress == nullptr || m_fnCompress == nullptr)
         {
-            throw new CRainmanException(__FILE__, __LINE__,
-                                        "DXTC compressor and decompressor functions required for operation");
+            throw CRainmanException(__FILE__, __LINE__,
+                                    "DXTC compressor and decompressor functions required for operation");
         }
     }
 
@@ -912,15 +911,15 @@ void CRgtFile::SaveTGA(IFileStore::IOutputStream *pFile, bool bIncludeAlpha)
             return;
         };
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CRainmanException(__FILE__, __LINE__, "Simple output error", pE);
+        throw CRainmanException(e, __FILE__, __LINE__, "Simple output error");
     }
 
     // DXTC format
     if (m_fnDecompress == nullptr)
     {
-        throw new CRainmanException(__FILE__, __LINE__, "DXTC data requires a decompressor function");
+        throw CRainmanException(__FILE__, __LINE__, "DXTC data requires a decompressor function");
     }
 
     try
@@ -928,9 +927,9 @@ void CRgtFile::SaveTGA(IFileStore::IOutputStream *pFile, bool bIncludeAlpha)
         _Save_Tga_Header(pFile, (unsigned short)m_pMipLevels[m_iMipCurrent]->m_iWidth,
                          (unsigned short)m_pMipLevels[m_iMipCurrent]->m_iHeight, bIncludeAlpha);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CRainmanException(__FILE__, __LINE__, "Output error", pE);
+        throw CRainmanException(e, __FILE__, __LINE__, "Output error");
     }
 
     size_t w = m_pMipLevels[m_iMipCurrent]->m_iWidth, h = m_pMipLevels[m_iMipCurrent]->m_iHeight;
@@ -972,9 +971,9 @@ void CRgtFile::SaveTGA(IFileStore::IOutputStream *pFile, bool bIncludeAlpha)
             delete[] pNoAlpha;
         }
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CRainmanException(__FILE__, __LINE__, "Error outputting uncompressed DXTC data", pE);
+        throw CRainmanException(e, __FILE__, __LINE__, "Error outputting uncompressed DXTC data");
     }
     return;
 }
@@ -992,9 +991,9 @@ void CRgtFile::_Save_Tga_Header(IFileStore::IOutputStream *pFile, unsigned short
         pFile->VWrite(2, 1, bAlpha ? "\x20\x08" : "\x18\x00");
         pFile->VWrite(39, 1, "Made with Corsix\'s Rainman <corsix.org>");
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CRainmanException(__FILE__, __LINE__, "Header output error", pE);
+        throw CRainmanException(e, __FILE__, __LINE__, "Header output error");
     }
 }
 
@@ -1006,9 +1005,9 @@ void CRgtFile::_Save_Tga(IFileStore::IOutputStream *pFile)
 
         pFile->VWrite(m_pMipLevels[m_iMipCurrent]->m_iDataLength, 1, m_pMipLevels[m_iMipCurrent]->m_pData);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CRainmanException(__FILE__, __LINE__, "Output error", pE);
+        throw CRainmanException(e, __FILE__, __LINE__, "Output error");
     }
 }
 
@@ -1016,18 +1015,18 @@ void CRgtFile::_Load_Dxtc()
 {
     CChunkyFile::CChunk *pChunk = m_pChunky->GetChildByName("TSET", CChunkyFile::CChunk::T_Folder);
     if (!pChunk)
-        throw new CRainmanException(__FILE__, __LINE__, "Cannot find FOLDTSET");
+        throw CRainmanException(__FILE__, __LINE__, "Cannot find FOLDTSET");
     pChunk = pChunk->GetChildByName("TXTR", CChunkyFile::CChunk::T_Folder);
     if (!pChunk)
-        throw new CRainmanException(__FILE__, __LINE__, "Cannot find FOLDTXTR");
+        throw CRainmanException(__FILE__, __LINE__, "Cannot find FOLDTXTR");
     pChunk = pChunk->GetChildByName("DXTC", CChunkyFile::CChunk::T_Folder);
     if (!pChunk)
-        throw new CRainmanException(__FILE__, __LINE__, "Cannot find FOLDDXTC");
+        throw CRainmanException(__FILE__, __LINE__, "Cannot find FOLDDXTC");
 
     // Read info
     CChunkyFile::CChunk *pDataChunk = pChunk->GetChildByName("TFMT", CChunkyFile::CChunk::T_Data);
     if (!pDataChunk)
-        throw new CRainmanException(__FILE__, __LINE__, "Cannot find DATATFMT");
+        throw CRainmanException(__FILE__, __LINE__, "Cannot find DATATFMT");
 
     std::unique_ptr<IFileStore::IStream> pStr(pDataChunk->GetData());
 
@@ -1055,13 +1054,13 @@ void CRgtFile::_Load_Dxtc()
     // Read mip info and data
     pDataChunk = pChunk->GetChildByName("TMAN", CChunkyFile::CChunk::T_Data);
     if (!pDataChunk)
-        throw new CRainmanException(__FILE__, __LINE__, "Cannot find DATATMAN");
+        throw CRainmanException(__FILE__, __LINE__, "Cannot find DATATMAN");
 
     pStr = std::unique_ptr<IFileStore::IStream>(pDataChunk->GetData());
 
     pDataChunk = pChunk->GetChildByName("TDAT", CChunkyFile::CChunk::T_Data);
     if (!pDataChunk)
-        throw new CRainmanException(__FILE__, __LINE__, "Cannot find DATATDAT");
+        throw CRainmanException(__FILE__, __LINE__, "Cannot find DATATDAT");
 
     std::unique_ptr<IFileStore::IStream> pDataStr(pDataChunk->GetData());
 
@@ -1111,15 +1110,15 @@ void CRgtFile::_Load_Tga()
 {
     CChunkyFile::CChunk *pChunk = m_pChunky->GetChildByName("TSET", CChunkyFile::CChunk::T_Folder);
     if (!pChunk)
-        throw new CRainmanException(__FILE__, __LINE__, "Cannot find FOLDTSET");
+        throw CRainmanException(__FILE__, __LINE__, "Cannot find FOLDTSET");
     pChunk = pChunk->GetChildByName("TXTR", CChunkyFile::CChunk::T_Folder);
     if (!pChunk)
-        throw new CRainmanException(__FILE__, __LINE__, "Cannot find FOLDTXTR");
+        throw CRainmanException(__FILE__, __LINE__, "Cannot find FOLDTXTR");
 
     // Read info
     CChunkyFile::CChunk *pDataChunk = pChunk->GetChildByName("INFO", CChunkyFile::CChunk::T_Data);
     if (!pDataChunk)
-        throw new CRainmanException(__FILE__, __LINE__, "Cannot find DATAINFO");
+        throw CRainmanException(__FILE__, __LINE__, "Cannot find DATAINFO");
 
     std::unique_ptr<IFileStore::IStream> pStr(pDataChunk->GetData());
 
@@ -1137,7 +1136,7 @@ void CRgtFile::_Load_Tga()
             {
                 pDataChunk = pChild->GetChildByName("ATTR", CChunkyFile::CChunk::T_Data);
                 if (!pDataChunk)
-                    throw new CRainmanException(__FILE__, __LINE__, "Cannot find DATAATTR");
+                    throw CRainmanException(__FILE__, __LINE__, "Cannot find DATAATTR");
 
                 auto *pCurrentLevel = new _MipLevel;
 
@@ -1150,7 +1149,7 @@ void CRgtFile::_Load_Tga()
                 if (!pDataChunk)
                 {
                     delete pCurrentLevel;
-                    throw new CRainmanException(__FILE__, __LINE__, "Cannot find DATADATA");
+                    throw CRainmanException(__FILE__, __LINE__, "Cannot find DATADATA");
                 }
 
                 pCurrentLevel->m_iDataLength = pDataChunk->GetDataLength();

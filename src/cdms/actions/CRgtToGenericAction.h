@@ -41,9 +41,9 @@ class CRgtToGenericAction : public frmFiles::IHandler
         {
             sConvertedTo = DoConvert(saFile.get());
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
-            ErrorBoxE(pE);
+            ErrorBoxE(e);
             return;
         }
 
@@ -75,13 +75,13 @@ class CRgtToGenericAction : public frmFiles::IHandler
         {
             auto inResult = TheConstruct->GetFileService().OpenStream(AsciiTowxString(saFile));
             if (!inResult)
-                throw new CModStudioException(0, __FILE__, __LINE__, "Cannot open input stream for \'%s\'", saFile);
+                throw CModStudioException(0, __FILE__, __LINE__, "Cannot open input stream for \'%s\'", saFile);
             pIn = inResult.value().release();
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             delete pIn;
-            throw new CModStudioException(pE, __FILE__, __LINE__, "Cannot open input stream for \'%s\'", saFile);
+            throw CModStudioException(e, __FILE__, __LINE__, "Cannot open input stream for \'%s\'", saFile);
         }
 
         CRgtFile oRgt;
@@ -89,15 +89,15 @@ class CRgtToGenericAction : public frmFiles::IHandler
         {
             oRgt.Load(pIn);
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             delete pIn;
-            throw new CModStudioException(pE, __FILE__, __LINE__, "Cannot load file \'%s\'", saFile);
+            throw CModStudioException(e, __FILE__, __LINE__, "Cannot load file \'%s\'", saFile);
         }
 
         char *saOutFile = strdup(saFile);
         if (!saOutFile)
-            throw new CModStudioException(__FILE__, __LINE__, "Memory allocation error");
+            throw CModStudioException(__FILE__, __LINE__, "Memory allocation error");
         switch (oRgt.GetImageFormat())
         {
         case CRgtFile::IF_Tga:
@@ -137,7 +137,7 @@ class CRgtToGenericAction : public frmFiles::IHandler
         default:
             delete pIn;
             free(saOutFile);
-            throw new CModStudioException(0, __FILE__, __LINE__, "Uknown image format of \'%s\'", saFile);
+            throw CModStudioException(0, __FILE__, __LINE__, "Uknown image format of \'%s\'", saFile);
         }
         if (oRgt.GetProperty(CRgtFile::IP_MipLevelCount) > 1)
         {
@@ -148,14 +148,14 @@ class CRgtToGenericAction : public frmFiles::IHandler
         {
             auto outResult = TheConstruct->GetFileService().OpenOutputStream(AsciiTowxString(saOutFile), true);
             if (!outResult)
-                throw new CModStudioException(0, __FILE__, __LINE__, "Cannot open output stream for \'%s\'", saFile);
+                throw CModStudioException(0, __FILE__, __LINE__, "Cannot open output stream for \'%s\'", saFile);
             pOut = outResult.value().release();
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             delete pIn;
             free(saOutFile);
-            throw new CModStudioException(pE, __FILE__, __LINE__, "Cannot open output stream for \'%s\'", saFile);
+            throw CModStudioException(e, __FILE__, __LINE__, "Cannot open output stream for \'%s\'", saFile);
         }
 
         try
@@ -163,12 +163,12 @@ class CRgtToGenericAction : public frmFiles::IHandler
             // oRgt.SaveTGA(pOut);
             oRgt.SaveGeneric(pOut);
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             delete pIn;
             delete pOut;
             free(saOutFile);
-            throw new CModStudioException(pE, __FILE__, __LINE__, "Cannot save generic of \'%s\'", saFile);
+            throw CModStudioException(e, __FILE__, __LINE__, "Cannot save generic of \'%s\'", saFile);
         }
 
         delete pIn;

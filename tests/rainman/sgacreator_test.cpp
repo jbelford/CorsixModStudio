@@ -10,6 +10,7 @@
 #include <fstream>
 #include <process.h>
 #include <string>
+#include <optional>
 
 class SgaCreatorTest : public ::testing::Test {
 protected:
@@ -51,9 +52,8 @@ protected:
 				result.push_back(buf[0]);
 			}
 		}
-		catch (CRainmanException *pE)
+		catch (const CRainmanException &pE)
 		{
-			pE->destroy();
 		}
 		return result;
 	}
@@ -176,19 +176,18 @@ TEST_F(SgaCreatorTest, InvalidVersionThrows)
 	ASSERT_NE(pIter, nullptr);
 
 	std::string sgaPath = filePath("test_bad.sga");
-	CRainmanException *caught = nullptr;
+	std::optional<CRainmanException> caught;
 	try
 	{
 		CSgaCreator::CreateSga(pIter, &fsStore, "data", sgaPath.c_str(), 99);
 	}
-	catch (CRainmanException *ex)
+	catch (const CRainmanException &ex)
 	{
 		caught = ex;
 	}
 	delete pIter;
 
-	ASSERT_NE(caught, nullptr);
-	caught->destroy();
+	ASSERT_TRUE(caught.has_value());
 }
 
 TEST_F(SgaCreatorTest, NullDirectoryThrows)
@@ -196,17 +195,16 @@ TEST_F(SgaCreatorTest, NullDirectoryThrows)
 	CFileSystemStore fsStore;
 	fsStore.VInit();
 
-	CRainmanException *caught = nullptr;
+	std::optional<CRainmanException> caught;
 	try
 	{
 		CSgaCreator::CreateSga(nullptr, &fsStore, "data", "output.sga", 4);
 	}
-	catch (CRainmanException *ex)
+	catch (const CRainmanException &ex)
 	{
 		caught = ex;
 	}
-	ASSERT_NE(caught, nullptr);
-	caught->destroy();
+	ASSERT_TRUE(caught.has_value());
 }
 
 TEST_F(SgaCreatorTest, NullStoreThrows)
@@ -218,17 +216,16 @@ TEST_F(SgaCreatorTest, NullStoreThrows)
 	auto *pIter = fsStore.VIterate(filePath("input").c_str());
 	ASSERT_NE(pIter, nullptr);
 
-	CRainmanException *caught = nullptr;
+	std::optional<CRainmanException> caught;
 	try
 	{
 		CSgaCreator::CreateSga(pIter, nullptr, "data", "output.sga", 4);
 	}
-	catch (CRainmanException *ex)
+	catch (const CRainmanException &ex)
 	{
 		caught = ex;
 	}
 	delete pIter;
 
-	ASSERT_NE(caught, nullptr);
-	caught->destroy();
+	ASSERT_TRUE(caught.has_value());
 }

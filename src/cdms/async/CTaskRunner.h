@@ -91,9 +91,9 @@ class CTaskRunner
                         result = Result<T>::Ok(std::move(value));
                     }
                 }
-                catch (CRainmanException *pE)
+                catch (const CRainmanException &e)
                 {
-                    result = ResultFromExceptionT<T>(pE);
+                    result = ResultFromExceptionT<T>(e);
                 }
                 catch (const std::exception &e)
                 {

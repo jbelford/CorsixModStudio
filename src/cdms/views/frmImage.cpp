@@ -321,8 +321,8 @@ void frmImageViewer::OnSaveComplete(const wxString &sNewFile)
     {
         TheConstruct->GetFilesList()->UpdateDirectoryChildren(m_oFileParent, dirResult.value().get());
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        ErrorBoxE(pE);
+        ErrorBoxE(e);
     }
 }

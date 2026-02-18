@@ -42,7 +42,7 @@ bool CModuleLoadPresenter::LoadMod(const wxString &sFilePath, const wxString &sL
         {
             auto sFile = wxStringToAscii(sFilePath);
             if (!sFile)
-                throw new CRainmanException(__FILE__, __LINE__, "Memory allocation error");
+                throw CRainmanException(__FILE__, __LINE__, "Memory allocation error");
 
             auto *pMod = new CModuleFile;
 
@@ -128,7 +128,7 @@ bool CModuleLoadPresenter::LoadSga(const wxString &sFilePath)
         {
             auto sFile = wxStringToAscii(sFilePath);
             if (!sFile)
-                throw new CRainmanException(__FILE__, __LINE__, "Memory allocation error");
+                throw CRainmanException(__FILE__, __LINE__, "Memory allocation error");
 
             auto *pMod = new CModuleFile;
             try

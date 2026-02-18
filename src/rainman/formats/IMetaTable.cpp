@@ -33,12 +33,9 @@ bool IMetaNode::IMetaTable::VSupportsRefresh() { return false; }
 
 void IMetaNode::IMetaTable::VDoRefresh() { QUICK_THROW("Refresh not supported") }
 
-unsigned long IMetaNode::VGetNameHash()
-{
-    throw new CRainmanException(__FILE__, __LINE__, "Variable has no name hash");
-}
+unsigned long IMetaNode::VGetNameHash() { throw CRainmanException(__FILE__, __LINE__, "Variable has no name hash"); }
 
 void IMetaNode::VSetNameHash(unsigned long iHash)
 {
-    throw new CRainmanException(__FILE__, __LINE__, "NameHash cannot be set");
+    throw CRainmanException(__FILE__, __LINE__, "NameHash cannot be set");
 }

@@ -100,7 +100,7 @@ TEST(CTaskRunnerTest, RainmanExceptionDeliversErrResult)
 
     runner.Run<int>(
         [](CProgressChannel &, CCancellationToken &) -> int {
-            throw new CRainmanException(__FILE__, __LINE__, "test rainman error");
+            throw CRainmanException(__FILE__, __LINE__, "test rainman error");
         },
         [](const std::string &) {},
         [&ar](Result<int> result) { ar.Set(std::move(result)); });
@@ -136,7 +136,7 @@ TEST(CTaskRunnerTest, ChainedRainmanExceptionFormatsFullChain)
         [](CProgressChannel &, CCancellationToken &) -> int {
             auto *pInner =
                 new CRainmanException(__FILE__, __LINE__, "inner cause");
-            throw new CRainmanException(pInner, __FILE__, __LINE__,
+            throw CRainmanException(pInner, __FILE__, __LINE__,
                                         "outer error");
         },
         [](const std::string &) {},

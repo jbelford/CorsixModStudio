@@ -81,10 +81,10 @@ void CLuaFile2::newFile(const char *sFileName)
 {
     _clean();
     if (!_checkCache())
-        throw new CRainmanException(__FILE__, __LINE__, "No cache");
+        throw CRainmanException(__FILE__, __LINE__, "No cache");
     L = m_pCache->MakeState();
     if (!L)
-        throw new CRainmanException(__FILE__, __LINE__, "Unable to create lua state");
+        throw CRainmanException(__FILE__, __LINE__, "Unable to create lua state");
 
     m_sFileName = CHECK_MEM(strdup(sFileName));
 
@@ -127,7 +127,7 @@ void CLuaFile2::loadFile(IFileStore::IStream *pStream, IFileStore *pFiles, const
     unsigned long iNameCrc = crc32_case_idt(0, (const Bytef *)sFileName, (uInt)strlen(sFileName));
     // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDelete) -- m_pRefMap is valid; not freed before this access
     if ((*m_pRefMap)[iNameCrc] > (int)1)
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Circular reference detected (%s)", sFileName);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Circular reference detected (%s)", sFileName);
     ++(*m_pRefMap)[iNameCrc];
 
     // Load
@@ -153,7 +153,7 @@ void CLuaFile2::loadFile(IFileStore::IStream *pStream, IFileStore *pFiles, const
     if (iLuaError == LUA_ERRMEM)
         QUICK_THROW("Lua memory error")
     else if (iLuaError == LUA_ERRSYNTAX)
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Lua error (LUA_ERRSYNTAX): %s", lua_tostring(L, -1));
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Lua error (LUA_ERRSYNTAX): %s", lua_tostring(L, -1));
 
 // Prepare lua state
 #define quick_fn_register(n, f)                                                                                        \
@@ -174,13 +174,12 @@ void CLuaFile2::loadFile(IFileStore::IStream *pStream, IFileStore *pFiles, const
         switch (lua_type(L, -1))
         {
         case LUA_TSTRING:
-            throw new CRainmanException(nullptr, __FILE__, __LINE__, "Lua error (%i): %s", iLuaError,
-                                        lua_tostring(L, -1));
+            throw CRainmanException(nullptr, __FILE__, __LINE__, "Lua error (%i): %s", iLuaError, lua_tostring(L, -1));
         case LUA_TLIGHTUSERDATA:
-            throw new CRainmanException((CRainmanException *)lua_touserdata(L, -1), __FILE__, __LINE__,
-                                        "Lua exception (%i)", iLuaError);
+            throw CRainmanException((CRainmanException *)lua_touserdata(L, -1), __FILE__, __LINE__,
+                                    "Lua exception (%i)", iLuaError);
         default:
-            throw new CRainmanException(nullptr, __FILE__, __LINE__, "Lua unknown error (%i)", iLuaError);
+            throw CRainmanException(nullptr, __FILE__, __LINE__, "Lua unknown error (%i)", iLuaError);
         };
     }
 
@@ -324,9 +323,9 @@ int CLuaFile2::_luaParent(const char *sFnName, const char *sTableToGrab)
                 {
                     pFileIn = pFiles->VOpenStream(sFileNameFull);
                 }
-                catch (CRainmanException *pE)
+                catch (const CRainmanException &e)
                 {
-                    throw new CRainmanException(pE, __FILE__, __LINE__, "Unable to open file \'%s\'", sFileNameFull);
+                    throw CRainmanException(e, __FILE__, __LINE__, "Unable to open file \'%s\'", sFileNameFull);
                 }
                 AutoDelete<IFileStore::IStream> pFileIn_(pFileIn, false);
 
@@ -338,9 +337,9 @@ int CLuaFile2::_luaParent(const char *sFnName, const char *sTableToGrab)
                 {
                     oParentFile.loadFile(pFileIn, pFiles, sFileName);
                 }
-                catch (CRainmanException *pE)
+                catch (const CRainmanException &e)
                 {
-                    throw new CRainmanException(pE, __FILE__, __LINE__, "Error loading file \'%s\'", sFileNameFull);
+                    throw CRainmanException(e, __FILE__, __LINE__, "Error loading file \'%s\'", sFileNameFull);
                 }
                 pFileIn_.del();
 
@@ -381,9 +380,10 @@ int CLuaFile2::_luaParent(const char *sFnName, const char *sTableToGrab)
 
         // Move any exceptions into lua land ...
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        lua_pushlightuserdata(L, (void *)pE);
+        auto *pHeapCopy = new CRainmanException(e);
+        lua_pushlightuserdata(L, (void *)pHeapCopy);
         lua_error(L);
     }
     return 1;

@@ -235,9 +235,9 @@ RAINMAN_API CRgdHashTable *Rainman_LoadDictionaries(const char *sPath, char **sC
     {
         pItr = oFSO.VIterate(sPath);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CRainmanException(pE, __FILE__, __LINE__, "Cannot iterate over \'%s\'", sPath);
+        throw CRainmanException(e, __FILE__, __LINE__, "Cannot iterate over \'%s\'", sPath);
     }
 
     try
@@ -264,15 +264,14 @@ RAINMAN_API CRgdHashTable *Rainman_LoadDictionaries(const char *sPath, char **sC
                     {
                         pRgdHashTable->ExtendWithDictionary(pItr->VGetFullPath(), bCustom);
                     }
-                    catch (CRainmanException *pE)
+                    catch (const CRainmanException &e)
                     {
                         if (bIgnoreLoadErrors)
                         {
-                            auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
                         }
                         else
-                            throw new CRainmanException(pE, __FILE__, __LINE__, "Error loading \'%s\'",
-                                                        pItr->VGetFullPath());
+                            throw CRainmanException(e, __FILE__, __LINE__, "Error loading \'%s\'",
+                                                    pItr->VGetFullPath());
                     }
                 }
             } while (pItr->VNextItem() == IDirectoryTraverser::IIterator::E_OK);

@@ -45,7 +45,7 @@ bool CSgaMakePresenter::CreateSga(const wxString &sInputDir, const wxString &sOu
 
             auto itrResult = FileService::IterateFileSystem(sInputDir);
             if (!itrResult)
-                throw new CRainmanException(__FILE__, __LINE__, "Cannot iterate input directory");
+                throw CRainmanException(__FILE__, __LINE__, "Cannot iterate input directory");
 
             auto pItr = itrResult.value().release();
 

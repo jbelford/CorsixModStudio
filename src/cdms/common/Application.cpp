@@ -79,9 +79,9 @@ int CDMSApplication::OnRun()
         return wxApp::OnRun();
 #ifndef _DEBUG
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        _ErrorBox(pE, __FILE__, __LINE__, true);
+        _ErrorBox(e, __FILE__, __LINE__, true);
         return -1;
     }
     catch (...)

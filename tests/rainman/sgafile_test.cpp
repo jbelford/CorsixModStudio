@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <fstream>
 #include <process.h>
+#include <optional>
 
 class SgaFileTest : public ::testing::Test {
 protected:
@@ -24,14 +25,13 @@ protected:
 
 TEST_F(SgaFileTest, LoadFromNullStreamThrows) {
     CSgaFile sga;
-    CRainmanException* caught = nullptr;
+    std::optional<CRainmanException> caught;
     try {
         sga.Load(nullptr);
-    } catch (CRainmanException* ex) {
+    } catch (const CRainmanException &ex) {
         caught = ex;
     }
-    ASSERT_NE(caught, nullptr);
-    caught->destroy();
+    ASSERT_TRUE(caught.has_value());
 }
 
 TEST_F(SgaFileTest, LoadInvalidHeaderThrows) {
@@ -45,14 +45,13 @@ TEST_F(SgaFileTest, LoadInvalidHeaderThrows) {
     ASSERT_NE(stream, nullptr);
 
     CSgaFile sga;
-    CRainmanException* caught = nullptr;
+    std::optional<CRainmanException> caught;
     try {
         sga.Load(stream);
-    } catch (CRainmanException* ex) {
+    } catch (const CRainmanException &ex) {
         caught = ex;
     }
-    ASSERT_NE(caught, nullptr);
-    caught->destroy();
+    ASSERT_TRUE(caught.has_value());
     delete stream;
 }
 
@@ -67,14 +66,13 @@ TEST_F(SgaFileTest, LoadTruncatedStreamThrows) {
     ASSERT_NE(stream, nullptr);
 
     CSgaFile sga;
-    CRainmanException* caught = nullptr;
+    std::optional<CRainmanException> caught;
     try {
         sga.Load(stream);
-    } catch (CRainmanException* ex) {
+    } catch (const CRainmanException &ex) {
         caught = ex;
     }
-    ASSERT_NE(caught, nullptr);
-    caught->destroy();
+    ASSERT_TRUE(caught.has_value());
     delete stream;
 }
 
@@ -93,39 +91,36 @@ TEST_F(SgaFileTest, LoadValidIdentifierBadVersionThrows) {
         const_cast<char*>(out->GetData()), out->GetDataLength(), false);
 
     CSgaFile sga;
-    CRainmanException* caught = nullptr;
+    std::optional<CRainmanException> caught;
     try {
         sga.Load(stream);
-    } catch (CRainmanException* ex) {
+    } catch (const CRainmanException &ex) {
         caught = ex;
     }
-    ASSERT_NE(caught, nullptr);
+    ASSERT_TRUE(caught.has_value());
     EXPECT_NE(std::strstr(caught->getMessage(), "not supported"), nullptr);
-    caught->destroy();
     delete stream;
     delete out;
 }
 
 TEST_F(SgaFileTest, VCreateFolderInThrows) {
     CSgaFile sga;
-    CRainmanException* caught = nullptr;
+    std::optional<CRainmanException> caught;
     try {
         sga.VCreateFolderIn("some/path", "folder");
-    } catch (CRainmanException* ex) {
+    } catch (const CRainmanException &ex) {
         caught = ex;
     }
-    ASSERT_NE(caught, nullptr);
-    caught->destroy();
+    ASSERT_TRUE(caught.has_value());
 }
 
 TEST_F(SgaFileTest, GetInputStreamWithoutInitThrows) {
     CSgaFile sga;
-    CRainmanException* caught = nullptr;
+    std::optional<CRainmanException> caught;
     try {
         sga.GetInputStream();
-    } catch (CRainmanException* ex) {
+    } catch (const CRainmanException &ex) {
         caught = ex;
     }
-    ASSERT_NE(caught, nullptr);
-    caught->destroy();
+    ASSERT_TRUE(caught.has_value());
 }

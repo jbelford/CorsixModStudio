@@ -50,7 +50,7 @@ This is a modernization of a ~2006 C++ modding IDE for Dawn of War / Company of 
 All includes use fully-qualified paths with the `rainman/` prefix (e.g., `#include "rainman/core/Exception.h"`, `#include <rainman/io/IFileStore.h>`).
 
 **CDMS Services** (`src/cdms/services/`, `src/cdms/async/`) — Intermediate layer between Rainman and the GUI:
-- `services/` — `ModuleService`, `FileService`, `FormatService`, `HashService` wrap Rainman calls with `Result<T>` error handling (see `Result.h`). Use `ResultFromException()` to convert `CRainmanException*` chains into `Result<void>::Err`.
+- `services/` — `ModuleService`, `FileService`, `FormatService`, `HashService` wrap Rainman calls with `Result<T>` error handling (see `Result.h`). Use `ResultFromException()` to convert `CRainmanException` references into `Result<void>::Err`.
 - `async/` — `CCancellationToken` (header-only), `CProgressChannel` (with RainmanCallback bridge), `CTaskRunner` (pure C++ `std::thread`), `CWxTaskRunner` (posts to main thread via `CallAfter`).
 
 **CDMS GUI** (`src/cdms/`) — wxWidgets 3.2 application. Frame classes (`frm*.cpp`), action handlers (`actions/*.h`), tab/menu management. Service classes accessed via `GetModuleService()`, `GetFileService()`, etc. on the `ConstructFrame`.
@@ -62,17 +62,21 @@ All includes use fully-qualified paths with the `rainman/` prefix (e.g., `#inclu
 ## Key Conventions
 
 ### Error handling
-The codebase uses heap-allocated exception objects, not stack-based C++ exceptions. Exceptions are created with `new` and cleaned up with `destroy()`, never `delete`:
+The codebase uses **stack-based exceptions** thrown and caught by reference:
 ```cpp
-throw new CRainmanException(__FILE__, __LINE__, "message");
-// Cleanup:
-pException->destroy();  // NOT delete
+throw CRainmanException(__FILE__, __LINE__, "message");
+// With precursor chain:
+throw CRainmanException(e, __FILE__, __LINE__, "context");
 ```
 Use the macros: `QUICK_THROW("msg")`, `CATCH_THROW("msg")`, `IGNORE_EXCEPTIONS`, `CHECK_MEM(new Foo)`.
+Catch by const reference:
+```cpp
+catch (const CRainmanException &e) { /* use e.getMessage(), e.getPrecursor() */ }
+```
 
 In the CDMS service layer, catch exceptions and convert them to `Result<T>`:
 ```cpp
-catch (CRainmanException* pE) { return ResultFromException(pE); }
+catch (const CRainmanException &e) { return ResultFromException(e); }
 ```
 
 ### API export macro
@@ -128,7 +132,6 @@ This is a 2006 codebase being ported to C++20/x64. Apply the **boy-scout rule**:
 
 **Do not** modernize across API boundaries in the same change — keep the diff focused. These legacy patterns must be preserved:
 - `unsigned long` in existing public/virtual API signatures (changing would cascade)
-- Heap-allocated exceptions (`throw new CRainmanException`) and `destroy()` cleanup
 - `RAINMAN_API` macro on public classes
 - `C`/`I`/`V`/`m_` naming conventions and Hungarian prefixes
 - Include guards (`_C_CLASS_NAME_H_` style) — do not replace with `#pragma once`

@@ -233,9 +233,9 @@ void ConstructFrame::LaunchW40k(wxCommandEvent &event)
     {
         sFolder = ConfGetDoWFolder();
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        ErrorBoxE(pE);
+        ErrorBoxE(e);
         return;
     }
     sCommand = sFolder;
@@ -265,9 +265,9 @@ void ConstructFrame::LaunchDC(wxCommandEvent &event)
     {
         sFolder = ConfGetDCFolder();
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        ErrorBoxE(pE);
+        ErrorBoxE(e);
         return;
     }
     sCommand = sFolder;
@@ -297,9 +297,9 @@ void ConstructFrame::LaunchSS(wxCommandEvent &event)
     {
         sFolder = ConfGetDCFolder();
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        ErrorBoxE(pE);
+        ErrorBoxE(e);
         return;
     }
     sCommand = sFolder;
@@ -329,9 +329,9 @@ void ConstructFrame::LaunchCOH(wxCommandEvent &event)
     {
         sFolder = ConfGetCoHFolder();
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        ErrorBoxE(pE);
+        ErrorBoxE(e);
         return;
     }
     sCommand = sFolder;
@@ -361,9 +361,9 @@ void ConstructFrame::LaunchW40kWA(wxCommandEvent &event)
     {
         sFolder = ConfGetDoWFolder();
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        ErrorBoxE(pE);
+        ErrorBoxE(e);
         return;
     }
     sCommand = sFolder;
@@ -403,9 +403,9 @@ void ConstructFrame::LaunchWarnings(wxCommandEvent &event)
         {
             sFolder = ConfGetDoWFolder();
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
-            ErrorBoxE(pE);
+            ErrorBoxE(e);
             return;
         }
         sCommand = wxT("\"");
@@ -711,9 +711,9 @@ void ConstructFrame::DoLoadMod(wxString sPath, eLoadModGames eGame)
             else if (eGame == LM_DoW_WA || eGame == LM_Any)
                 sDoWPath = ConfGetDoWFolder();
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
-            ErrorBoxE(pE);
+            ErrorBoxE(e);
             return;
         }
         pFileDialog =

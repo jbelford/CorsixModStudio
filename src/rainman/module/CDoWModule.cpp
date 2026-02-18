@@ -161,20 +161,20 @@ void CDoWModule::New()
     {
         m_pFiles->VInit();
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
         _Clean();
-        throw new CRainmanException(__FILE__, __LINE__, "Cannot init file view", pE);
+        throw CRainmanException(e, __FILE__, __LINE__, "Cannot init file view");
     }
     m_pFSO = CHECK_MEM(new CFileSystemStore());
     try
     {
         m_pFSO->VInit();
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
         _Clean();
-        throw new CRainmanException(__FILE__, __LINE__, "Cannot init file system store", pE);
+        throw CRainmanException(e, __FILE__, __LINE__, "Cannot init file system store");
     }
 }
 
@@ -349,7 +349,7 @@ void CDoWModule::_TryLoadDataGeneric(const char *sModName, const char *sDoWPath,
                 fclose(fPipeline);
                 delete[] sPipeline;
                 delete[] sDGFolder;
-                throw new CRainmanException(__FILE__, __LINE__, "fgetline() failed");
+                throw CRainmanException(__FILE__, __LINE__, "fgetline() failed");
             }
             char *sCommentBegin = strstr(sLine, ";");
             if (sCommentBegin)
@@ -394,7 +394,7 @@ void CDoWModule::_TryLoadDataGeneric(const char *sModName, const char *sDoWPath,
                         fclose(fPipeline);
                         delete[] sPipeline;
                         delete[] sLine;
-                        throw new CRainmanException(__FILE__, __LINE__, "mystrdup() failed");
+                        throw CRainmanException(__FILE__, __LINE__, "mystrdup() failed");
                     }
                 }
             }
@@ -417,7 +417,7 @@ void CDoWModule::_TryLoadDataGeneric(const char *sModName, const char *sDoWPath,
     if (sFullPath == 0)
     {
         delete[] sDGFolder;
-        throw new CRainmanException(__FILE__, __LINE__, "memory allocation problem");
+        throw CRainmanException(__FILE__, __LINE__, "memory allocation problem");
     }
     strcpy(sFullPath, sDoWPath);
     strcat(sFullPath, "\\");
@@ -428,9 +428,9 @@ void CDoWModule::_TryLoadDataGeneric(const char *sModName, const char *sDoWPath,
     {
         pDirItr = m_pFSO->VIterate(sFullPath);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        delete pE;
+        delete e;
         delete[] sFullPath;
         return;
     }
@@ -440,10 +440,10 @@ void CDoWModule::_TryLoadDataGeneric(const char *sModName, const char *sDoWPath,
     {
         m_pFiles->AddFileSource(m_pFSO, pDirItr, m_pFSO, sModFSName, "Data Generic", bReq, !bReq, false);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
         delete pDirItr;
-        throw new CRainmanException(__FILE__, __LINE__, "Cannot add data generic as file source", pE);
+        throw CRainmanException(e, __FILE__, __LINE__, "Cannot add data generic as file source");
     }
 
     delete pDirItr;
@@ -454,17 +454,17 @@ void CDoWModule::_TryLoadDataGeneric(const char *sModName, const char *sDoWPath,
     Quick "Catch, Clean, Throw"
 */
 #define QCCT(msg)                                                                                                      \
-    catch (CRainmanException * pE)                                                                                     \
+    catch (const CRainmanException &e)                                                                                 \
     {                                                                                                                  \
         _Clean();                                                                                                      \
-        throw new CRainmanException(__FILE__, __LINE__, msg, pE);                                                      \
+        throw CRainmanException(e, __FILE__, __LINE__, msg);                                                           \
     }
 
 #define QCZ(var)                                                                                                       \
     if (var == 0)                                                                                                      \
     {                                                                                                                  \
         _Clean();                                                                                                      \
-        throw new CRainmanException(__FILE__, __LINE__, #var " is zero");                                              \
+        throw CRainmanException(__FILE__, __LINE__, #var " is zero");                                                  \
     }
 
 #endif
@@ -497,13 +497,13 @@ void CDoWModule::Load(const char *sFile, CALLBACK_ARG)
     if (sFile == 0)
     {
         _Clean();
-        throw new CRainmanException(__FILE__, __LINE__, "No filename passed");
+        throw CRainmanException(__FILE__, __LINE__, "No filename passed");
     }
     FILE *fFile = fopen(sFile, "rb");
     if (fFile == 0)
     {
         _Clean();
-        throw new CRainmanException(0, __FILE__, __LINE__, "Could not open \'%s\'", sFile);
+        throw CRainmanException(0, __FILE__, __LINE__, "Could not open \'%s\'", sFile);
     }
     bool bInGlobal = false;
 
@@ -750,14 +750,14 @@ void CDoWModule::Load(const char *sFile, CALLBACK_ARG)
         {
             pItr = m_pFSO->VIterate(sSgaFolderPath);
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             free(sDoWPath);
             delete[] sModFolder;
             _Clean();
-            pE = new CRainmanException(pE, __FILE__, __LINE__, "Unable to iterate \'%s\'", sSgaFolderPath);
+            e = new CRainmanException(e, __FILE__, __LINE__, "Unable to iterate \'%s\'", sSgaFolderPath);
             delete[] sSgaFolderPath;
-            throw pE;
+            throw e;
         }
         delete[] sSgaFolderPath;
         if (pItr)
@@ -781,14 +781,14 @@ void CDoWModule::Load(const char *sFile, CALLBACK_ARG)
                 }
                 delete pItr;
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
                 free(sDoWPath);
                 delete[] sModFolder;
                 _Clean();
-                pE = new CRainmanException(pE, __FILE__, __LINE__, "(rethrow)");
+                e = new CRainmanException(e, __FILE__, __LINE__, "(rethrow)");
                 delete pItr;
-                throw pE;
+                throw e;
             }
         }
     }
@@ -846,9 +846,9 @@ void CDoWModule::Load(const char *sFile, CALLBACK_ARG)
                 m_pFiles->AddFileSource(m_pFSO, pDirItr, m_pFSO, m_sModFileName, itr->second, m_bLoadFSToCustom,
                                         !m_bLoadFSToCustom, (!m_bLoadFSToCustom && sOutFolder == itr->second));
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
-            delete pE;
+            delete e;
         }
 
         delete[] sFolderFullPath;
@@ -882,9 +882,9 @@ void CDoWModule::Load(const char *sFile, CALLBACK_ARG)
             {
                 guardIn = std::unique_ptr<IFileStore::IStream>(m_pFSO->VOpenStream(sFolderFullPath));
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
-                delete pE;
+                delete e;
                 delete pSga;
                 pSga = 0;
                 goto archive_not_present;
@@ -899,17 +899,17 @@ void CDoWModule::Load(const char *sFile, CALLBACK_ARG)
                     m_pFiles->AddFileSource(pSga, pDirItr, pSga, m_sModFileName, itr->second, m_bLoadFSToCustom);
                 delete pDirItr;
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
                 free(sDoWPath);
                 delete[] sWithoutDynamics;
                 delete[] sFolderFullPath;
                 delete[] sModFolder;
                 _Clean();
-                pE = new CRainmanException(pE, __FILE__, __LINE__, "(rethrow)");
+                e = new CRainmanException(e, __FILE__, __LINE__, "(rethrow)");
                 delete pDirItr;
                 delete pSga;
-                throw pE;
+                throw e;
             }
         archive_not_present:
             m_vSgas.push_back(pSga);
@@ -950,13 +950,13 @@ void CDoWModule::Load(const char *sFile, CALLBACK_ARG)
                 pReqMod->SetLocale(m_sLocale);
                 pReqMod->Load(sFolderFullPath, THE_CALLBACK);
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
                 free(sDoWPath);
                 delete[] sModFolder;
                 delete[] sFolderFullPath;
                 _Clean();
-                throw new CRainmanException(__FILE__, __LINE__, "Problem loading required mod", pE);
+                throw CRainmanException(e, __FILE__, __LINE__, "Problem loading required mod");
             }
             delete[] sFolderFullPath;
         }
@@ -970,7 +970,7 @@ void CDoWModule::Load(const char *sFile, CALLBACK_ARG)
                 free(sDoWPath);
                 delete[] sModFolder;
                 _Clean();
-                throw new CRainmanException(__FILE__, __LINE__, "Memory allocation error");
+                throw CRainmanException(__FILE__, __LINE__, "Memory allocation error");
             }
             strcpy(sEngineFile, sDoWPath);
             strcat(sEngineFile, "\\Engine\\Data");
@@ -979,9 +979,9 @@ void CDoWModule::Load(const char *sFile, CALLBACK_ARG)
             {
                 pEngineDirItr = m_pFSO->VIterate(sEngineFile);
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
-                delete pE;
+                delete e;
                 pEngineDirItr = 0;
             }
             if (pEngineDirItr)
@@ -998,7 +998,7 @@ void CDoWModule::Load(const char *sFile, CALLBACK_ARG)
                 delete[] sModFolder;
                 delete[] sEngineFile;
                 _Clean();
-                throw new CRainmanException(__FILE__, __LINE__, "Memory allocation error");
+                throw CRainmanException(__FILE__, __LINE__, "Memory allocation error");
             }
 
             std::unique_ptr<IFileStore::IStream> guardIn;
@@ -1014,14 +1014,14 @@ void CDoWModule::Load(const char *sFile, CALLBACK_ARG)
                     m_pFiles->AddFileSource(pEngineSga, pDirItr, pEngineSga, GetEngineModName(), "Engine.sga", true);
                 delete pDirItr;
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
                 delete pDirItr;
                 free(sDoWPath);
                 delete[] sModFolder;
                 delete[] sEngineFile;
                 _Clean();
-                throw new CRainmanException(__FILE__, __LINE__, "Problem loading in engine SGA file", pE);
+                throw CRainmanException(e, __FILE__, __LINE__, "Problem loading in engine SGA file");
             }
             m_vSgas.push_back(pEngineSga);
 
@@ -1037,7 +1037,7 @@ void CDoWModule::Load(const char *sFile, CALLBACK_ARG)
                     delete[] sModFolder;
                     delete[] sEngineFile;
                     _Clean();
-                    throw new CRainmanException(__FILE__, __LINE__, "Memory allocation error");
+                    throw CRainmanException(__FILE__, __LINE__, "Memory allocation error");
                 }
 
                 std::unique_ptr<IFileStore::IStream> guardIn;
@@ -1054,14 +1054,14 @@ void CDoWModule::Load(const char *sFile, CALLBACK_ARG)
                                                 true);
                     delete pDirItr;
                 }
-                catch (CRainmanException *pE)
+                catch (const CRainmanException &e)
                 {
                     delete pDirItr;
                     free(sDoWPath);
                     delete[] sModFolder;
                     delete[] sEngineFile;
                     _Clean();
-                    throw new CRainmanException(__FILE__, __LINE__, "Cannot load RelicOnline.sga", pE);
+                    throw CRainmanException(e, __FILE__, __LINE__, "Cannot load RelicOnline.sga");
                 }
                 m_vSgas.push_back(pEngineSga);
             }
@@ -1098,7 +1098,7 @@ void CDoWModule::Load(const char *sFile, CALLBACK_ARG)
         free(sDoWPath);
         delete[] sModFolder;
         _Clean();
-        throw new CRainmanException(__FILE__, __LINE__, "Memory allocation error");
+        throw CRainmanException(__FILE__, __LINE__, "Memory allocation error");
     }
     strcpy(sUcsFilesPath, sModFolder);
     strcat(sUcsFilesPath, "\\Locale\\");
@@ -1125,13 +1125,13 @@ void CDoWModule::Load(const char *sFile, CALLBACK_ARG)
                         {
                             guardFile = std::unique_ptr<IFileStore::IStream>(pItr->VOpenFile());
                         }
-                        catch (CRainmanException *pE)
+                        catch (const CRainmanException &e)
                         {
                             free(sDoWPath);
                             delete[] sModFolder;
                             delete pItr;
                             _Clean();
-                            throw new CRainmanException(__FILE__, __LINE__, "Cannot open UCS file", pE);
+                            throw CRainmanException(e, __FILE__, __LINE__, "Cannot open UCS file");
                         }
 
                         auto pUcs = std::make_shared<CUcsFile>();
@@ -1142,12 +1142,12 @@ void CDoWModule::Load(const char *sFile, CALLBACK_ARG)
                             m_vUcsFiles.push_back(pUcs);
                             m_vUcsNames.push_back(strdup(pItr->VGetName()));
                         }
-                        catch (CRainmanException *pE)
+                        catch (const CRainmanException &e)
                         {
                             free(sDoWPath);
                             delete[] sModFolder;
                             _Clean();
-                            throw new CRainmanException(__FILE__, __LINE__, "Cannot load UCS file", pE);
+                            throw CRainmanException(e, __FILE__, __LINE__, "Cannot load UCS file");
                         }
                     }
                 }
@@ -1168,7 +1168,7 @@ void CDoWModule::Save(const char *sFile)
         QUICK_THROW("No file specified")
     FILE *f = fopen(sFile, "wb");
     if (!f)
-        throw new CRainmanException(0, __FILE__, __LINE__, "Cannot open file \'%s\'", sFile);
+        throw CRainmanException(0, __FILE__, __LINE__, "Cannot open file \'%s\'", sFile);
     // Print nice header
     fputs(";; //////////////////////////////////////////////////////////////////\xD\n", f);
     fputs(";; ", f);
@@ -1553,9 +1553,9 @@ void CDoWModule::_Clean()
             {
                 delete (*itr)->GetInputStream();
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
-                delete pE;
+                delete e;
             }
             delete *itr;
         }
@@ -1655,11 +1655,11 @@ long CDoWModule::GetDataFolderID(long iIndex)
 void CDoWModule::SwapDataFolders(long iIndexA, long iIndexB)
 {
     if (iIndexA < 0 || iIndexA >= GetDataFolderCount())
-        throw new CRainmanException(0, __FILE__, __LINE__, "IndexA %li is beyond %li or below 0", iIndexA,
-                                    GetDataFolderCount());
+        throw CRainmanException(0, __FILE__, __LINE__, "IndexA %li is beyond %li or below 0", iIndexA,
+                                GetDataFolderCount());
     if (iIndexB < 0 || iIndexB >= GetDataFolderCount())
-        throw new CRainmanException(0, __FILE__, __LINE__, "IndexB %li is beyond %li or below 0", iIndexB,
-                                    GetDataFolderCount());
+        throw CRainmanException(0, __FILE__, __LINE__, "IndexB %li is beyond %li or below 0", iIndexB,
+                                GetDataFolderCount());
 
     std::map<long, char *>::iterator itrA = m_mapDataFolders.begin();
     while (iIndexA)
@@ -1685,8 +1685,8 @@ void CDoWModule::AddDataFolder(const char *sName)
 void CDoWModule::RemoveDataFolder(long iIndex)
 {
     if (iIndex < 0 || iIndex >= GetDataFolderCount())
-        throw new CRainmanException(0, __FILE__, __LINE__, "Index %li is beyond %li or below 0", iIndex,
-                                    GetDataFolderCount());
+        throw CRainmanException(0, __FILE__, __LINE__, "Index %li is beyond %li or below 0", iIndex,
+                                GetDataFolderCount());
     std::map<long, char *>::iterator itr = m_mapDataFolders.begin();
     while (iIndex)
         --iIndex, ++itr;
@@ -1718,8 +1718,7 @@ long CDoWModule::GetArchiveCount() const { return static_cast<long>(m_mapArchive
 const char *CDoWModule::GetArchive(long iIndex)
 {
     if (iIndex < 0 || iIndex >= GetArchiveCount())
-        throw new CRainmanException(0, __FILE__, __LINE__, "Index %li is beyond %li or below 0", iIndex,
-                                    GetArchiveCount());
+        throw CRainmanException(0, __FILE__, __LINE__, "Index %li is beyond %li or below 0", iIndex, GetArchiveCount());
     std::map<long, char *>::iterator itr = m_mapArchiveFiles.begin();
     while (iIndex)
         --iIndex, ++itr;
@@ -1729,8 +1728,7 @@ const char *CDoWModule::GetArchive(long iIndex)
 long CDoWModule::GetArchiveID(long iIndex)
 {
     if (iIndex < 0 || iIndex >= GetArchiveCount())
-        throw new CRainmanException(0, __FILE__, __LINE__, "Index %li is beyond %li or below 0", iIndex,
-                                    GetArchiveCount());
+        throw CRainmanException(0, __FILE__, __LINE__, "Index %li is beyond %li or below 0", iIndex, GetArchiveCount());
     std::map<long, char *>::iterator itr = m_mapArchiveFiles.begin();
     while (iIndex)
         --iIndex, ++itr;
@@ -1740,19 +1738,18 @@ long CDoWModule::GetArchiveID(long iIndex)
 CSgaFile *CDoWModule::GetArchiveHandle(long iIndex) const
 {
     if (iIndex < 0 || iIndex >= GetArchiveCount())
-        throw new CRainmanException(0, __FILE__, __LINE__, "Index %li is beyond %li or below 0", iIndex,
-                                    GetArchiveCount());
+        throw CRainmanException(0, __FILE__, __LINE__, "Index %li is beyond %li or below 0", iIndex, GetArchiveCount());
     return m_vSgas[iIndex];
 }
 
 void CDoWModule::SwapArchives(long iIndexA, long iIndexB)
 {
     if (iIndexA < 0 || iIndexA >= GetArchiveCount())
-        throw new CRainmanException(0, __FILE__, __LINE__, "IndexA %li is beyond %li or below 0", iIndexA,
-                                    GetArchiveCount());
+        throw CRainmanException(0, __FILE__, __LINE__, "IndexA %li is beyond %li or below 0", iIndexA,
+                                GetArchiveCount());
     if (iIndexB < 0 || iIndexB >= GetArchiveCount())
-        throw new CRainmanException(0, __FILE__, __LINE__, "IndexB %li is beyond %li or below 0", iIndexB,
-                                    GetArchiveCount());
+        throw CRainmanException(0, __FILE__, __LINE__, "IndexB %li is beyond %li or below 0", iIndexB,
+                                GetArchiveCount());
 
     std::map<long, char *>::iterator itrA = m_mapArchiveFiles.begin();
     while (iIndexA)
@@ -1783,8 +1780,7 @@ void CDoWModule::AddArchive(const char *sName)
 void CDoWModule::RemoveArchive(long iIndex)
 {
     if (iIndex < 0 || iIndex >= GetArchiveCount())
-        throw new CRainmanException(0, __FILE__, __LINE__, "Index %li is beyond %li or below 0", iIndex,
-                                    GetArchiveCount());
+        throw CRainmanException(0, __FILE__, __LINE__, "Index %li is beyond %li or below 0", iIndex, GetArchiveCount());
     std::map<long, char *>::iterator itr = m_mapArchiveFiles.begin();
     while (iIndex)
         --iIndex, ++itr;
@@ -1817,8 +1813,8 @@ long CDoWModule::GetRequiredCount() const { return static_cast<long>(m_mapRequir
 const char *CDoWModule::GetRequired(long iIndex)
 {
     if (iIndex < 0 || iIndex >= GetRequiredCount())
-        throw new CRainmanException(0, __FILE__, __LINE__, "Index %li is beyond %li or below 0", iIndex,
-                                    GetRequiredCount());
+        throw CRainmanException(0, __FILE__, __LINE__, "Index %li is beyond %li or below 0", iIndex,
+                                GetRequiredCount());
     std::map<long, char *>::iterator itr = m_mapRequiredMods.begin();
     while (iIndex)
         --iIndex, ++itr;
@@ -1828,8 +1824,8 @@ const char *CDoWModule::GetRequired(long iIndex)
 long CDoWModule::GetRequiredID(long iIndex)
 {
     if (iIndex < 0 || iIndex >= GetRequiredCount())
-        throw new CRainmanException(0, __FILE__, __LINE__, "Index %li is beyond %li or below 0", iIndex,
-                                    GetRequiredCount());
+        throw CRainmanException(0, __FILE__, __LINE__, "Index %li is beyond %li or below 0", iIndex,
+                                GetRequiredCount());
     std::map<long, char *>::iterator itr = m_mapRequiredMods.begin();
     while (iIndex)
         --iIndex, ++itr;
@@ -1839,19 +1835,19 @@ long CDoWModule::GetRequiredID(long iIndex)
 CDoWModule *CDoWModule::GetRequiredHandle(long iIndex) const
 {
     if (iIndex < 0 || iIndex >= GetArchiveCount())
-        throw new CRainmanException(0, __FILE__, __LINE__, "Index %li is beyond %li or below 0", iIndex,
-                                    GetRequiredCount());
+        throw CRainmanException(0, __FILE__, __LINE__, "Index %li is beyond %li or below 0", iIndex,
+                                GetRequiredCount());
     return m_vInheritedMods[iIndex];
 }
 
 void CDoWModule::SwapRequireds(long iIndexA, long iIndexB)
 {
     if (iIndexA < 0 || iIndexA >= GetRequiredCount())
-        throw new CRainmanException(0, __FILE__, __LINE__, "IndexA %li is beyond %li or below 0", iIndexA,
-                                    GetRequiredCount());
+        throw CRainmanException(0, __FILE__, __LINE__, "IndexA %li is beyond %li or below 0", iIndexA,
+                                GetRequiredCount());
     if (iIndexA < 0 || iIndexB >= GetRequiredCount())
-        throw new CRainmanException(0, __FILE__, __LINE__, "IndexB %li is beyond %li or below 0", iIndexB,
-                                    GetRequiredCount());
+        throw CRainmanException(0, __FILE__, __LINE__, "IndexB %li is beyond %li or below 0", iIndexB,
+                                GetRequiredCount());
 
     std::map<long, char *>::iterator itrA = m_mapRequiredMods.begin();
     while (iIndexA)
@@ -1882,8 +1878,8 @@ void CDoWModule::AddRequired(const char *sName)
 void CDoWModule::RemoveRequired(long iIndex)
 {
     if (iIndex < 0 || iIndex >= GetRequiredCount())
-        throw new CRainmanException(0, __FILE__, __LINE__, "Index %li is beyond %li or below 0", iIndex,
-                                    GetRequiredCount());
+        throw CRainmanException(0, __FILE__, __LINE__, "Index %li is beyond %li or below 0", iIndex,
+                                GetRequiredCount());
     std::map<long, char *>::iterator itr = m_mapRequiredMods.begin();
     while (iIndex)
         --iIndex, ++itr;
@@ -1916,8 +1912,8 @@ long CDoWModule::GetCompatableCount() const { return static_cast<long>(m_mapComp
 const char *CDoWModule::GetCompatable(long iIndex)
 {
     if (iIndex < 0 || iIndex >= GetCompatableCount())
-        throw new CRainmanException(0, __FILE__, __LINE__, "Index %li is beyond %li or below 0", iIndex,
-                                    GetCompatableCount());
+        throw CRainmanException(0, __FILE__, __LINE__, "Index %li is beyond %li or below 0", iIndex,
+                                GetCompatableCount());
     std::map<long, char *>::iterator itr = m_mapCompatableMods.begin();
     while (iIndex)
         --iIndex, ++itr;
@@ -1927,8 +1923,8 @@ const char *CDoWModule::GetCompatable(long iIndex)
 long CDoWModule::GetCompatableID(long iIndex)
 {
     if (iIndex < 0 || iIndex >= GetCompatableCount())
-        throw new CRainmanException(0, __FILE__, __LINE__, "Index %li is beyond %li or below 0", iIndex,
-                                    GetCompatableCount());
+        throw CRainmanException(0, __FILE__, __LINE__, "Index %li is beyond %li or below 0", iIndex,
+                                GetCompatableCount());
     std::map<long, char *>::iterator itr = m_mapCompatableMods.begin();
     while (iIndex)
         --iIndex, ++itr;
@@ -1938,11 +1934,11 @@ long CDoWModule::GetCompatableID(long iIndex)
 void CDoWModule::SwapCompatables(long iIndexA, long iIndexB)
 {
     if (iIndexA < 0 || iIndexA >= GetCompatableCount())
-        throw new CRainmanException(0, __FILE__, __LINE__, "IndexA %li is beyond %li or below 0", iIndexA,
-                                    GetCompatableCount());
+        throw CRainmanException(0, __FILE__, __LINE__, "IndexA %li is beyond %li or below 0", iIndexA,
+                                GetCompatableCount());
     if (iIndexA < 0 || iIndexB >= GetCompatableCount())
-        throw new CRainmanException(0, __FILE__, __LINE__, "IndexB %li is beyond %li or below 0", iIndexB,
-                                    GetCompatableCount());
+        throw CRainmanException(0, __FILE__, __LINE__, "IndexB %li is beyond %li or below 0", iIndexB,
+                                GetCompatableCount());
 
     std::map<long, char *>::iterator itrA = m_mapCompatableMods.begin();
     while (iIndexA)
@@ -1968,8 +1964,8 @@ void CDoWModule::AddCompatable(const char *sName)
 void CDoWModule::RemoveCompatable(long iIndex)
 {
     if (iIndex < 0 || iIndex >= GetCompatableCount())
-        throw new CRainmanException(0, __FILE__, __LINE__, "Index %li is beyond %li or below 0", iIndex,
-                                    GetCompatableCount());
+        throw CRainmanException(0, __FILE__, __LINE__, "Index %li is beyond %li or below 0", iIndex,
+                                GetCompatableCount());
     std::map<long, char *>::iterator itr = m_mapCompatableMods.begin();
     while (iIndex)
         --iIndex, ++itr;
@@ -2031,7 +2027,7 @@ bool CDoWModule::IsDollarString(const wchar_t *s)
 const wchar_t *CDoWModule::ResolveUCS(const char *sDollarString)
 {
     if (!IsDollarString(sDollarString))
-        throw new CRainmanException(__FILE__, __LINE__, "sDollarString must be a dollar string");
+        throw CRainmanException(__FILE__, __LINE__, "sDollarString must be a dollar string");
     try
     {
         return ResolveUCS((unsigned long)atol(sDollarString + 1));
@@ -2042,7 +2038,7 @@ const wchar_t *CDoWModule::ResolveUCS(const char *sDollarString)
 const wchar_t *CDoWModule::ResolveUCS(const wchar_t *sDollarString)
 {
     if (!IsDollarString(sDollarString))
-        throw new CRainmanException(__FILE__, __LINE__, "sDollarString must be a dollar string");
+        throw CRainmanException(__FILE__, __LINE__, "sDollarString must be a dollar string");
     try
     {
         return ResolveUCS(wcstoul(sDollarString + 1, 0, 10));
@@ -2070,7 +2066,7 @@ const wchar_t *CDoWModule::ResolveUCS(unsigned long iStringID)
         }
     }
 
-    throw new CRainmanException(0, __FILE__, __LINE__, "$%lu no key!", iStringID);
+    throw CRainmanException(0, __FILE__, __LINE__, "$%lu no key!", iStringID);
 }
 
 long CDoWModule::GetUcsFileCount() const { return static_cast<long>(m_vUcsFiles.size()); }
@@ -2141,9 +2137,9 @@ unsigned long CDoWModule::_MakeFileSourcesHash(unsigned long iBase)
 void CDoWModule::RegisterNewUCS(const char *sFile, std::shared_ptr<CUcsFile> pUcs)
 {
     if (sFile == nullptr)
-        throw new CRainmanException(__FILE__, __LINE__, "Invalid argument: sFile");
+        throw CRainmanException(__FILE__, __LINE__, "Invalid argument: sFile");
     if (!pUcs)
-        throw new CRainmanException(__FILE__, __LINE__, "Invalid argument: pUcs");
+        throw CRainmanException(__FILE__, __LINE__, "Invalid argument: pUcs");
     sFile = CHECK_MEM(mystrdup(sFile));
     m_vUcsFiles.push_back(std::move(pUcs));
     m_vUcsNames.push_back((char *)sFile);
@@ -2155,7 +2151,7 @@ const char *CDoWModule::GetEngineDataFolder(long iIndex)
 {
     if (iIndex == 0)
         return "Data";
-    throw new CRainmanException(0, __FILE__, __LINE__, "Invalid index %li", iIndex);
+    throw CRainmanException(0, __FILE__, __LINE__, "Invalid index %li", iIndex);
 }
 
 long CDoWModule::GetEngineArchiveCount() const { return m_bIsCohMod ? 2 : 1; }
@@ -2166,7 +2162,7 @@ const char *CDoWModule::GetEngineArchive(long iIndex)
         return "Engine.sga";
     if (iIndex == 1 && m_bIsCohMod)
         return "RelicOnline.sga";
-    throw new CRainmanException(0, __FILE__, __LINE__, "Invalid index %li", iIndex);
+    throw CRainmanException(0, __FILE__, __LINE__, "Invalid index %li", iIndex);
 }
 
 #endif

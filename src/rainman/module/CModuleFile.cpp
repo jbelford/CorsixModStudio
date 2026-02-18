@@ -129,16 +129,16 @@ size_t CModuleFile::GetEngineCount() const { return m_vEngines.size(); }
 CModuleFile *CModuleFile::GetEngine(size_t iId)
 {
     if (iId < 0 || iId >= GetEngineCount())
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
-                                    (unsigned long)GetEngineCount());
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
+                                (unsigned long)GetEngineCount());
     return m_vEngines[iId];
 }
 
 const CModuleFile *CModuleFile::GetEngine(size_t iId) const
 {
     if (iId < 0 || iId >= GetEngineCount())
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
-                                    (unsigned long)GetEngineCount());
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
+                                (unsigned long)GetEngineCount());
     return m_vEngines[iId];
 }
 
@@ -197,9 +197,9 @@ IDirectoryTraverser::IIterator *CModuleFile::VIterate(const char *sPath)
     {
         return m_pNewFileMap->VIterate(sPath);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CRainmanException(__FILE__, __LINE__, "File view error iterating path", pE);
+        throw CRainmanException(e, __FILE__, __LINE__, "File view error iterating path");
     }
 }
 
@@ -711,7 +711,7 @@ void CModuleFile::NewUCS(const char *sName, std::shared_ptr<CUcsFile> pUcs)
 const wchar_t *CModuleFile::ResolveUCS(const char *sDollarString)
 {
     if (!CUcsFile::IsDollarString(sDollarString))
-        throw new CRainmanException(__FILE__, __LINE__, "sDollarString must be a dollar string");
+        throw CRainmanException(__FILE__, __LINE__, "sDollarString must be a dollar string");
     try
     {
         return ResolveUCS((unsigned long)atol(sDollarString + 1));
@@ -722,7 +722,7 @@ const wchar_t *CModuleFile::ResolveUCS(const char *sDollarString)
 const wchar_t *CModuleFile::ResolveUCS(const wchar_t *sDollarString)
 {
     if (!CUcsFile::IsDollarString(sDollarString))
-        throw new CRainmanException(__FILE__, __LINE__, "sDollarString must be a dollar string");
+        throw CRainmanException(__FILE__, __LINE__, "sDollarString must be a dollar string");
     try
     {
         return ResolveUCS(wcstoul(sDollarString + 1, nullptr, 10));
@@ -762,24 +762,24 @@ size_t CModuleFile::GetUcsCount() const { return m_vLocaleTexts.size(); }
 CModuleFile::CUcsHandler *CModuleFile::GetUcs(size_t iId)
 {
     if (iId < 0 || iId >= GetUcsCount())
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
-                                    (unsigned long)GetUcsCount());
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
+                                (unsigned long)GetUcsCount());
     return m_vLocaleTexts[iId];
 }
 
 const CModuleFile::CUcsHandler *CModuleFile::GetUcs(size_t iId) const
 {
     if (iId < 0 || iId >= GetUcsCount())
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
-                                    (unsigned long)GetUcsCount());
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
+                                (unsigned long)GetUcsCount());
     return m_vLocaleTexts[iId];
 }
 
 void CModuleFile::DeleteUcs(size_t iId)
 {
     if (iId < 0 || iId >= GetUcsCount())
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
-                                    (unsigned long)GetUcsCount());
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
+                                (unsigned long)GetUcsCount());
     m_vLocaleTexts.erase(m_vLocaleTexts.begin() + iId);
 }
 
@@ -788,16 +788,16 @@ size_t CModuleFile::GetRequiredCount() const { return m_vRequireds.size(); }
 CModuleFile::CRequiredHandler *CModuleFile::GetRequired(size_t iId)
 {
     if (iId < 0 || iId >= GetRequiredCount())
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
-                                    (unsigned long)GetRequiredCount());
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
+                                (unsigned long)GetRequiredCount());
     return m_vRequireds[iId];
 }
 
 const CModuleFile::CRequiredHandler *CModuleFile::GetRequired(size_t iId) const
 {
     if (iId < 0 || iId >= GetRequiredCount())
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
-                                    (unsigned long)GetRequiredCount());
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
+                                (unsigned long)GetRequiredCount());
     return m_vRequireds[iId];
 }
 
@@ -806,8 +806,8 @@ size_t CModuleFile::GetFolderCount() { return m_vFolders.size(); }
 CModuleFile::CFolderHandler *CModuleFile::GetFolder(size_t iId)
 {
     if (iId < 0 || iId >= GetFolderCount())
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
-                                    (unsigned long)GetFolderCount());
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
+                                (unsigned long)GetFolderCount());
     return m_vFolders[iId];
 }
 
@@ -816,16 +816,16 @@ size_t CModuleFile::GetArchiveCount() { return m_vArchives.size(); }
 CModuleFile::CArchiveHandler *CModuleFile::GetArchive(size_t iId)
 {
     if (iId < 0 || iId >= GetArchiveCount())
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
-                                    (unsigned long)GetArchiveCount());
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
+                                (unsigned long)GetArchiveCount());
     return m_vArchives[iId];
 }
 
 size_t CModuleFile::GetArchiveFullPath(size_t iId, char *sOutput)
 {
     if (iId < 0 || iId >= GetArchiveCount())
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
-                                    (unsigned long)GetArchiveCount());
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
+                                (unsigned long)GetArchiveCount());
     CModuleFile::CArchiveHandler *pHandler = m_vArchives[iId];
 
     size_t iLen;
@@ -863,8 +863,8 @@ size_t CModuleFile::GetCompatibleCount() { return m_vCompatibles.size(); }
 CModuleFile::CCompatibleHandler *CModuleFile::GetCompatible(size_t iId)
 {
     if (iId < 0 || iId >= GetCompatibleCount())
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
-                                    (unsigned long)GetCompatibleCount());
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
+                                (unsigned long)GetCompatibleCount());
     return m_vCompatibles[iId];
 }
 
@@ -873,8 +873,8 @@ size_t CModuleFile::GetDataSourceCount() { return m_vDataSources.size(); }
 CModuleFile::CCohDataSource *CModuleFile::GetDataSource(size_t iId)
 {
     if (iId < 0 || iId >= GetDataSourceCount())
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
-                                    (unsigned long)GetDataSourceCount());
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
+                                (unsigned long)GetDataSourceCount());
     return m_vDataSources[iId];
 }
 
@@ -883,8 +883,8 @@ size_t CModuleFile::CCohDataSource::GetArchiveCount() { return m_vArchives.size(
 CModuleFile::CArchiveHandler *CModuleFile::CCohDataSource::GetArchive(size_t iId)
 {
     if (iId < 0 || iId >= GetArchiveCount())
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
-                                    (unsigned long)GetArchiveCount());
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
+                                (unsigned long)GetArchiveCount());
     return m_vArchives[iId];
 }
 

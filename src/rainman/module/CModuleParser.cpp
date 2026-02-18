@@ -31,7 +31,7 @@ CModuleParseResult CModuleParser::Parse(const char *sFileName)
 
     FILE *fModule = fopen(sFileName, "rb");
     if (fModule == nullptr)
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Unable to open \'%s\' for reading", sFileName);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Unable to open \'%s\' for reading", sFileName);
 
     size_t iCurrentDS = SIZE_MAX;
     bool bInGlobal = false;
@@ -41,7 +41,7 @@ CModuleParseResult CModuleParser::Parse(const char *sFileName)
         if (sLine == nullptr)
         {
             fclose(fModule);
-            throw new CRainmanException(__FILE__, __LINE__, "Error reading from file");
+            throw CRainmanException(__FILE__, __LINE__, "Error reading from file");
         }
         char *sCommentBegin = strchr(sLine, ';');
         if (sCommentBegin)
@@ -168,11 +168,11 @@ CModuleParseResult CModuleParser::Parse(const char *sFileName)
                         result.compatibles.push_back(std::move(entry));
                     }
                 }
-                catch (CRainmanException *pE)
+                catch (const CRainmanException &e)
                 {
                     delete[] sLine;
                     fclose(fModule);
-                    throw pE;
+                    throw e;
                 }
             }
             else if (iCurrentDS != SIZE_MAX)
@@ -191,11 +191,11 @@ CModuleParseResult CModuleParser::Parse(const char *sFileName)
                         result.dataSources[iCurrentDS].archives.push_back(std::move(entry));
                     }
                 }
-                catch (CRainmanException *pE)
+                catch (const CRainmanException &e)
                 {
                     delete[] sLine;
                     fclose(fModule);
-                    throw pE;
+                    throw e;
                 }
             }
         }
@@ -234,11 +234,11 @@ CModuleParseResult CModuleParser::Parse(const char *sFileName)
                             result.dataSources.push_back(std::move(ds));
                             iCurrentDS = result.dataSources.size() - 1;
                         }
-                        catch (CRainmanException *pE)
+                        catch (const CRainmanException &e)
                         {
                             delete[] sLine;
                             fclose(fModule);
-                            throw pE;
+                            throw e;
                         }
                     }
                 }
@@ -281,7 +281,7 @@ CModuleParseResult CModuleParser::Parse(const char *sFileName)
         iHeuristicCoh += 5, iHeuristicCohEarly += 5;
 
     if (iHeuristicDow == 0 && iHeuristicCoh == 0 && iHeuristicCohEarly == 0)
-        throw new CRainmanException(__FILE__, __LINE__, "File is not a valid .module file");
+        throw CRainmanException(__FILE__, __LINE__, "File is not a valid .module file");
 
     if (iHeuristicDow > iHeuristicCoh && iHeuristicDow > iHeuristicCohEarly)
         result.iModuleType = 0; // MT_DawnOfWar
@@ -290,7 +290,7 @@ CModuleParseResult CModuleParser::Parse(const char *sFileName)
     else if (iHeuristicCohEarly > iHeuristicDow && iHeuristicCohEarly > iHeuristicCoh)
         result.iModuleType = 1; // MT_CompanyOfHeroesEarly
     else
-        throw new CRainmanException(__FILE__, __LINE__, "Unable to determine what kind of .module file this is");
+        throw CRainmanException(__FILE__, __LINE__, "Unable to determine what kind of .module file this is");
 
     return result;
 }

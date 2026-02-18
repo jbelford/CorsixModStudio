@@ -395,9 +395,9 @@ void frmRgdMacro::OnRunClick(wxCommandEvent &event)
     {
         oTestMacro.loadMacro(saContent.get());
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        ErrorBoxE(pE);
+        ErrorBoxE(e);
         return;
     }
     oTestMacro.unloadMacro();

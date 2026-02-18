@@ -109,21 +109,32 @@ template <> class Result<void>
 
 //! Helper to build a Result<void>::Err from a CRainmanException chain.
 /*!
-    Formats the full exception chain into a single wxString and calls
-    pE->destroy() to clean up the heap-allocated exception.
+    Formats the full exception chain into a single wxString.
     Typical usage inside a service method:
 
     \code
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
-            return ResultFromException(pE);
+            return ResultFromException(e);
         }
     \endcode
 */
-inline Result<void> ResultFromException(CRainmanException *pE)
+//! Helper to build a Result<void>::Err from a CRainmanException chain.
+/*!
+    Formats the full exception chain into a single wxString.
+    Typical usage inside a service method:
+
+    \code
+        catch (const CRainmanException &e)
+        {
+            return ResultFromException(e);
+        }
+    \endcode
+*/
+inline Result<void> ResultFromException(const CRainmanException &e)
 {
     wxString msg;
-    const CRainmanException *pCur = pE;
+    const CRainmanException *pCur = &e;
     while (pCur)
     {
         if (!msg.empty())
@@ -131,15 +142,14 @@ inline Result<void> ResultFromException(CRainmanException *pE)
         msg += wxString::FromUTF8(pCur->getMessage());
         pCur = pCur->getPrecursor();
     }
-    pE->destroy();
     return Result<void>::Err(std::move(msg));
 }
 
 //! Typed variant of ResultFromException for Result<T>.
-template <typename T> Result<T> ResultFromExceptionT(CRainmanException *pE)
+template <typename T> Result<T> ResultFromExceptionT(const CRainmanException &e)
 {
     wxString msg;
-    const CRainmanException *pCur = pE;
+    const CRainmanException *pCur = &e;
     while (pCur)
     {
         if (!msg.empty())
@@ -147,6 +157,5 @@ template <typename T> Result<T> ResultFromExceptionT(CRainmanException *pE)
         msg += wxString::FromUTF8(pCur->getMessage());
         pCur = pCur->getPrecursor();
     }
-    pE->destroy();
     return Result<T>::Err(std::move(msg));
 }

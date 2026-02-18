@@ -51,9 +51,8 @@ bool CMassExtractPresenter::Extract(std::vector<std::string> vFiles, size_t iCou
                 {
                     CExtractAction::DoExtract(saFile.data(), p4mbBuffer.get());
                 }
-                catch (CRainmanException *pE)
+                catch (const CRainmanException &e)
                 {
-                    pE->destroy();
                 }
 
                 int iNGVal = static_cast<int>((i + 1) / iCountDiv);

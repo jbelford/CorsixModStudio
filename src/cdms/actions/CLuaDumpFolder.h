@@ -64,9 +64,9 @@ class CLuaDumpFolder : public frmFiles::IHandler
                         {
                             CRgdToLuaDumpAction::DoConvert(saFile.get());
                         }
-                        catch (CRainmanException *pE)
+                        catch (const CRainmanException &e)
                         {
-                            ErrorBoxE(pE);
+                            ErrorBoxE(e);
                         }
                     }
                 }

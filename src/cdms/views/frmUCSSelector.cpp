@@ -38,9 +38,9 @@ void frmUCSSelector::_AddReadOnlyModToList(CModuleFile *pMod, wxArrayString &aLi
         {
             iUCSCount = pMod->GetUcsCount();
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
-            throw new CModStudioException(__FILE__, __LINE__, "Unable to get UCS count", pE);
+            throw CModStudioException(e, __FILE__, __LINE__, "Unable to get UCS count");
         }
         for (size_t i = 0; i < iUCSCount; ++i)
         {
@@ -54,9 +54,9 @@ void frmUCSSelector::_AddReadOnlyModToList(CModuleFile *pMod, wxArrayString &aLi
                               AsciiTowxString(pUcs->GetFileName()) + wxT(" (Read Only)"));
                 m_lstUcsFiles.push_back(pUcs->GetUcsHandle());
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
-                throw new CModStudioException(pE, __FILE__, __LINE__, "Unable to get UCS name for file #%li", i);
+                throw CModStudioException(e, __FILE__, __LINE__, "Unable to get UCS name for file #%li", i);
             }
         }
     }
@@ -79,10 +79,10 @@ frmUCSSelector::frmUCSSelector(const wxString &sTitle)
     {
         m_iWritableUcsCount = iUCSCount = TheConstruct->GetModuleService().GetUcsCount();
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
         delete pTopSizer;
-        throw new CModStudioException(__FILE__, __LINE__, "Unable to get UCS count", pE);
+        throw CModStudioException(e, __FILE__, __LINE__, "Unable to get UCS count");
     }
     for (size_t i = 0; i < iUCSCount; ++i)
     {
@@ -92,10 +92,10 @@ frmUCSSelector::frmUCSSelector(const wxString &sTitle)
             aModUCSs.Add(AsciiTowxString(pUcs->GetFileName()));
             m_lstUcsFiles.push_back(pUcs->GetUcsHandle());
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             delete pTopSizer;
-            throw new CModStudioException(pE, __FILE__, __LINE__, "Unable to get UCS name for file #%li", i);
+            throw CModStudioException(e, __FILE__, __LINE__, "Unable to get UCS name for file #%li", i);
         }
     }
 

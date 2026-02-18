@@ -4,6 +4,7 @@
 #include "rainman/formats/CRgdHashTable.h"
 #include "rainman/core/Exception.h"
 #include <cstring>
+#include <optional>
 
 class RgdFileTest : public ::testing::Test {
 protected:
@@ -109,14 +110,13 @@ TEST_F(RgdFileTest, SaveAndLoadRoundTrip) {
 
 TEST_F(RgdFileTest, SaveNullStreamThrows) {
     rgd.New(1);
-    CRainmanException* caught = nullptr;
+    std::optional<CRainmanException> caught;
     try {
         rgd.Save(nullptr);
-    } catch (CRainmanException* ex) {
+    } catch (const CRainmanException &ex) {
         caught = ex;
     }
-    ASSERT_NE(caught, nullptr);
-    caught->destroy();
+    ASSERT_TRUE(caught.has_value());
 }
 
 TEST_F(RgdFileTest, IntegerRoundTrip) {

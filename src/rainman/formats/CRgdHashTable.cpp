@@ -124,7 +124,7 @@ void CRgdHashTable::ExtendWithDictionary(const char *sFile, bool bCustom)
 {
     FILE *fFile = fopen(sFile, "rb");
     if (fFile == nullptr)
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Failed to open file \'%s\'", sFile);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Failed to open file \'%s\'", sFile);
 
     std::string sLine;
     while (ReadLine(fFile, sLine))
@@ -210,7 +210,7 @@ void CRgdHashTable::XRefWithStringList(const char *sFile)
 {
     FILE *fFile = fopen(sFile, "rb");
     if (fFile == nullptr)
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Failed to open file \'%s\'", sFile);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Failed to open file \'%s\'", sFile);
 
     std::string sLine;
     while (ReadLine(fFile, sLine))
@@ -231,7 +231,7 @@ void CRgdHashTable::SaveCustomKeys(const char *sFile)
 {
     FILE *fFile = fopen(sFile, "wb");
     if (fFile == nullptr)
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Failed to open file \'%s\'", sFile);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Failed to open file \'%s\'", sFile);
 
     fputs("#RGD_DIC\n# This dictionary is generated from any keys that are \'discovered\'\n", fFile);
 

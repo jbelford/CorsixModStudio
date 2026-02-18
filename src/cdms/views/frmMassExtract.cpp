@@ -154,9 +154,9 @@ size_t frmMassExtract::_DoExtract(wxTreeCtrl *pTree, wxTreeItemId &oFolder, cons
                     {
                         CExtractAction::DoExtract(saFile.get(), m_p4mbBuffer);
                     }
-                    catch (CRainmanException *pE)
+                    catch (const CRainmanException &e)
                     {
-                        ErrorBoxE(pE);
+                        ErrorBoxE(e);
                     }
                     int iNGVal = (int)((iCountBase + iCount) / iCountDiv);
                     if (iNGVal != iGVal)

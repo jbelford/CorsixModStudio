@@ -67,35 +67,35 @@ frmNewMod::frmNewMod()
     {
         m_sDoWPath = ConfGetDoWFolder();
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CModStudioException(__FILE__, __LINE__, "Unable to get DoW folder", pE);
+        throw CModStudioException(e, __FILE__, __LINE__, "Unable to get DoW folder");
     }
     try
     {
         m_sCoHPath = ConfGetCoHFolder();
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CModStudioException(__FILE__, __LINE__, "Unable to get CoH folder", pE);
+        throw CModStudioException(e, __FILE__, __LINE__, "Unable to get CoH folder");
     }
 
     try
     {
         m_sDCPath = ConfGetDCFolder();
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CModStudioException(__FILE__, __LINE__, "Unable to get DC folder", pE);
+        throw CModStudioException(e, __FILE__, __LINE__, "Unable to get DC folder");
     }
 
     try
     {
         m_sSSPath = ConfGetSSFolder();
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CModStudioException(__FILE__, __LINE__, "Unable to get SS folder", pE);
+        throw CModStudioException(e, __FILE__, __LINE__, "Unable to get SS folder");
     }
 
     CentreOnParent();

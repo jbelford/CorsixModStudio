@@ -45,7 +45,7 @@ RAINMAN_API void CallCallback(CALLBACK_ARG, const char *sFormat, ...)
                              // round again -> error
             {
                 va_end(marker);
-                throw new CRainmanException(__FILE__, __LINE__, "Message too large");
+                throw CRainmanException(__FILE__, __LINE__, "Message too large");
             }
             if (iSize != 256)
                 va_end(marker);

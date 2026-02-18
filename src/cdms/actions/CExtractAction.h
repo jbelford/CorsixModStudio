@@ -48,9 +48,9 @@ class CExtractAction : public frmFiles::IHandler
         {
             DoExtract(saFile.get());
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
-            ErrorBoxE(pE);
+            ErrorBoxE(e);
             return;
         }
 
@@ -74,22 +74,22 @@ class CExtractAction : public frmFiles::IHandler
         {
             auto inResult = TheConstruct->GetFileService().OpenStream(AsciiTowxString(saFile));
             if (!inResult)
-                throw new CModStudioException(0, __FILE__, __LINE__, "Unable to open streams for \'%s\'", saFile);
+                throw CModStudioException(0, __FILE__, __LINE__, "Unable to open streams for \'%s\'", saFile);
             pIn = inResult.value().release();
             auto outResult = TheConstruct->GetFileService().OpenOutputStream(AsciiTowxString(saFile), true);
             if (!outResult)
             {
                 delete pIn;
                 pIn = 0;
-                throw new CModStudioException(0, __FILE__, __LINE__, "Unable to open streams for \'%s\'", saFile);
+                throw CModStudioException(0, __FILE__, __LINE__, "Unable to open streams for \'%s\'", saFile);
             }
             pOut = outResult.value().release();
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             delete pIn;
             delete pOut;
-            throw new CModStudioException(pE, __FILE__, __LINE__, "Unable to open streams for \'%s\'", saFile);
+            throw CModStudioException(e, __FILE__, __LINE__, "Unable to open streams for \'%s\'", saFile);
         }
         try
         {
@@ -97,11 +97,11 @@ class CExtractAction : public frmFiles::IHandler
             iLen = pIn->VTell();
             pIn->VSeek(0, IFileStore::IStream::SL_Root);
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             delete pIn;
             delete pOut;
-            throw new CModStudioException(pE, __FILE__, __LINE__, "Seek/Tell problem on streams for \'%s\'", saFile);
+            throw CModStudioException(e, __FILE__, __LINE__, "Seek/Tell problem on streams for \'%s\'", saFile);
         }
         if (!pBuffer)
             pBuffer = new char[4194304]; // 4mb
@@ -109,7 +109,7 @@ class CExtractAction : public frmFiles::IHandler
         {
             delete pIn;
             delete pOut;
-            throw new CModStudioException(__FILE__, __LINE__, "Cannot allocate memory");
+            throw CModStudioException(__FILE__, __LINE__, "Cannot allocate memory");
         }
         while (iLen)
         {
@@ -119,14 +119,13 @@ class CExtractAction : public frmFiles::IHandler
                 pIn->VRead(iLen2, 1, pBuffer);
                 pOut->VWrite(iLen2, 1, pBuffer);
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
                 delete pIn;
                 delete pOut;
                 if (!p4mbBuffer)
                     delete[] pBuffer;
-                throw new CModStudioException(pE, __FILE__, __LINE__, "Read/Write problem on streams for \'%s\'",
-                                              saFile);
+                throw CModStudioException(e, __FILE__, __LINE__, "Read/Write problem on streams for \'%s\'", saFile);
             }
             iLen -= iLen2;
         }

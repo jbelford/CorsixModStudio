@@ -44,16 +44,15 @@ tLastWriteTime GetLastWriteTime(const char *sFile)
     // Open the file at a low level
     int iH = _open(sFile, _O_BINARY | _O_RDONLY);
     if (iH == -1)
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "_open gave \'%s\' opening \'%s\'", strerror(errno),
-                                    sFile);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "_open gave \'%s\' opening \'%s\'", strerror(errno),
+                                sFile);
     struct _stat s;
 
     // Get the information
     if (_fstat(iH, &s) == -1)
     {
         _close(iH);
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "_fstat gave \'%s\' on \'%s\'", strerror(errno),
-                                    sFile);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "_fstat gave \'%s\' on \'%s\'", strerror(errno), sFile);
     }
 
     // Clean up and return

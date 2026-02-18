@@ -66,18 +66,17 @@ TEST(ResultTest, OkString)
 
 TEST(ResultTest, FromExceptionSimple)
 {
-	CRainmanException *pE = new CRainmanException(__FILE__, __LINE__, "test error");
-	auto r = ResultFromException(pE);
-	// pE is destroyed by ResultFromException
+	CRainmanException ex(__FILE__, __LINE__, "test error");
+	auto r = ResultFromException(ex);
 	EXPECT_FALSE(r.ok());
 	EXPECT_TRUE(r.error().Contains(wxT("test error")));
 }
 
 TEST(ResultTest, FromExceptionChain)
 {
-	CRainmanException *pInner = new CRainmanException(__FILE__, __LINE__, "inner");
-	CRainmanException *pOuter = new CRainmanException(__FILE__, __LINE__, "outer", pInner);
-	auto r = ResultFromException(pOuter);
+	CRainmanException inner(__FILE__, __LINE__, "inner");
+	CRainmanException outer(inner, __FILE__, __LINE__, "outer");
+	auto r = ResultFromException(outer);
 	EXPECT_FALSE(r.ok());
 	EXPECT_TRUE(r.error().Contains(wxT("outer")));
 	EXPECT_TRUE(r.error().Contains(wxT("inner")));
@@ -85,8 +84,8 @@ TEST(ResultTest, FromExceptionChain)
 
 TEST(ResultTest, FromExceptionTyped)
 {
-	CRainmanException *pE = new CRainmanException(__FILE__, __LINE__, "typed error");
-	auto r = ResultFromExceptionT<int>(pE);
+	CRainmanException ex(__FILE__, __LINE__, "typed error");
+	auto r = ResultFromExceptionT<int>(ex);
 	EXPECT_FALSE(r.ok());
 	EXPECT_TRUE(r.error().Contains(wxT("typed error")));
 }

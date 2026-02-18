@@ -99,7 +99,7 @@ void CChunkyFile::Load(IFileStore::IStream *pStream)
 
         if (std::strcmp(m_sHeader.data(), kChunkyHeader) != 0)
         {
-            throw new CRainmanException(nullptr, __FILE__, __LINE__, "Unrecognised header (%s)", m_sHeader.data());
+            throw CRainmanException(nullptr, __FILE__, __LINE__, "Unrecognised header (%s)", m_sHeader.data());
         }
 
         pStream->Read(m_iVersion);
@@ -111,9 +111,9 @@ void CChunkyFile::Load(IFileStore::IStream *pStream)
             pStream->VRead(1, sizeof(uint32_t), &m_iUnknown4);
         }
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CRainmanException(__FILE__, __LINE__, "Error reading from stream", pE);
+        throw CRainmanException(e, __FILE__, __LINE__, "Error reading from stream");
     }
 
     auto pChunk = std::make_unique<CChunk>();
@@ -126,10 +126,10 @@ void CChunkyFile::Load(IFileStore::IStream *pStream)
             pChunk = std::make_unique<CChunk>();
         }
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CRainmanException(pE, __FILE__, __LINE__, "Error loading root chunk (#%lu)",
-                                    static_cast<unsigned long>(m_vChunks.size()));
+        throw CRainmanException(e, __FILE__, __LINE__, "Error loading root chunk (#%lu)",
+                                static_cast<unsigned long>(m_vChunks.size()));
     }
 }
 
@@ -145,9 +145,9 @@ void CChunkyFile::Save(IFileStore::IOutputStream *pStream)
         pStream->VWrite(1, sizeof(uint32_t), &m_iUnknown3);
         pStream->VWrite(1, sizeof(uint32_t), &m_iUnknown4);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CRainmanException(__FILE__, __LINE__, "Error writing to stream", pE);
+        throw CRainmanException(e, __FILE__, __LINE__, "Error writing to stream");
     }
 
     for (const auto &pChunk : m_vChunks)
@@ -165,9 +165,8 @@ bool CChunkyFile::CChunk::_Load(IFileStore::IStream *pStream, long iChunkyVersio
     {
         pStream->VRead(4, 1, sType);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
         return false;
     }
     if (std::strcmp(sType, "DATA") == 0)
@@ -175,7 +174,7 @@ bool CChunkyFile::CChunk::_Load(IFileStore::IStream *pStream, long iChunkyVersio
     else if (std::strcmp(sType, "FOLD") == 0)
         m_eType = T_Folder;
     else
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Unrecognised chunk type \'%s\'", sType);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Unrecognised chunk type \'%s\'", sType);
 
     unsigned long iDescriptorLength = 0;
     try
@@ -190,9 +189,9 @@ bool CChunkyFile::CChunk::_Load(IFileStore::IStream *pStream, long iChunkyVersio
             pStream->VRead(1, sizeof(uint32_t), &m_iUnknown2);
         }
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CRainmanException(__FILE__, __LINE__, "Error reading from stream", pE);
+        throw CRainmanException(e, __FILE__, __LINE__, "Error reading from stream");
     }
 
     if (iDescriptorLength > 0)
@@ -202,9 +201,9 @@ bool CChunkyFile::CChunk::_Load(IFileStore::IStream *pStream, long iChunkyVersio
         {
             pStream->VRead(iDescriptorLength, 1, m_sDescriptor.data());
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
-            throw new CRainmanException(__FILE__, __LINE__, "Error reading from stream", pE);
+            throw CRainmanException(e, __FILE__, __LINE__, "Error reading from stream");
         }
         // Strip trailing null if present (file format includes it)
         if (!m_sDescriptor.empty() && m_sDescriptor.back() == '\0')
@@ -222,9 +221,9 @@ bool CChunkyFile::CChunk::_Load(IFileStore::IStream *pStream, long iChunkyVersio
         {
             iDataEnd = pStream->VTell() + static_cast<long>(m_iDataLength);
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
-            throw new CRainmanException(__FILE__, __LINE__, "Cannot get position from stream", pE);
+            throw CRainmanException(e, __FILE__, __LINE__, "Cannot get position from stream");
         }
         unsigned long iChildN = 0;
         while (true)
@@ -234,9 +233,9 @@ bool CChunkyFile::CChunk::_Load(IFileStore::IStream *pStream, long iChunkyVersio
                 if (pStream->VTell() >= iDataEnd)
                     break;
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
-                throw new CRainmanException(__FILE__, __LINE__, "Cannot get position from stream", pE);
+                throw CRainmanException(e, __FILE__, __LINE__, "Cannot get position from stream");
             }
 
             auto pChunk = std::make_unique<CChunk>();
@@ -244,12 +243,12 @@ bool CChunkyFile::CChunk::_Load(IFileStore::IStream *pStream, long iChunkyVersio
             try
             {
                 if (!pChunk->_Load(pStream, iChunkyVersion))
-                    throw new CRainmanException(__FILE__, __LINE__, "End of stream reached");
+                    throw CRainmanException(__FILE__, __LINE__, "End of stream reached");
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
-                throw new CRainmanException(pE, __FILE__, __LINE__, "Error reading child #%lu of FOLD%s", iChildN,
-                                            m_sName.data());
+                throw CRainmanException(e, __FILE__, __LINE__, "Error reading child #%lu of FOLD%s", iChildN,
+                                        m_sName.data());
             }
 
             m_vChildren.push_back(std::move(pChunk));
@@ -265,9 +264,9 @@ bool CChunkyFile::CChunk::_Load(IFileStore::IStream *pStream, long iChunkyVersio
             {
                 pStream->VRead(m_iDataLength, 1, m_vData.data());
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
-                throw new CRainmanException(__FILE__, __LINE__, "Error reading from stream", pE);
+                throw CRainmanException(e, __FILE__, __LINE__, "Error reading from stream");
             }
         }
     }
@@ -329,9 +328,9 @@ void CChunkyFile::CChunk::_Save(IFileStore::IOutputStream *pStream)
         if (iDescriptorLength > 0)
             pStream->VWrite(iDescriptorLength, 1, m_sDescriptor.c_str());
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CRainmanException(__FILE__, __LINE__, "Error writing to stream", pE);
+        throw CRainmanException(e, __FILE__, __LINE__, "Error writing to stream");
     }
 
     if (m_eType == T_Folder)

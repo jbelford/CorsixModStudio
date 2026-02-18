@@ -484,7 +484,7 @@ void AutoDPS::AutoDPS_OutputHTML(AutoDPS_Internal::tAutoDPS_Package *pPackage, c
     FILE *f = fopen(sOutFile, "w");
 
     if (f == nullptr)
-        throw new CModStudioException(nullptr, __FILE__, __LINE__, "Unable to open file \'%s\' for writing", sOutFile);
+        throw CModStudioException(nullptr, __FILE__, __LINE__, "Unable to open file \'%s\' for writing", sOutFile);
 
     fwrites(f, "<html><head><title>DoW DPS</title></head><body><table border=1>\n");
 

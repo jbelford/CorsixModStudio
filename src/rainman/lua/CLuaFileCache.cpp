@@ -59,7 +59,7 @@ void CLuaFileCache::FreeState(lua_State *L)
         if (pItr->L == L)
         {
             if (pItr->bUseful)
-                throw new CRainmanException(__FILE__, __LINE__, "Cannot delete state as it is useful");
+                throw CRainmanException(__FILE__, __LINE__, "Cannot delete state as it is useful");
             if ((pPrev->pNext = pItr->pNext) == nullptr) // NOLINT(bugprone-assignment-in-if-condition)
                 m_pEntriesEnd = pPrev;
             break;
@@ -68,7 +68,7 @@ void CLuaFileCache::FreeState(lua_State *L)
         pItr = pItr->pNext;
     }
     if (!pItr)
-        throw new CRainmanException(__FILE__, __LINE__, "State not found");
+        throw CRainmanException(__FILE__, __LINE__, "State not found");
     lua_pushlightuserdata(m_pMother, (void *)L); // {U -1}
     lua_pushnil(m_pMother);                      // {U -2} {N -1}
     lua_settable(m_pMother, LUA_REGISTRYINDEX);  //
@@ -120,7 +120,7 @@ void CLuaFileCache::AddToCache(const char *sName, lua_State *L)
         }
         pItr = pItr->pNext;
     }
-    throw new CRainmanException(__FILE__, __LINE__, "State not found");
+    throw CRainmanException(__FILE__, __LINE__, "State not found");
 }
 
 lua_State *CLuaFileCache::Fetch(const char *sName)
@@ -145,7 +145,7 @@ void CLuaFileCache::GameDataToStack(const char *sRef, lua_State *L)
     std::lock_guard<std::recursive_mutex> lock(m_mtx);
     lua_State *Ls = Fetch(sRef);
     if (!Ls)
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "No state found with name \'%s\'", sRef);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "No state found with name \'%s\'", sRef);
     lua_pushstring(Ls, "GameData");
     lua_gettable(Ls, LUA_GLOBALSINDEX);
     lua_pushvalue(Ls, -1);
@@ -159,7 +159,7 @@ void CLuaFileCache::MetaDataToStack(const char *sRef, lua_State *L)
     std::lock_guard<std::recursive_mutex> lock(m_mtx);
     lua_State *Ls = Fetch(sRef);
     if (!Ls)
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "No state found with name \'%s\'", sRef);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "No state found with name \'%s\'", sRef);
     lua_pushstring(Ls, "MetaData");
     lua_gettable(Ls, LUA_GLOBALSINDEX);
     lua_xmove(Ls, L, 1);

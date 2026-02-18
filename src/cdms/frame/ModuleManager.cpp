@@ -63,7 +63,7 @@ CRgdHashTable *ModuleManager::GetRgdHashTable(const wxString &dictionariesPath)
     auto result = m_hashService.Initialize(dictionariesPath);
     if (!result.ok())
     {
-        throw new CModStudioException(__FILE__, __LINE__, wxStringToAscii(result.error()).get());
+        throw CModStudioException(__FILE__, __LINE__, wxStringToAscii(result.error()).get());
     }
 
     m_pRgdHashTable = m_hashService.GetHashTable();

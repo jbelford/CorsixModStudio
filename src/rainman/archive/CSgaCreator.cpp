@@ -91,10 +91,10 @@ CSgaCreator::CInputDirectory *CSgaCreator::_ScanDirectory(IDirectoryTraverser::I
     {
         sDirectory = pDirectory->VGetDirectoryPath();
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
         delete pUs;
-        throw new CRainmanException(__FILE__, __LINE__, "Cannot get directory path", pE);
+        throw CRainmanException(e, __FILE__, __LINE__, "Cannot get directory path");
     }
 
     size_t iDirLen = strlen(sDirectory);
@@ -125,10 +125,10 @@ CSgaCreator::CInputDirectory *CSgaCreator::_ScanDirectory(IDirectoryTraverser::I
                 {
                     pChild = pDirectory->VOpenSubDir();
                 }
-                catch (CRainmanException *pE)
+                catch (const CRainmanException &e)
                 {
-                    throw new CRainmanException(pE, __FILE__, __LINE__, "Cannot traverse sub-dir \'%s\'",
-                                                pDirectory->VGetFullPath());
+                    throw CRainmanException(e, __FILE__, __LINE__, "Cannot traverse sub-dir \'%s\'",
+                                            pDirectory->VGetFullPath());
                 }
                 if (pChild != nullptr)
                 {
@@ -137,11 +137,11 @@ CSgaCreator::CInputDirectory *CSgaCreator::_ScanDirectory(IDirectoryTraverser::I
                     {
                         pChildIn = _ScanDirectory(pChild, pStore, iDirBaseL);
                     }
-                    catch (CRainmanException *pE)
+                    catch (const CRainmanException &e)
                     {
                         delete pChild;
-                        throw new CRainmanException(pE, __FILE__, __LINE__, "Cannot scan sub-dir \'%s\'",
-                                                    pDirectory->VGetFullPath());
+                        throw CRainmanException(e, __FILE__, __LINE__, "Cannot scan sub-dir \'%s\'",
+                                                pDirectory->VGetFullPath());
                     }
                     delete pChild;
                     pUs->vDirsList.push_back(pChildIn);
@@ -173,10 +173,10 @@ CSgaCreator::CInputDirectory *CSgaCreator::_ScanDirectory(IDirectoryTraverser::I
             }
         }
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
         delete pUs;
-        throw new CRainmanException(__FILE__, __LINE__, "(rethrow)", pE);
+        throw CRainmanException(e, __FILE__, __LINE__, "(rethrow)");
     }
 endwhile:
 
@@ -213,9 +213,9 @@ CompressedFileData CompressOneFile(IFileStore *pFileStore, const char *sFullPath
     {
         fileStream = std::unique_ptr<IFileStore::IStream>(pFileStore->VOpenStream(sFullPath));
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CRainmanException(pE, __FILE__, __LINE__, "Could not open \'%s\'", sFullPath);
+        throw CRainmanException(e, __FILE__, __LINE__, "Could not open \'%s\'", sFullPath);
     }
     try
     {
@@ -235,7 +235,7 @@ CompressedFileData CompressOneFile(IFileStore *pFileStore, const char *sFullPath
         if (compress2(reinterpret_cast<Bytef *>(pCompressedBuffer.get()), &iCompBuffSize,
                       reinterpret_cast<const Bytef *>(pFileBuffer.get()), result.iUncompressedSize,
                       Z_BEST_COMPRESSION) != Z_OK)
-            throw new CRainmanException(__FILE__, __LINE__, "Compression error");
+            throw CRainmanException(__FILE__, __LINE__, "Compression error");
 
         // Determine flags based on compression ratio
         if (iCompBuffSize < result.iUncompressedSize)
@@ -262,9 +262,9 @@ CompressedFileData CompressOneFile(IFileStore *pFileStore, const char *sFullPath
             result.iDataSize = iCompBuffSize;
         }
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CRainmanException(__FILE__, __LINE__, "File operation failed", pE);
+        throw CRainmanException(e, __FILE__, __LINE__, "File operation failed");
     }
 
     return result;
@@ -278,15 +278,15 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
     RAINMAN_LOG_INFO("CSgaCreator — building SGA archive \"{}\" (version {})", sOutputFile ? sOutputFile : "(null)",
                      iVersion);
     if (iVersion != 2 && iVersion != 4)
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Version %li not supported", iVersion);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Version %li not supported", iVersion);
     CSgaCreator::CInputDirectory *pInput = nullptr;
     try
     {
         pInput = _ScanDirectory(pDirectory, pStore);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CRainmanException(pE, __FILE__, __LINE__, "ScanDirectory failed");
+        throw CRainmanException(e, __FILE__, __LINE__, "ScanDirectory failed");
     }
 
     FILE *fOut = nullptr;
@@ -298,20 +298,20 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
         unsigned short iSTmp = 0;
         fOut = fopen(sOutputFile, "w+b");
         if (fOut == nullptr)
-            throw new CRainmanException(
+            throw CRainmanException(
                 nullptr, __FILE__, __LINE__,
                 "Cold not open \'%s\' (does the directory exist, and do you have permission to create files there?)",
                 sOutputFile);
 
         // File signature
         if (fwrite("_ARCHIVE", 1, 8, fOut) != 8)
-            throw new CRainmanException(__FILE__, __LINE__, "Write operation failed");
+            throw CRainmanException(__FILE__, __LINE__, "Write operation failed");
         // Version
         if (fwrite(&iVersion, sizeof(uint32_t), 1, fOut) != 1)
-            throw new CRainmanException(__FILE__, __LINE__, "Write operation failed");
+            throw CRainmanException(__FILE__, __LINE__, "Write operation failed");
         // MD5
         if (fwrite("-BUFFER FOR MD5-", 1, 16, fOut) != 16)
-            throw new CRainmanException(__FILE__, __LINE__, "Write operation failed");
+            throw CRainmanException(__FILE__, __LINE__, "Write operation failed");
         // Archive UI name
         wchar_t sUiName[65];
         memset(sUiName, 0, 65 * sizeof(wchar_t));
@@ -329,19 +329,19 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
             wcscpy(sUiName, L"Made with Corsix\'s Rainman");
         }
         if (fwrite(sUiName, sizeof(uint16_t), 64, fOut) != 64)
-            throw new CRainmanException(__FILE__, __LINE__, "Write operation failed");
+            throw CRainmanException(__FILE__, __LINE__, "Write operation failed");
         // MD5
         if (fwrite("-BUFFER FOR MD5-", 1, 16, fOut) != 16)
-            throw new CRainmanException(__FILE__, __LINE__, "Write operation failed");
+            throw CRainmanException(__FILE__, __LINE__, "Write operation failed");
         // DataHeaderSize / DataOffset
         if (fwrite(&iTmp, sizeof(uint32_t), 1, fOut) != 1 || fwrite(&iTmp, sizeof(uint32_t), 1, fOut) != 1)
-            throw new CRainmanException(__FILE__, __LINE__, "Write operation failed");
+            throw CRainmanException(__FILE__, __LINE__, "Write operation failed");
         // Platform [V4 only]
         if (iVersion == 4)
         {
             iTmp = 1;
             if (fwrite(&iTmp, sizeof(uint32_t), 1, fOut) != 1)
-                throw new CRainmanException(__FILE__, __LINE__, "Write operation failed");
+                throw CRainmanException(__FILE__, __LINE__, "Write operation failed");
         }
 
         const unsigned long iTocOutLength = 138;
@@ -494,15 +494,15 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
                 iNamesLength += (long)iNameL;
             }
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
-            throw new CRainmanException(__FILE__, __LINE__, "Memory operation failed", pE);
+            throw CRainmanException(e, __FILE__, __LINE__, "Memory operation failed");
         }
 
         // Get output file ready for writing file data
         auto *pOutStream = static_cast<CMemoryStore::COutStream *>(dataHeader.get());
         if (fwrite(pOutStream->GetData(), 1, pOutStream->GetDataLength(), fOut) != pOutStream->GetDataLength())
-            throw new CRainmanException(__FILE__, __LINE__, "Write operation failed");
+            throw CRainmanException(__FILE__, __LINE__, "Write operation failed");
 
         // Phase 1: Parallel per-file compression
         auto tCompressStart = std::chrono::steady_clock::now();
@@ -559,9 +559,9 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
                     dataHeader->VWrite(1, sizeof(uint32_t), &compressed.iUncompressedSize);
                 }
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
-                throw new CRainmanException(__FILE__, __LINE__, "Memory operation failed", pE);
+                throw CRainmanException(e, __FILE__, __LINE__, "Memory operation failed");
             }
 
             if (iVersion == 4)
@@ -572,12 +572,12 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
                 sPreDataName[255] = 0;
 
                 if (fwrite(sPreDataName, 1, 256, fOut) != 256)
-                    throw new CRainmanException(__FILE__, __LINE__, "Write operation failed");
+                    throw CRainmanException(__FILE__, __LINE__, "Write operation failed");
                 if (fwrite(&compressed.iUncompressedCRC, sizeof(uint32_t), 1, fOut) != 1)
-                    throw new CRainmanException(__FILE__, __LINE__, "Write operation failed");
+                    throw CRainmanException(__FILE__, __LINE__, "Write operation failed");
             }
             if (fwrite(compressed.pData.get(), 1, compressed.iDataSize, fOut) != compressed.iDataSize)
-                throw new CRainmanException(__FILE__, __LINE__, "Write operation failed");
+                throw CRainmanException(__FILE__, __LINE__, "Write operation failed");
             iDataLengthTotal += compressed.iDataSize;
         }
 
@@ -594,26 +594,26 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
         MD5Update(&md5DataKey, (const unsigned char *)pOutStream->GetData(), pOutStream->GetDataLength());
         MD5Final(sMD5, &md5DataKey);
         if (fseek(fOut, 156, SEEK_SET) != 0)
-            throw new CRainmanException(__FILE__, __LINE__, "Seek operation failed");
+            throw CRainmanException(__FILE__, __LINE__, "Seek operation failed");
         if (fwrite(sMD5, 1, 16, fOut) != 16)
-            throw new CRainmanException(__FILE__, __LINE__, "Write operation failed");
+            throw CRainmanException(__FILE__, __LINE__, "Write operation failed");
 
         // Data header size / offset
         iTmp = pOutStream->GetDataLength();
         if (fwrite(&iTmp, sizeof(uint32_t), 1, fOut) != 1)
-            throw new CRainmanException(__FILE__, __LINE__, "Write operation failed");
+            throw CRainmanException(__FILE__, __LINE__, "Write operation failed");
         iTmp += (iVersion == 4 ? 0xB8 : 0xB4);
         if (fwrite(&iTmp, sizeof(uint32_t), 1, fOut) != 1)
-            throw new CRainmanException(__FILE__, __LINE__, "Write operation failed");
+            throw CRainmanException(__FILE__, __LINE__, "Write operation failed");
 
         // Write data header properly
         if (iVersion == 4)
         {
             if (fseek(fOut, 4, SEEK_CUR) != 0)
-                throw new CRainmanException(__FILE__, __LINE__, "Seek operation failed");
+                throw CRainmanException(__FILE__, __LINE__, "Seek operation failed");
         }
         if (fwrite(pOutStream->GetData(), 1, pOutStream->GetDataLength(), fOut) != pOutStream->GetDataLength())
-            throw new CRainmanException(__FILE__, __LINE__, "Write operation failed");
+            throw CRainmanException(__FILE__, __LINE__, "Write operation failed");
 
         // Data MD5
         fflush(fOut);
@@ -627,11 +627,11 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
         delete[] sBuffer;
         MD5Final(sMD5, &md5DataKey);
         if (fseek(fOut, 12, SEEK_SET) != 0)
-            throw new CRainmanException(__FILE__, __LINE__, "Seek operation failed");
+            throw CRainmanException(__FILE__, __LINE__, "Seek operation failed");
         if (fwrite(sMD5, 1, 16, fOut) != 16)
-            throw new CRainmanException(__FILE__, __LINE__, "Write operation failed");
+            throw CRainmanException(__FILE__, __LINE__, "Write operation failed");
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
         delete pInput;
         if (fOut)
@@ -640,7 +640,7 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
             delete[] pFileBuffer;
         if (pCompressedBuffer)
             delete[] pCompressedBuffer;
-        throw pE;
+        throw e;
     }
     delete pInput;
     if (fOut)

@@ -22,48 +22,55 @@
 
 #define SKIP_BACKUP return;
 
-CModStudioException::CModStudioException(const char *sFile, unsigned long iLine, const char *sMessage,
-                                         CRainmanException *pPrecursor)
+CModStudioException::CModStudioException(const char *sFile, unsigned long iLine, const char *sMessage)
+    : CRainmanException(sFile, iLine, sMessage)
 {
-    m_sFile = sFile;
-    m_iLine = iLine;
-    m_pPrecursor = pPrecursor;
-    m_sMessage = strdup(sMessage);
 }
 CModStudioException::CModStudioException(CRainmanException *pPrecursor, const char *sFile, unsigned long iLine,
                                          const char *sFormat, ...)
 {
     m_sFile = sFile;
     m_iLine = iLine;
-    m_pPrecursor = pPrecursor;
+    m_pPrecursor.reset(pPrecursor);
 
     size_t iL = 128;
     va_list marker;
-    while (1)
+    while (true)
     {
-        char *sBuf = (char *)malloc(iL);
+        m_sMessage.resize(iL);
         va_start(marker, sFormat);
-        if (_vsnprintf(sBuf, iL - 1, sFormat, marker) == -1)
+        int n = _vsnprintf(m_sMessage.data(), iL, sFormat, marker);
+        va_end(marker);
+        if (n >= 0 && static_cast<size_t>(n) < iL)
         {
-            va_end(marker);
-            free(sBuf);
-            iL <<= 1;
-        }
-        else
-        {
-            va_end(marker);
-            m_sMessage = sBuf;
+            m_sMessage.resize(static_cast<size_t>(n));
             return;
         }
+        iL <<= 1;
     }
 }
-
-void CModStudioException::destroy()
+CModStudioException::CModStudioException(const CRainmanException &precursor, const char *sFile, unsigned long iLine,
+                                         const char *sFormat, ...)
 {
-    free(m_sMessage);
-    if (m_pPrecursor)
-        m_pPrecursor->destroy();
-    delete this;
+    m_sFile = sFile;
+    m_iLine = iLine;
+    m_pPrecursor = std::make_unique<CRainmanException>(precursor);
+
+    size_t iL = 128;
+    va_list marker;
+    while (true)
+    {
+        m_sMessage.resize(iL);
+        va_start(marker, sFormat);
+        int n = _vsnprintf(m_sMessage.data(), iL, sFormat, marker);
+        va_end(marker);
+        if (n >= 0 && static_cast<size_t>(n) < iL)
+        {
+            m_sMessage.resize(static_cast<size_t>(n));
+            return;
+        }
+        iL <<= 1;
+    }
 }
 
 bool _ErrorBox(const wxString &sError, const char *sFile, long iLine, bool bUnhandled, bool bAllowCancel)
@@ -93,9 +100,8 @@ bool _ErrorBox(const wxString &sError, const char *sFile, long iLine, bool bUnha
     return iAnswer == wxOK;
 }
 
-bool _ErrorBox(CRainmanException *pE, const char *sFile, long iLine, bool bUnhandled, bool bAllowCancel)
+bool _ErrorBox(const CRainmanException &e, const char *sFile, long iLine, bool bUnhandled, bool bAllowCancel)
 {
-    auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
     wchar_t *pFile = AsciiToUnicode(sFile);
     wchar_t pLine[33];
     _ltow(iLine, &pLine[0], 10);
@@ -111,7 +117,7 @@ bool _ErrorBox(CRainmanException *pE, const char *sFile, long iLine, bool bUnhan
         sError.Append(pFile).Append(wxT(" line ")).Append(pLine).Append(wxT(":"));
     }
     delete[] pFile;
-    const CRainmanException *pError = pE;
+    const CRainmanException *pError = &e;
     while (pError)
     {
         pFile = AsciiToUnicode(pError->getFile());

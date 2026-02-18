@@ -31,13 +31,13 @@ extern "C"
 void luax_GetGameData(lua_State *L)
 {
     if (L == nullptr)
-        throw new CRainmanException(__FILE__, __LINE__, "Invalid lua_State");
+        throw CRainmanException(__FILE__, __LINE__, "Invalid lua_State");
     lua_pushstring(L, "GameData");
     lua_gettable(L, LUA_GLOBALSINDEX);
     if (!lua_istable(L, -1))
     {
         lua_pop(L, 1);
-        throw new CRainmanException(__FILE__, __LINE__, "GameData is not table.");
+        throw CRainmanException(__FILE__, __LINE__, "GameData is not table.");
     }
     return;
 }
@@ -46,13 +46,13 @@ void luax_GetGameData(lua_State *L)
 void luax_GetMetaData(lua_State *L)
 {
     if (L == nullptr)
-        throw new CRainmanException(__FILE__, __LINE__, "Invalid lua_State");
+        throw CRainmanException(__FILE__, __LINE__, "Invalid lua_State");
     lua_pushstring(L, "MetaData");
     lua_gettable(L, LUA_GLOBALSINDEX);
     if (!lua_istable(L, -1))
     {
         lua_pop(L, 1);
-        throw new CRainmanException(__FILE__, __LINE__, "MetaData is not table.");
+        throw CRainmanException(__FILE__, __LINE__, "MetaData is not table.");
     }
     return;
 }

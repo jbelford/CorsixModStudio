@@ -21,53 +21,72 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "rainman/core/RainmanLog.h"
 #include <cstdio>
 #include <cstdarg>
-#include <cstring>
-#include <memory.h>
-#include <cstdlib>
 #include "rainman/core/memdebug.h"
 
-CRainmanException::CRainmanException() {}
-
-CRainmanException::CRainmanException(const char *sFile, unsigned long iLine, const char *sMessage,
-                                     CRainmanException *pPrecursor)
-    : m_sFile(sFile), m_iLine(iLine), m_pPrecursor(pPrecursor)
+CRainmanException::CRainmanException(const char *sFile, unsigned long iLine, const char *sMessage)
+    : m_sMessage(sMessage ? sMessage : ""), m_iLine(iLine), m_sFile(sFile)
 {
-    m_sMessage = strdup(sMessage);
-    RAINMAN_LOG_ERROR("Exception at {}:{} — {}", sFile ? sFile : "?", iLine, sMessage ? sMessage : "(null)");
+    RAINMAN_LOG_ERROR("Exception at {}:{} — {}", sFile ? sFile : "?", iLine, m_sMessage);
+}
+
+CRainmanException::CRainmanException(const CRainmanException &precursor, const char *sFile, unsigned long iLine,
+                                     const char *sFormat, ...)
+    : m_iLine(iLine), m_sFile(sFile), m_pPrecursor(std::make_unique<CRainmanException>(precursor))
+{
+    size_t iL = 128;
+    va_list marker;
+    while (true)
+    {
+        m_sMessage.resize(iL);
+        va_start(marker, sFormat);
+        int n = _vsnprintf(m_sMessage.data(), iL, sFormat, marker);
+        va_end(marker);
+        if (n >= 0 && static_cast<size_t>(n) < iL)
+        {
+            m_sMessage.resize(static_cast<size_t>(n));
+            break;
+        }
+        iL <<= 1;
+    }
+    RAINMAN_LOG_ERROR("Exception at {}:{} — {}", sFile ? sFile : "?", iLine, m_sMessage);
 }
 
 CRainmanException::CRainmanException(CRainmanException *pPrecursor, const char *sFile, unsigned long iLine,
                                      const char *sFormat, ...)
-    : m_sFile(sFile), m_iLine(iLine), m_pPrecursor(pPrecursor)
+    : m_iLine(iLine), m_sFile(sFile), m_pPrecursor(pPrecursor)
 {
     size_t iL = 128;
     va_list marker;
-    while (1)
+    while (true)
     {
-        char *sBuf = (char *)malloc(iL);
+        m_sMessage.resize(iL);
         va_start(marker, sFormat);
-        if (_vsnprintf(sBuf, iL - 1, sFormat, marker) == -1)
+        int n = _vsnprintf(m_sMessage.data(), iL, sFormat, marker);
+        va_end(marker);
+        if (n >= 0 && static_cast<size_t>(n) < iL)
         {
-            va_end(marker);
-            free(sBuf);
-            iL <<= 1;
+            m_sMessage.resize(static_cast<size_t>(n));
+            break;
         }
-        else
-        {
-            va_end(marker);
-            m_sMessage = sBuf;
-            RAINMAN_LOG_ERROR("Exception at {}:{} — {}", sFile ? sFile : "?", iLine, m_sMessage);
-            return;
-        }
+        iL <<= 1;
     }
+    RAINMAN_LOG_ERROR("Exception at {}:{} — {}", sFile ? sFile : "?", iLine, m_sMessage);
 }
 
-CRainmanException::~CRainmanException() {}
-
-void CRainmanException::destroy()
+CRainmanException::CRainmanException(const CRainmanException &other)
+    : m_sMessage(other.m_sMessage), m_iLine(other.m_iLine), m_sFile(other.m_sFile),
+      m_pPrecursor(other.m_pPrecursor ? std::make_unique<CRainmanException>(*other.m_pPrecursor) : nullptr)
 {
-    free(m_sMessage);
-    if (m_pPrecursor)
-        m_pPrecursor->destroy();
-    delete this;
+}
+
+CRainmanException &CRainmanException::operator=(const CRainmanException &other)
+{
+    if (this != &other)
+    {
+        m_sMessage = other.m_sMessage;
+        m_iLine = other.m_iLine;
+        m_sFile = other.m_sFile;
+        m_pPrecursor = other.m_pPrecursor ? std::make_unique<CRainmanException>(*other.m_pPrecursor) : nullptr;
+    }
+    return *this;
 }

@@ -125,9 +125,9 @@ class CLuaBurnFolderAction : public frmFiles::IHandler
                                 {
                                     pRgd->Load(pLua.get(), m_iRGDVersion);
                                 }
-                                catch (CRainmanException *pE)
+                                catch (const CRainmanException &e)
                                 {
-                                    ErrorBoxE(pE);
+                                    ErrorBoxE(e);
                                     goto skip_recurse_lua_load_ok_code;
                                 }
                                 BackupFile(TheConstruct->GetModuleService().GetModule(), AsciiTowxString(saRgd));
@@ -140,9 +140,9 @@ class CLuaBurnFolderAction : public frmFiles::IHandler
                                         if (outResult)
                                             outStream = std::move(outResult.value());
                                     }
-                                    catch (CRainmanException *pE)
+                                    catch (const CRainmanException &e)
                                     {
-                                        ErrorBoxE(pE);
+                                        ErrorBoxE(e);
                                     }
                                     if (outStream)
                                     {
@@ -150,9 +150,9 @@ class CLuaBurnFolderAction : public frmFiles::IHandler
                                         {
                                             pRgd->Save(outStream.get());
                                         }
-                                        catch (CRainmanException *pE)
+                                        catch (const CRainmanException &e)
                                         {
-                                            ErrorBoxE(pE);
+                                            ErrorBoxE(e);
                                             RestoreBackupFile(TheConstruct->GetModuleService().GetModule(),
                                                               AsciiTowxString(saRgd));
                                         }

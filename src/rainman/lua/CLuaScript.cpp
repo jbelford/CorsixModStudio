@@ -46,7 +46,7 @@ void CLuaScript::Load(const char *sFile)
     if (!m_pLua)
     {
         m_sLuaError = strdup("Unable to create lua state");
-        throw new CRainmanException(__FILE__, __LINE__, "Unable to create Lua state");
+        throw CRainmanException(__FILE__, __LINE__, "Unable to create Lua state");
     }
 
     if (luaL_loadfile(m_pLua, sFile))
@@ -54,7 +54,7 @@ void CLuaScript::Load(const char *sFile)
         char *sLuaError = strdup(lua_tostring(m_pLua, -1));
         _Clean();
         m_sLuaError = sLuaError;
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Lua error: %s", sLuaError);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Lua error: %s", sLuaError);
     }
 
     // LuaBind_Globals(m_pLua);
@@ -66,7 +66,7 @@ void CLuaScript::Execute()
     if (!m_pLua)
     {
         m_sLuaError = strdup("No lua state");
-        throw new CRainmanException(__FILE__, __LINE__, "No state");
+        throw CRainmanException(__FILE__, __LINE__, "No state");
     }
 
     // Lua standard libraries (each luaopen pushes a table; restore stack after)
@@ -87,22 +87,22 @@ void CLuaScript::Execute()
             char *sLuaError = strdup(lua_tostring(m_pLua, -1));
             _Clean();
             m_sLuaError = sLuaError;
-            throw new CRainmanException(nullptr, __FILE__, __LINE__, "Lua error: %s", sLuaError);
+            throw CRainmanException(nullptr, __FILE__, __LINE__, "Lua error: %s", sLuaError);
         }
         case LUA_TLIGHTUSERDATA:
         {
-            auto *pE = (CRainmanException *)lua_touserdata(m_pLua, -1);
-            char *sLuaError = strdup(pE->getMessage());
+            auto *e = (CRainmanException *)lua_touserdata(m_pLua, -1);
+            char *sLuaError = strdup(e->getMessage());
             _Clean();
             m_sLuaError = sLuaError;
-            throw new CRainmanException(pE, __FILE__, __LINE__, "Lua error");
+            throw CRainmanException(*e, __FILE__, __LINE__, "Lua error");
         }
         default:
         {
             char *sLuaError = strdup("Unknown error");
             _Clean();
             m_sLuaError = sLuaError;
-            throw new CRainmanException(nullptr, __FILE__, __LINE__, "Lua unknown error");
+            throw CRainmanException(nullptr, __FILE__, __LINE__, "Lua unknown error");
         }
         };
     }

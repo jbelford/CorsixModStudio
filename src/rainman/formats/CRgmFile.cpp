@@ -86,10 +86,10 @@ bool CRgmFile::_TSETPrune(CChunkyFile::CChunk *pChunk, std::vector<std::pair<boo
                         --iC;
                     }
                 }
-                catch (CRainmanException *pE)
+                catch (const CRainmanException &e)
                 {
-                    throw new CRainmanException(pE, __FILE__, __LINE__, "Error pruning child for TSET chunks (FOLD%s)",
-                                                pChunk->GetName());
+                    throw CRainmanException(e, __FILE__, __LINE__, "Error pruning child for TSET chunks (FOLD%s)",
+                                            pChunk->GetName());
                 }
             }
         }
@@ -248,10 +248,10 @@ void CRgmFile::CMaterial::_WriteChunk()
                 pChild->SetData(pData);
                 delete pData;
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
                 _Free();
-                throw new CRainmanException(__FILE__, __LINE__, "Error writing DATAINFO chunk", pE);
+                throw CRainmanException(e, __FILE__, __LINE__, "Error writing DATAINFO chunk");
             }
         }
     }
@@ -286,11 +286,10 @@ void CRgmFile::_ParseChunk(CChunkyFile::CChunk *pChunk)
                 {
                     _ParseChunk(pChunk->GetChild(i));
                 }
-                catch (CRainmanException *pE)
+                catch (const CRainmanException &e)
                 {
-                    throw new CRainmanException(pE, __FILE__, __LINE__,
-                                                "Error searching child for material chunks (FOLD%s)",
-                                                pChunk->GetName());
+                    throw CRainmanException(e, __FILE__, __LINE__, "Error searching child for material chunks (FOLD%s)",
+                                            pChunk->GetName());
                 }
             }
         }
@@ -301,10 +300,10 @@ CRgmFile::CMaterial::CMaterial(CChunkyFile::CChunk *pChunk)
 {
     // Basic chunk check
     if (pChunk->GetType() != CChunkyFile::CChunk::T_Folder || strcmp(pChunk->GetName(), "MTRL") != 0)
-        throw new CRainmanException(__FILE__, __LINE__, "Not a material chunk");
+        throw CRainmanException(__FILE__, __LINE__, "Not a material chunk");
     if (pChunk->GetVersion() != 1)
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Material is version %lu, expected version 1",
-                                    pChunk->GetVersion());
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Material is version %lu, expected version 1",
+                                pChunk->GetVersion());
 
     // Initialise members
     m_sName = nullptr;
@@ -323,10 +322,10 @@ CRgmFile::CMaterial::CMaterial(CChunkyFile::CChunk *pChunk)
             {
                 _ParseInfo(pChild);
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
                 _Free();
-                throw new CRainmanException(__FILE__, __LINE__, "Error parsing material info", pE);
+                throw CRainmanException(e, __FILE__, __LINE__, "Error parsing material info");
             }
         }
         else if (memcmp(pChild->GetName(), "\0VAR", 5) == 0)
@@ -336,10 +335,10 @@ CRgmFile::CMaterial::CMaterial(CChunkyFile::CChunk *pChunk)
             {
                 pVar = new CVariable(pChild);
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
                 _Free();
-                throw new CRainmanException(__FILE__, __LINE__, "Error parsing variable", pE);
+                throw CRainmanException(e, __FILE__, __LINE__, "Error parsing variable");
             }
 
             m_vVariables.push_back(pVar);
@@ -364,14 +363,14 @@ void CRgmFile::CMaterial::_ParseInfo(CChunkyFile::CChunk *pChunk)
 {
     // Basic chunk check
     if (pChunk->GetType() != CChunkyFile::CChunk::T_Data || strcmp(pChunk->GetName(), "INFO") != 0)
-        throw new CRainmanException(__FILE__, __LINE__, "Not a material chunk");
+        throw CRainmanException(__FILE__, __LINE__, "Not a material chunk");
     if (pChunk->GetVersion() != 1)
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Material info is version %lu, expected version 1",
-                                    pChunk->GetVersion());
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Material info is version %lu, expected version 1",
+                                pChunk->GetVersion());
     if (strcmp(pChunk->GetDescriptor(), "Material Info") != 0)
-        throw new CRainmanException(nullptr, __FILE__, __LINE__,
-                                    "Material info descriptor is \"%s\", expected \"Material Info\"",
-                                    pChunk->GetDescriptor());
+        throw CRainmanException(nullptr, __FILE__, __LINE__,
+                                "Material info descriptor is \"%s\", expected \"Material Info\"",
+                                pChunk->GetDescriptor());
 
     // Read
     CMemoryStore::CStream *pData = pChunk->GetData();
@@ -410,14 +409,14 @@ CRgmFile::CMaterial::CVariable::eValTypes CRgmFile::CMaterial::CVariable::GetTyp
 const char *CRgmFile::CMaterial::CVariable::GetValueText() const
 {
     if (m_eValType != VT_Text)
-        throw new CRainmanException(__FILE__, __LINE__, "Value type is not text");
+        throw CRainmanException(__FILE__, __LINE__, "Value type is not text");
     return m_sValue;
 }
 
 float CRgmFile::CMaterial::CVariable::GetValueNumber() const
 {
     if (m_eValType != VT_Number)
-        throw new CRainmanException(__FILE__, __LINE__, "Value type is not number");
+        throw CRainmanException(__FILE__, __LINE__, "Value type is not number");
     return m_fValue;
 }
 
@@ -489,14 +488,14 @@ CRgmFile::CMaterial::CVariable::CVariable(CChunkyFile::CChunk *pChunk)
 
     // Basic chunk check
     if (pChunk->GetType() != CChunkyFile::CChunk::T_Data || memcmp(pChunk->GetName(), "\0VAR", 5) != 0)
-        throw new CRainmanException(__FILE__, __LINE__, "Not a material variable chunk");
+        throw CRainmanException(__FILE__, __LINE__, "Not a material variable chunk");
     if (pChunk->GetVersion() != 1)
-        throw new CRainmanException(nullptr, __FILE__, __LINE__,
-                                    "Material variable info is version %lu, expected version 1", pChunk->GetVersion());
+        throw CRainmanException(nullptr, __FILE__, __LINE__,
+                                "Material variable info is version %lu, expected version 1", pChunk->GetVersion());
     if (strcmp(pChunk->GetDescriptor(), "Material Variable") != 0)
-        throw new CRainmanException(nullptr, __FILE__, __LINE__,
-                                    "Material variable descriptor is \"%s\", expected \"Material Variable\"",
-                                    pChunk->GetDescriptor());
+        throw CRainmanException(nullptr, __FILE__, __LINE__,
+                                "Material variable descriptor is \"%s\", expected \"Material Variable\"",
+                                pChunk->GetDescriptor());
 
     // Read
     CMemoryStore::CStream *pData = pChunk->GetData();
@@ -529,9 +528,9 @@ CRgmFile::CMaterial::CVariable::CVariable(CChunkyFile::CChunk *pChunk)
         {
             delete pData;
             _Free();
-            throw new CRainmanException(nullptr, __FILE__, __LINE__,
-                                        "Data length %lu has not been seen before for numeric data. CONTACT CORSIX",
-                                        iDataLen);
+            throw CRainmanException(nullptr, __FILE__, __LINE__,
+                                    "Data length %lu has not been seen before for numeric data. CONTACT CORSIX",
+                                    iDataLen);
         }
     }
     else if (iDataType == 5)
@@ -543,8 +542,8 @@ CRgmFile::CMaterial::CVariable::CVariable(CChunkyFile::CChunk *pChunk)
     {
         delete pData;
         _Free();
-        throw new CRainmanException(nullptr, __FILE__, __LINE__,
-                                    "Data type %lu has not been seen before. CONTACT CORSIX", iDataType);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Data type %lu has not been seen before. CONTACT CORSIX",
+                                iDataType);
     }
 
     delete pData;

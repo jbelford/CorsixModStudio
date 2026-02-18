@@ -26,6 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include <cstring>
 #include <string>
 #include <vector>
+#include <optional>
 
 // ── Test helpers ──────────────────────────────────────────────────────────────
 
@@ -290,12 +291,12 @@ TEST_F(RgdFileMacroTest, MathClampExtension)
 
 TEST_F(RgdFileMacroTest, SyntaxErrorThrows)
 {
-    EXPECT_THROW(macro.loadMacro("function each_file("), CRainmanException*);
+    EXPECT_THROW(macro.loadMacro("function each_file("), CRainmanException);
 }
 
 TEST_F(RgdFileMacroTest, RuntimeErrorInTopLevelThrows)
 {
-    EXPECT_THROW(macro.loadMacro("error('boom')"), CRainmanException*);
+    EXPECT_THROW(macro.loadMacro("error('boom')"), CRainmanException);
 }
 
 // ── runMacro ─────────────────────────────────────────────────────────────────
@@ -373,18 +374,17 @@ TEST_F(RgdFileMacroTest, RuntimeErrorInEachFileThrows)
     store.VInit();
     CreateMinimalRgd(store);
 
-    CRainmanException* caught = nullptr;
+    std::optional<CRainmanException> caught;
     try
     {
         macro.runMacro("test.rgd", &store);
     }
-    catch (CRainmanException* pE)
+    catch (const CRainmanException &pE)
     {
         caught = pE;
     }
-    ASSERT_NE(caught, nullptr);
+    ASSERT_TRUE(caught.has_value());
     EXPECT_NE(std::strstr(caught->getMessage(), "test.rgd"), nullptr);
-    caught->destroy();
 }
 
 // ── runAtEnd ─────────────────────────────────────────────────────────────────

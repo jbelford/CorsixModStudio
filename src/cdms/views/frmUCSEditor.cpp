@@ -196,9 +196,9 @@ void frmUCSEditor::OnPropertyChange(wxPropertyGridEvent &event)
     {
         m_pUCS->SetString(iID, event.GetPropertyValue().GetString());
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        ErrorBoxE(pE);
+        ErrorBoxE(e);
     }
     m_bNeedsSave = true;
 }
@@ -226,9 +226,9 @@ void frmUCSEditor::OnNewEntry(wxCommandEvent &event)
         else
             wcscpy(sNumberBuffer, AppStr(ucsedit_newentrydefault));
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        ErrorBoxE(pE);
+        ErrorBoxE(e);
         return;
     }
 
@@ -280,9 +280,9 @@ void frmUCSEditor::OnNewEntry(wxCommandEvent &event)
                 m_pUCS->SetString(iNewID, L"");
                 m_bNeedsSave = true;
             }
-            catch (CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
-                ErrorBoxE(pE);
+                ErrorBoxE(e);
                 return;
             }
             oEntry = m_pPropertyGrid->Insert(oEntry, new wxStringProperty(sNumberBuffer, sNumberBuffer, wxT("")));
@@ -301,9 +301,9 @@ void frmUCSEditor::OnNewEntry(wxCommandEvent &event)
         m_pUCS->SetString(iNewID, L"");
         m_bNeedsSave = true;
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        ErrorBoxE(pE);
+        ErrorBoxE(e);
         return;
     }
     wxPGProperty *oEntry = m_pPropertyGrid->Append(new wxStringProperty(sNumberBuffer, sNumberBuffer, wxT("")));
@@ -338,9 +338,9 @@ void frmUCSEditor::DoSave()
         sNewFile = CUcsEditorPresenter::BuildLocaleBasePath(
             sModuleDir, modSvc.GetModuleType(), modSvc.GetLocaleFolder(), modSvc.GetModFolder(), modSvc.GetLocale());
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        ErrorBoxE(pE);
+        ErrorBoxE(e);
         return;
     }
 
@@ -391,11 +391,11 @@ void frmUCSEditor::DoSave()
                 }
             }
         }
-        throw new CModStudioException(__FILE__, __LINE__, "Unable to match UCS handle (should never happen; o.O)");
+        throw CModStudioException(__FILE__, __LINE__, "Unable to match UCS handle (should never happen; o.O)");
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        ErrorBoxE(pE);
+        ErrorBoxE(e);
         return;
     }
 found_ucs_file:
@@ -406,9 +406,9 @@ found_ucs_file:
     {
         m_pUCS->Save(saNewFile.get());
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        ErrorBoxE(pE);
+        ErrorBoxE(e);
         RestoreBackupFile(sNewFile);
         return;
     }

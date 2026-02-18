@@ -39,12 +39,11 @@
 class CModStudioException : public CRainmanException
 {
   public:
-    CModStudioException(const char *sFile, unsigned long iLine, const char *sMessage,
-                        CRainmanException *pPrecursor = 0);
+    CModStudioException(const char *sFile, unsigned long iLine, const char *sMessage);
     CModStudioException(CRainmanException *pPrecursor, const char *sFile, unsigned long iLine, const char *sFormat,
                         ...);
-
-    virtual void destroy();
+    CModStudioException(const CRainmanException &precursor, const char *sFile, unsigned long iLine, const char *sFormat,
+                        ...);
 };
 
 bool _ErrorBox(const wxString &sError, const char *sFile, long iLine, bool bUnhandled = false,
@@ -52,9 +51,9 @@ bool _ErrorBox(const wxString &sError, const char *sFile, long iLine, bool bUnha
 #define ErrorBox(sError) _ErrorBox(wxT(sError), __FILE__, __LINE__)
 #define ErrorBoxS(sError) _ErrorBox(sError, __FILE__, __LINE__)
 #define ErrorBoxAS(sError) _ErrorBox(AppStr(sError), __FILE__, __LINE__)
-bool _ErrorBox(CRainmanException *pE, const char *sFile, long iLine, bool bUnhandled = false,
+bool _ErrorBox(const CRainmanException &e, const char *sFile, long iLine, bool bUnhandled = false,
                bool bAllowCancel = false);
-#define ErrorBoxE(pException) _ErrorBox(pException, __FILE__, __LINE__)
+#define ErrorBoxE(exception) _ErrorBox(exception, __FILE__, __LINE__)
 
 void BackupFile(const wxString &sFile);
 void BackupFile(IFileStore *pStore, const wxString &sFile);

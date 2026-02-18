@@ -67,7 +67,7 @@ void CUcsFile::Save(const char *sFile)
     RAINMAN_LOG_INFO("CUcsFile::Save() — writing UCS file");
     FILE *f = fopen(sFile, "wb");
     if (!f)
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Cannot open file \'%s\' in mode \'wb\'", sFile);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Cannot open file \'%s\' in mode \'wb\'", sFile);
     unsigned short iHeader = 0xFEFF;
     fwrite(&iHeader, 2, 1, f);
     for (auto &itr : m_map.GetSortedMap())
@@ -136,9 +136,8 @@ static wchar_t *readwideline(IFileStore::IStream *pStream, unsigned long iInitSi
     {
         pStream->VRead(1, sizeof(uint16_t), sBuffer + iWordsRead);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
         delete[] sBuffer;
         return nullptr;
     }
@@ -186,9 +185,8 @@ static char *readasciiline(IFileStore::IStream *pStream, unsigned long iInitSize
     {
         pStream->VRead(1, sizeof(char), sBuffer + iWordsRead);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
         delete[] sBuffer;
         return nullptr;
     }
@@ -272,7 +270,7 @@ void CUcsFile::Load(IFileStore::IStream *pStream)
 
     if (iHeader != 0xFEFF)
     {
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Invalid header (%u)", iHeader);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Invalid header (%u)", iHeader);
     }
 
     // Bulk-read the entire file into memory after the BOM
@@ -356,7 +354,7 @@ const wchar_t *CUcsFile::ResolveStringID(unsigned long iID)
 {
     const auto &pS = m_map[iID];
     if (!pS)
-        return nullptr; // throw new CRainmanException(0, __FILE__, __LINE__, "$%ul no key", iID);
+        return nullptr; // throw CRainmanException(0, __FILE__, __LINE__, "$%ul no key", iID);
     return pS.get();
 }
 
@@ -369,7 +367,7 @@ void CUcsFile::SetString(unsigned long iID, const wchar_t *pString)
     }
     std::unique_ptr<wchar_t[]> pTmp(mywcsdup(pString));
     if (pTmp == nullptr)
-        throw new CRainmanException(__FILE__, __LINE__, "Cannot duplicate string (out of memory?)");
+        throw CRainmanException(__FILE__, __LINE__, "Cannot duplicate string (out of memory?)");
     m_map.Add(iID, std::move(pTmp));
 }
 

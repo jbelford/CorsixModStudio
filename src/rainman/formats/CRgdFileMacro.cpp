@@ -67,10 +67,10 @@ int CRgdFileMacro::_tCRgdFile::luaf_saveAs(lua_State *L)
         {
             self->_loadRgd();
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             lua51_pushlightuserdata(
-                L, new CRainmanException(pE, __FILE__, __LINE__, "Cannot load RGD file \'%s\'", self->sFile));
+                L, new CRainmanException(e, __FILE__, __LINE__, "Cannot load RGD file \'%s\'", self->sFile));
             lua51_error(L);
         }
     }
@@ -82,10 +82,10 @@ int CRgdFileMacro::_tCRgdFile::luaf_saveAs(lua_State *L)
     {
         pOutStr = std::unique_ptr<IFileStore::IOutputStream>(self->pStore->VOpenOutputStream(sFile, true));
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
         lua51_pushlightuserdata(
-            L, new CRainmanException(pE, __FILE__, __LINE__, "Cannot open file \'%s\' for saving", sFile));
+            L, new CRainmanException(e, __FILE__, __LINE__, "Cannot open file \'%s\' for saving", sFile));
         lua51_error(L);
     }
 
@@ -95,9 +95,9 @@ int CRgdFileMacro::_tCRgdFile::luaf_saveAs(lua_State *L)
     {
         self->pRgd->Save(pOutStr.get());
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        lua51_pushlightuserdata(L, new CRainmanException(pE, __FILE__, __LINE__, "Error while saving \'%s\'", sFile));
+        lua51_pushlightuserdata(L, new CRainmanException(e, __FILE__, __LINE__, "Error while saving \'%s\'", sFile));
         lua51_error(L);
     }
 
@@ -154,10 +154,10 @@ int CRgdFileMacro::_tCRgdFile::luaf_GET(lua_State *L)
         {
             self->_loadRgd();
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             lua51_pushlightuserdata(
-                L, new CRainmanException(pE, __FILE__, __LINE__, "Cannot load RGD file \'%s\'", self->sFile));
+                L, new CRainmanException(e, __FILE__, __LINE__, "Cannot load RGD file \'%s\'", self->sFile));
             lua51_error(L);
         }
     }
@@ -308,10 +308,10 @@ int CRgdFileMacro::_tCRgdFile::luae_delayload(lua_State *L)
         {
             pThis->_loadRgd();
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             lua51_pushlightuserdata(
-                L, new CRainmanException(pE, __FILE__, __LINE__, "Cannot load RGD file \'%s\'", pThis->sFile));
+                L, new CRainmanException(e, __FILE__, __LINE__, "Cannot load RGD file \'%s\'", pThis->sFile));
             lua51_error(L);
         }
     }
@@ -509,10 +509,9 @@ int CRgdFileMacro::luaf_pcall(lua_State *L)
     lua51_insert(L, 1);
     if (status != 0 && lua51_type(L, 2) == LUA_TLIGHTUSERDATA)
     {
-        auto *pE = (CRainmanException *)lua51_touserdata(L, 2);
-        auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
+        auto *e = (CRainmanException *)lua51_touserdata(L, 2);
         lua51_pushstring(L, "");
-        for (const CRainmanException *e = pE; e; e = e->getPrecursor())
+        for (const CRainmanException *e = e; e; e = e->getPrecursor())
         {
             lua51_pushstring(L, e->getFile());
             lua51_pushstring(L, " line ");
@@ -535,19 +534,19 @@ void CRgdFileMacro::_tCRgdFile::_loadRgd()
     {
         pStream = std::unique_ptr<IFileStore::IStream>(pStore->VOpenStream(sFile));
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
-        throw new CRainmanException(pE, __FILE__, __LINE__, "Unable to open RGD file \'%s\'", sFile);
+        throw CRainmanException(e, __FILE__, __LINE__, "Unable to open RGD file \'%s\'", sFile);
     }
 
     try
     {
         pRgd = CHECK_MEM(new CRgdFile);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
         pRgd = nullptr;
-        throw pE;
+        throw e;
     }
 
     pRgd->SetHashTable(pMacro->m_pHashTableToUse);
@@ -556,11 +555,11 @@ void CRgdFileMacro::_tCRgdFile::_loadRgd()
     {
         pRgd->Load(pStream.get());
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
         delete pRgd;
         pRgd = nullptr;
-        throw pE;
+        throw e;
     }
 }
 
@@ -1309,10 +1308,9 @@ int CRgdFileMacro::luaf_xpcalle(lua_State *L)
     {
         if (lua51_type(L, i) == LUA_TLIGHTUSERDATA)
         {
-            auto *pE = (CRainmanException *)lua51_touserdata(L, i);
-            auto guard = std::unique_ptr<CRainmanException, ExceptionDeleter>(pE);
+            auto *e = (CRainmanException *)lua51_touserdata(L, i);
             lua51_pushstring(L, "");
-            for (const CRainmanException *e = pE; e; e = e->getPrecursor())
+            for (const CRainmanException *e = e; e; e = e->getPrecursor())
             {
                 lua51_pushstring(L, e->getFile());
                 lua51_pushstring(L, " line ");
@@ -1591,9 +1589,9 @@ void CRgdFileMacro::loadMacro(const char *sCode)
 
     int iLoadErr = lua51L_loadbuffer(m_pL, sCode, strlen(sCode), "macro");
     if (iLoadErr == LUA_ERRSYNTAX)
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Syntax error in macro: %s", lua51_tostring(m_pL, -1));
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Syntax error in macro: %s", lua51_tostring(m_pL, -1));
     if (iLoadErr == LUA_ERRMEM)
-        throw new CRainmanException(nullptr, __FILE__, __LINE__, "Memory error in macro: %s", lua51_tostring(m_pL, -1));
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Memory error in macro: %s", lua51_tostring(m_pL, -1));
     iLoadErr = lua51_pcall(m_pL, 0, 0, 0);
     if (iLoadErr)
     {
@@ -1601,7 +1599,7 @@ void CRgdFileMacro::loadMacro(const char *sCode)
         {
             auto *pErr = (CRainmanException *)lua51_touserdata(m_pL, -1);
             lua51_pop(m_pL, 1);
-            throw new CRainmanException(pErr, __FILE__, __LINE__, "Error loading macro");
+            throw CRainmanException(pErr, __FILE__, __LINE__, "Error loading macro");
         }
         else
         {
@@ -1679,7 +1677,7 @@ void CRgdFileMacro::runAtEnd()
         {
             auto *pErr = (CRainmanException *)lua51_touserdata(m_pL, -1);
             lua51_pop(m_pL, 1);
-            throw new CRainmanException(pErr, __FILE__, __LINE__, "Error running end event");
+            throw CRainmanException(pErr, __FILE__, __LINE__, "Error running end event");
         }
         else
         {
@@ -1720,10 +1718,10 @@ void CRgdFileMacro::runMacro(const char *sFile, IFileStore *pStore)
     {
         _tCRgdFile::construct(m_pL, this, sFile, pStore);
     }
-    catch (CRainmanException *pE)
+    catch (const CRainmanException &e)
     {
         lua51_pop(m_pL, 1);
-        throw new CRainmanException(pE, __FILE__, __LINE__, "Error pushing RGD \'%s\' into LUA", sFile);
+        throw CRainmanException(e, __FILE__, __LINE__, "Error pushing RGD \'%s\' into LUA", sFile);
     }
 
     int iErr;
@@ -1733,7 +1731,7 @@ void CRgdFileMacro::runMacro(const char *sFile, IFileStore *pStore)
         {
             auto *pErr = (CRainmanException *)lua51_touserdata(m_pL, -1);
             lua51_pop(m_pL, 1);
-            throw new CRainmanException(pErr, __FILE__, __LINE__, "Error processing RGD \'%s\'", sFile);
+            throw CRainmanException(pErr, __FILE__, __LINE__, "Error processing RGD \'%s\'", sFile);
         }
         else
         {

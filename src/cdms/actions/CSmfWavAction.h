@@ -39,9 +39,9 @@ class CSmfWavAction : public frmFiles::IHandler
         {
             DoExtract(saFile.get());
         }
-        catch (CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
-            ErrorBoxE(pE);
+            ErrorBoxE(e);
             return;
         }
 
@@ -71,11 +71,11 @@ class CSmfWavAction : public frmFiles::IHandler
             char *sDotPos
             pOut = pMod->VOpenOutputStream(saFile, true);
         }
-        catch(CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             delete pIn;
             delete pOut;
-            throw new CModStudioException(pE, __FILE__, __LINE__, "Unable to open streams for \'%s\'", saFile);
+            throw CModStudioException(e, __FILE__, __LINE__, "Unable to open streams for \'%s\'", saFile);
         }
         try
         {
@@ -83,18 +83,18 @@ class CSmfWavAction : public frmFiles::IHandler
             iLen = pIn->VTell();
             pIn->VSeek(0, IFileStore::IStream::SL_Root);
         }
-        catch(CRainmanException *pE)
+        catch (const CRainmanException &e)
         {
             delete pIn;
             delete pOut;
-            throw new CModStudioException(pE, __FILE__, __LINE__, "Seek/Tell problem on streams for \'%s\'", saFile);
+            throw CModStudioException(e, __FILE__, __LINE__, "Seek/Tell problem on streams for \'%s\'", saFile);
         }
         if(!pBuffer) pBuffer = new char[4194304]; //4mb
         if(!pBuffer)
         {
             delete pIn;
             delete pOut;
-            throw new CModStudioException(__FILE__, __LINE__, "Cannot allocate memory");
+            throw CModStudioException(__FILE__, __LINE__, "Cannot allocate memory");
         }
         while(iLen)
         {
@@ -104,12 +104,12 @@ class CSmfWavAction : public frmFiles::IHandler
                 pIn->VRead(iLen2, 1, pBuffer);
                 pOut->VWrite(iLen2, 1, pBuffer);
             }
-            catch(CRainmanException *pE)
+            catch (const CRainmanException &e)
             {
                 delete pIn;
                 delete pOut;
                 if(!p4mbBuffer) delete[] pBuffer;
-                throw new CModStudioException(pE, __FILE__, __LINE__, "Read/Write problem on streams for \'%s\'",
+                throw CModStudioException(e, __FILE__, __LINE__, "Read/Write problem on streams for \'%s\'",
         saFile);
             }
             iLen -= iLen2;

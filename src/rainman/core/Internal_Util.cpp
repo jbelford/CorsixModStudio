@@ -127,10 +127,10 @@ void Util_ForEach(IDirectoryTraverser::IIterator *pDirectory, Util_ForEachFuncti
                         pSub = pDirectory->VOpenSubDir();
                         Util_ForEach(pSub, pFn, pTag, true);
                     }
-                    catch (CRainmanException *pE)
+                    catch (const CRainmanException &e)
                     {
                         delete pSub;
-                        throw new CRainmanException(pE, __FILE__, __LINE__, "Error iterating sub-directory");
+                        throw CRainmanException(e, __FILE__, __LINE__, "Error iterating sub-directory");
                     }
                     delete pSub;
                 }

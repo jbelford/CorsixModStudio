@@ -5,6 +5,7 @@
 #include "rainman/core/Exception.h"
 #include <cstring>
 #include <string>
+#include <optional>
 
 #define EXPECT_WSTREQ(expected, actual) \
     EXPECT_EQ(std::wstring(expected), std::wstring(actual))
@@ -121,14 +122,13 @@ TEST_F(UcsFileTest, LoadInvalidHeaderThrows) {
         const_cast<char*>(out->GetData()), out->GetDataLength(), false);
 
     CUcsFile ucs2;
-    CRainmanException* caught = nullptr;
+    std::optional<CRainmanException> caught;
     try {
         ucs2.Load(inStream);
-    } catch (CRainmanException* ex) {
+    } catch (const CRainmanException &ex) {
         caught = ex;
     }
-    ASSERT_NE(caught, nullptr);
-    caught->destroy();
+    ASSERT_TRUE(caught.has_value());
     delete inStream;
     delete out;
 }
