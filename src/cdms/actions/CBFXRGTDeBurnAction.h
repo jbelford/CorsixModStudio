@@ -26,6 +26,7 @@
 #include "actions/CBfxToLuaDumpAction.h"
 #include <rainman/formats/CRgtFile.h>
 #include <rainman/core/RainmanLog.h>
+#include <memory>
 #include <wx/progdlg.h>
 #include <zlib.h>
 extern "C"
@@ -84,15 +85,13 @@ class CBFXRGTDeBurnAction : public frmFiles::IHandler
                             }
                             auto &stream = streamResult.value();
 
-                            CRgtFile *pRgt = new CRgtFile;
+                            auto pRgt = std::make_unique<CRgtFile>();
                             pRgt->Load(stream.get());
 
                             strcpy(strrchr(saFile.get(), '.'), ".tga");
                             auto outResult =
                                 TheConstruct->GetFileService().OpenOutputStream(AsciiTowxString(saFile.get()), true);
                             pRgt->SaveTGA(outResult ? outResult.value().get() : nullptr);
-
-                            delete pRgt;
                         }
                     }
                 }
@@ -111,9 +110,9 @@ class CBFXRGTDeBurnAction : public frmFiles::IHandler
             if (pTree->IsExpanded(oParent))
             {
                 auto itrResult = TheConstruct->GetFileService().Iterate(sFolder);
-                IDirectoryTraverser::IIterator *pDir = itrResult ? itrResult.value().release() : nullptr;
-                TheConstruct->GetFilesList()->UpdateDirectoryChildren(oParent, pDir);
-                delete pDir;
+                auto pDir =
+                    itrResult ? std::unique_ptr<IDirectoryTraverser::IIterator>(itrResult.value().release()) : nullptr;
+                TheConstruct->GetFilesList()->UpdateDirectoryChildren(oParent, pDir.get());
             }
         }
         return iCount;
@@ -138,12 +137,11 @@ class CBFXRGTDeBurnAction : public frmFiles::IHandler
         fread(pCompressed, 1, iSizeComp, f);
         fclose(f);
 
-        unsigned char *pUncompressed = new unsigned char[iSizeDecomp];
-        uncompress(pUncompressed, &iSizeDecomp, pCompressed, iSizeComp);
+        auto pUncompressed = std::make_unique<unsigned char[]>(iSizeDecomp);
+        uncompress(pUncompressed.get(), &iSizeDecomp, pCompressed, iSizeComp);
         delete[] pCompressed;
 
-        int iE = luaL_loadbuffer(L, (const char *)pUncompressed, iSizeDecomp, "map");
-        delete[] pUncompressed;
+        int iE = luaL_loadbuffer(L, (const char *)pUncompressed.get(), iSizeDecomp, "map");
 
         if (iE == 0)
         {

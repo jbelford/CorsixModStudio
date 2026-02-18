@@ -25,6 +25,7 @@
 #include "common/strings.h"
 #include "common/Common.h"
 #include <rainman/formats/CRgdFile.h>
+#include <memory>
 
 class CLuaBurnAction : public frmFiles::IHandler
 {
@@ -66,16 +67,16 @@ class CLuaBurnAction : public frmFiles::IHandler
         auto &stream = streamResult.value();
         auto saFile = wxStringToAscii(sFile);
 
-        CLuaFile *pLua = CLuaAction::DoLoad(stream.get(), saFile.get());
+        auto pLua = std::unique_ptr<CLuaFile>(CLuaAction::DoLoad(stream.get(), saFile.get()));
         if (pLua)
         {
-            CRgdFile *pRgd = new CRgdFile;
+            auto pRgd = std::make_unique<CRgdFile>();
             if (pRgd)
             {
                 pRgd->SetHashTable(TheConstruct->GetHashService().GetHashTable());
                 try
                 {
-                    pRgd->Load(pLua, iRGDVersion);
+                    pRgd->Load(pLua.get(), iRGDVersion);
                 }
                 catch (CRainmanException *pE)
                 {
@@ -92,14 +93,15 @@ class CLuaBurnAction : public frmFiles::IHandler
                         auto &outStream = outResult.value();
                         auto itrResult =
                             TheConstruct->GetFileService().Iterate(AsciiTowxString(saFile.get()).BeforeLast('\\'));
-                        IDirectoryTraverser::IIterator *pDir = itrResult ? itrResult.value().release() : nullptr;
+                        auto pDir = itrResult
+                                        ? std::unique_ptr<IDirectoryTraverser::IIterator>(itrResult.value().release())
+                                        : nullptr;
                         frmFiles *pFiles = TheConstruct->GetFilesList();
                         if (bMovedTOC)
                             pFiles->UpdateDirectoryChildren(pFiles->FindFile(AsciiTowxString(saFile.get()), true),
-                                                            pDir);
+                                                            pDir.get());
                         else
-                            pFiles->UpdateDirectoryChildren(oParent, pDir);
-                        delete pDir;
+                            pFiles->UpdateDirectoryChildren(oParent, pDir.get());
                         try
                         {
                             pRgd->Save(outStream.get());
@@ -117,14 +119,12 @@ class CLuaBurnAction : public frmFiles::IHandler
                         ErrorBoxAS(err_write);
                     }
                 }
-            after_rgd_loaded_cleany_code:
-                delete pRgd;
+            after_rgd_loaded_cleany_code:;
             }
             else
             {
                 ErrorBoxAS(err_memory);
             }
         }
-        delete pLua;
     }
 };

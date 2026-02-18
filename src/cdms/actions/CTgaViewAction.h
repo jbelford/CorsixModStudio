@@ -24,6 +24,7 @@
 #include "common/Utility.h"
 #include "actions/ActionUtil.h"
 #include <rainman/formats/CRgtFile.h>
+#include <memory>
 
 class CTgaViewAction : public frmFiles::IHandler
 {
@@ -44,12 +45,12 @@ class CTgaViewAction : public frmFiles::IHandler
         auto &stream = streamResult.value();
 
         bool bIs32 = true;
-        CRgtFile *pRgt = new CRgtFile;
+        auto pRgt = std::make_unique<CRgtFile>();
         pRgt->LoadTGA(stream.get(), false, &bIs32);
 
         frmImageViewer *pForm;
         TheConstruct->GetTabs()->AddPage(
-            pForm = new frmImageViewer(oParent, sFile, TheConstruct->GetTabs(), -1, pRgt, true),
+            pForm = new frmImageViewer(oParent, sFile, TheConstruct->GetTabs(), -1, pRgt.release(), true),
             wxString().Append(wxT("TGA")).Append(wxT(" [")).Append(OnlyFilename(sFile)).Append(wxT("]")), true);
         pForm->SetIsTga(!bIs32);
     }

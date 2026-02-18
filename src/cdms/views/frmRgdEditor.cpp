@@ -1382,10 +1382,10 @@ void frmRGDEditor::OnPaste(wxCommandEvent &event)
 
             MywxDataObjectSimple oData(wxDataFormat(wxT("application/x-rainman-rgd")));
             wxTheClipboard->GetData(oData);
-            char *pObjData = new char[oData.GetDataSize()];
-            oData.GetDataHere(pObjData);
+            auto pObjData = std::make_unique<char[]>(oData.GetDataSize());
+            oData.GetDataHere(pObjData.get());
             std::unique_ptr<IFileStore::IStream> pStream(
-                CMemoryStore::OpenStreamExt(pObjData, (unsigned long)oData.GetDataSize(), true));
+                CMemoryStore::OpenStreamExt(pObjData.release(), (unsigned long)oData.GetDataSize(), true));
 
             pData->pNode->SGetNodeFromRainmanRgd(pStream.get(), false);
 
@@ -1411,10 +1411,10 @@ void frmRGDEditor::OnPasteInto(wxCommandEvent &event)
         {
             MywxDataObjectSimple oData(wxDataFormat(wxT("application/x-rainman-rgd")));
             wxTheClipboard->GetData(oData);
-            char *pObjData = new char[oData.GetDataSize()];
-            oData.GetDataHere(pObjData);
+            auto pObjData = std::make_unique<char[]>(oData.GetDataSize());
+            oData.GetDataHere(pObjData.get());
             std::unique_ptr<IFileStore::IStream> pStream(
-                CMemoryStore::OpenStreamExt(pObjData, (unsigned long)oData.GetDataSize(), true));
+                CMemoryStore::OpenStreamExt(pObjData.release(), (unsigned long)oData.GetDataSize(), true));
 
             unsigned long iNodeHash, iNodeNameLen;
             char *sNodeName = 0;
@@ -1423,9 +1423,10 @@ void frmRGDEditor::OnPasteInto(wxCommandEvent &event)
             pStream->VRead(1, sizeof(long), &iNodeNameLen);
             if (iNodeNameLen)
             {
-                sNodeName = new char[iNodeNameLen + 1];
-                pStream->VRead(iNodeNameLen, 1, sNodeName);
-                sNodeName[iNodeNameLen] = 0;
+                auto pNodeName = std::make_unique<char[]>(iNodeNameLen + 1);
+                pStream->VRead(iNodeNameLen, 1, pNodeName.get());
+                pNodeName[iNodeNameLen] = 0;
+                sNodeName = pNodeName.release();
             }
             pStream->VSeek(0, IFileStore::IStream::SL_Root);
 

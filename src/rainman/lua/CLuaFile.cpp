@@ -827,21 +827,15 @@ char *CLuaFile::GetReferencedFile(IFileStore::IStream *pStream)
         _Clean();
         throw new CRainmanException(__FILE__, __LINE__, "Seek/Tell failed", pE);
     }
-    char *sBuffer = new char[iDataLength];
-    if (!sBuffer)
-    {
-        _Clean();
-        throw new CRainmanException(__FILE__, __LINE__, "Memory allocation failed");
-    }
+    auto sBuffer = std::make_unique<char[]>(iDataLength);
 
     try
     {
         pStream->VSeek(0, IFileStore::IStream::SL_Root);
-        pStream->VRead(1, (unsigned long)iDataLength, sBuffer);
+        pStream->VRead(1, (unsigned long)iDataLength, sBuffer.get());
     }
     catch (CRainmanException *pE)
     {
-        delete[] sBuffer;
         _Clean();
         throw new CRainmanException(__FILE__, __LINE__, "Seek/Read failed", pE);
     }
@@ -851,8 +845,8 @@ char *CLuaFile::GetReferencedFile(IFileStore::IStream *pStream)
     lua_pushcclosure(m_pLua, _Reference_Grabby, 0);
     lua_settable(m_pLua, LUA_GLOBALSINDEX);
 
-    int iLuaError = luaL_loadbuffer(m_pLua, sBuffer, iDataLength, "input stream");
-    delete[] sBuffer;
+    int iLuaError = luaL_loadbuffer(m_pLua, sBuffer.get(), iDataLength, "input stream");
+    sBuffer.reset();
     iLuaError = iLuaError || lua_pcall(m_pLua, 0, 0, 0);
 
     if (iLuaError)
@@ -916,21 +910,15 @@ void CLuaFile::Load(IFileStore::IStream *pStream, IFileStore *pFiles, const char
         _Clean();
         throw new CRainmanException(__FILE__, __LINE__, "Seek/Tell failed", pE);
     }
-    char *sBuffer = new char[iDataLength];
-    if (!sBuffer)
-    {
-        _Clean();
-        throw new CRainmanException(__FILE__, __LINE__, "Memory allocation failed");
-    }
+    auto sBuffer = std::make_unique<char[]>(iDataLength);
 
     try
     {
         pStream->VSeek(0, IFileStore::IStream::SL_Root);
-        pStream->VRead(1, (unsigned long)iDataLength, sBuffer);
+        pStream->VRead(1, (unsigned long)iDataLength, sBuffer.get());
     }
     catch (CRainmanException *pE)
     {
-        delete[] sBuffer;
         _Clean();
         throw new CRainmanException(__FILE__, __LINE__, "Seek/Read failed", pE);
     }
@@ -940,12 +928,6 @@ void CLuaFile::Load(IFileStore::IStream *pStream, IFileStore *pFiles, const char
     if (!m_pRefQueue)
     {
         m_pRefQueue = new std::deque<const char *>;
-        if (!m_pRefQueue)
-        {
-            delete[] sBuffer;
-            _Clean();
-            throw new CRainmanException(__FILE__, __LINE__, "Memory allocation failed");
-        }
         bOwnRefQueue = true;
 
         if (strnicmp("generic", sFileName, 7) == 0)
@@ -988,7 +970,6 @@ void CLuaFile::Load(IFileStore::IStream *pStream, IFileStore *pFiles, const char
     {
         if (stricmp(*itr, sFileName) == 0)
         {
-            delete[] sBuffer;
             if (bOwnRefQueue)
                 delete m_pRefQueue;
             _Clean();
@@ -997,8 +978,8 @@ void CLuaFile::Load(IFileStore::IStream *pStream, IFileStore *pFiles, const char
     }
     m_pRefQueue->push_back(sFileName);
 
-    int iLuaError = luaL_loadbuffer(m_pLua, sBuffer, iDataLength, sFileName);
-    delete[] sBuffer;
+    int iLuaError = luaL_loadbuffer(m_pLua, sBuffer.get(), iDataLength, sFileName);
+    sBuffer.reset();
     iLuaError = iLuaError || lua_pcall(m_pLua, 0, 0, 0);
 
     m_pRefQueue->pop_back();

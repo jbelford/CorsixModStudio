@@ -25,6 +25,7 @@
 #include "common/strings.h"
 #include "common/config.h"
 #include <rainman/formats/CRgdFile.h>
+#include <memory>
 #include <wx/progdlg.h>
 #include <vector>
 
@@ -96,9 +97,9 @@ class CScanHashesAction : public frmFiles::IHandler
             if (pTree->IsExpanded(oParent))
             {
                 auto itrResult = TheConstruct->GetFileService().Iterate(sFolder);
-                IDirectoryTraverser::IIterator *pDir = itrResult ? itrResult.value().release() : nullptr;
-                TheConstruct->GetFilesList()->UpdateDirectoryChildren(oParent, pDir);
-                delete pDir;
+                auto pDir =
+                    itrResult ? std::unique_ptr<IDirectoryTraverser::IIterator>(itrResult.value().release()) : nullptr;
+                TheConstruct->GetFilesList()->UpdateDirectoryChildren(oParent, pDir.get());
             }
         }
         return iCount;
@@ -130,7 +131,8 @@ class CScanHashesAction : public frmFiles::IHandler
             std::vector<unsigned long> oHashList;
             TheConstruct->GetHashService().GetHashTable()->FillUnknownList(oHashList);
 
-            unsigned char *sStr = new unsigned char[4096], *sStr2 = new unsigned char[4096];
+            auto sStr = std::make_unique<unsigned char[]>(4096);
+            auto sStr2 = std::make_unique<unsigned char[]>(4096);
             unsigned long iHash;
             size_t iL = 0;
             unsigned char iByte;
@@ -167,15 +169,15 @@ class CScanHashesAction : public frmFiles::IHandler
                         {
                             for (size_t j = i; j < iL; ++j)
                             {
-                                iHash = hash((ub1 *)(sStr + i), (ub4)(j - i + 1), (ub4)0);
+                                iHash = hash((ub1 *)(sStr.get() + i), (ub4)(j - i + 1), (ub4)0);
                                 for (std::vector<unsigned long>::iterator itr = oHashList.begin();
                                      itr != oHashList.end(); ++itr)
                                 {
                                     if (*itr == iHash)
                                     {
                                         sStr[j + 1] = 0;
-                                        TheConstruct->GetHashService().GetHashTable()->ValueToHash((const char *)sStr +
-                                                                                                   i);
+                                        TheConstruct->GetHashService().GetHashTable()->ValueToHash(
+                                            (const char *)sStr.get() + i);
                                         break;
                                     }
                                 }
@@ -187,8 +189,6 @@ class CScanHashesAction : public frmFiles::IHandler
             }
             fclose(fIn);
             wxMessageBox(wxT("Scan complete"), VGetAction(), wxICON_INFORMATION, TheConstruct);
-            delete[] sStr;
-            delete[] sStr2;
             delete m_pProgress;
         }
     }

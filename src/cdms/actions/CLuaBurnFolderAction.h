@@ -26,6 +26,7 @@
 #include "common/Common.h"
 #include "actions/CLuaBurnAction.h"
 #include <rainman/formats/CRgdFile.h>
+#include <memory>
 #include <wx/progdlg.h>
 
 class CLuaBurnFolderAction : public frmFiles::IHandler
@@ -114,66 +115,58 @@ class CLuaBurnFolderAction : public frmFiles::IHandler
                         else
                         {
                             auto &stream = streamResult.value();
-                            CLuaFile *pLua = CLuaAction::DoLoad(stream.get(), saFile.get(), m_pCache);
+                            auto pLua =
+                                std::unique_ptr<CLuaFile>(CLuaAction::DoLoad(stream.get(), saFile.get(), m_pCache));
                             if (pLua)
                             {
-                                CRgdFile *pRgd = new CRgdFile;
-                                if (pRgd)
+                                auto pRgd = std::make_unique<CRgdFile>();
+                                pRgd->SetHashTable(TheConstruct->GetHashService().GetHashTable());
+                                try
                                 {
-                                    pRgd->SetHashTable(TheConstruct->GetHashService().GetHashTable());
+                                    pRgd->Load(pLua.get(), m_iRGDVersion);
+                                }
+                                catch (CRainmanException *pE)
+                                {
+                                    ErrorBoxE(pE);
+                                    goto skip_recurse_lua_load_ok_code;
+                                }
+                                BackupFile(TheConstruct->GetModuleService().GetModule(), AsciiTowxString(saRgd));
+                                {
+                                    std::unique_ptr<IFileStore::IOutputStream> outStream;
                                     try
                                     {
-                                        pRgd->Load(pLua, m_iRGDVersion);
+                                        auto outResult = TheConstruct->GetFileService().OpenOutputStream(
+                                            AsciiTowxString(saRgd), true);
+                                        if (outResult)
+                                            outStream = std::move(outResult.value());
                                     }
                                     catch (CRainmanException *pE)
                                     {
                                         ErrorBoxE(pE);
-                                        goto skip_recurse_lua_load_ok_code;
                                     }
-                                    BackupFile(TheConstruct->GetModuleService().GetModule(), AsciiTowxString(saRgd));
+                                    if (outStream)
                                     {
-                                        std::unique_ptr<IFileStore::IOutputStream> outStream;
                                         try
                                         {
-                                            auto outResult = TheConstruct->GetFileService().OpenOutputStream(
-                                                AsciiTowxString(saRgd), true);
-                                            if (outResult)
-                                                outStream = std::move(outResult.value());
+                                            pRgd->Save(outStream.get());
                                         }
                                         catch (CRainmanException *pE)
                                         {
                                             ErrorBoxE(pE);
-                                        }
-                                        if (outStream)
-                                        {
-                                            try
-                                            {
-                                                pRgd->Save(outStream.get());
-                                            }
-                                            catch (CRainmanException *pE)
-                                            {
-                                                ErrorBoxE(pE);
-                                                RestoreBackupFile(TheConstruct->GetModuleService().GetModule(),
-                                                                  AsciiTowxString(saRgd));
-                                            }
-                                        }
-                                        else
-                                        {
-                                            sError = AppStr(err_write);
+                                            RestoreBackupFile(TheConstruct->GetModuleService().GetModule(),
+                                                              AsciiTowxString(saRgd));
                                         }
                                     }
-                                skip_recurse_lua_load_ok_code:
-                                    delete pRgd;
+                                    else
+                                    {
+                                        sError = AppStr(err_write);
+                                    }
                                 }
-                                else
-                                {
-                                    sError = AppStr(err_memory);
-                                }
+                            skip_recurse_lua_load_ok_code:;
                             }
                             free(saRgd);
                             if (pLua)
                                 m_pCache->FreeState(pLua->m_pLua);
-                            delete pLua;
                         }
                         if (sError != wxT(""))
                         {
@@ -204,9 +197,9 @@ class CLuaBurnFolderAction : public frmFiles::IHandler
             if (pTree->IsExpanded(oParent))
             {
                 auto itrResult = TheConstruct->GetFileService().Iterate(sFolder);
-                IDirectoryTraverser::IIterator *pDir = itrResult ? itrResult.value().release() : nullptr;
-                TheConstruct->GetFilesList()->UpdateDirectoryChildren(oParent, pDir);
-                delete pDir;
+                auto pDir =
+                    itrResult ? std::unique_ptr<IDirectoryTraverser::IIterator>(itrResult.value().release()) : nullptr;
+                TheConstruct->GetFilesList()->UpdateDirectoryChildren(oParent, pDir.get());
             }
         }
         return iCount;
@@ -226,9 +219,10 @@ class CLuaBurnFolderAction : public frmFiles::IHandler
         }
         m_pProgress = new wxProgressDialog(VGetAction(), wxT(""), (int)(iCount / iDiv) + 1, TheConstruct,
                                            wxPD_SMOOTH | wxPD_AUTO_HIDE | wxPD_ELAPSED_TIME | wxPD_REMAINING_TIME);
-        m_pCache = new CLuaFileCache;
+        auto pCache = std::make_unique<CLuaFileCache>();
+        m_pCache = pCache.get();
         Recurse(sFile, oParent, false, 0, iDiv);
-        delete m_pCache;
+        m_pCache = nullptr;
         wxMessageBox(AppStr(rgd_massburngood), VGetAction(), wxICON_INFORMATION, TheConstruct);
         delete m_pProgress;
     }

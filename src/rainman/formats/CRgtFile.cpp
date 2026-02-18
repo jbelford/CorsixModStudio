@@ -373,26 +373,25 @@ void CRgtFile::LoadTGA(IFileStore::IStream *pFile, bool bMakeMips, bool *pIs32Bi
     pChunkData->SetVersion(1);
     std::unique_ptr<IFileStore::IOutputStream> pOutData(CMemoryStore::OpenOutputStreamExt());
 
-    auto *pDatIn = new unsigned char[static_cast<size_t>(iTga_BPP >> 3) * iTga_W * iTga_H];
-    pFile->VRead(iTga_W * iTga_H, iTga_BPP / 8, pDatIn);
+    auto pDatIn = std::make_unique<unsigned char[]>(static_cast<size_t>(iTga_BPP >> 3) * iTga_W * iTga_H);
+    pFile->VRead(iTga_W * iTga_H, iTga_BPP / 8, pDatIn.get());
 
     if (iTga_BPP == 32)
     {
-        pOutData->VWrite(iTga_W * iTga_H, iTga_BPP / 8, pDatIn);
+        pOutData->VWrite(iTga_W * iTga_H, iTga_BPP / 8, pDatIn.get());
         if (bMakeMips)
-            _MakeTgaImagMips(pTXTR, iTga_W, iTga_H, pDatIn);
+            _MakeTgaImagMips(pTXTR, iTga_W, iTga_H, pDatIn.get());
     }
     else
     {
         unsigned long iRgbaLen;
-        unsigned char *pRgba = TranscodeData(pDatIn, (iTga_BPP >> 3) * iTga_W * iTga_H, iTga_BPP / 8, 4, iRgbaLen);
+        unsigned char *pRgba =
+            TranscodeData(pDatIn.get(), (iTga_BPP >> 3) * iTga_W * iTga_H, iTga_BPP / 8, 4, iRgbaLen);
         pOutData->VWrite(iRgbaLen, 1, pRgba);
         if (bMakeMips)
             _MakeTgaImagMips(pTXTR, iTga_W, iTga_H, pRgba);
         delete[] pRgba;
     }
-
-    delete[] pDatIn;
     pChunkData->SetData(static_cast<CMemoryStore::COutStream *>(pOutData.get()));
 
     // All done
@@ -785,10 +784,9 @@ void CRgtFile::SaveDDS(IFileStore::IOutputStream *pFile, int iCompression, bool 
     }
     else
     {
-        auto *pDXTC = new unsigned char[iPrimarySize];
-        m_fnCompress(pRGBATop, (int)iW, (int)iH, pDXTC, (1 << (iCompression >> 1)));
-        pFile->VWrite(iPrimarySize, 1, pDXTC);
-        delete[] pDXTC;
+        auto pDXTC = std::make_unique<unsigned char[]>(iPrimarySize);
+        m_fnCompress(pRGBATop, (int)iW, (int)iH, pDXTC.get(), (1 << (iCompression >> 1)));
+        pFile->VWrite(iPrimarySize, 1, pDXTC.get());
     }
 
     if (bMipLevels)
@@ -804,10 +802,9 @@ void CRgtFile::SaveDDS(IFileStore::IOutputStream *pFile, int iCompression, bool 
                 iPrimarySize *= 8;
             else
                 iPrimarySize *= 16;
-            auto *pDXTC = new unsigned char[iPrimarySize];
-            m_fnCompress(pRGBATop, (int)iW, (int)iH, pDXTC, (1 << (iCompression >> 1)));
-            pFile->VWrite(iPrimarySize, 1, pDXTC);
-            delete[] pDXTC;
+            auto pDXTC = std::make_unique<unsigned char[]>(iPrimarySize);
+            m_fnCompress(pRGBATop, (int)iW, (int)iH, pDXTC.get(), (1 << (iCompression >> 1)));
+            pFile->VWrite(iPrimarySize, 1, pDXTC.get());
         }
     }
 }
@@ -938,14 +935,14 @@ void CRgtFile::SaveTGA(IFileStore::IOutputStream *pFile, bool bIncludeAlpha)
 
     size_t w = m_pMipLevels[m_iMipCurrent]->m_iWidth, h = m_pMipLevels[m_iMipCurrent]->m_iHeight;
     size_t iPixCount = w * h;
-    unsigned char *pRGBAData = CHECK_MEM(new unsigned char[iPixCount * 4]);
-    m_fnDecompress(pRGBAData, (int)w, (int)h, m_pMipLevels[m_iMipCurrent]->m_pData + 16,
+    auto pRGBAData = std::make_unique<unsigned char[]>(iPixCount * 4);
+    m_fnDecompress(pRGBAData.get(), (int)w, (int)h, m_pMipLevels[m_iMipCurrent]->m_pData + 16,
                    (1 << (m_iDxtCompression >> 1)));
 
     // data seems to come out with Red and Blue swapped, so swap them back
     for (size_t i = 0; i < iPixCount; ++i)
     {
-        unsigned char *p = pRGBAData + (i << 2);
+        unsigned char *p = pRGBAData.get() + (i << 2);
         p[0] ^= p[2];
         p[2] ^= p[0];
         p[0] ^= p[2];
@@ -966,21 +963,19 @@ void CRgtFile::SaveTGA(IFileStore::IOutputStream *pFile, bool bIncludeAlpha)
     try
     {
         if (bIncludeAlpha)
-            pFile->VWrite(iPixCount * 4, 1, pRGBAData);
+            pFile->VWrite(iPixCount * 4, 1, pRGBAData.get());
         else
         {
             unsigned long iShortLen;
-            unsigned char *pNoAlpha = TranscodeData(pRGBAData, iPixCount * 4, 4, 3, iShortLen);
+            unsigned char *pNoAlpha = TranscodeData(pRGBAData.get(), iPixCount * 4, 4, 3, iShortLen);
             pFile->VWrite(iShortLen, 1, pNoAlpha);
             delete[] pNoAlpha;
         }
     }
     catch (CRainmanException *pE)
     {
-        delete[] pRGBAData;
         throw new CRainmanException(__FILE__, __LINE__, "Error outputting uncompressed DXTC data", pE);
     }
-    delete[] pRGBAData;
     return;
 }
 

@@ -24,6 +24,7 @@
 #include "common/Utility.h"
 #include "actions/ActionUtil.h"
 #include <rainman/formats/CRgtFile.h>
+#include <memory>
 
 class CDdsViewAction : public frmFiles::IHandler
 {
@@ -43,12 +44,12 @@ class CDdsViewAction : public frmFiles::IHandler
         }
         auto &stream = streamResult.value();
 
-        CRgtFile *pRgt = new CRgtFile;
+        auto pRgt = std::make_unique<CRgtFile>();
         pRgt->LoadDDS(stream.get());
 
         frmImageViewer *pForm;
         TheConstruct->GetTabs()->AddPage(
-            pForm = new frmImageViewer(oParent, sFile, TheConstruct->GetTabs(), -1, pRgt, true),
+            pForm = new frmImageViewer(oParent, sFile, TheConstruct->GetTabs(), -1, pRgt.release(), true),
             wxString().Append(wxT("DDS")).Append(wxT(" [")).Append(OnlyFilename(sFile)).Append(wxT("]")), true);
         pForm->SetIsDds();
     }

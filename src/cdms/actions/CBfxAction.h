@@ -24,6 +24,7 @@
 #include "common/Utility.h"
 #include "actions/ActionUtil.h"
 #include <rainman/formats/CRgdFile.h>
+#include <memory>
 
 class CBfxAction : public frmFiles::IHandler
 {
@@ -48,15 +49,15 @@ class CBfxAction : public frmFiles::IHandler
         }
         auto &stream = streamResult.value();
 
-        CRgdFile *pRgd = new CRgdFile;
+        auto pRgd = std::make_unique<CRgdFile>();
         pRgd->SetHashTable(TheConstruct->GetHashService().GetHashTable());
         pRgd->Load(stream.get());
 
-        if (!pForm->FillFromMetaNode(pRgd))
+        if (!pForm->FillFromMetaNode(pRgd.get()))
         {
             ErrorBox("Cannot load file");
-            delete pRgd;
             return;
         }
+        pRgd.release(); // ownership transferred to form
     }
 };
