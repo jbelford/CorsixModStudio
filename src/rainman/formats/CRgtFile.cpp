@@ -37,7 +37,6 @@ static void SquishDecompress(unsigned char *rgba, int width, int height, void *b
 
 CRgtFile::CRgtFile()
 {
-    m_pChunky = nullptr;
     m_eFormat = IF_None;
 
     m_iWidth = 0;
@@ -293,10 +292,10 @@ void CRgtFile::LoadTGA(IFileStore::IStream *pFile, bool bMakeMips, bool *pIs32Bi
     _Clean();
 
     // Make what chunkyness can be made without opening the DDS
-    m_pChunky = CHECK_MEM(new CChunkyFile);
+    m_pChunky = std::make_unique<CChunkyFile>();
     m_pChunky->New(3);
 
-    _MakeFileBurnInfo(m_pChunky);
+    _MakeFileBurnInfo(m_pChunky.get());
 
     CChunkyFile::CChunk *pFoldChunk = m_pChunky->AppendNew("TSET", CChunkyFile::CChunk::T_Folder), *pTXTR;
     pFoldChunk->SetVersion(1);
@@ -464,10 +463,10 @@ void CRgtFile::LoadDDS(IFileStore::IStream *pFile)
     _Clean();
 
     // Make what chunkyness can be made without opening the DDS
-    m_pChunky = CHECK_MEM(new CChunkyFile);
+    m_pChunky = std::make_unique<CChunkyFile>();
     m_pChunky->New(3);
 
-    _MakeFileBurnInfo(m_pChunky);
+    _MakeFileBurnInfo(m_pChunky.get());
 
     CChunkyFile::CChunk *pFoldChunk = m_pChunky->AppendNew("TSET", CChunkyFile::CChunk::T_Folder);
     pFoldChunk->SetVersion(1);
@@ -662,7 +661,7 @@ void CRgtFile::Load(IFileStore::IStream *pFile)
 {
     RAINMAN_LOG_INFO("CRgtFile::Load() — parsing RGT texture file");
     _Clean();
-    m_pChunky = CHECK_MEM(new CChunkyFile);
+    m_pChunky = std::make_unique<CChunkyFile>();
     try
     {
         m_pChunky->Load(pFile);
@@ -743,7 +742,7 @@ void CRgtFile::SaveDDS(IFileStore::IOutputStream *pFile, int iCompression, bool 
         pRGBATop = new unsigned char[static_cast<size_t>(iW) * iH * 4];
         if (m_eFormat == IF_Tga)
         {
-            memcpy(pRGBATop, m_pMipLevels[m_iMipCurrent]->m_pData, m_pMipLevels[m_iMipCurrent]->m_iDataLength);
+            memcpy(pRGBATop, m_pMipLevels[m_iMipCurrent]->m_pData.get(), m_pMipLevels[m_iMipCurrent]->m_iDataLength);
             {
                 size_t w = iW;
                 size_t iPixCount = w * iH;
@@ -772,14 +771,14 @@ void CRgtFile::SaveDDS(IFileStore::IOutputStream *pFile, int iCompression, bool 
         }
         else if (m_eFormat == IF_Dxtc)
         {
-            m_fnDecompress(pRGBATop, (int)iW, (int)iH, m_pMipLevels[m_iMipCurrent]->m_pData + 16,
+            m_fnDecompress(pRGBATop, (int)iW, (int)iH, m_pMipLevels[m_iMipCurrent]->m_pData.get() + 16,
                            (1 << (m_iDxtCompression >> 1)));
         }
     }
 
     if (m_iDxtCompression == iCompression)
     {
-        pFile->VWrite(m_pMipLevels[m_iMipCurrent]->m_iDataLength, 1, m_pMipLevels[m_iMipCurrent]->m_pData + 16);
+        pFile->VWrite(m_pMipLevels[m_iMipCurrent]->m_iDataLength, 1, m_pMipLevels[m_iMipCurrent]->m_pData.get() + 16);
     }
     else
     {
@@ -869,13 +868,13 @@ void CRgtFile::_Save_Dxtc_Header(IFileStore::IOutputStream *pFile, unsigned shor
 
 void CRgtFile::_Save_Dxtc(IFileStore::IOutputStream *pFile)
 {
-    _MipLevel *pLevel = m_pMipLevels.begin()->second;
+    _MipLevel *pLevel = m_pMipLevels.begin()->second.get();
     _Save_Dxtc_Header(pFile, pLevel->m_iWidth, pLevel->m_iHeight, m_iDxtCompression, pLevel->m_iDataLength,
                       m_pMipLevels.size());
 
     for (auto itr = m_pMipLevels.begin(); itr != m_pMipLevels.end(); ++itr)
     {
-        pFile->VWrite(itr->second->m_iDataLength, 1, itr->second->m_pData + 16);
+        pFile->VWrite(itr->second->m_iDataLength, 1, itr->second->m_pData.get() + 16);
     }
 }
 
@@ -890,11 +889,12 @@ void CRgtFile::SaveTGA(IFileStore::IOutputStream *pFile, bool bIncludeAlpha)
             _Save_Tga_Header(pFile, (unsigned short)m_pMipLevels[m_iMipCurrent]->m_iWidth,
                              (unsigned short)m_pMipLevels[m_iMipCurrent]->m_iHeight, bIncludeAlpha);
             if (bIncludeAlpha)
-                pFile->VWrite(m_pMipLevels[m_iMipCurrent]->m_iDataLength, 1, m_pMipLevels[m_iMipCurrent]->m_pData);
+                pFile->VWrite(m_pMipLevels[m_iMipCurrent]->m_iDataLength, 1,
+                              m_pMipLevels[m_iMipCurrent]->m_pData.get());
             else
             {
                 unsigned long iShortLen;
-                unsigned char *pNoAlpha = TranscodeData(m_pMipLevels[m_iMipCurrent]->m_pData,
+                unsigned char *pNoAlpha = TranscodeData(m_pMipLevels[m_iMipCurrent]->m_pData.get(),
                                                         m_pMipLevels[m_iMipCurrent]->m_iDataLength, 4, 3, iShortLen);
                 pFile->VWrite(iShortLen, 1, pNoAlpha);
                 delete[] pNoAlpha;
@@ -935,7 +935,7 @@ void CRgtFile::SaveTGA(IFileStore::IOutputStream *pFile, bool bIncludeAlpha)
     size_t w = m_pMipLevels[m_iMipCurrent]->m_iWidth, h = m_pMipLevels[m_iMipCurrent]->m_iHeight;
     size_t iPixCount = w * h;
     auto pRGBAData = std::make_unique<unsigned char[]>(iPixCount * 4);
-    m_fnDecompress(pRGBAData.get(), (int)w, (int)h, m_pMipLevels[m_iMipCurrent]->m_pData + 16,
+    m_fnDecompress(pRGBAData.get(), (int)w, (int)h, m_pMipLevels[m_iMipCurrent]->m_pData.get() + 16,
                    (1 << (m_iDxtCompression >> 1)));
 
     // data seems to come out with Red and Blue swapped, so swap them back
@@ -1003,7 +1003,7 @@ void CRgtFile::_Save_Tga(IFileStore::IOutputStream *pFile)
     {
         _Save_Tga_Header(pFile, (unsigned short)m_iWidth, (unsigned short)m_iHeight);
 
-        pFile->VWrite(m_pMipLevels[m_iMipCurrent]->m_iDataLength, 1, m_pMipLevels[m_iMipCurrent]->m_pData);
+        pFile->VWrite(m_pMipLevels[m_iMipCurrent]->m_iDataLength, 1, m_pMipLevels[m_iMipCurrent]->m_pData.get());
     }
     catch (const CRainmanException &e)
     {
@@ -1067,43 +1067,42 @@ void CRgtFile::_Load_Dxtc()
     pStr->VRead(1, sizeof(uint32_t), &m_iMipCount);
     for (long iMipLevel = 0; iMipLevel < m_iMipCount; ++iMipLevel)
     {
-        auto *pCurrentLevel = new _MipLevel;
+        auto pCurrentLevel = std::make_unique<_MipLevel>();
         long iDataLengthCompressed;
 
         pStr->VRead(1, sizeof(uint32_t), &pCurrentLevel->m_iDataLength);
         pStr->VRead(1, sizeof(uint32_t), &iDataLengthCompressed);
 
-        pCurrentLevel->m_pData = new unsigned char[iDataLengthCompressed];
+        pCurrentLevel->m_pData.reset(new unsigned char[iDataLengthCompressed]);
 
-        pDataStr->VRead((unsigned long)iDataLengthCompressed, 1, pCurrentLevel->m_pData);
+        pDataStr->VRead((unsigned long)iDataLengthCompressed, 1, pCurrentLevel->m_pData.get());
 
         if (iDataLengthCompressed != pCurrentLevel->m_iDataLength)
         {
             auto *pUncompressed = new unsigned char[pCurrentLevel->m_iDataLength];
             if (uncompress((Bytef *)pUncompressed, (uLongf *)&pCurrentLevel->m_iDataLength,
-                           (Bytef *)pCurrentLevel->m_pData, iDataLengthCompressed) != Z_OK)
+                           (Bytef *)pCurrentLevel->m_pData.get(), iDataLengthCompressed) != Z_OK)
             {
                 //! \todo
             }
 
-            delete[] pCurrentLevel->m_pData;
-            pCurrentLevel->m_pData = pUncompressed;
+            pCurrentLevel->m_pData.reset(pUncompressed);
         }
 
-        long *pVals = (long *)pCurrentLevel->m_pData;
+        long *pVals = (long *)pCurrentLevel->m_pData.get();
 
         m_iMipCurrent = pVals[0];
         pCurrentLevel->m_iWidth = pVals[1];
         pCurrentLevel->m_iHeight = pVals[2];
         pCurrentLevel->m_iDataLength = pVals[3];
 
-        m_pMipLevels[m_iMipCurrent] = pCurrentLevel;
+        m_pMipLevels[m_iMipCurrent] = std::move(pCurrentLevel);
     }
 
     m_iWidth = m_pMipLevels[m_iMipCurrent]->m_iWidth;
     m_iHeight = m_pMipLevels[m_iMipCurrent]->m_iHeight;
     m_iDataLength = m_pMipLevels[m_iMipCurrent]->m_iDataLength;
-    m_pData = m_pMipLevels[m_iMipCurrent]->m_pData + 16;
+    m_pData = m_pMipLevels[m_iMipCurrent]->m_pData.get() + 16;
 }
 
 void CRgtFile::_Load_Tga()
@@ -1138,7 +1137,7 @@ void CRgtFile::_Load_Tga()
                 if (!pDataChunk)
                     throw CRainmanException(__FILE__, __LINE__, "Cannot find DATAATTR");
 
-                auto *pCurrentLevel = new _MipLevel;
+                auto pCurrentLevel = std::make_unique<_MipLevel>();
 
                 pStr = std::unique_ptr<IFileStore::IStream>(pDataChunk->GetData());
                 pStr->VSeek(4, IFileStore::IStream::SL_Current);
@@ -1147,19 +1146,16 @@ void CRgtFile::_Load_Tga()
 
                 pDataChunk = pChild->GetChildByName("DATA", CChunkyFile::CChunk::T_Data);
                 if (!pDataChunk)
-                {
-                    delete pCurrentLevel;
                     throw CRainmanException(__FILE__, __LINE__, "Cannot find DATADATA");
-                }
 
                 pCurrentLevel->m_iDataLength = pDataChunk->GetDataLength();
 
-                pCurrentLevel->m_pData = new unsigned char[pCurrentLevel->m_iDataLength];
+                pCurrentLevel->m_pData.reset(new unsigned char[pCurrentLevel->m_iDataLength]);
 
                 pStr = std::unique_ptr<IFileStore::IStream>(pDataChunk->GetData());
-                pStr->VRead((unsigned long)pCurrentLevel->m_iDataLength, 1, pCurrentLevel->m_pData);
+                pStr->VRead((unsigned long)pCurrentLevel->m_iDataLength, 1, pCurrentLevel->m_pData.get());
 
-                m_pMipLevels[m_iMipCurrent = m_iMipCount] = pCurrentLevel;
+                m_pMipLevels[m_iMipCurrent = m_iMipCount] = std::move(pCurrentLevel);
                 ++m_iMipCount;
             }
         }
@@ -1168,9 +1164,7 @@ void CRgtFile::_Load_Tga()
 
 void CRgtFile::_Clean()
 {
-    if (m_pChunky)
-        delete m_pChunky;
-    m_pChunky = nullptr;
+    m_pChunky.reset();
 
     m_eFormat = IF_None;
 
@@ -1182,12 +1176,6 @@ void CRgtFile::_Clean()
     m_iMipCurrent = 0;
     m_iDxtCompression = 0;
 
-    for (auto itr = m_pMipLevels.begin(); itr != m_pMipLevels.end(); ++itr)
-    {
-        if (itr->second->m_pData)
-            delete[] itr->second->m_pData;
-        delete itr->second;
-    }
     m_pMipLevels.clear();
 }
 

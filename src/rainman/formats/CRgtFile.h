@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "rainman/core/gnuc_defines.h"
 #include "rainman/formats/CChunkyFile.h"
 #include <map>
+#include <memory>
 
 class RAINMAN_API CRgtFile
 {
@@ -107,7 +108,7 @@ class RAINMAN_API CRgtFile
                                         unsigned char iBppOut, unsigned long &pLenOut);
     static unsigned char *DownsizeData(unsigned char *pIn, unsigned long &iWidth, unsigned long &iHeight);
 
-    CChunkyFile *m_pChunky;
+    std::unique_ptr<CChunkyFile> m_pChunky;
     eImageFormats m_eFormat;
 
     long m_iWidth;
@@ -125,9 +126,9 @@ class RAINMAN_API CRgtFile
         long m_iWidth;
         long m_iHeight;
         long m_iDataLength;
-        unsigned char *m_pData; //!< In DXTC images, actual data = this + 16
+        std::unique_ptr<unsigned char[]> m_pData; //!< In DXTC images, actual data = this + 16
     };
-    std::map<long, _MipLevel *> m_pMipLevels;
+    std::map<long, std::unique_ptr<_MipLevel>> m_pMipLevels;
 
     tfnDXTCodec m_fnCompress, m_fnDecompress;
 
