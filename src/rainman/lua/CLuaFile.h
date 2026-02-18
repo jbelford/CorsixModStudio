@@ -27,6 +27,8 @@ extern "C"
 #include <lua.h>
 };
 #include <deque>
+#include <memory>
+#include <string>
 #include <vector>
 
 class RAINMAN_API CLuaFile : public IMetaNode::IMetaTable
@@ -92,7 +94,7 @@ class RAINMAN_API CLuaFile : public IMetaNode::IMetaTable
     friend class CLuaBurnFolderIncReqAction; // For memory
 
     lua_State *m_pLua;
-    char *m_sLuaError;
+    std::string m_sLuaError;
     std::deque<const char *> *m_pRefQueue;
     CLuaFileCache *m_pCache;
     bool m_bOwnCache;
@@ -109,12 +111,9 @@ class RAINMAN_API CLuaFile : public IMetaNode::IMetaTable
     struct _NodeLocator
     {
         const _NodeLocator *pParent; // If 0, parent is _G
-        union
-        {
-            char *sName;
-            double fName;
-            bool bName;
-        };
+        std::string sName;
+        double fName = 0.0;
+        bool bName = false;
         enum
         {
             NT_String,
@@ -130,11 +129,12 @@ class RAINMAN_API CLuaFile : public IMetaNode::IMetaTable
         void SetValue(lua_State *L) const; // pop value from stack and set to this
     };
 
-    static bool _SortCMetaTableChildren(_NodeLocator *p1, _NodeLocator *p2);
-    typedef std::vector<_NodeLocator *> _NodeList;
+    static bool _SortCMetaTableChildren(const std::unique_ptr<_NodeLocator> &p1,
+                                        const std::unique_ptr<_NodeLocator> &p2);
+    typedef std::vector<std::unique_ptr<_NodeLocator>> _NodeList;
 
     _NodeList m_lstGlobals; // it was once a list - honest!
-    _NodeLocator *m_pDowModStudio;
+    std::unique_ptr<_NodeLocator> m_pDowModStudio;
 
     // Uses table at top of stack and generates a list of children
     static void _TableToNodeList(_NodeList &lstNodeList, lua_State *L, const _NodeLocator *pParent,
@@ -155,12 +155,11 @@ class RAINMAN_API CLuaFile : public IMetaNode::IMetaTable
         CMetaNode(const _NodeLocator *pNode, lua_State *L);
 
         const _NodeLocator *m_pNode;
-        char *m_sName;
-        bool m_bOwnName; // true = need to free() m_sName
+        std::string m_sName;
         unsigned long m_iNameHash;
         lua_State *m_pLua;
 
-        char *m_sValue;
+        std::string m_sValue;
 
       public:
         virtual ~CMetaNode();
@@ -201,10 +200,10 @@ class RAINMAN_API CLuaFile : public IMetaNode::IMetaTable
         void _Init(const _NodeLocator *pParent); // pParent should have already been Get()ted
 
         CLuaFile::_NodeList m_vecChildren;
-        const _NodeLocator *m_pRef;
-        const _NodeLocator *m_pDowModStudio;
+        std::unique_ptr<_NodeLocator> m_pRef;
+        std::unique_ptr<_NodeLocator> m_pDowModStudio;
         lua_State *m_pLua;
-        char *m_sRef;
+        std::string m_sRef;
 
       public:
         virtual ~CMetaTable();
