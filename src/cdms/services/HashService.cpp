@@ -1,29 +1,9 @@
-/*
-    This file is part of Corsix's Mod Studio.
-
-    Corsix's Mod Studio is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    Corsix's Mod Studio is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Corsix's Mod Studio; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
-
 #include "HashService.h"
 #include "common/strconv.h"
 #include <rainman/core/Exception.h>
 #include <rainman/formats/CRgdHashTable.h>
 #include <rainman/io/CFileSystemStore.h>
 #include <rainman/io/IDirectoryTraverser.h>
-#include <cstdlib>
-#include <cstring>
 
 HashService::~HashService() { Shutdown(); }
 
@@ -32,28 +12,24 @@ Result<void> HashService::Initialize(const wxString &sDictionaryPath)
     // Clean up any previous state
     Shutdown();
 
-    m_pHashTable = new CRgdHashTable;
-    if (!m_pHashTable)
-        return Result<void>::Err(wxT("Memory allocation error"));
+    m_pHashTable = std::make_unique<CRgdHashTable>();
 
     auto sDicPath = wxStringToAscii(sDictionaryPath);
     if (!sDicPath)
     {
-        delete m_pHashTable;
-        m_pHashTable = nullptr;
+        m_pHashTable.reset();
         return Result<void>::Err(wxT("Memory allocation error"));
     }
 
     CFileSystemStore oStore;
-    IDirectoryTraverser::IIterator *pItr = nullptr;
+    std::unique_ptr<IDirectoryTraverser::IIterator> pItr;
     try
     {
-        pItr = oStore.VIterate(sDicPath.get());
+        pItr.reset(oStore.VIterate(sDicPath.get()));
     }
     catch (const CRainmanException &e)
     {
-        delete m_pHashTable;
-        m_pHashTable = nullptr;
+        m_pHashTable.reset();
         return ResultFromException(e);
     }
 
@@ -68,7 +44,7 @@ Result<void> HashService::Initialize(const wxString &sDictionaryPath)
             {
                 if (stricmp(pItr->VGetName(), "custom.txt") == 0)
                 {
-                    m_sCustomOutPath = strdup(pItr->VGetFullPath());
+                    m_sCustomOutPath = pItr->VGetFullPath();
                 }
                 m_pHashTable->ExtendWithDictionary(pItr->VGetFullPath(),
                                                    (stricmp(pItr->VGetName(), "custom.txt") == 0));
@@ -77,17 +53,10 @@ Result<void> HashService::Initialize(const wxString &sDictionaryPath)
     }
     catch (const CRainmanException &e)
     {
-        delete pItr;
-        if (m_sCustomOutPath)
-        {
-            free(m_sCustomOutPath);
-            m_sCustomOutPath = nullptr;
-        }
-        delete m_pHashTable;
-        m_pHashTable = nullptr;
+        m_sCustomOutPath.clear();
+        m_pHashTable.reset();
         return ResultFromException(e);
     }
-    delete pItr;
 
     return Result<void>::Ok();
 }
@@ -96,16 +65,11 @@ void HashService::Shutdown()
 {
     if (m_pHashTable)
     {
-        if (m_sCustomOutPath)
-            m_pHashTable->SaveCustomKeys(m_sCustomOutPath);
-        delete m_pHashTable;
-        m_pHashTable = nullptr;
+        if (!m_sCustomOutPath.empty())
+            m_pHashTable->SaveCustomKeys(m_sCustomOutPath.c_str());
+        m_pHashTable.reset();
     }
-    if (m_sCustomOutPath)
-    {
-        free(m_sCustomOutPath);
-        m_sCustomOutPath = nullptr;
-    }
+    m_sCustomOutPath.clear();
 }
 
 Result<void> HashService::CrossRefWithStringList(const wxString &sFile)

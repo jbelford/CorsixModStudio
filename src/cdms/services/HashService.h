@@ -1,25 +1,9 @@
-/*
-    This file is part of Corsix's Mod Studio.
-
-    Corsix's Mod Studio is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    Corsix's Mod Studio is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with Corsix's Mod Studio; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-*/
-
 #pragma once
 
 #include <wx/string.h>
 #include "Result.h"
+#include <memory>
+#include <string>
 #include <vector>
 
 class CRgdHashTable;
@@ -36,7 +20,7 @@ class CRgdHashTable;
 class HashService
 {
   public:
-    HashService() : m_pHashTable(nullptr), m_sCustomOutPath(nullptr) {}
+    HashService() = default;
     ~HashService();
 
     HashService(const HashService &) = delete;
@@ -52,7 +36,7 @@ class HashService
     Result<void> Initialize(const wxString &sDictionaryPath);
 
     //! Get the hash table (must call Initialize first).
-    CRgdHashTable *GetHashTable() const { return m_pHashTable; }
+    CRgdHashTable *GetHashTable() const { return m_pHashTable.get(); }
 
     //! Whether the hash table has been initialized.
     bool IsInitialized() const { return m_pHashTable != nullptr; }
@@ -61,7 +45,7 @@ class HashService
     void Shutdown();
 
     //! Get the custom output path (for SaveCustomKeys).
-    const char *GetCustomOutPath() const { return m_sCustomOutPath; }
+    const char *GetCustomOutPath() const { return m_sCustomOutPath.empty() ? nullptr : m_sCustomOutPath.c_str(); }
 
     //! Cross-reference hash table with a string list file.
     Result<void> CrossRefWithStringList(const wxString &sFile);
@@ -73,6 +57,6 @@ class HashService
     unsigned long ValueToHash(const char *sValue);
 
   private:
-    CRgdHashTable *m_pHashTable;
-    char *m_sCustomOutPath;
+    std::unique_ptr<CRgdHashTable> m_pHashTable;
+    std::string m_sCustomOutPath;
 };
