@@ -25,6 +25,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "rainman/io/CMemoryStore.h"
 #include "rainman/core/Api.h"
 #include <wchar.h>
+#include <array>
+#include <memory>
+#include <string>
 #include <vector>
 
 //! SGA (Game data archive) file
@@ -93,15 +96,15 @@ class RAINMAN_API CSgaFile : public IFileStore, public IDirectoryTraverser
       protected:
         friend class CSgaFile;
         CStream();
-        IFileStore::IStream *m_pRawStream;
-        char *m_pData;
+        std::unique_ptr<IFileStore::IStream> m_pRawStream;
+        std::unique_ptr<char[]> m_pData;
 
       public:
-        virtual ~CStream();
+        ~CStream() override;
 
-        virtual void VRead(unsigned long iItemCount, unsigned long iItemSize, void *pDestination);
-        virtual void VSeek(long iPosition, IFileStore::IStream::SeekLocation SeekFrom = SL_Current);
-        virtual long VTell();
+        void VRead(unsigned long iItemCount, unsigned long iItemSize, void *pDestination) override;
+        void VSeek(long iPosition, IFileStore::IStream::SeekLocation SeekFrom = SL_Current) override;
+        long VTell() override;
     };
 
     // ## IDirectoryTraverser interface ##
@@ -178,12 +181,12 @@ class RAINMAN_API CSgaFile : public IFileStore, public IDirectoryTraverser
         /*!
             The full path of the directory being iterated, including a forward slash on the end
         */
-        char *m_sParentPath;
+        std::string m_sParentPath;
 
         /*!
             The full path of the current item; no forward slash on the end for directories
         */
-        char *m_sFullPath;
+        std::string m_sFullPath;
 
       public:
         virtual ~CIterator();
@@ -257,14 +260,14 @@ class RAINMAN_API CSgaFile : public IFileStore, public IDirectoryTraverser
     //! The file header is at the start of the SGA archive
     struct _SgaFileHeader
     {
-        char *sIdentifier;      //!< 8 bytes "_ARCHIVE"
-        unsigned long iVersion; //!< DoW is v2 , CoH is v4
-        long *iToolMD5;         //!< First MD5
-        wchar_t *sArchiveType;  //!< Unicode string (128 bytes - 64 * wchar)
-        long *iMD5;             //!< Second MD5
-        unsigned long iDataHeaderSize;
-        unsigned long iDataOffset;
-        unsigned long iPlatform; //!< v4 only; 1 = win32
+        std::string sIdentifier;        //!< 8 bytes "_ARCHIVE"
+        unsigned long iVersion = 0;     //!< DoW is v2 , CoH is v4
+        std::array<long, 4> iToolMD5{}; //!< First MD5
+        std::wstring sArchiveType;      //!< Unicode string (128 bytes - 64 * wchar)
+        std::array<long, 4> iMD5{};     //!< Second MD5
+        unsigned long iDataHeaderSize = 0;
+        unsigned long iDataOffset = 0;
+        unsigned long iPlatform = 0; //!< v4 only; 1 = win32
     };
 
 #pragma pack(push, sga_formats, 1)
@@ -354,20 +357,21 @@ class RAINMAN_API CSgaFile : public IFileStore, public IDirectoryTraverser
     };
 
     _SgaFileHeader m_SgaHeader; //!< The file header
-    //! The data header info
+    //! The data header blob
     /*!
-        This pointer is to the start of the data header, which is one large block of memory.
-        As such, deleting this pointer will free the entire data header.
+        This unique_ptr owns the entire data header, which is one large block of memory.
+        Interior pointers (m_pDataHeaderInfo, m_pSgaToCs, m_pSgaDirs, etc.) alias into this blob.
     */
-    _SgaDataHeaderInfo *m_pDataHeaderInfo;
-    _SgaToC *m_pSgaToCs;             //!< Array of ToC entries
-    _SgaDirInfo *m_pSgaDirs;         //!< Array of directory entries
-    _SgaDirInfoExt *m_pSgaDirExts;   //!< Array of directory extra information
-    _SgaDirHash *m_pSgaDirHashMap;   //!< Hash map for quickly resolving directory name -> directory ID
-    _SgaFileInfo *m_pSgaFiles;       //!< An array of file entries for v2 SGAs
-    _SgaFileInfo4 *m_pSga4Files;     //!< An array of file entries for v4 SGAs
-    _SgaFileInfoExt *m_pSgaFileExts; //!< Array of file extra information
-    tLastWriteTime m_oSgaWriteTime;  //!< The last modification date of the SGA file
+    std::unique_ptr<unsigned char[]> m_pDataHeaderBlob;
+    _SgaDataHeaderInfo *m_pDataHeaderInfo;       //!< Non-owning; aliases m_pDataHeaderBlob
+    _SgaToC *m_pSgaToCs;                         //!< Non-owning; array of ToC entries into blob
+    _SgaDirInfo *m_pSgaDirs;                     //!< Non-owning; array of directory entries into blob
+    std::vector<_SgaDirInfoExt> m_pSgaDirExts;   //!< Array of directory extra information
+    std::vector<_SgaDirHash> m_pSgaDirHashMap;   //!< Hash map for quickly resolving directory name -> directory ID
+    _SgaFileInfo *m_pSgaFiles;                   //!< Non-owning; array of file entries for v2 SGAs into blob
+    _SgaFileInfo4 *m_pSga4Files;                 //!< Non-owning; array of file entries for v4 SGAs into blob
+    std::vector<_SgaFileInfoExt> m_pSgaFileExts; //!< Array of file extra information
+    tLastWriteTime m_oSgaWriteTime;              //!< The last modification date of the SGA file
 
     //! Free all memory used by the class and reset the class to a blank state
     /*!
