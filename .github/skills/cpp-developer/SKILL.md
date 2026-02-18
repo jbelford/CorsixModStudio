@@ -6,12 +6,13 @@ description: Write new C++ code that follows CorsixModStudio codebase convention
 # C++ Developer
 
 Write new C++ code that follows CorsixModStudio codebase conventions across all layers,
-**preferring modern C++20 practices** wherever it is safe to do so.
+**using smart pointers and modern C++20 ownership practices by default**. Raw `new`/`delete`
+is only acceptable at legacy API boundaries — all other heap ownership must use
+`std::unique_ptr`, `std::shared_ptr`, or RAII containers.
 
 **Boy-scout rule**: When touching existing code, improve it toward modern C++ if the change
-is safe and localized (e.g., `NULL` → `nullptr`, add `override`, use range-for, add `const`,
-replace raw arrays with `std::vector`). Keep modernization changes within the scope of the
-files you're already modifying — don't refactor unrelated code.
+is safe and localized — especially migrating raw `new`/`delete` to smart pointers. Keep
+modernization changes within the scope of the files you're already modifying.
 
 ## Workflow
 
@@ -97,35 +98,67 @@ try { SomeOperation(); } CATCH_THROW("Failed during X")  // catch + re-throw
 char* pBuffer = CHECK_MEM(new char[1024]);  // throws if allocation fails
 ```
 
-## Memory Management
+## Memory Management — Smart Pointers by Default
 
-### New code (preferred)
+**All new code MUST use smart pointers for heap ownership.** Raw `new`/`delete` is only
+acceptable at legacy API boundaries that require it (e.g., returning from `VOpenStream()`).
+Even there, use smart pointers internally and `.release()` at the return statement.
 
-Use **RAII and smart pointers** for all new internal code:
+### Ownership hierarchy (choose in order)
+
+1. **`std::unique_ptr<T>`** — default for sole ownership. Use `std::make_unique<T>(...)`.
+2. **`std::shared_ptr<T>`** — when ownership is genuinely shared (e.g., `CUcsFile` in
+   `CUcsHandler` and `CDoWModule`). Use `std::make_shared<T>(...)`.
+3. **`std::unique_ptr<T, Deleter>`** — for objects with custom cleanup (streams, exceptions).
+4. **Raw pointer** — only for non-owning observation, or at existing virtual API boundaries.
+
+### Wrapping legacy API returns
+
+Always wrap raw-pointer returns from legacy APIs in a smart pointer **immediately** at the
+call site — never hold a raw owning pointer across more than one statement:
 
 ```cpp
-// Prefer std::unique_ptr for owned heap objects
-auto pBuffer = std::make_unique<char[]>(1024);
-
-// Use a custom deleter for IStream* returned by VOpenStream()
+// Streams from VOpenStream() — caller owns, so wrap immediately
 auto pStream = std::unique_ptr<IFileStore::IStream>(store.VOpenStream("path"));
 pStream->VRead(1, sizeof(unsigned long), &iValue);
-// stream is automatically deleted when pStream goes out of scope
+// stream is automatically deleted on scope exit or exception
 
-// Use a custom deleter for CRainmanException* if you need to hold one
+// CRainmanException* uses destroy(), not delete — use custom deleter
 auto pEx = std::unique_ptr<CRainmanException, decltype(&CRainmanException::destroy)>(
     pCaught, &CRainmanException::destroy);
+
+// Heap buffers — use make_unique instead of new[]
+auto pBuffer = std::make_unique<char[]>(1024);
 ```
 
-### Legacy API boundaries
+### Implementing virtual interfaces that return raw pointers
 
-When implementing or overriding existing virtual interfaces that return raw pointers
-(e.g., `VOpenStream()`, `VOpenOutputStream()`), continue to return raw `new`-allocated
-objects — **callers** of those interfaces are responsible for deletion.
-Within the implementation body, still prefer smart pointers for intermediate allocations.
+When overriding `VOpenStream()`, `VOpenOutputStream()`, or `VIterate()`, the API contract
+requires returning a raw pointer. Build the object with a smart pointer internally, then
+release at the boundary:
 
-- Use `CHECK_MEM(new ...)` for allocations that must not fail at API boundaries.
-- Use `AutoDelete<T>` (from `Internal_Util.h`) when interfacing with legacy cleanup patterns.
+```cpp
+IFileStore::IStream* CMyStore::VOpenStream(const char* sIdentifier)
+{
+    auto pStream = std::make_unique<CMyStream>(/* args */);
+    pStream->Init(sIdentifier);       // safe: if Init throws, unique_ptr cleans up
+    return pStream.release();          // transfer ownership to caller
+}
+```
+
+### Boy-scout rule for ownership
+
+When touching existing code that uses raw `new`/`delete`, migrate to smart pointers if the
+change is safe and localized:
+- `new T` → `std::make_unique<T>(...)` (adjust callers in the same file)
+- `new T[]` / `delete[]` → `std::make_unique<T[]>(n)` or `std::vector<T>`
+- `delete pX` at function exit → wrap in `std::unique_ptr` at creation
+- Multiple ownership sites → `std::shared_ptr<T>`
+
+### CHECK_MEM at API boundaries
+
+Use `CHECK_MEM(new ...)` only when the allocation is immediately returned through a raw-pointer
+API boundary. For internal code, `std::make_unique` already throws `std::bad_alloc` on failure.
 
 ## RAINMAN_API Macro
 
@@ -155,11 +188,16 @@ public:
 improvements within the scope of your change. Only preserve legacy style at existing API
 boundaries where changing would cascade.
 
-### Smart pointers & RAII
-- Prefer `std::unique_ptr` / `std::make_unique` for owned heap objects.
+### Smart pointers & RAII (mandatory)
+- **Always** use `std::unique_ptr` / `std::make_unique` for sole-ownership heap objects.
+- Use `std::shared_ptr` / `std::make_shared` when ownership is genuinely shared.
 - Wrap raw-pointer returns from legacy APIs (e.g., `VOpenStream()`) in `std::unique_ptr`
-  at the call site for automatic cleanup.
+  **immediately** at the call site — never hold a raw owning pointer.
 - For `CRainmanException*`, use a `unique_ptr` with a custom deleter that calls `destroy()`.
+- When overriding virtual methods that return raw pointers, build internally with
+  `std::unique_ptr` and call `.release()` at the return statement.
+- **Boy-scout**: When touching code with raw `new`/`delete`, migrate to smart pointers
+  if the change is safe and localized within the files you're modifying.
 
 ### Modern types (internal / new code)
 | Use | Instead of | When |

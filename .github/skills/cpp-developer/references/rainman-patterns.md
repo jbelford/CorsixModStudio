@@ -37,11 +37,11 @@ protected:
 ### Stream Lifecycle Rules
 
 1. `VOpenStream()` / `VOpenOutputStream()` return a heap-allocated stream.
-2. The **caller** owns the returned stream and must `delete` it when done.
+2. The **caller** owns the returned stream and must manage its lifetime.
 3. Streams throw `CRainmanException*` on errors (read past end, seek out of range).
 4. Always check `m_bInited` before operations.
 
-**Modern (preferred) usage — wrap in `std::unique_ptr` at the call site:**
+**Always wrap in `std::unique_ptr` at the call site (mandatory for new code):**
 ```cpp
 CMyStore store;
 store.VInit();
@@ -49,10 +49,10 @@ store.VInit();
 auto pStream = std::unique_ptr<IFileStore::IStream>(store.VOpenStream("path/to/file"));
 unsigned long iValue;
 pStream->VRead(1, sizeof(unsigned long), &iValue);
-// pStream is auto-deleted on scope exit or exception
+// pStream is auto-deleted on scope exit or exception — no manual delete needed
 ```
 
-**Legacy usage (when editing existing code):**
+**Legacy usage (acceptable only in existing code you aren't otherwise modifying):**
 ```cpp
 CMyStore store;
 store.VInit();
@@ -70,9 +70,12 @@ try {
 delete pStream;
 ```
 
+**When boy-scouting**: if you touch a function that uses raw `delete pStream`, migrate it
+to `std::unique_ptr` wrapping.
+
 ## CMemoryStore Pattern
 
-Used for in-memory I/O, especially in tests:
+Used for in-memory I/O, especially in tests. **Always use smart pointers for stream lifetime:**
 
 ```cpp
 CMemoryStore store;
@@ -81,18 +84,18 @@ store.VInit();
 // Reading: wrap existing data in a memory range
 const char data[] = "file content here";
 char* pRange = store.MemoryRange((void*)data, sizeof(data) - 1);
-IFileStore::IStream* pStream = store.VOpenStream(pRange);
+auto pStream = std::unique_ptr<IFileStore::IStream>(store.VOpenStream(pRange));
 // ... read from stream ...
-delete pStream;
+// pStream auto-deleted on scope exit
 
 // Writing: create an auto-resizing output buffer
-IFileStore::IOutputStream* pOut = store.VOpenOutputStream("ignored", false);
+auto pOut = std::unique_ptr<IFileStore::IOutputStream>(store.VOpenOutputStream("ignored", false));
 pOut->VWrite(4, 1, "test");
 // Retrieve written data via cast:
-CMemoryStore::COutStream* pMemOut = static_cast<CMemoryStore::COutStream*>(pOut);
+auto* pMemOut = static_cast<CMemoryStore::COutStream*>(pOut.get());
 const char* pWritten = pMemOut->GetData();
 unsigned long iLen = pMemOut->GetDataLength();
-delete pOut;
+// pOut auto-deleted on scope exit
 ```
 
 ## Parser Class Pattern
@@ -125,10 +128,12 @@ protected:
 ```
 
 Key rules:
-- `Load()` reads from a stream but does NOT take ownership (caller still deletes the stream).
-- For **new** parser classes, prefer `std::vector<T>` and `std::string` for internal storage
-  instead of raw `char**` / `T*` arrays.
-- Existing parser classes use raw C arrays — match their style when modifying them.
+- `Load()` reads from a stream but does NOT take ownership (caller still manages the stream).
+- For **new** parser classes, use `std::vector<T>` and `std::string` for internal storage
+  — never raw `char**` / `T*` arrays with manual `new[]`/`delete[]`.
+- Use `std::unique_ptr<T>` or `std::shared_ptr<T>` for any owned sub-objects.
+- Existing parser classes use raw C arrays — when modifying them, migrate to smart pointers /
+  containers if the change is safe and localized (boy-scout rule).
 - Destructor must clean up all owned memory (smart pointers handle this automatically).
 
 ## Directory Traversal
@@ -151,7 +156,8 @@ public:
 3. Use `#include "rainman/core/Api.h"` and any needed headers with fully-qualified `rainman/` prefix.
 4. Apply `RAINMAN_API` to the class declaration.
 5. Use `_C_NEW_CLASS_H_` style include guard.
-6. **Default to modern C++20**: use `std::unique_ptr`, `std::string`, `std::vector`, `auto`,
-   `override`, `nullptr`, range-for, etc. Only use legacy patterns at API boundaries
-   that must match existing virtual signatures.
+6. **Smart pointers are mandatory**: use `std::unique_ptr`, `std::shared_ptr`, `std::string`,
+   `std::vector`, `auto`, `override`, `nullptr`, range-for, etc. Only use raw pointers for
+   non-owning observation or at API boundaries that must match existing virtual signatures
+   (and even there, use `.release()` to hand off from a smart pointer).
 7. Files are auto-discovered by `file(GLOB)` — just rebuild.

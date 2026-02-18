@@ -63,23 +63,21 @@ wxPGProperty* pSelected = m_pGrid->GetSelectedProperty();
 ```cpp
 #include "strconv.h"
 
-// ASCII → Unicode (caller must delete[] result)
-wchar_t* wsResult = AsciiToUnicode("hello");
-delete[] wsResult;
+// ASCII → Unicode — wrap in unique_ptr immediately
+auto wsResult = std::unique_ptr<wchar_t[]>(AsciiToUnicode("hello"));
 
-// Unicode → ASCII (caller must delete[] result)
-char* sResult = UnicodeToAscii(L"hello");
-delete[] sResult;
+// Unicode → ASCII — wrap in unique_ptr immediately
+auto sResult = std::unique_ptr<char[]>(UnicodeToAscii(L"hello"));
 
-// ASCII → wxString
+// ASCII → wxString (returns by value, no ownership concern)
 wxString wxResult = AsciiTowxString("hello");
 
-// wxString → ASCII (caller must delete[] result)
-char* sFromWx = wxStringToAscii(myWxString);
-delete[] sFromWx;
+// wxString → ASCII — wrap in unique_ptr immediately
+auto sFromWx = std::unique_ptr<char[]>(wxStringToAscii(myWxString));
 ```
 
-**Important**: All pointer-returning functions allocate with `new[]`. Callers must `delete[]` the result.
+**Important**: All pointer-returning functions allocate with `new[]`. **Always** wrap returns
+in `std::unique_ptr<T[]>` — never hold a raw owning `char*`/`wchar_t*`.
 
 ## Common.h
 
@@ -107,6 +105,8 @@ CDMS uses a slightly different naming style than Rainman:
 5. If adding a new window, register it in the appropriate menu handler in `Construct.cpp`.
 6. **Boy-scout rule**: When modifying existing CDMS code, apply localized modern C++ improvements
    (e.g., `NULL` → `nullptr`, add `override`, use range-for, add `const`).
+   **Ownership boy-scout**: migrate raw `new`/`delete` to `std::unique_ptr` or `std::shared_ptr`
+   when the change is safe and localized within the files being modified.
 
 ## Service Layer (`src/cdms/services/`)
 
