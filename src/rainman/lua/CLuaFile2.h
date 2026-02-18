@@ -28,6 +28,8 @@ extern "C"
 #include <lua.h>
 };
 #include <map>
+#include <memory>
+#include <string>
 #include <vector>
 
 class CLuaStateNode;
@@ -37,7 +39,7 @@ class RAINMAN_API CLuaStateTable : public IMetaNode::IMetaTable
 {
   protected:
     lua_State *mL;
-    std::vector<CLuaStateNode *> m_vNodes;
+    std::vector<CLuaStateNode *> m_vNodes; // non-owning when bCustom=true
     bool bDeleteNodes;
     friend class CLuaStateStackNode;
 
@@ -97,7 +99,7 @@ class RAINMAN_API CLuaFile2
         friend class CLuaFile2::CTable;
         CLuaFile2::_LuaLocator m_oTablePtr;
         CLuaFile2::_LuaLocator m_oKeyPtr;
-        char *m_sName;
+        std::string m_sName;
         unsigned long m_iNodeHash;
         int m_iType;
         lua_State *L;
@@ -145,12 +147,13 @@ class RAINMAN_API CLuaFile2
       protected:
         lua_State *L;
         CLuaFile2::_LuaLocator m_oTablePtr;
-        std::vector<CLuaFile2::CNode *> m_vNodes;
-        char *m_sRef;
+        std::vector<std::unique_ptr<CLuaFile2::CNode>> m_vNodes;
+        std::string m_sRef;
         bool m_bGlobals;
 
         void _DoLoad();
-        static bool _SortNodes(CLuaFile2::CNode *p1, CLuaFile2::CNode *p2);
+        static bool _SortNodes(const std::unique_ptr<CLuaFile2::CNode> &p1,
+                               const std::unique_ptr<CLuaFile2::CNode> &p2);
 
       public:
         CTable(lua_State *pL, bool bG = false);
@@ -174,9 +177,9 @@ class RAINMAN_API CLuaFile2
   protected:
     CLuaFileCache *m_pCache;
     bool m_bOwnCache;
-    char *m_sRootFolder;
+    std::string m_sRootFolder;
     lua_State *L;
-    char *m_sFileName;
+    std::string m_sFileName;
 
     typedef std::map<unsigned long, int> _tRefMap;
     _tRefMap *m_pRefMap;
@@ -222,7 +225,7 @@ class RAINMAN_API CLuaStateNode : public IMetaNode
   protected:
     lua_State *L;
     CLuaFile2::_LuaLocator m_L;
-    char *sName;
+    std::string sName;
     friend class CLuaStateTable;
     friend class CLuaStateStackNode;
     CLuaStateNode(lua_State *pL, int iVal, int iKey);
@@ -261,7 +264,7 @@ class RAINMAN_API CLuaStateNode : public IMetaNode
 class RAINMAN_API CLuaStateStackNode : public IMetaNode
 {
   protected:
-    std::vector<CLuaStateNode *> m_vNodes;
+    std::vector<std::unique_ptr<CLuaStateNode>> m_vNodes;
     lua_State *m_L;
 
   public:

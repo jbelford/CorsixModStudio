@@ -24,12 +24,10 @@ extern "C"
 CLuaFile2::CLuaFile2()
 {
     m_pCache = nullptr;
-    m_sFileName = nullptr;
     m_pRefMap = nullptr;
     m_bOwnCache = false;
     m_bOwnRefMap = false;
     L = nullptr;
-    m_sRootFolder = strdup("");
 }
 
 CLuaFile2::~CLuaFile2()
@@ -37,15 +35,11 @@ CLuaFile2::~CLuaFile2()
     _clean();
     if (m_bOwnCache && m_pCache)
         delete m_pCache;
-    if (m_sRootFolder)
-        free(m_sRootFolder); // NOLINT(clang-analyzer-unix.MismatchedDeallocator)
 }
 
 void CLuaFile2::_clean()
 {
-    if (m_sFileName)
-        free(m_sFileName);
-    m_sFileName = nullptr;
+    m_sFileName.clear();
     if (m_pRefMap && m_bOwnRefMap)
         delete m_pRefMap;
     m_bOwnRefMap = false;
@@ -70,12 +64,7 @@ bool CLuaFile2::setCache(CLuaFileCache *pCache, bool bOwn)
     return true;
 }
 
-void CLuaFile2::setRootFolder(const char *sRootFolder)
-{
-    if (m_sRootFolder)
-        free(m_sRootFolder); // NOLINT(clang-analyzer-unix.MismatchedDeallocator)
-    m_sRootFolder = strdup(sRootFolder);
-}
+void CLuaFile2::setRootFolder(const char *sRootFolder) { m_sRootFolder = sRootFolder; }
 
 void CLuaFile2::newFile(const char *sFileName)
 {
@@ -86,7 +75,7 @@ void CLuaFile2::newFile(const char *sFileName)
     if (!L)
         throw CRainmanException(__FILE__, __LINE__, "Unable to create lua state");
 
-    m_sFileName = CHECK_MEM(strdup(sFileName));
+    m_sFileName = sFileName;
 
     luaopen_base(L);
     luaopen_string(L);
@@ -314,9 +303,9 @@ int CLuaFile2::_luaParent(const char *sFnName, const char *sTableToGrab)
             else
             {
                 // Open parented file
-                char *sFileNameFull = CHECK_MEM(new char[strlen(sFileName) + strlen(m_sRootFolder) + 1]);
+                char *sFileNameFull = CHECK_MEM(new char[strlen(sFileName) + m_sRootFolder.size() + 1]);
                 AutoDelete<char> sFileNameFull_(sFileNameFull, true);
-                strcpy(sFileNameFull, m_sRootFolder);
+                strcpy(sFileNameFull, m_sRootFolder.c_str());
                 strcat(sFileNameFull, sFileName);
                 IFileStore::IStream *pFileIn = nullptr;
                 try
@@ -331,7 +320,7 @@ int CLuaFile2::_luaParent(const char *sFnName, const char *sTableToGrab)
 
                 // Continue loading
                 oParentFile.setCache(m_pCache, false);
-                oParentFile.setRootFolder(m_sRootFolder);
+                oParentFile.setRootFolder(m_sRootFolder.c_str());
                 oParentFile.m_pRefMap = m_pRefMap;
                 try
                 {
@@ -431,17 +420,12 @@ void CLuaFile2::_LuaLocator::push(lua_State *L)
 CLuaStateNode::CLuaStateNode(lua_State *pL, int iVal, int iKey) : m_L(pL, iVal)
 {
     L = pL;
-    sName = nullptr;
     lua_pushvalue(pL, iKey);
-    sName = strdup(lua_tostring(pL, -1));
+    sName = lua_tostring(pL, -1);
     lua_pop(pL, 1);
 }
 
-CLuaStateNode::~CLuaStateNode()
-{
-    m_L.kill(L);
-    free(sName);
-}
+CLuaStateNode::~CLuaStateNode() { m_L.kill(L); }
 
 IMetaNode::eDataTypes CLuaStateNode::VGetType()
 {
@@ -471,9 +455,9 @@ IMetaNode::eDataTypes CLuaStateNode::VGetType()
     return eRet;
 }
 
-const char *CLuaStateNode::VGetName() { return sName; }
+const char *CLuaStateNode::VGetName() { return sName.c_str(); }
 
-unsigned long CLuaStateNode::VGetNameHash() { return (unsigned long)hash((ub1 *)sName, (ub4)strlen(sName), 0); }
+unsigned long CLuaStateNode::VGetNameHash() { return (unsigned long)hash((ub1 *)sName.c_str(), (ub4)sName.size(), 0); }
 
 float CLuaStateNode::VGetValueFloat()
 {
@@ -586,7 +570,7 @@ IMetaNode *CLuaStateTable::VGetChild(unsigned long iIndex)
 {
     CLuaStateNode *pCur = m_vNodes[iIndex];
 
-    lua_pushstring(mL, pCur->sName);
+    lua_pushstring(mL, pCur->sName.c_str());
     pCur->m_L.push(mL);
     auto *pNew = new CLuaStateNode(mL, -1, -2);
     lua_pop(mL, 2);
@@ -618,18 +602,12 @@ CLuaStateStackNode::CLuaStateStackNode(lua_State *L)
         sNam[2] = (i < -9) ? ('0' + ((-i) % 10)) : 0;
         sNam[3] = 0;
         lua_pushstring(L, sNam);
-        m_vNodes.push_back(new CLuaStateNode(L, i - 1, -1));
+        m_vNodes.push_back(std::unique_ptr<CLuaStateNode>(new CLuaStateNode(L, i - 1, -1)));
         lua_pop(L, 1);
     }
 }
 
-CLuaStateStackNode::~CLuaStateStackNode()
-{
-    for (auto itr = m_vNodes.begin(); itr != m_vNodes.end(); ++itr)
-    {
-        delete *itr;
-    }
-}
+CLuaStateStackNode::~CLuaStateStackNode() {}
 
 IMetaNode::eDataTypes CLuaStateStackNode::VGetType() { return IMetaNode::DT_Table; }
 const char *CLuaStateStackNode::VGetName() { return "STACK"; }
@@ -642,9 +620,9 @@ const wchar_t *CLuaStateStackNode::VGetValueWString() { QUICK_THROW("Unsupported
 IMetaNode::IMetaTable *CLuaStateStackNode::VGetValueMetatable()
 {
     auto *p = new CLuaStateTable(m_L, true);
-    for (auto itr = m_vNodes.begin(); itr != m_vNodes.end(); ++itr)
+    for (auto &pNode : m_vNodes)
     {
-        p->add(*itr);
+        p->add(pNode.get());
     }
     return p;
 }
@@ -672,13 +650,7 @@ CLuaFile2::CNode::CNode(lua_State *Lua, CLuaFile2::_LuaLocator *pTable, CLuaFile
 bool CLuaFile2::CTable::VSupportsRefresh() { return true; }
 void CLuaFile2::CTable::VDoRefresh()
 {
-    if (m_sRef)
-        free(m_sRef);
-    m_sRef = nullptr;
-    for (auto itr = m_vNodes.begin(); itr != m_vNodes.end(); ++itr)
-    {
-        delete *itr;
-    }
+    m_sRef.clear();
     m_vNodes.clear();
 
     m_oTablePtr.push(L);
@@ -705,11 +677,11 @@ void CLuaFile2::CTable::_DoLoad()
             {
                 if (iHash == 0x1DA0FE3C) // $FUNC
                 {
-                    if (m_sRef == nullptr && lua_strlen(L, -2))
+                    if (m_sRef.empty() && lua_strlen(L, -2))
                     {
                         lua_pushstring(L, "$REF"); // "$REF" K V K T T
                         lua_gettable(L, -5);       // $REF K V K T T
-                        m_sRef = strdup(lua_tostring(L, -1));
+                        m_sRef = lua_tostring(L, -1);
                         lua_pop(L, 1); // K V K T T
                     }
                     lua_pop(L, 1); // V K T T
@@ -743,12 +715,12 @@ void CLuaFile2::CTable::_DoLoad()
             // add to node list
             // K V K T T
             {
-                auto *pNode = new CLuaFile2::CNode(L, -3, -4);
+                auto pNode = std::unique_ptr<CLuaFile2::CNode>(new CLuaFile2::CNode(L, -3, -4));
                 pNode->L = L;
-                pNode->m_sName = strdup(sName);
+                pNode->m_sName = sName;
                 pNode->m_iNodeHash = iHash;
                 pNode->m_iType = lua_type(L, -2);
-                m_vNodes.push_back(pNode);
+                m_vNodes.push_back(std::move(pNode));
             }
             lua_pop(L, 1); // V K T T
 
@@ -767,10 +739,7 @@ void CLuaFile2::CTable::_DoLoad()
     lua_pop(L, 1); // T
 }
 
-CLuaFile2::CTable::CTable(lua_State *pL, bool bG) : m_oTablePtr(pL, -1), m_sRef(nullptr), m_bGlobals(bG), L(pL)
-{
-    _DoLoad();
-}
+CLuaFile2::CTable::CTable(lua_State *pL, bool bG) : m_oTablePtr(pL, -1), m_bGlobals(bG), L(pL) { _DoLoad(); }
 
 bool CLuaFile2::_SaveKey::_Sort(_SaveKey *p1, _SaveKey *p2)
 {
@@ -806,52 +775,44 @@ bool CLuaFile2::_SaveKey::_Sort(_SaveKey *p1, _SaveKey *p2)
     return atol(sNumBegin1) < atol(sNumBegin2);
 }
 
-bool CLuaFile2::CTable::_SortNodes(CLuaFile2::CNode *p1, CLuaFile2::CNode *p2)
+bool CLuaFile2::CTable::_SortNodes(const std::unique_ptr<CLuaFile2::CNode> &p1,
+                                   const std::unique_ptr<CLuaFile2::CNode> &p2)
 {
-    if (p1->m_sName == nullptr || p2->m_sName == nullptr)
+    if (p1->m_sName.empty() || p2->m_sName.empty())
     {
-        if (p1->m_sName == nullptr && p2->m_sName != nullptr)
+        if (p1->m_sName.empty() && !p2->m_sName.empty())
             return true;
         return false;
     }
 
-    char *sNumBegin1, *sNumBegin2;
-    size_t iLen1 = strlen(p1->m_sName), iLen2 = strlen(p2->m_sName);
+    const char *sNumBegin1, *sNumBegin2;
+    size_t iLen1 = p1->m_sName.size(), iLen2 = p2->m_sName.size();
 
     while (iLen1 > 0 && p1->m_sName[iLen1 - 1] >= '0' && p1->m_sName[iLen1 - 1] <= '9')
         --iLen1;
-    sNumBegin1 = p1->m_sName + iLen1;
+    sNumBegin1 = p1->m_sName.c_str() + iLen1;
     while (iLen2 > 0 && p2->m_sName[iLen2 - 1] >= '0' && p2->m_sName[iLen2 - 1] <= '9')
         --iLen2;
-    sNumBegin2 = p2->m_sName + iLen2;
+    sNumBegin2 = p2->m_sName.c_str() + iLen2;
 
     if (iLen1 != iLen2)
-        return (stricmp(p1->m_sName, p2->m_sName) < 0);
-    int iCmp = strnicmp(p1->m_sName, p2->m_sName, iLen1);
+        return (stricmp(p1->m_sName.c_str(), p2->m_sName.c_str()) < 0);
+    int iCmp = strnicmp(p1->m_sName.c_str(), p2->m_sName.c_str(), iLen1);
     if (iCmp != 0)
         return iCmp < 0;
     return atol(sNumBegin1) < atol(sNumBegin2);
 }
 
-CLuaFile2::CTable::~CTable()
-{
-    m_oTablePtr.kill(L);
-    if (m_sRef)
-        free(m_sRef);
-    for (auto itr = m_vNodes.begin(); itr != m_vNodes.end(); ++itr)
-    {
-        delete *itr;
-    }
-}
+CLuaFile2::CTable::~CTable() { m_oTablePtr.kill(L); }
 
-unsigned long CLuaFile2::CTable::VGetChildCount() { return m_vNodes.size(); }
+unsigned long CLuaFile2::CTable::VGetChildCount() { return static_cast<unsigned long>(m_vNodes.size()); }
 
 IMetaNode *CLuaFile2::CTable::VGetChild(unsigned long iIndex)
 {
-    CLuaFile2::CNode *pNode = m_vNodes[iIndex];
+    const auto &pNode = m_vNodes[iIndex];
     auto *p = new CLuaFile2::CNode(L, &pNode->m_oTablePtr, &pNode->m_oKeyPtr);
     p->L = L;
-    p->m_sName = strdup(pNode->m_sName);
+    p->m_sName = pNode->m_sName;
     p->m_iNodeHash = pNode->m_iNodeHash;
     p->m_iType = pNode->m_iType;
 
@@ -860,10 +821,10 @@ IMetaNode *CLuaFile2::CTable::VGetChild(unsigned long iIndex)
 
 IMetaNode::eDataTypes CLuaFile2::CTable::VGetReferenceType()
 {
-    return m_sRef ? IMetaNode::DT_String : IMetaNode::DT_NoData;
+    return m_sRef.empty() ? IMetaNode::DT_NoData : IMetaNode::DT_String;
 }
 
-const char *CLuaFile2::CTable::VGetReferenceString() { return m_sRef; }
+const char *CLuaFile2::CTable::VGetReferenceString() { return m_sRef.empty() ? nullptr : m_sRef.c_str(); }
 
 const wchar_t *CLuaFile2::CTable::VGetReferenceWString() { QUICK_THROW("Invalid type") }
 void CLuaFile2::CTable::VSetReferenceType(IMetaNode::eDataTypes eType) { QUICK_THROW("TODO") }
@@ -889,13 +850,13 @@ IMetaNode *CLuaFile2::CTable::VAddChild(const char *sName)
     CLuaFile2::_LuaLocator oL(L, -1);
     lua_pop(L, 2);
 
-    auto *pNode = new CLuaFile2::CNode(L, &m_oTablePtr, &oL);
+    auto pNode = std::unique_ptr<CLuaFile2::CNode>(new CLuaFile2::CNode(L, &m_oTablePtr, &oL));
     pNode->L = L;
     pNode->m_iType = LUA_TSTRING;
-    pNode->m_sName = strdup(sName);
+    pNode->m_sName = sName;
     pNode->m_iNodeHash = (unsigned long)hash((ub1 *)sName, (ub4)strlen(sName), 0);
 
-    m_vNodes.push_back(pNode);
+    m_vNodes.push_back(std::move(pNode));
     IMetaNode *pINode = VGetChild(m_vNodes.size() - 1);
     std::sort(m_vNodes.begin(), m_vNodes.end(), _SortNodes);
     return pINode;
@@ -903,7 +864,7 @@ IMetaNode *CLuaFile2::CTable::VAddChild(const char *sName)
 
 void CLuaFile2::CTable::VDeleteChild(unsigned long iIndex)
 {
-    CLuaFile2::CNode *pNode = m_vNodes[iIndex];
+    CLuaFile2::CNode *pNode = m_vNodes[iIndex].get();
 
     pNode->_pushTable();          // T
     lua_pushstring(L, "$PARENT"); // "$PARENT" T
@@ -928,7 +889,6 @@ CLuaFile2::CNode::~CNode()
 {
     m_oTablePtr.kill(L);
     m_oKeyPtr.kill(L);
-    free(m_sName);
 }
 
 CLuaFile2::CNode::eDataTypes CLuaFile2::CNode::VGetType()
@@ -957,7 +917,7 @@ CLuaFile2::CNode::eDataTypes CLuaFile2::CNode::VGetType()
     return eRet;
 }
 
-const char *CLuaFile2::CNode::VGetName() { return m_sName; }
+const char *CLuaFile2::CNode::VGetName() { return m_sName.c_str(); }
 unsigned long CLuaFile2::CNode::VGetNameHash() { return m_iNodeHash; }
 
 void CLuaFile2::CNode::_pushVal()
@@ -1134,8 +1094,7 @@ void CLuaFile2::CNode::VSetName(const char *sName)
     lua_settable(L, -3);      // T V
     lua_pop(L, 2);
 
-    free(m_sName);
-    m_sName = strdup(sName);
+    m_sName = sName;
     m_iNodeHash = (unsigned long)hash((ub1 *)sName, (ub4)strlen(sName), 0);
 }
 void CLuaFile2::CNode::VSetNameHash(unsigned long iHash) { QUICK_THROW("Invalid operation for LUA") }
