@@ -313,7 +313,7 @@ void CModuleFile_UcsForEach(IDirectoryTraverser::IIterator *pItr, void *pModuleF
     {
         auto *pUcsEntry = new CModuleFile::CUcsHandler;
         pUcsEntry->m_sName = strdup(sName);
-        pUcsEntry->m_pHandle = new CUcsFile;
+        pUcsEntry->m_pHandle = std::make_shared<CUcsFile>();
 
         std::unique_ptr<IFileStore::IStream> stream;
         try
@@ -326,7 +326,6 @@ void CModuleFile_UcsForEach(IDirectoryTraverser::IIterator *pItr, void *pModuleF
         }
         catch (CRainmanException *pE)
         {
-            delete pUcsEntry->m_pHandle;
             free(pUcsEntry->m_sName);
             delete pUcsEntry;
             throw new CRainmanException(pE, __FILE__, __LINE__, "Error loading UCS file \'%s\'", sName);
@@ -377,7 +376,7 @@ void CResourceLoader::LoadUcsFilesParallel(CModuleFile &module, IDirectoryTraver
     // Phase 2 (parallel): Load CUcsFile instances via thread pool
     struct UcsLoadResult
     {
-        CUcsFile *pHandle = nullptr;
+        std::shared_ptr<CUcsFile> pHandle;
         std::string name;
         CRainmanException *pError = nullptr;
     };
@@ -393,7 +392,7 @@ void CResourceLoader::LoadUcsFilesParallel(CModuleFile &module, IDirectoryTraver
             {
                 UcsLoadResult result;
                 result.name = fileInfo.name;
-                result.pHandle = new CUcsFile;
+                result.pHandle = std::make_shared<CUcsFile>();
                 try
                 {
                     std::unique_ptr<IFileStore::IStream> stream(pFSS->VOpenStream(fileInfo.fullPath.c_str()));
@@ -404,8 +403,7 @@ void CResourceLoader::LoadUcsFilesParallel(CModuleFile &module, IDirectoryTraver
                 }
                 catch (CRainmanException *pE)
                 {
-                    delete result.pHandle;
-                    result.pHandle = nullptr;
+                    result.pHandle.reset();
                     result.pError = pE;
                 }
                 return result;
@@ -435,7 +433,7 @@ void CResourceLoader::LoadUcsFilesParallel(CModuleFile &module, IDirectoryTraver
 
         auto *pUcsEntry = new CModuleFile::CUcsHandler;
         pUcsEntry->m_sName = strdup(result.name.c_str());
-        pUcsEntry->m_pHandle = result.pHandle;
+        pUcsEntry->m_pHandle = std::move(result.pHandle);
         module.m_vLocaleTexts.push_back(pUcsEntry);
     }
 

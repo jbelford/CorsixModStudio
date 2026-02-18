@@ -140,7 +140,7 @@ bool frmUCSSelector::GotAnswer() { return m_bGotAnswer; }
 
 wxString &frmUCSSelector::GetAnswer() { return m_sAnswer; }
 
-CUcsFile *frmUCSSelector::GetAnswerUcs() { return m_pAnswer; }
+std::shared_ptr<CUcsFile> frmUCSSelector::GetAnswerUcs() { return m_pAnswer; }
 
 bool frmUCSSelector::IsAnswerUcsReadOnly() { return m_bAnswerIsReadOnly; }
 

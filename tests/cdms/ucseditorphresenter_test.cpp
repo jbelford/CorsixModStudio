@@ -18,7 +18,7 @@
 
 #include "views/interfaces/IUcsEditorView.h"
 #include "presenters/CUcsEditorPresenter.h"
-#include <rainman/localization/CUcsFile.h>
+#include <rainman/localization/CUcsMap.h>
 #include <gtest/gtest.h>
 
 // --- Mock view ---
@@ -68,17 +68,19 @@ TEST(CUcsEditorPresenterTest, IsIdInRange_OutOfRange)
 
 TEST(CUcsEditorPresenterTest, SuggestNextId_EmptyMap)
 {
-    CUcsFile::UcsMap entries;
+    CUcsMap entries;
     EXPECT_EQ(CUcsEditorPresenter::SuggestNextId(entries), CUcsEditorPresenter::kMinRecommendedId);
 }
 
 TEST(CUcsEditorPresenterTest, SuggestNextId_WithEntries)
 {
-    wchar_t buf1[] = L"hello";
-    wchar_t buf2[] = L"world";
-    CUcsFile::UcsMap entries;
-    entries[15000001] = buf1;
-    entries[15000005] = buf2;
+    CUcsMap entries;
+    auto buf1 = std::make_shared<wchar_t[]>(6);
+    wcscpy(buf1.get(), L"hello");
+    auto buf2 = std::make_shared<wchar_t[]>(6);
+    wcscpy(buf2.get(), L"world");
+    entries.Add(15000001, buf1);
+    entries.Add(15000005, buf2);
 
     EXPECT_EQ(CUcsEditorPresenter::SuggestNextId(entries), 15000006UL);
 }
@@ -87,26 +89,27 @@ TEST(CUcsEditorPresenterTest, SuggestNextId_WithEntries)
 
 TEST(CUcsEditorPresenterTest, ValidateNewId_Valid)
 {
-    wchar_t buf[] = L"hello";
-    CUcsFile::UcsMap entries;
-    entries[15000001] = buf;
+    CUcsMap entries;
+    auto buf = std::make_shared<wchar_t[]>(6);
+    wcscpy(buf.get(), L"hello");
+    entries.Add(15000001, buf);
 
     EXPECT_EQ(CUcsEditorPresenter::ValidateNewId(15000002, entries), CUcsEditorPresenter::IdValidation::Valid);
 }
 
 TEST(CUcsEditorPresenterTest, ValidateNewId_Duplicate)
 {
-    wchar_t buf[] = L"hello";
-    CUcsFile::UcsMap entries;
-    entries[15000001] = buf;
+    CUcsMap entries;
+    auto buf = std::make_shared<wchar_t[]>(6);
+    wcscpy(buf.get(), L"hello");
+    entries.Add(15000001, buf);
 
     EXPECT_EQ(CUcsEditorPresenter::ValidateNewId(15000001, entries), CUcsEditorPresenter::IdValidation::Duplicate);
 }
 
 TEST(CUcsEditorPresenterTest, ValidateNewId_NullEntry_NotDuplicate)
 {
-    CUcsFile::UcsMap entries;
-    entries[15000001] = nullptr;
+    CUcsMap entries;
 
     EXPECT_EQ(CUcsEditorPresenter::ValidateNewId(15000001, entries), CUcsEditorPresenter::IdValidation::Valid);
 }

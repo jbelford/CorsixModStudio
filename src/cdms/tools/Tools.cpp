@@ -125,14 +125,13 @@ void CUcsTool::HandleSelectorResponse(frmUCSSelector *pSelector, wxAuiNotebook *
         sNewFile.Append(pSelector->GetAnswer());
 
         auto saNewFile = wxStringToAscii(sNewFile);
-        CUcsFile *pNewUcs = new CUcsFile;
+        auto pNewUcs = std::make_shared<CUcsFile>();
         try
         {
             pNewUcs->Save(saNewFile.get());
         }
         catch (CRainmanException *pE)
         {
-            delete pNewUcs;
             delete pSelector;
             ErrorBoxE(pE);
             return;
@@ -141,7 +140,6 @@ void CUcsTool::HandleSelectorResponse(frmUCSSelector *pSelector, wxAuiNotebook *
             auto result = TheConstruct->GetModuleService().NewUCS(pSelector->GetAnswer(), pNewUcs);
             if (!result)
             {
-                delete pNewUcs;
                 ErrorBoxS(result.error());
                 return;
             }

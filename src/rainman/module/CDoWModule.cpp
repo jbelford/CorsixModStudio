@@ -1134,14 +1134,7 @@ void CDoWModule::Load(const char *sFile, CALLBACK_ARG)
                             throw new CRainmanException(__FILE__, __LINE__, "Cannot open UCS file", pE);
                         }
 
-                        CUcsFile *pUcs = new CUcsFile;
-                        if (!pUcs)
-                        {
-                            free(sDoWPath);
-                            delete[] sModFolder;
-                            _Clean();
-                            throw new CRainmanException(__FILE__, __LINE__, "Memory allocation error");
-                        }
+                        auto pUcs = std::make_shared<CUcsFile>();
 
                         try
                         {
@@ -1151,7 +1144,6 @@ void CDoWModule::Load(const char *sFile, CALLBACK_ARG)
                         }
                         catch (CRainmanException *pE)
                         {
-                            delete pUcs;
                             free(sDoWPath);
                             delete[] sModFolder;
                             _Clean();
@@ -1576,10 +1568,6 @@ void CDoWModule::_Clean()
     }
     m_vInheritedMods.clear();
 
-    for (std::vector<CUcsFile *>::iterator itr = m_vUcsFiles.begin(); itr != m_vUcsFiles.end(); ++itr)
-    {
-        delete *itr;
-    }
     m_vUcsFiles.clear();
 
     for (std::vector<char *>::iterator itr = m_vUcsNames.begin(); itr != m_vUcsNames.end(); ++itr)
@@ -2064,10 +2052,10 @@ const wchar_t *CDoWModule::ResolveUCS(const wchar_t *sDollarString)
 
 const wchar_t *CDoWModule::ResolveUCS(unsigned long iStringID)
 {
-    for (std::vector<CUcsFile *>::iterator itr = m_vUcsFiles.begin(); itr != m_vUcsFiles.end(); ++itr)
+    for (auto &pUcs : m_vUcsFiles)
     {
         const wchar_t *t;
-        if (t = (*itr)->ResolveStringID(iStringID))
+        if (t = pUcs->ResolveStringID(iStringID))
         {
             return t;
         }
@@ -2094,10 +2082,10 @@ const char *CDoWModule::GetUcsFileName(long iIndex) const
     return m_vUcsNames[iIndex];
 }
 
-CUcsFile *CDoWModule::GetUcsFile(long iIndex) const
+std::shared_ptr<CUcsFile> CDoWModule::GetUcsFile(long iIndex) const
 {
     if (iIndex < 0 || iIndex >= GetUcsFileCount())
-        return 0;
+        return nullptr;
     return m_vUcsFiles[iIndex];
 }
 
@@ -2150,14 +2138,14 @@ unsigned long CDoWModule::_MakeFileSourcesHash(unsigned long iBase)
     return iBase;
 }
 
-void CDoWModule::RegisterNewUCS(const char *sFile, CUcsFile *pUcs)
+void CDoWModule::RegisterNewUCS(const char *sFile, std::shared_ptr<CUcsFile> pUcs)
 {
-    if (sFile == 0)
+    if (sFile == nullptr)
         throw new CRainmanException(__FILE__, __LINE__, "Invalid argument: sFile");
-    if (pUcs == 0)
+    if (!pUcs)
         throw new CRainmanException(__FILE__, __LINE__, "Invalid argument: pUcs");
     sFile = CHECK_MEM(mystrdup(sFile));
-    m_vUcsFiles.push_back(pUcs);
+    m_vUcsFiles.push_back(std::move(pUcs));
     m_vUcsNames.push_back((char *)sFile);
 }
 

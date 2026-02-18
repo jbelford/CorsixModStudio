@@ -24,10 +24,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include <memory>
 #include <vector>
 
-CUcsFile::CUcsFile() {}
-
-CUcsFile::~CUcsFile() { _Clean(); }
-
 bool CUcsFile::IsDollarString(const char *s)
 {
     if (!s || *s != '$')
@@ -62,7 +58,7 @@ bool CUcsFile::IsDollarString(const wchar_t *s)
 
 void CUcsFile::New()
 {
-    _Clean();
+    m_map.Clear();
     return;
 }
 
@@ -74,20 +70,20 @@ void CUcsFile::Save(const char *sFile)
         throw new CRainmanException(nullptr, __FILE__, __LINE__, "Cannot open file \'%s\' in mode \'wb\'", sFile);
     unsigned short iHeader = 0xFEFF;
     fwrite(&iHeader, 2, 1, f);
-    for (auto itr = m_mapValues.begin(); itr != m_mapValues.end(); ++itr)
+    for (auto &itr : m_map.GetSortedMap())
     {
-        if (itr->second)
+        if (itr.second)
         {
             // get the string representation of the number and write it
             wchar_t sBuffer[35];
-            _ltow((long)itr->first, sBuffer, 10);
+            _ltow((long)itr.first, sBuffer, 10);
             fputws(sBuffer, f);
             wchar_t t;
 
             // write the tab delimeter and value
             t = 0x09;
             fwrite(&t, 2, 1, f);
-            fputws(itr->second, f);
+            fputws(itr.second.get(), f);
 
             // write newline
             t = 0x0D;
@@ -99,9 +95,7 @@ void CUcsFile::Save(const char *sFile)
     fclose(f);
 }
 
-CUcsFile::UcsMap *CUcsFile::GetRawMap() { return &m_mapValues; }
-
-const CUcsFile::UcsMap *CUcsFile::GetRawMap() const { return &m_mapValues; }
+const CUcsMap &CUcsFile::GetRawMap() const { return m_map; }
 
 static wchar_t *mywcsdup(const char *sStr)
 {
@@ -228,7 +222,7 @@ static char *readasciiline(IFileStore::IStream *pStream, unsigned long iInitSize
 
 void CUcsFile::LoadDat(IFileStore::IStream *pStream)
 {
-    _Clean();
+    m_map.Clear();
 
     char *sLine = nullptr;
     while (sLine = readasciiline(pStream))
@@ -243,20 +237,19 @@ void CUcsFile::LoadDat(IFileStore::IStream *pStream)
                 iNumber += (sLine[i] - '0');
                 ++i;
             }
-            if (i != 0 && sLine[i] && sLine[i + 1] &&
-                m_mapValues[iNumber] == nullptr) // silenty ignore duplicate values
+            if (i != 0 && sLine[i] && sLine[i + 1] && m_map[iNumber] == nullptr) // silenty ignore duplicate values
             {
                 ++i;
-                wchar_t *sString = mywcsdup(sLine + i);
+                std::unique_ptr<wchar_t[]> sString(mywcsdup(sLine + i));
                 if (sString)
                 {
                     wchar_t *sTmp;
-                    if (sTmp = wcschr(sString, 0x0D))
+                    if (sTmp = wcschr(sString.get(), 0x0D))
                         *sTmp = 0;
-                    if (sTmp = wcschr(sString, 0x0A))
+                    if (sTmp = wcschr(sString.get(), 0x0A))
                         *sTmp = 0;
 
-                    m_mapValues[iNumber] = sString;
+                    m_map.Add(iNumber, std::move(sString));
                 }
             }
         }
@@ -268,7 +261,7 @@ void CUcsFile::LoadDat(IFileStore::IStream *pStream)
 void CUcsFile::Load(IFileStore::IStream *pStream)
 {
     RAINMAN_LOG_INFO("CUcsFile::Load() — parsing UCS string table");
-    _Clean();
+    m_map.Clear();
 
     unsigned short iHeader;
     try
@@ -345,56 +338,47 @@ void CUcsFile::Load(IFileStore::IStream *pStream)
             continue;
 
         // Only store if not a duplicate
-        if (m_mapValues[iNumber] != nullptr)
+        if (m_map[iNumber] != nullptr)
             continue;
 
         // Copy the string value
-        size_t iLen = static_cast<size_t>(pLineEnd - p);
-        auto *sString = new wchar_t[iLen + 1];
+        auto iLen = static_cast<size_t>(pLineEnd - p);
+        std::unique_ptr<wchar_t[]> sString(new wchar_t[iLen + 1]);
         for (size_t j = 0; j < iLen; ++j)
             sString[j] = static_cast<wchar_t>(p[j]);
         sString[iLen] = 0;
 
-        m_mapValues[iNumber] = sString;
+        m_map.Add(iNumber, std::move(sString));
     }
 }
 
 const wchar_t *CUcsFile::ResolveStringID(unsigned long iID)
 {
-    const wchar_t *pS = m_mapValues[iID];
+    const auto &pS = m_map[iID];
     if (!pS)
         return nullptr; // throw new CRainmanException(0, __FILE__, __LINE__, "$%ul no key", iID);
-    return pS;
+    return pS.get();
 }
 
 void CUcsFile::SetString(unsigned long iID, const wchar_t *pString)
 {
-    delete[] m_mapValues[iID];
     if (pString == nullptr)
     {
-        m_mapValues.erase(iID);
+        m_map.Remove(iID);
         return;
     }
-    wchar_t *pTmp = mywcsdup(pString);
+    std::unique_ptr<wchar_t[]> pTmp(mywcsdup(pString));
     if (pTmp == nullptr)
         throw new CRainmanException(__FILE__, __LINE__, "Cannot duplicate string (out of memory?)");
-    m_mapValues[iID] = pTmp;
+    m_map.Add(iID, std::move(pTmp));
 }
 
-void CUcsFile::ReplaceString(unsigned long iID, wchar_t *pString)
+void CUcsFile::ReplaceString(unsigned long iID, std::shared_ptr<wchar_t[]> pString)
 {
-    delete[] m_mapValues[iID];
     if (pString == nullptr)
     {
-        m_mapValues.erase(iID);
+        m_map.Remove(iID);
         return;
     }
-    m_mapValues[iID] = pString;
-}
-
-void CUcsFile::_Clean()
-{
-    for (auto itr = m_mapValues.begin(); itr != m_mapValues.end(); ++itr)
-        delete[] itr->second;
-    m_mapValues.erase(m_mapValues.begin(), m_mapValues.end());
+    m_map.Add(iID, std::move(pString));
 }

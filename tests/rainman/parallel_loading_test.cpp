@@ -490,8 +490,7 @@ TEST(BulkUcsLoading, LoadProducesCorrectEntries)
     }
 
     // Verify GetRawMap has correct count
-    ASSERT_NE(ucs.GetRawMap(), nullptr);
-    EXPECT_EQ(ucs.GetRawMap()->size(), entries.size());
+    EXPECT_EQ(ucs.GetRawMap().Size(), entries.size());
 }
 
 TEST(BulkUcsLoading, LoadHandlesEmptyFile)
@@ -509,8 +508,7 @@ TEST(BulkUcsLoading, LoadHandlesEmptyFile)
     delete stream;
     delete out;
 
-    ASSERT_NE(ucs.GetRawMap(), nullptr);
-    EXPECT_EQ(ucs.GetRawMap()->size(), 0u);
+    EXPECT_EQ(ucs.GetRawMap().Size(), 0u);
 }
 
 TEST(BulkUcsLoading, LoadHandlesLineWithoutTab)
@@ -543,7 +541,7 @@ TEST(BulkUcsLoading, LoadHandlesLineWithoutTab)
     EXPECT_NE(ucs.ResolveStringID(1), nullptr);
     EXPECT_NE(ucs.ResolveStringID(2), nullptr);
     // The invalid line should not crash or corrupt other entries
-    EXPECT_GE(ucs.GetRawMap()->size(), 2u);
+    EXPECT_GE(ucs.GetRawMap().Size(), 2u);
 }
 
 TEST(BulkUcsLoading, LoadHandlesLargeFile)
@@ -569,8 +567,7 @@ TEST(BulkUcsLoading, LoadHandlesLargeFile)
     delete stream;
     delete out;
 
-    ASSERT_NE(ucs.GetRawMap(), nullptr);
-    EXPECT_EQ(ucs.GetRawMap()->size(), static_cast<size_t>(kNumEntries));
+    EXPECT_EQ(ucs.GetRawMap().Size(), static_cast<size_t>(kNumEntries));
 
     // Spot-check a few entries
     for (int i : {0, 1, 999, 5000, 9999})

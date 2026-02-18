@@ -32,13 +32,15 @@
 // ----------------------------
 #include <rainman/localization/CUcsTransaction.h>
 #include <rainman/localization/CUcsFile.h>
+#include <rainman/localization/CUcsMap.h>
 #include <wx/propgrid/propgrid.h>
+#include <memory>
 
 class frmUCSEditor : public wxWindow
 {
   protected:
     wxPropertyGrid *m_pPropertyGrid;
-    CUcsTransaction *m_pUCS;
+    std::unique_ptr<CUcsTransaction> m_pUCS;
     bool m_bReadOnly;
     bool m_bNeedsSave;
     unsigned long *m_pResultVal;
@@ -53,7 +55,7 @@ class frmUCSEditor : public wxWindow
     /*!
         will throw a CRainmanException on error
     */
-    void FillFromCUcsFile(CUcsFile *pUcs, unsigned long iSelect = ULONG_MAX);
+    void FillFromCUcsFile(std::shared_ptr<CUcsFile> pUcs, unsigned long iSelect = ULONG_MAX);
 
     void SetTabStripForLoad(wxAuiNotebook *pTabStrib);
 

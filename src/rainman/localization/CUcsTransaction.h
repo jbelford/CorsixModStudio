@@ -25,12 +25,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include <wchar.h>
 #include "rainman/core/Api.h"
 #include "rainman/localization/CUcsFile.h"
+#include "rainman/localization/CUcsMap.h"
 
 class RAINMAN_API CUcsTransaction : public CUcsFile
 {
   public:
-    CUcsTransaction(CUcsFile *pUcsObject);
-    ~CUcsTransaction(void);
+    CUcsTransaction(std::shared_ptr<CUcsFile> pUcsObject);
+    ~CUcsTransaction() = default;
 
     //! Load an existing UCS file
     /*!
@@ -62,11 +63,11 @@ class RAINMAN_API CUcsTransaction : public CUcsFile
         a std::map<unsigned long, wchar_t*>. Otherwise returns a pointer to the
         std::map<unsigned long, wchar_t*> object
     */
-    UcsMap *GetRawMap();
+    const CUcsMap &GetRawMap();
 
     CUcsFile *GetRawObject();
 
   protected:
-    CUcsFile *m_pRawFile;
-    UcsMap m_mapCombinationValues;
+    std::shared_ptr<CUcsFile> m_pRawFile;
+    CUcsMap m_mapCombinationValues;
 };

@@ -110,7 +110,7 @@ class ModuleService
     Result<void> NewUCS(const wxString &sName);
 
     //! Create a new UCS entry with an existing CUcsFile object.
-    Result<void> NewUCS(const wxString &sName, CUcsFile *pUcs);
+    Result<void> NewUCS(const wxString &sName, std::shared_ptr<CUcsFile> pUcs);
 
     //! Check whether a directory exists in the module's virtual filesystem.
     Result<bool> DirectoryExists(const wxString &sPath);

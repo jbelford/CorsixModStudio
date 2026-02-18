@@ -630,8 +630,9 @@ public:
 	{
 		CDoWModule* arg1 = *(CDoWModule**)lua_touserdata(L, 1);
 		long arg2 = (long)(lua_tonumber(L, 2) + 0.5f);
-		CUcsFile* ret1 = arg1->GetUcsFile(arg2);
-		LuaBind_CucsFile(L, ret1, false);
+		auto ret1 = arg1->GetUcsFile(arg2);
+		if(!ret1) lua_pushnil(L);
+		else LuaBind_CucsFile(L, ret1.get(), false);
 		return 1;
 	}
 	static int f61_ucsAdd(lua_State *L)
@@ -656,8 +657,10 @@ public:
 			lua_settable(L, -3);
 			lua_pop(L, 1);
 		}
-		bool ret1 = arg1->RegisterNewUCS(arg2, arg3);
-		lua_pushboolean(L, ret1 ? 1 : 0);
+		// Lua has relinquished ownership — wrap in shared_ptr
+		std::shared_ptr<CUcsFile> pShared(arg3);
+		arg1->RegisterNewUCS(arg2, std::move(pShared));
+		lua_pushboolean(L, 1);
 		return 1;
 	}
 	static int __gc(lua_State *L)

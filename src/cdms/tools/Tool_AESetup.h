@@ -94,7 +94,7 @@ class UCSToDATConvertor
     void _endRange();
     bool _nextEntry(unsigned long *, wchar_t **);
 
-    using SortedEntry = std::pair<unsigned long, wchar_t *>;
+    using SortedEntry = std::pair<unsigned long, std::shared_ptr<wchar_t[]>>;
     using SortedEntries = std::vector<SortedEntry>;
 
     FILE *m_fDAT;

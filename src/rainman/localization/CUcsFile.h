@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include <wchar.h>
 #include <unordered_map>
 #include "rainman/core/Api.h"
+#include "rainman/localization/CUcsMap.h"
 
 //! A UCS (DoW locilization) file
 /*!
@@ -34,10 +35,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 class RAINMAN_API CUcsFile
 {
   public:
-    using UcsMap = std::unordered_map<unsigned long, wchar_t *>;
-
-    CUcsFile(void);
-    ~CUcsFile(void);
+    CUcsFile() = default;
+    ~CUcsFile() = default;
 
     static bool IsDollarString(const char *sString);
     static bool IsDollarString(const wchar_t *sString);
@@ -86,7 +85,7 @@ class RAINMAN_API CUcsFile
        instance.
         \return Returns nothing, but throws a CRainmanException on error
     */
-    void ReplaceString(unsigned long iID, wchar_t *pString);
+    void ReplaceString(unsigned long iID, std::shared_ptr<wchar_t[]> pString);
 
     //! Get the raw mappings
     /*!
@@ -94,18 +93,8 @@ class RAINMAN_API CUcsFile
         a std::map<unsigned long, wchar_t*>. Otherwise returns a pointer to the
         std::map<unsigned long, wchar_t*> object
     */
-    UcsMap *GetRawMap();
-    const UcsMap *GetRawMap() const;
+    const CUcsMap &GetRawMap() const;
 
   protected:
-    //! The raw mappings
-    UcsMap m_mapValues;
-
-    //! Free memory
-    /*!
-        Called by the destructor to free all the allocated memory, and
-        by the New() and Load() methods to clear the class ready for a
-        new set of mappings.
-    */
-    void _Clean();
+    CUcsMap m_map;
 };

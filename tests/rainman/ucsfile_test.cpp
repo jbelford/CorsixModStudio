@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "rainman/localization/CUcsFile.h"
+#include "rainman/localization/CUcsMap.h"
 #include "rainman/io/CMemoryStore.h"
 #include "rainman/core/Exception.h"
 #include <cstring>
@@ -15,9 +16,8 @@ protected:
 
 TEST_F(UcsFileTest, NewCreatesEmptyFile) {
     ucs.New();
-    auto* map = ucs.GetRawMap();
-    ASSERT_NE(map, nullptr);
-    EXPECT_TRUE(map->empty());
+    const auto &map = ucs.GetRawMap();
+    EXPECT_TRUE(map.Empty());
 }
 
 TEST_F(UcsFileTest, SetStringAndResolve) {
@@ -31,7 +31,7 @@ TEST_F(UcsFileTest, SetStringAndResolve) {
 
 TEST_F(UcsFileTest, ResolveNonexistentReturnsNull) {
     ucs.New();
-    // Note: ResolveStringID inserts a null entry for missing keys
+    // Note: operator[] now uses find() and does not insert for missing keys
     const wchar_t* result = ucs.ResolveStringID(999);
     EXPECT_EQ(result, nullptr);
 }
@@ -42,8 +42,8 @@ TEST_F(UcsFileTest, SetMultipleStrings) {
     ucs.SetString(2, L"Second");
     ucs.SetString(3, L"Third");
 
-    auto* map = ucs.GetRawMap();
-    EXPECT_GE(map->size(), 3u);
+    const auto &map = ucs.GetRawMap();
+    EXPECT_GE(map.Size(), 3u);
 
     EXPECT_WSTREQ(L"First", ucs.ResolveStringID(1));
     EXPECT_WSTREQ(L"Second", ucs.ResolveStringID(2));
@@ -64,19 +64,18 @@ TEST_F(UcsFileTest, SetStringNullRemoves) {
     ucs.SetString(1, nullptr);
 
     // After setting null, entry should be erased
-    auto* map = ucs.GetRawMap();
-    EXPECT_EQ(map->find(1), map->end());
+    const auto &map = ucs.GetRawMap();
+    EXPECT_EQ(map.Find(1), map.end());
 }
 
 TEST_F(UcsFileTest, ReplaceStringTransfersOwnership) {
     ucs.New();
 
-    wchar_t* owned = new wchar_t[6];
-    wcscpy(owned, L"Hello");
-    ucs.ReplaceString(1, owned);
+    auto owned = std::make_shared<wchar_t[]>(6);
+    wcscpy(owned.get(), L"Hello");
+    ucs.ReplaceString(1, std::move(owned));
 
     EXPECT_WSTREQ(L"Hello", ucs.ResolveStringID(1));
-    // `owned` is now managed by CUcsFile — no manual delete needed
 }
 
 TEST_F(UcsFileTest, LoadUcsFromMemory) {
@@ -140,8 +139,8 @@ TEST_F(UcsFileTest, NewClearsExistingData) {
     ucs.SetString(2, L"Second");
 
     ucs.New(); // Should clear
-    auto* map = ucs.GetRawMap();
-    EXPECT_TRUE(map->empty());
+    const auto &map = ucs.GetRawMap();
+    EXPECT_TRUE(map.Empty());
 }
 
 TEST_F(UcsFileTest, IsDollarStringValid) {
@@ -176,14 +175,13 @@ TEST_F(UcsFileTest, GetRawMapIsConsistent) {
     ucs.SetString(10, L"Ten");
     ucs.SetString(20, L"Twenty");
 
-    auto* map = ucs.GetRawMap();
-    ASSERT_NE(map, nullptr);
+    const auto &map = ucs.GetRawMap();
 
-    auto it10 = map->find(10);
-    ASSERT_NE(it10, map->end());
-    EXPECT_WSTREQ(L"Ten", it10->second);
+    auto it10 = map.Find(10);
+    ASSERT_NE(it10, map.end());
+    EXPECT_WSTREQ(L"Ten", it10->second.get());
 
-    auto it20 = map->find(20);
-    ASSERT_NE(it20, map->end());
-    EXPECT_WSTREQ(L"Twenty", it20->second);
+    auto it20 = map.Find(20);
+    ASSERT_NE(it20, map.end());
+    EXPECT_WSTREQ(L"Twenty", it20->second.get());
 }

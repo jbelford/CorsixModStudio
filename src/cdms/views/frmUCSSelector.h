@@ -33,15 +33,16 @@
 #include <rainman/localization/CUcsFile.h>
 #include <rainman/module/CModuleFile.h>
 #include <list>
+#include <memory>
 
 class frmUCSSelector : public wxDialog
 {
   protected:
     bool m_bGotAnswer;
     wxString m_sAnswer;
-    CUcsFile *m_pAnswer;
+    std::shared_ptr<CUcsFile> m_pAnswer;
     wxListBox *m_pList;
-    std::list<CUcsFile *> m_lstUcsFiles;
+    std::list<std::shared_ptr<CUcsFile>> m_lstUcsFiles;
     size_t m_iWritableUcsCount;
     bool m_bAnswerIsReadOnly;
 
@@ -61,7 +62,7 @@ class frmUCSSelector : public wxDialog
 
     bool GotAnswer();
     wxString &GetAnswer();
-    CUcsFile *GetAnswerUcs();
+    std::shared_ptr<CUcsFile> GetAnswerUcs();
     bool IsAnswerUcsReadOnly();
 
     bool SelectFromReference(unsigned long iVal);

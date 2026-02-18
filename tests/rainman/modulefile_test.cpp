@@ -438,7 +438,7 @@ TEST_F(ModuleFileTest, NewUcsWithHandle) {
     CModuleFile mod;
 
     // Create a UCS file with a string entry
-    auto* pUcs = new CUcsFile;
+    auto pUcs = std::make_shared<CUcsFile>();
     pUcs->New();
     const wchar_t* testStr = L"Hello World";
     pUcs->SetString(42, testStr);
@@ -454,7 +454,7 @@ TEST_F(ModuleFileTest, NewUcsWithHandle) {
 TEST_F(ModuleFileTest, ResolveUcsById) {
     CModuleFile mod;
 
-    auto* pUcs = new CUcsFile;
+    auto pUcs = std::make_shared<CUcsFile>();
     pUcs->New();
     const wchar_t* expected = L"Test String";
     pUcs->SetString(100, expected);
@@ -469,7 +469,7 @@ TEST_F(ModuleFileTest, ResolveUcsById) {
 TEST_F(ModuleFileTest, ResolveUcsReturnsNullForMissingId) {
     CModuleFile mod;
 
-    auto* pUcs = new CUcsFile;
+    auto pUcs = std::make_shared<CUcsFile>();
     pUcs->New();
     pUcs->SetString(1, L"exists");
 
@@ -482,7 +482,7 @@ TEST_F(ModuleFileTest, ResolveUcsReturnsNullForMissingId) {
 TEST_F(ModuleFileTest, ResolveUcsByCharDollarString) {
     CModuleFile mod;
 
-    auto* pUcs = new CUcsFile;
+    auto pUcs = std::make_shared<CUcsFile>();
     pUcs->New();
     pUcs->SetString(200, L"Dollar Result");
 
@@ -496,7 +496,7 @@ TEST_F(ModuleFileTest, ResolveUcsByCharDollarString) {
 TEST_F(ModuleFileTest, ResolveUcsByWcharDollarString) {
     CModuleFile mod;
 
-    auto* pUcs = new CUcsFile;
+    auto pUcs = std::make_shared<CUcsFile>();
     pUcs->New();
     pUcs->SetString(300, L"Wide Dollar");
 
@@ -539,12 +539,12 @@ TEST_F(ModuleFileTest, ResolveUcsMultipleFiles) {
     CModuleFile mod;
 
     // First UCS doesn't have the ID
-    auto* pUcs1 = new CUcsFile;
+    auto pUcs1 = std::make_shared<CUcsFile>();
     pUcs1->New();
     pUcs1->SetString(1, L"First File");
 
     // Second UCS has the ID
-    auto* pUcs2 = new CUcsFile;
+    auto pUcs2 = std::make_shared<CUcsFile>();
     pUcs2->New();
     pUcs2->SetString(2, L"Second File");
 

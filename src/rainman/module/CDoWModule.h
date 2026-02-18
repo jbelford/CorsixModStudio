@@ -28,6 +28,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "rainman/module/CDoWFileView.h"
 #include "rainman/archive/CSgaFile.h"
 #include "rainman/localization/CUcsFile.h"
+#include <memory>
 #include <zlib.h>
 #include "rainman/core/Callbacks.h"
 #include "rainman/core/Api.h"
@@ -188,8 +189,8 @@ class RAINMAN_API CDoWModule : public IFileStore, public IDirectoryTraverser
     const wchar_t *ResolveUCS(unsigned long iStringID);
     long GetUcsFileCount() const;
     const char *GetUcsFileName(long iIndex) const;
-    CUcsFile *GetUcsFile(long iIndex) const;
-    void RegisterNewUCS(const char *sFile, CUcsFile *pUcs);
+    std::shared_ptr<CUcsFile> GetUcsFile(long iIndex) const;
+    void RegisterNewUCS(const char *sFile, std::shared_ptr<CUcsFile> pUcs);
 
   protected:
     char *m_sUIName;      // DoW
@@ -223,7 +224,7 @@ class RAINMAN_API CDoWModule : public IFileStore, public IDirectoryTraverser
     void _TryLoadDataGeneric(const char *sModName, const char *sDoWPath, bool bReq, const char *sModFSName);
 
     // UCS Stuff
-    std::vector<CUcsFile *> m_vUcsFiles;
+    std::vector<std::shared_ptr<CUcsFile>> m_vUcsFiles;
     std::vector<char *> m_vUcsNames;
 
     // Random

@@ -30,6 +30,7 @@
 #include <memory>
 #include <algorithm>
 #include "common/Common.h"
+#include "rainman/localization/CUcsMap.h"
 
 BEGIN_EVENT_TABLE(frmUCSEditor, wxWindow)
 EVT_SIZE(frmUCSEditor::OnSize)
@@ -151,39 +152,28 @@ void frmUCSEditor::OnLoad(wxCommandEvent &event)
     CUcsTool::HandleSelectorResponse(&*pSelector, m_pTabStripForLoad, m_pResultVal, true);
 }
 
-frmUCSEditor::~frmUCSEditor() { delete m_pUCS; }
+frmUCSEditor::~frmUCSEditor() {}
 
-void frmUCSEditor::FillFromCUcsFile(CUcsFile *pUcs, unsigned long iSelect)
+void frmUCSEditor::FillFromCUcsFile(std::shared_ptr<CUcsFile> pUcs, unsigned long iSelect)
 {
     wxPGProperty *oSelectMe = nullptr;
+    auto sortedMap = pUcs->GetRawMap().GetSortedMap();
+    m_pUCS = std::make_unique<CUcsTransaction>(std::move(pUcs));
+    for (auto &entry : sortedMap)
+    {
+        if (!entry.second)
+            continue;
 
-    delete m_pUCS;
-    m_pUCS = new CUcsTransaction(pUcs);
-    decltype(pUcs->GetRawMap()) pEntries;
-    try
-    {
-        pEntries = pUcs->GetRawMap();
+        auto sNumberBuffer = L"$" + std::to_wstring(entry.first);
+        auto stringProp = std::make_unique<wxStringProperty>(sNumberBuffer, sNumberBuffer, entry.second.get());
+        if (m_bReadOnly)
+            stringProp->Enable(false);
+        if (iSelect == entry.first)
+            oSelectMe = stringProp.get();
+
+        m_pPropertyGrid->Append(stringProp.release());
     }
-    catch (CRainmanException *pE)
-    {
-        throw new CModStudioException(__FILE__, __LINE__, "Unable to get UCS mappings", pE);
-    }
-    for (auto itr = pEntries->begin(); itr != pEntries->end(); ++itr)
-    {
-        if (itr->second)
-        {
-            wchar_t sNumberBuffer[34];
-            sNumberBuffer[0] = '$';
-            _ultow(itr->first, sNumberBuffer + 1, 10);
-            wxPGProperty *pTmp;
-            wxPGProperty *oTmp =
-                m_pPropertyGrid->Append(pTmp = new wxStringProperty(sNumberBuffer, sNumberBuffer, itr->second));
-            if (m_bReadOnly)
-                pTmp->Enable(false);
-            if (iSelect == itr->first)
-                oSelectMe = oTmp;
-        }
-    }
+
     m_pPropertyGrid->SetSplitterLeft();
 
     if (oSelectMe != nullptr)
@@ -227,10 +217,10 @@ void frmUCSEditor::OnNewEntry(wxCommandEvent &event)
     sNumberBuffer[0] = '$';
     try
     {
-        auto *pMap = m_pUCS->GetRawMap();
-        if (!pMap->empty())
+        const CUcsMap &pMap = m_pUCS->GetRawMap();
+        if (!pMap.Empty())
         {
-            unsigned long iNext = CUcsEditorPresenter::SuggestNextId(*pMap);
+            unsigned long iNext = CUcsEditorPresenter::SuggestNextId(pMap);
             _ultow(iNext, sNumberBuffer + 1, 10);
         }
         else
@@ -268,25 +258,16 @@ void frmUCSEditor::OnNewEntry(wxCommandEvent &event)
         }
     }
 
-    decltype(m_pUCS->GetRawMap()) pEntries;
-    try
-    {
-        pEntries = m_pUCS->GetRawMap();
-    }
-    catch (CRainmanException *pE)
-    {
-        ErrorBoxE(pE);
-        return;
-    }
+    const CUcsMap &entries = m_pUCS->GetRawMap();
 
-    if (CUcsEditorPresenter::ValidateNewId(iNewID, *pEntries) == CUcsEditorPresenter::IdValidation::Duplicate)
+    if (CUcsEditorPresenter::ValidateNewId(iNewID, entries) == CUcsEditorPresenter::IdValidation::Duplicate)
     {
         wxMessageBox(AppStr(ucsedit_newentrydupcaption), AppStr(ucsedit_newentryduptitle), wxICON_ERROR, this);
         return;
     }
 
     // Find insertion point (sorted order)
-    for (auto itr = pEntries->begin(); itr != pEntries->end(); ++itr)
+    for (auto itr = entries.begin(); itr != entries.end(); ++itr)
     {
         if (itr->second && itr->first >= iNewID)
         {
@@ -369,7 +350,7 @@ void frmUCSEditor::DoSave()
         for (size_t i = 0; i < iUCSCount; ++i)
         {
             CModuleFile::CUcsHandler *pUcs = TheConstruct->GetModuleService().GetUcs(i);
-            if (pUcs->GetUcsHandle() == m_pUCS->GetRawObject())
+            if (pUcs->GetUcsHandle().get() == m_pUCS->GetRawObject())
             {
                 sNewFile.Append(AsciiTowxString(pUcs->GetFileName()));
                 goto found_ucs_file;
@@ -386,7 +367,7 @@ void frmUCSEditor::DoSave()
                 for (size_t i = 0; i < iUCSCount; ++i)
                 {
                     const CModuleFile::CUcsHandler *pUcs = pMod->GetUcs(i);
-                    if (pUcs->GetUcsHandle() == m_pUCS->GetRawObject())
+                    if (pUcs->GetUcsHandle().get() == m_pUCS->GetRawObject())
                     {
                         sNewFile.Append(AsciiTowxString(pUcs->GetFileName()));
                         goto found_ucs_file;
@@ -402,7 +383,7 @@ void frmUCSEditor::DoSave()
                 for (size_t i = 0; i < iUCSCount; ++i)
                 {
                     const CModuleFile::CUcsHandler *pUcs = pMod->GetUcs(i);
-                    if (pUcs->GetUcsHandle() == m_pUCS->GetRawObject())
+                    if (pUcs->GetUcsHandle().get() == m_pUCS->GetRawObject())
                     {
                         sNewFile.Append(AsciiTowxString(pUcs->GetFileName()));
                         goto found_ucs_file;

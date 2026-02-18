@@ -20,7 +20,7 @@
 
 #include "views/interfaces/IUcsEditorView.h"
 #include <rainman/module/CModuleFile.h>
-#include <rainman/localization/CUcsFile.h>
+#include <rainman/localization/CUcsMap.h>
 #include <wx/string.h>
 
 //! Presenter for the UCS localization editor.
@@ -46,7 +46,7 @@ class CUcsEditorPresenter
         \param entries  Raw UCS entry map (id → string).
         \return Suggested next ID, or kMinRecommendedId if entries is empty.
     */
-    [[nodiscard]] static unsigned long SuggestNextId(const CUcsFile::UcsMap &entries);
+    [[nodiscard]] static unsigned long SuggestNextId(const CUcsMap &entries);
 
     //! Result of validating a new UCS ID.
     enum class IdValidation
@@ -56,7 +56,7 @@ class CUcsEditorPresenter
     };
 
     //! Validate a proposed new UCS ID against existing entries.
-    [[nodiscard]] static IdValidation ValidateNewId(unsigned long iId, const CUcsFile::UcsMap &entries);
+    [[nodiscard]] static IdValidation ValidateNewId(unsigned long iId, const CUcsMap &entries);
 
     //! Parse a UCS ID from user input text.
     /*!

@@ -21,17 +21,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "rainman/core/memdebug.h"
 #include "rainman/core/Exception.h"
 
-CUcsTransaction::CUcsTransaction(CUcsFile *pUcsObject) { m_pRawFile = pUcsObject; }
-
-CUcsTransaction::~CUcsTransaction() { _Clean(); }
+CUcsTransaction::CUcsTransaction(std::shared_ptr<CUcsFile> pUcsObject) { m_pRawFile = std::move(pUcsObject); }
 
 void CUcsTransaction::Save(const char *sFile)
 {
-    for (auto itr = m_mapValues.begin(); itr != m_mapValues.end(); ++itr)
+    for (auto &itr : m_map.GetSortedMap())
     {
-        m_pRawFile->ReplaceString(itr->first, itr->second);
+        m_pRawFile->ReplaceString(itr.first, std::move(itr.second));
     }
-    m_mapValues.clear();
+    m_map.Clear();
 
     try
     {
@@ -40,26 +38,26 @@ void CUcsTransaction::Save(const char *sFile)
     CATCH_THROW("Raw object failed to write")
 }
 
-CUcsFile::UcsMap *CUcsTransaction::GetRawMap()
+const CUcsMap &CUcsTransaction::GetRawMap()
 {
-    if (m_mapValues.empty())
+    if (m_map.Empty())
         return m_pRawFile->GetRawMap();
 
     // Need to make a faux map of a combination of our edits and the original
-    m_mapCombinationValues.clear();
-    m_mapCombinationValues = *m_pRawFile->GetRawMap();
+    m_mapCombinationValues.Clear();
+    m_mapCombinationValues = m_pRawFile->GetRawMap();
 
-    for (auto itr = m_mapValues.begin(); itr != m_mapValues.end(); ++itr)
+    for (auto &itr : m_map.GetSortedMap())
     {
-        m_mapCombinationValues[itr->first] = itr->second;
+        m_mapCombinationValues.Add(itr.first, itr.second);
     }
 
-    return &m_mapCombinationValues;
+    return m_mapCombinationValues;
 }
 
 void CUcsTransaction::Load(IFileStore::IStream *pStream)
 {
-    _Clean();
+    m_map.Clear();
 
     try
     {
@@ -70,10 +68,10 @@ void CUcsTransaction::Load(IFileStore::IStream *pStream)
 
 const wchar_t *CUcsTransaction::ResolveStringID(unsigned long iID)
 {
-    const wchar_t *pS = m_mapValues[iID];
+    const std::shared_ptr<wchar_t[]> &pS = m_map[iID];
     if (!pS)
         return m_pRawFile->ResolveStringID(iID);
-    return pS;
+    return pS.get();
 }
 
-CUcsFile *CUcsTransaction::GetRawObject() { return m_pRawFile; }
+CUcsFile *CUcsTransaction::GetRawObject() { return m_pRawFile.get(); }

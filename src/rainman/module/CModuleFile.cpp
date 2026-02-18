@@ -260,19 +260,15 @@ long CModuleFile::GetSgaOutputVersion()
     return 2;
 }
 
-CModuleFile::CUcsHandler::CUcsHandler()
-{
-    m_sName = nullptr;
-    m_pHandle = nullptr;
-}
+CModuleFile::CUcsHandler::CUcsHandler() { m_sName = nullptr; }
 
 CModuleFile::CUcsHandler::~CUcsHandler() {}
 
 const char *CModuleFile::CUcsHandler::GetFileName() const { return m_sName; }
 
-const CUcsFile *CModuleFile::CUcsHandler::GetUcsHandle() const { return m_pHandle; }
+std::shared_ptr<const CUcsFile> CModuleFile::CUcsHandler::GetUcsHandle() const { return m_pHandle; }
 
-CUcsFile *CModuleFile::CUcsHandler::GetUcsHandle() { return m_pHandle; }
+std::shared_ptr<CUcsFile> CModuleFile::CUcsHandler::GetUcsHandle() { return m_pHandle; }
 
 CModuleFile::CFolderHandler::CFolderHandler()
 {
@@ -463,8 +459,7 @@ void CModuleFile::_CleanResources()
 
     for (auto itr = m_vLocaleTexts.begin(); itr != m_vLocaleTexts.end(); ++itr)
     {
-        if ((**itr).m_pHandle)
-            delete (**itr).m_pHandle;
+        (**itr).m_pHandle.reset();
         if ((**itr).m_sName)
             free((**itr).m_sName);
         delete *itr;
@@ -704,11 +699,11 @@ void CModuleFile::ReloadResources(unsigned long iReloadWhat, unsigned long iRelo
 
 const char *CModuleFile::GetApplicationPath() const { return m_sApplicationPath; }
 
-void CModuleFile::NewUCS(const char *sName, CUcsFile *pUcs)
+void CModuleFile::NewUCS(const char *sName, std::shared_ptr<CUcsFile> pUcs)
 {
     auto *pHandler = new CUcsHandler;
     pHandler->m_sName = strdup(sName);
-    pHandler->m_pHandle = pUcs;
+    pHandler->m_pHandle = std::move(pUcs);
 
     m_vLocaleTexts.push_back(pHandler);
 }

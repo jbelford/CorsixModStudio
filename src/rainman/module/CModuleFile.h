@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "rainman/core/Api.h"
 #include "rainman/core/Callbacks.h"
 #include "rainman/module/CModuleMetadata.h"
+#include <memory>
 #include <vector>
 
 class CSgaFile;
@@ -256,8 +257,8 @@ class RAINMAN_API CModuleFile : public IFileStore, public IDirectoryTraverser
     {
       public:
         const char *GetFileName() const;
-        CUcsFile *GetUcsHandle();
-        const CUcsFile *GetUcsHandle() const;
+        std::shared_ptr<CUcsFile> GetUcsHandle();
+        std::shared_ptr<const CUcsFile> GetUcsHandle() const;
 
       protected:
         CUcsHandler();
@@ -266,11 +267,11 @@ class RAINMAN_API CModuleFile : public IFileStore, public IDirectoryTraverser
         friend class CModuleFile;
         friend class CResourceLoader;
         friend void CModuleFile_UcsForEach(IDirectoryTraverser::IIterator *, void *);
-        char *m_sName;       //!< This is a "resource" (because CUcsHandler is)
-        CUcsFile *m_pHandle; //!< This is a "resource" (because CUcsHandler is)
+        char *m_sName;                       //!< This is a "resource" (because CUcsHandler is)
+        std::shared_ptr<CUcsFile> m_pHandle; //!< This is a "resource" (because CUcsHandler is)
     };
 
-    void NewUCS(const char *sName, CUcsFile *pUcs = 0);
+    void NewUCS(const char *sName, std::shared_ptr<CUcsFile> pUcs = nullptr);
     const wchar_t *ResolveUCS(const char *sDollarString);
     const wchar_t *ResolveUCS(const wchar_t *sDollarString);
     /*!

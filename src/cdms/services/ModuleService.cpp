@@ -218,7 +218,7 @@ Result<void> ModuleService::NewUCS(const wxString &sName)
     return Result<void>::Ok();
 }
 
-Result<void> ModuleService::NewUCS(const wxString &sName, CUcsFile *pUcs)
+Result<void> ModuleService::NewUCS(const wxString &sName, std::shared_ptr<CUcsFile> pUcs)
 {
     auto s = wxStringToAscii(sName);
     if (!s)
@@ -226,7 +226,7 @@ Result<void> ModuleService::NewUCS(const wxString &sName, CUcsFile *pUcs)
 
     try
     {
-        m_pModule->NewUCS(s.get(), pUcs);
+        m_pModule->NewUCS(s.get(), std::move(pUcs));
     }
     catch (CRainmanException *pE)
     {

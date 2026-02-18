@@ -238,7 +238,7 @@ bool UCSToDATConvertor::_nextEntry(unsigned long *pCode, wchar_t **pValue)
     }
     if (n == m_iUCSCount)
         return false;
-    *pValue = m_aUCSFiles[n]->second;
+    *pValue = m_aUCSFiles[n]->second.get();
     ++m_aUCSFiles[n];
     return true;
 }
@@ -248,7 +248,7 @@ static void AddUcsFilesToVector(const CModuleFile *pModule, std::vector<const CU
     if (pModule)
     {
         for (size_t i = 0; i < pModule->GetUcsCount(); ++i)
-            vFiles.push_back(pModule->GetUcs(i)->GetUcsHandle());
+            vFiles.push_back(pModule->GetUcs(i)->GetUcsHandle().get());
     }
 }
 
@@ -270,8 +270,8 @@ void UCSToDATConvertor::doConvertion()
     m_aUCSFileEnds = new SortedEntries::const_iterator[m_iUCSCount];
     for (size_t i = 0; i < m_iUCSCount; ++i)
     {
-        const auto *pMap = vFiles[i]->GetRawMap();
-        m_vSortedMaps[i].assign(pMap->begin(), pMap->end());
+        const auto &rMap = vFiles[i]->GetRawMap();
+        m_vSortedMaps[i].assign(rMap.begin(), rMap.end());
         std::sort(m_vSortedMaps[i].begin(), m_vSortedMaps[i].end(),
                   [](const SortedEntry &a, const SortedEntry &b) { return a.first < b.first; });
         m_aUCSFiles[i] = m_vSortedMaps[i].cbegin();

@@ -26,9 +26,9 @@ bool CUcsEditorPresenter::IsIdInRecommendedRange(unsigned long iId)
     return iId >= kMinRecommendedId && iId <= kMaxRecommendedId;
 }
 
-unsigned long CUcsEditorPresenter::SuggestNextId(const CUcsFile::UcsMap &entries)
+unsigned long CUcsEditorPresenter::SuggestNextId(const CUcsMap &entries)
 {
-    if (entries.empty())
+    if (entries.Empty())
         return kMinRecommendedId;
 
     auto itMax = std::max_element(entries.begin(), entries.end(),
@@ -36,9 +36,9 @@ unsigned long CUcsEditorPresenter::SuggestNextId(const CUcsFile::UcsMap &entries
     return itMax->first + 1;
 }
 
-CUcsEditorPresenter::IdValidation CUcsEditorPresenter::ValidateNewId(unsigned long iId, const CUcsFile::UcsMap &entries)
+CUcsEditorPresenter::IdValidation CUcsEditorPresenter::ValidateNewId(unsigned long iId, const CUcsMap &entries)
 {
-    auto it = entries.find(iId);
+    auto it = entries.Find(iId);
     if (it != entries.end() && it->second != nullptr)
         return IdValidation::Duplicate;
 
