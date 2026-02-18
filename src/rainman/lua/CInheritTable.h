@@ -1,7 +1,9 @@
 #pragma once
 
-#include <vector>
 #include <map>
+#include <memory>
+#include <string>
+#include <vector>
 #include "rainman/io/IFileStore.h"
 
 class RAINMAN_API CInheritTable
@@ -12,18 +14,18 @@ class RAINMAN_API CInheritTable
       protected:
         friend class CInheritTable;
         CNode();
-        ~CNode();
 
         CNode *m_pParent;
         CNode *m_pHashMapNext;
-        char *m_sFullName;
-        char *m_sMiniName;
+        std::string m_sFullName;
+        std::string m_sMiniName;
         bool m_bIsNil;
         std::vector<CNode *> m_vChildren;
 
         void setName(const char *sPath);
 
       public:
+        ~CNode() = default;
         void print(FILE *f, int iL = 0);
         void setParent(CNode *pParent);
 
@@ -36,8 +38,9 @@ class RAINMAN_API CInheritTable
     };
 
   protected:
+    std::vector<std::unique_ptr<CNode>> m_nodeStorage;
     std::map<unsigned long, CNode *> m_mapNodes;
-    CNode *m_pRootNode;
+    std::unique_ptr<CNode> m_pRootNode;
 
   public:
     CInheritTable();
