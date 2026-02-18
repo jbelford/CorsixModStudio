@@ -61,63 +61,43 @@ CModuleParseResult CModuleParser::Parse(const char *sFileName)
                 {
                     if (stricmp(sKey, "UIName") == 0)
                     {
-                        if (result.metadata.m_sUiName)
-                            free(result.metadata.m_sUiName);
-                        result.metadata.m_sUiName = CHECK_MEM(strdup(sValue));
+                        result.metadata.m_sUiName = sValue;
                     }
                     else if (stricmp(sKey, "Name") == 0)
                     {
-                        if (result.metadata.m_sName)
-                            free(result.metadata.m_sName);
-                        result.metadata.m_sName = CHECK_MEM(strdup(sValue));
+                        result.metadata.m_sName = sValue;
                     }
                     else if (stricmp(sKey, "Description") == 0)
                     {
-                        if (result.metadata.m_sDescription)
-                            free(result.metadata.m_sDescription);
-                        result.metadata.m_sDescription = CHECK_MEM(strdup(sValue));
+                        result.metadata.m_sDescription = sValue;
                     }
                     else if (stricmp(sKey, "DllName") == 0)
                     {
-                        if (result.metadata.m_sDllName)
-                            free(result.metadata.m_sDllName);
-                        result.metadata.m_sDllName = CHECK_MEM(strdup(sValue));
+                        result.metadata.m_sDllName = sValue;
                     }
                     else if (stricmp(sKey, "ModFolder") == 0)
                     {
-                        if (result.metadata.m_sModFolder)
-                            free(result.metadata.m_sModFolder);
-                        result.metadata.m_sModFolder = CHECK_MEM(strdup(sValue));
+                        result.metadata.m_sModFolder = sValue;
                     }
                     else if (stricmp(sKey, "TextureFE") == 0)
                     {
-                        if (result.metadata.m_sTextureFe)
-                            free(result.metadata.m_sTextureFe);
-                        result.metadata.m_sTextureFe = CHECK_MEM(strdup(sValue));
+                        result.metadata.m_sTextureFe = sValue;
                     }
                     else if (stricmp(sKey, "TextureIcon") == 0)
                     {
-                        if (result.metadata.m_sTextureIcon)
-                            free(result.metadata.m_sTextureIcon);
-                        result.metadata.m_sTextureIcon = CHECK_MEM(strdup(sValue));
+                        result.metadata.m_sTextureIcon = sValue;
                     }
                     else if (stricmp(sKey, "PatcherUrl") == 0)
                     {
-                        if (result.metadata.m_sPatcherUrl)
-                            free(result.metadata.m_sPatcherUrl);
-                        result.metadata.m_sPatcherUrl = CHECK_MEM(strdup(sValue));
+                        result.metadata.m_sPatcherUrl = sValue;
                     }
                     else if (stricmp(sKey, "LocFolder") == 0)
                     {
-                        if (result.metadata.m_sLocFolder)
-                            free(result.metadata.m_sLocFolder);
-                        result.metadata.m_sLocFolder = CHECK_MEM(strdup(sValue));
+                        result.metadata.m_sLocFolder = sValue;
                     }
                     else if (stricmp(sKey, "ScenarioPackFolder") == 0)
                     {
-                        if (result.metadata.m_sScenarioPackFolder)
-                            free(result.metadata.m_sScenarioPackFolder);
-                        result.metadata.m_sScenarioPackFolder = CHECK_MEM(strdup(sValue));
+                        result.metadata.m_sScenarioPackFolder = sValue;
                     }
                     else if (stricmp(sKey, "ModVersion") == 0)
                     {
@@ -250,25 +230,25 @@ CModuleParseResult CModuleParser::Parse(const char *sFileName)
 
     // Decide what kind of module file it is
     size_t iHeuristicDow = 0, iHeuristicCoh = 0, iHeuristicCohEarly = 0;
-    if (result.metadata.m_sUiName && *result.metadata.m_sUiName)
+    if (!result.metadata.m_sUiName.empty())
         iHeuristicDow += 3;
-    if (result.metadata.m_sName && *result.metadata.m_sName)
+    if (!result.metadata.m_sName.empty())
         iHeuristicCoh += 1, iHeuristicCohEarly += 1;
-    if (result.metadata.m_sDescription && *result.metadata.m_sDescription)
+    if (!result.metadata.m_sDescription.empty())
         iHeuristicCoh += 1, iHeuristicCohEarly += 1, iHeuristicDow += 1;
-    if (result.metadata.m_sDllName && *result.metadata.m_sDllName)
+    if (!result.metadata.m_sDllName.empty())
         iHeuristicCoh += 1, iHeuristicCohEarly += 1, iHeuristicDow += 1;
-    if (result.metadata.m_sModFolder && *result.metadata.m_sModFolder)
+    if (!result.metadata.m_sModFolder.empty())
         iHeuristicCoh += 1, iHeuristicCohEarly += 1, iHeuristicDow += 1;
-    if (result.metadata.m_sTextureFe && *result.metadata.m_sTextureFe)
+    if (!result.metadata.m_sTextureFe.empty())
         iHeuristicDow += 3;
-    if (result.metadata.m_sTextureIcon && *result.metadata.m_sTextureIcon)
+    if (!result.metadata.m_sTextureIcon.empty())
         iHeuristicDow += 3;
-    if (result.metadata.m_sPatcherUrl && *result.metadata.m_sPatcherUrl)
+    if (!result.metadata.m_sPatcherUrl.empty())
         iHeuristicCohEarly += 3;
-    if (result.metadata.m_sLocFolder && *result.metadata.m_sLocFolder)
+    if (!result.metadata.m_sLocFolder.empty())
         iHeuristicCoh += 3;
-    if (result.metadata.m_sScenarioPackFolder && *result.metadata.m_sScenarioPackFolder)
+    if (!result.metadata.m_sScenarioPackFolder.empty())
         iHeuristicCoh += 3;
     iHeuristicDow += (result.folders.size() * 3);
     iHeuristicDow += (result.archives.size() * 3);

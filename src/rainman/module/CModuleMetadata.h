@@ -19,24 +19,23 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 #pragma once
 
-#include <cstdlib>
-#include <cstring>
+#include <string>
 
 //! Holds the parsed directive fields from a .module file.
-//! This is a value type that owns all its string memory via strdup/free.
+//! This is a value type — all string memory is managed by std::string.
 struct CModuleMetadata
 {
-    // String directives (all nullable, owned via strdup)
-    char *m_sUiName = nullptr;
-    char *m_sName = nullptr;
-    char *m_sDescription = nullptr;
-    char *m_sDllName = nullptr;
-    char *m_sModFolder = nullptr;
-    char *m_sTextureFe = nullptr;
-    char *m_sTextureIcon = nullptr;
-    char *m_sPatcherUrl = nullptr;
-    char *m_sLocFolder = nullptr;
-    char *m_sScenarioPackFolder = nullptr;
+    // String directives
+    std::string m_sUiName;
+    std::string m_sName;
+    std::string m_sDescription;
+    std::string m_sDllName;
+    std::string m_sModFolder;
+    std::string m_sTextureFe;
+    std::string m_sTextureIcon;
+    std::string m_sPatcherUrl;
+    std::string m_sLocFolder;
+    std::string m_sScenarioPackFolder;
 
     // Version directives
     signed long m_iModVersionMajor = 0;
@@ -44,86 +43,30 @@ struct CModuleMetadata
     signed long m_iModVersionRevision = 0;
 
     CModuleMetadata() = default;
-    ~CModuleMetadata() { Reset(); }
+    ~CModuleMetadata() = default;
 
-    CModuleMetadata(const CModuleMetadata &) = delete;
-    CModuleMetadata &operator=(const CModuleMetadata &) = delete;
+    CModuleMetadata(const CModuleMetadata &) = default;
+    CModuleMetadata &operator=(const CModuleMetadata &) = default;
 
-    CModuleMetadata(CModuleMetadata &&other) noexcept { MoveFrom(other); }
+    CModuleMetadata(CModuleMetadata &&) noexcept = default;
+    CModuleMetadata &operator=(CModuleMetadata &&) noexcept = default;
 
-    CModuleMetadata &operator=(CModuleMetadata &&other) noexcept
-    {
-        if (this != &other)
-        {
-            Reset();
-            MoveFrom(other);
-        }
-        return *this;
-    }
-
-    //! Free all owned strings and reset version fields to zero.
+    //! Clear all fields to defaults.
     void Reset()
     {
-        FreeField(m_sUiName);
-        FreeField(m_sName);
-        FreeField(m_sDescription);
-        FreeField(m_sDllName);
-        FreeField(m_sModFolder);
-        FreeField(m_sTextureFe);
-        FreeField(m_sTextureIcon);
-        FreeField(m_sPatcherUrl);
-        FreeField(m_sLocFolder);
-        FreeField(m_sScenarioPackFolder);
+        m_sUiName.clear();
+        m_sName.clear();
+        m_sDescription.clear();
+        m_sDllName.clear();
+        m_sModFolder.clear();
+        m_sTextureFe.clear();
+        m_sTextureIcon.clear();
+        m_sPatcherUrl.clear();
+        m_sLocFolder.clear();
+        m_sScenarioPackFolder.clear();
 
         m_iModVersionMajor = 0;
         m_iModVersionMinor = 0;
         m_iModVersionRevision = 0;
-    }
-
-    //! Set a string field, freeing the previous value.
-    static void SetField(char *&field, const char *value)
-    {
-        if (field)
-            free(field);
-        field = value ? strdup(value) : nullptr;
-    }
-
-  private:
-    static void FreeField(char *&field)
-    {
-        if (field)
-            free(field);
-        field = nullptr;
-    }
-
-    void MoveFrom(CModuleMetadata &other)
-    {
-        m_sUiName = other.m_sUiName;
-        m_sName = other.m_sName;
-        m_sDescription = other.m_sDescription;
-        m_sDllName = other.m_sDllName;
-        m_sModFolder = other.m_sModFolder;
-        m_sTextureFe = other.m_sTextureFe;
-        m_sTextureIcon = other.m_sTextureIcon;
-        m_sPatcherUrl = other.m_sPatcherUrl;
-        m_sLocFolder = other.m_sLocFolder;
-        m_sScenarioPackFolder = other.m_sScenarioPackFolder;
-        m_iModVersionMajor = other.m_iModVersionMajor;
-        m_iModVersionMinor = other.m_iModVersionMinor;
-        m_iModVersionRevision = other.m_iModVersionRevision;
-
-        other.m_sUiName = nullptr;
-        other.m_sName = nullptr;
-        other.m_sDescription = nullptr;
-        other.m_sDllName = nullptr;
-        other.m_sModFolder = nullptr;
-        other.m_sTextureFe = nullptr;
-        other.m_sTextureIcon = nullptr;
-        other.m_sPatcherUrl = nullptr;
-        other.m_sLocFolder = nullptr;
-        other.m_sScenarioPackFolder = nullptr;
-        other.m_iModVersionMajor = 0;
-        other.m_iModVersionMinor = 0;
-        other.m_iModVersionRevision = 0;
     }
 };

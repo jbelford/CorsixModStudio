@@ -624,8 +624,8 @@ void CResourceLoader::LoadDataGeneric(CModuleFile &module, CALLBACK_ARG)
     CallCallback(THE_CALLBACK, "Parsing file \'pipeline.ini\'");
     delete[] sPipelineFile;
 
-    char *sSectionName = new char[16 + strlen(module.m_metadata.m_sModFolder)];
-    sprintf(sSectionName, "project:%s", module.m_metadata.m_sModFolder);
+    char *sSectionName = new char[16 + module.m_metadata.m_sModFolder.size()];
+    sprintf(sSectionName, "project:%s", module.m_metadata.m_sModFolder.c_str());
 
     bool bInSection = false;
     while (!feof(fModule))
@@ -710,10 +710,10 @@ void CResourceLoader::LoadCohEngine(CModuleFile &module, const char *sFolder, co
     CModuleFile *pEngine = CHECK_MEM(new CModuleFile);
 
     pEngine->m_eModuleType = CModuleFile::MT_CompanyOfHeroesEarly;
-    pEngine->m_metadata.m_sUiName = strdup(sUiName);
-    pEngine->m_metadata.m_sDescription = strdup(sUiName);
+    pEngine->m_metadata.m_sUiName = sUiName;
+    pEngine->m_metadata.m_sDescription = sUiName;
     pEngine->m_sFileMapName = strdup(sUiName);
-    pEngine->m_metadata.m_sModFolder = strdup(sFolder);
+    pEngine->m_metadata.m_sModFolder = sFolder;
 
     free(pEngine->m_sLocale);
     pEngine->m_sLocale = module.m_sLocale;
@@ -769,7 +769,7 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
         auto tPhaseStart = std::chrono::steady_clock::now();
 
         std::string sUcsPath;
-        if (module.m_metadata.m_sLocFolder && *module.m_metadata.m_sLocFolder)
+        if (!module.m_metadata.m_sLocFolder.empty())
         {
             sUcsPath =
                 std::string(module.m_sApplicationPath) + module.m_metadata.m_sLocFolder + "\\" + module.m_sLocale;
@@ -929,8 +929,9 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
             else if (module.m_eModuleType == CModuleFile::MT_CompanyOfHeroesEarly)
             {
                 char *sArchivesPath =
-                    new char[strlen(module.m_sApplicationPath) + strlen(module.m_metadata.m_sModFolder) + 10];
-                sprintf(sArchivesPath, "%s%s\\Archives", module.m_sApplicationPath, module.m_metadata.m_sModFolder);
+                    new char[strlen(module.m_sApplicationPath) + module.m_metadata.m_sModFolder.size() + 10];
+                sprintf(sArchivesPath, "%s%s\\Archives", module.m_sApplicationPath,
+                        module.m_metadata.m_sModFolder.c_str());
                 IDirectoryTraverser::IIterator *pItr = nullptr;
                 try
                 {
@@ -1039,12 +1040,12 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
     if (iReloadWhat & CModuleFile::RR_MapArchives)
     {
         if (module.m_sScenarioPackRootFolder && *module.m_sScenarioPackRootFolder &&
-            module.m_metadata.m_sScenarioPackFolder && *module.m_metadata.m_sScenarioPackFolder)
+            !module.m_metadata.m_sScenarioPackFolder.empty())
         {
             auto *sArchivesPath = new wchar_t[wcslen(module.m_sScenarioPackRootFolder) +
-                                              strlen(module.m_metadata.m_sScenarioPackFolder) + 2];
+                                              module.m_metadata.m_sScenarioPackFolder.size() + 2];
             swprintf(sArchivesPath, L"%s\\%S", module.m_sScenarioPackRootFolder,
-                     module.m_metadata.m_sScenarioPackFolder);
+                     module.m_metadata.m_sScenarioPackFolder.c_str());
             IDirectoryTraverser::IIterator *pItr = nullptr;
             try
             {
@@ -1115,10 +1116,10 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
             CModuleFile *pEngine = CHECK_MEM(new CModuleFile);
 
             pEngine->m_eModuleType = CModuleFile::MT_DawnOfWar;
-            pEngine->m_metadata.m_sUiName = strdup("(Engine)");
+            pEngine->m_metadata.m_sUiName = "(Engine)";
             pEngine->m_sFileMapName = strdup("(Engine)");
-            pEngine->m_metadata.m_sDescription = strdup("(Engine)");
-            pEngine->m_metadata.m_sModFolder = strdup("Engine");
+            pEngine->m_metadata.m_sDescription = "(Engine)";
+            pEngine->m_metadata.m_sModFolder = "Engine";
 
             free(pEngine->m_sLocale);
             pEngine->m_sLocale = module.m_sLocale;

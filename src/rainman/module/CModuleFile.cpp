@@ -96,13 +96,8 @@ void CModuleFile::SetMapPackRootFolder(const wchar_t *sFolder)
 const wchar_t *CModuleFile::GetMapPackRootFolder() const { return m_sScenarioPackRootFolder; }
 
 #define GET_SET_DIRECTIVE(name, int_name)                                                                              \
-    const char *CModuleFile::Get##name() const { return int_name; }                                                    \
-    void CModuleFile::Set##name(const char *value)                                                                     \
-    {                                                                                                                  \
-        if (int_name)                                                                                                  \
-            free(int_name);                                                                                            \
-        (int_name) = strdup(value);                                                                                    \
-    }
+    const char *CModuleFile::Get##name() const { return (int_name).c_str(); }                                          \
+    void CModuleFile::Set##name(const char *value) { (int_name) = value ? value : ""; }
 
 GET_SET_DIRECTIVE(Name, m_metadata.m_sName)
 GET_SET_DIRECTIVE(ModFolder, m_metadata.m_sModFolder)
@@ -526,7 +521,7 @@ void CModuleFile::LoadSgaAsMod(const char *sFileName, CALLBACK_ARG)
         break;
     };
 
-    m_metadata.m_sModFolder = strdup("");
+    m_metadata.m_sModFolder = "";
 
     auto *pHandler = new CArchiveHandler;
     pHandler->m_iNumber = 0;
@@ -617,8 +612,8 @@ void CModuleFile::LoadModuleFile(const char *sFileName, CALLBACK_ARG)
     // CoH post-processing
     if (m_eModuleType == MT_CompanyOfHeroes)
     {
-        m_sCohThisModFolder = new char[strlen(m_sApplicationPath) + strlen(m_metadata.m_sModFolder) + 1];
-        sprintf(m_sCohThisModFolder, "%s%s", m_sApplicationPath, m_metadata.m_sModFolder);
+        m_sCohThisModFolder = new char[strlen(m_sApplicationPath) + m_metadata.m_sModFolder.size() + 1];
+        sprintf(m_sCohThisModFolder, "%s%s", m_sApplicationPath, m_metadata.m_sModFolder.c_str());
         char *sSlashLoc = strrchr(m_sCohThisModFolder, '\\');
         ++sSlashLoc;
         *sSlashLoc = 0;
@@ -832,16 +827,17 @@ size_t CModuleFile::GetArchiveFullPath(size_t iId, char *sOutput)
     if (m_eModuleType == MT_DawnOfWar)
     {
         char *sWithoutDynamics = _DawnOfWarRemoveDynamics(pHandler->m_sName);
-        iLen = strlen(m_sApplicationPath) + strlen(m_metadata.m_sModFolder) + strlen(sWithoutDynamics) + 2;
+        iLen = strlen(m_sApplicationPath) + m_metadata.m_sModFolder.size() + strlen(sWithoutDynamics) + 2;
         if (sOutput)
-            sprintf(sOutput, "%s%s\\%s", m_sApplicationPath, m_metadata.m_sModFolder, sWithoutDynamics);
+            sprintf(sOutput, "%s%s\\%s", m_sApplicationPath, m_metadata.m_sModFolder.c_str(), sWithoutDynamics);
         delete[] sWithoutDynamics;
     }
     else if (m_eModuleType == MT_CompanyOfHeroesEarly)
     {
-        iLen = strlen(m_sApplicationPath) + strlen(m_metadata.m_sModFolder) + strlen(pHandler->m_sName) + 11;
+        iLen = strlen(m_sApplicationPath) + m_metadata.m_sModFolder.size() + strlen(pHandler->m_sName) + 11;
         if (sOutput)
-            sprintf(sOutput, "%s%s\\Archives\\%s", m_sApplicationPath, m_metadata.m_sModFolder, pHandler->m_sName);
+            sprintf(sOutput, "%s%s\\Archives\\%s", m_sApplicationPath, m_metadata.m_sModFolder.c_str(),
+                    pHandler->m_sName);
     }
     else if (m_eModuleType == MT_CompanyOfHeroes)
     {
