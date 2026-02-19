@@ -23,16 +23,18 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "rainman/io/IDirectoryTraverser.h"
 #include "rainman/core/Api.h"
 
-#include <vector>
 #include <map>
+#include <memory>
+#include <string>
+#include <vector>
 
 class RAINMAN_API CDoWFileView : public IFileStore, public IDirectoryTraverser
 {
   protected:
     struct _VirtFolder;
     struct _VirtFile;
-    static bool _SortFolds(CDoWFileView::_VirtFolder *a, CDoWFileView::_VirtFolder *b);
-    static bool _SortFiles(CDoWFileView::_VirtFile *a, CDoWFileView::_VirtFile *b);
+    static bool _SortFolds(const std::unique_ptr<_VirtFolder> &a, const std::unique_ptr<_VirtFolder> &b);
+    static bool _SortFiles(const std::unique_ptr<_VirtFile> &a, const std::unique_ptr<_VirtFile> &b);
 
   public:
     //! Basic constructor
@@ -61,15 +63,15 @@ class RAINMAN_API CDoWFileView : public IFileStore, public IDirectoryTraverser
         friend class CDoWFileView;
         CIterator(_VirtFolder *pFolder, CDoWFileView *pStore);
 
-        char *m_sParentPath;
-        char *m_sFullPath;
+        std::string m_sParentPath;
+        std::string m_sFullPath;
         CDoWFileView *m_pStore;
 
         int m_iWhat;
 
         _VirtFolder *m_pDirectory;
-        std::vector<_VirtFolder *>::iterator m_FoldIter;
-        std::vector<_VirtFile *>::iterator m_FileIter;
+        std::vector<std::unique_ptr<_VirtFolder>>::iterator m_FoldIter;
+        std::vector<std::unique_ptr<_VirtFile>>::iterator m_FileIter;
 
       public:
         ~CIterator();
@@ -99,8 +101,8 @@ class RAINMAN_API CDoWFileView : public IFileStore, public IDirectoryTraverser
     void Reset();
 
   protected:
-    std::vector<char *> m_vModNames;
-    std::vector<char *> m_vSourceNames;
+    std::vector<std::string> m_vModNames;
+    std::vector<std::string> m_vSourceNames;
     std::vector<IFileStore *> m_vSourceStores;
     std::vector<IDirectoryTraverser *> m_vSourceDirItrs;
     std::vector<std::pair<bool, bool>> m_vSourceFlags;
@@ -109,7 +111,7 @@ class RAINMAN_API CDoWFileView : public IFileStore, public IDirectoryTraverser
     {
         _VirtFile();
 
-        char *sName;
+        std::string sName;
         unsigned long iModID;
         unsigned long iSourceID;
         bool bInReqMod;
@@ -125,18 +127,17 @@ class RAINMAN_API CDoWFileView : public IFileStore, public IDirectoryTraverser
         _VirtFolder();
 
         _VirtFolder *pParent;
-        char *sName;
-        char *sFullName;
-        std::vector<_VirtFolder *> vChildFolders;
-        std::vector<_VirtFile *> vChildFiles;
+        std::string sName;
+        std::string sFullName;
+        std::vector<std::unique_ptr<_VirtFolder>> vChildFolders;
+        std::vector<std::unique_ptr<_VirtFile>> vChildFiles;
 
-        std::map<unsigned long, char *> mapSourceFolderNames;
+        std::map<unsigned long, std::string> mapSourceFolderNames;
     };
 
     _VirtFolder m_RootFolder;
 
     void _Clean();
-    void _CleanFolder(_VirtFolder *pFolder);
     void _RawMapFolder(unsigned long iModID, unsigned long iSourceID, IDirectoryTraverser::IIterator *pSourceDirectory,
                        _VirtFolder *pDestination, bool bIsReqMod = false);
     _VirtFile *_FindFile(const char *sPath, CDoWFileView::_VirtFolder **pFolder = 0);
