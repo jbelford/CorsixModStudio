@@ -24,8 +24,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "rainman/io/IDirectoryTraverser.h"
 #include "rainman/io/CMemoryStore.h"
 #include "rainman/core/Api.h"
-#include <wchar.h>
+#include <cwchar>
 #include <array>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
@@ -260,66 +261,66 @@ class RAINMAN_API CSgaFile : public IFileStore, public IDirectoryTraverser
     //! The file header is at the start of the SGA archive
     struct _SgaFileHeader
     {
-        std::string sIdentifier;        //!< 8 bytes "_ARCHIVE"
-        unsigned long iVersion = 0;     //!< DoW is v2 , CoH is v4
-        std::array<long, 4> iToolMD5{}; //!< First MD5
-        std::wstring sArchiveType;      //!< Unicode string (128 bytes - 64 * wchar)
-        std::array<long, 4> iMD5{};     //!< Second MD5
-        unsigned long iDataHeaderSize = 0;
-        unsigned long iDataOffset = 0;
-        unsigned long iPlatform = 0; //!< v4 only; 1 = win32
+        std::string sIdentifier;            //!< 8 bytes "_ARCHIVE"
+        uint32_t iVersion = 0;              //!< DoW is v2 , CoH is v4
+        std::array<uint8_t, 16> iToolMD5{}; //!< First MD5
+        std::wstring sArchiveType;          //!< Unicode string (128 bytes - 64 * wchar)
+        std::array<uint8_t, 16> iMD5{};     //!< Second MD5
+        uint32_t iDataHeaderSize = 0;
+        uint32_t iDataOffset = 0;
+        uint32_t iPlatform = 0; //!< v4 only; 1 = win32
     };
 
 #pragma pack(push, sga_formats, 1)
     struct _SgaDataHeaderInfo
     {
-        unsigned long iToCOffset; //!< Where in the data header ToCs start
-        unsigned short int iToCCount;
-        unsigned long iDirOffset; //!< Where in the data header directories start
-        unsigned short int iDirCount;
-        unsigned long iFileOffset; //!< Where in the data header files start
-        unsigned short int iFileCount;
-        unsigned long iItemOffset; //!< Where in the data header strings start
-        unsigned short int iItemCount;
+        uint32_t iToCOffset; //!< Where in the data header ToCs start
+        uint16_t iToCCount;
+        uint32_t iDirOffset; //!< Where in the data header directories start
+        uint16_t iDirCount;
+        uint32_t iFileOffset; //!< Where in the data header files start
+        uint16_t iFileCount;
+        uint32_t iItemOffset; //!< Where in the data header strings start
+        uint16_t iItemCount;
     };
 
     struct _SgaToC
     {
         char sAlias[64];
         char sBaseDirName[64];
-        short unsigned int iStartDir;
-        short unsigned int iEndDir;
-        short unsigned int iStartFile;
-        short unsigned int iEndFile;
-        unsigned long iFolderOffset; //!< Unknown
+        uint16_t iStartDir;
+        uint16_t iEndDir;
+        uint16_t iStartFile;
+        uint16_t iEndFile;
+        uint32_t iFolderOffset; //!< Unknown
     };
 
     struct _SgaDirInfo
     {
-        unsigned long iNameOffset;
-        short unsigned int iSubDirBegin;
-        short unsigned int iSubDirEnd;
-        short unsigned int iFileBegin;
-        short unsigned int iFileEnd;
+        uint32_t iNameOffset;
+        uint16_t iSubDirBegin;
+        uint16_t iSubDirEnd;
+        uint16_t iFileBegin;
+        uint16_t iFileEnd;
     };
 
     struct _SgaFileInfo
     {
-        unsigned long iNameOffset;
-        unsigned long iFlags; //!< 0x00 = uncompressed, 0x10 = zlib large file, 0x20 = zlib small file (< 4kb)
-        unsigned long iDataOffset;
-        unsigned long iDataLengthCompressed;
-        unsigned long iDataLength;
+        uint32_t iNameOffset;
+        uint32_t iFlags; //!< 0x00 = uncompressed, 0x10 = zlib large file, 0x20 = zlib small file (< 4kb)
+        uint32_t iDataOffset;
+        uint32_t iDataLengthCompressed;
+        uint32_t iDataLength;
     };
 
     struct _SgaFileInfo4
     {
-        unsigned long iNameOffset;
-        unsigned long iDataOffset;
-        unsigned long iDataLengthCompressed;
-        unsigned long iDataLength;
-        unsigned long iModificationTime;
-        unsigned short iFlags;
+        uint32_t iNameOffset;
+        uint32_t iDataOffset;
+        uint32_t iDataLengthCompressed;
+        uint32_t iDataLength;
+        uint32_t iModificationTime;
+        uint16_t iFlags;
     };
 
 #pragma pack(pop, sga_formats)
@@ -333,14 +334,14 @@ class RAINMAN_API CSgaFile : public IFileStore, public IDirectoryTraverser
 
             IDs are 16 bit unsigned int, so 32 bit signed int will allow that and negative numbers.
         */
-        signed long iParent;
+        int32_t iParent;
         char *sShortName;
         char *sName;
     };
 
     struct _SgaFileInfoExt
     {
-        signed long iParent;
+        int32_t iParent;
         char *sName;
     };
 
@@ -352,8 +353,8 @@ class RAINMAN_API CSgaFile : public IFileStore, public IDirectoryTraverser
     */
     struct _SgaDirHash
     {
-        unsigned long iCRC;
-        unsigned short int iID;
+        uint32_t iCRC;
+        uint16_t iID;
     };
 
     _SgaFileHeader m_SgaHeader; //!< The file header

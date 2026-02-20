@@ -29,7 +29,7 @@ extern "C"
 }
 #include "rainman/core/memdebug.h"
 #include <cstdlib>
-#include <search.h>
+#include <algorithm>
 #include "rainman/core/Exception.h"
 
 CSgaFile::CSgaFile()
@@ -55,32 +55,6 @@ IFileStore::IStream *CSgaFile::GetInputStream()
         return m_pFileStoreInputStream;
     }
     throw CRainmanException(__FILE__, __LINE__, "No file store given");
-}
-
-#ifdef RAINMAN_GNUC
-static int CompareDirHash(const void *elem1, const void *elem2)
-#else
-static int __cdecl CompareDirHash(const void *elem1, const void *elem2)
-#endif
-{
-    /*
-        Sorting method to allow qsort() to sort the hash map
-
-        Cannot do elem1 - elem2 even though it would appear to work:
-        with elem1 of 3 and elem2 of 5, e1 - e2 = -2 = e1 < e2
-        with elem1 of 13 and elem2 of 3,e1 - e2 = 10 = e1 > e2
-        However:
-        with elem1 of 2 and elem2 of 3, e1 - e2 = INT_MAX = e1 > e2 , which is incorrect
-    */
-    if ((*(((const unsigned long *)elem1)) < (*((const unsigned long *)elem2))))
-    {
-        return -1;
-    }
-    if ((*(((const unsigned long *)elem1)) > (*((const unsigned long *)elem2))))
-    {
-        return +1;
-    }
-    return 0;
 }
 
 #ifndef DOXY_NODOC
@@ -112,14 +86,15 @@ void CSgaFile::Load(IFileStore::IStream *pStream, tLastWriteTime oWriteTime)
         While we do want to be leniant over file format specifics, we also do not want to crash when passed a
         file full of random data.
     */
-    char identBuf[9] = {};
+    // Read identifier + version in one call (12 bytes)
+    unsigned char headerBuf[12] = {};
     try
     {
-        pStream->VRead(8, 1, identBuf);
+        pStream->VRead(12, 1, headerBuf);
     }
-    QCCT("Failed to read from stream")
+    QCCT("Failed to read SGA header")
 
-    m_SgaHeader.sIdentifier.assign(identBuf);
+    m_SgaHeader.sIdentifier.assign(reinterpret_cast<const char *>(headerBuf), 8);
     if (m_SgaHeader.sIdentifier != "_ARCHIVE")
     {
         _Clean();
@@ -127,11 +102,7 @@ void CSgaFile::Load(IFileStore::IStream *pStream, tLastWriteTime oWriteTime)
                                 m_SgaHeader.sIdentifier.c_str());
     }
 
-    try
-    {
-        pStream->VRead(1, sizeof(uint32_t), &m_SgaHeader.iVersion);
-    }
-    QCCT("Failed to read from stream")
+    std::memcpy(&m_SgaHeader.iVersion, headerBuf + 8, sizeof(uint32_t));
 
     if (m_SgaHeader.iVersion != 2 && m_SgaHeader.iVersion != 4)
     {
@@ -140,37 +111,35 @@ void CSgaFile::Load(IFileStore::IStream *pStream, tLastWriteTime oWriteTime)
             An early version of CoH or DoW:DC may have used version 3 - only Relic knows :/
         */
         _Clean();
-        throw CRainmanException(nullptr, __FILE__, __LINE__, "Version %lu is not supported (only 2 and 4 are)",
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Version %u is not supported (only 2 and 4 are)",
                                 m_SgaHeader.iVersion);
     }
 
+    // Read remaining fixed header fields in one call
+    // toolMD5(16) + archiveType(128) + dataMD5(16) + dataHeaderSize(4) + dataOffset(4) = 168 bytes
+    unsigned char fixedHeader[168];
     try
     {
-        pStream->VRead(4, 4, m_SgaHeader.iToolMD5.data());
+        pStream->VRead(168, 1, fixedHeader);
     }
-    QCCT("Failed to read from stream")
+    QCCT("Failed to read SGA header")
 
+    std::memcpy(m_SgaHeader.iToolMD5.data(), fixedHeader, 16);
     wchar_t archTypeBuf[65] = {};
-
-    try
-    {
-        pStream->VRead(64, 2, archTypeBuf);
-    }
-    QCCT("Failed to read from stream")
+    std::memcpy(archTypeBuf, fixedHeader + 16, 128);
     m_SgaHeader.sArchiveType.assign(archTypeBuf);
+    std::memcpy(m_SgaHeader.iMD5.data(), fixedHeader + 144, 16);
+    std::memcpy(&m_SgaHeader.iDataHeaderSize, fixedHeader + 160, 4);
+    std::memcpy(&m_SgaHeader.iDataOffset, fixedHeader + 164, 4);
 
-    try
+    if (m_SgaHeader.iVersion == 4)
     {
-        pStream->VRead(4, sizeof(uint32_t), m_SgaHeader.iMD5.data());
-        pStream->VRead(1, sizeof(uint32_t), &m_SgaHeader.iDataHeaderSize);
-        pStream->VRead(1, sizeof(uint32_t), &m_SgaHeader.iDataOffset);
-
-        if (m_SgaHeader.iVersion == 4) // v4 SGAs have an extra 4 byte value here
+        try
         {
             pStream->VRead(1, sizeof(uint32_t), &m_SgaHeader.iPlatform);
         }
+        QCCT("Failed to read SGA header")
     }
-    QCCT("Failed to read from stream")
 
     if (m_SgaHeader.iVersion == 4 && m_SgaHeader.iPlatform != 1)
     {
@@ -182,7 +151,7 @@ void CSgaFile::Load(IFileStore::IStream *pStream, tLastWriteTime oWriteTime)
         _Clean();
         throw CRainmanException(
             nullptr, __FILE__, __LINE__,
-            "Platform #%lu is not supported (only platform #1 is supported, so please show this to programmers)",
+            "Platform #%u is not supported (only platform #1 is supported, so please show this to programmers)",
             m_SgaHeader.iPlatform);
     }
 
@@ -202,7 +171,7 @@ void CSgaFile::Load(IFileStore::IStream *pStream, tLastWriteTime oWriteTime)
     catch (const CRainmanException &e)
     {
         _Clean();
-        throw CRainmanException(e, __FILE__, __LINE__, "Cannot read %lu bytes of data header",
+        throw CRainmanException(e, __FILE__, __LINE__, "Cannot read %u bytes of data header",
                                 m_SgaHeader.iDataHeaderSize);
     }
 
@@ -220,7 +189,7 @@ void CSgaFile::Load(IFileStore::IStream *pStream, tLastWriteTime oWriteTime)
     unsigned char pMD5Main[17];
     pMD5Main[16] = 0;
     MD5Final(pMD5Main, &md5MainKey);
-    int iMD5Match = strncmp((const char *)pMD5Main, reinterpret_cast<const char *>(m_SgaHeader.iMD5.data()), 16);
+    int iMD5Match = std::memcmp(pMD5Main, m_SgaHeader.iMD5.data(), 16);
     if (iMD5Match != 0)
     {
         _Clean();
@@ -273,7 +242,7 @@ void CSgaFile::Load(IFileStore::IStream *pStream, tLastWriteTime oWriteTime)
         As such this code may well be horribly wrong. If you have experience with multi-ToC SGA files
         then please contact me and/or check the ToC related code.
     */
-    m_pSgaToCs = (_SgaToC *)(pDataHeader + m_pDataHeaderInfo->iToCOffset);
+    m_pSgaToCs = reinterpret_cast<_SgaToC *>(pDataHeader + m_pDataHeaderInfo->iToCOffset);
 
     for (unsigned short i = 0; i < m_pDataHeaderInfo->iToCCount; ++i)
     {
@@ -298,11 +267,12 @@ void CSgaFile::Load(IFileStore::IStream *pStream, tLastWriteTime oWriteTime)
         a) going over each directory one by one (obvious reaons)
         b) binary chop with strcmp() / stricmp() (integer comparions are cheap - string compisons are not so)
     */
-    m_pSgaDirs = (_SgaDirInfo *)(pDataHeader + m_pDataHeaderInfo->iDirOffset);
+    m_pSgaDirs = reinterpret_cast<_SgaDirInfo *>(pDataHeader + m_pDataHeaderInfo->iDirOffset);
 
     for (unsigned short i = 0; i < m_pDataHeaderInfo->iDirCount; ++i)
     {
-        m_pSgaDirExts[i].sName = (char *)(pDataHeader + m_pDataHeaderInfo->iItemOffset + m_pSgaDirs[i].iNameOffset);
+        m_pSgaDirExts[i].sName =
+            reinterpret_cast<char *>(pDataHeader + m_pDataHeaderInfo->iItemOffset + m_pSgaDirs[i].iNameOffset);
 
         char *sTmp = strrchr(m_pSgaDirExts[i].sName, '\\');
         if (sTmp)
@@ -323,18 +293,19 @@ void CSgaFile::Load(IFileStore::IStream *pStream, tLastWriteTime oWriteTime)
             m_pSgaFileExts[j].iParent = i;
         }
     }
-    qsort(m_pSgaDirHashMap.data(), m_pDataHeaderInfo->iDirCount, sizeof(_SgaDirHash), &CompareDirHash);
+    std::sort(m_pSgaDirHashMap.begin(), m_pSgaDirHashMap.end(),
+              [](const _SgaDirHash &a, const _SgaDirHash &b) { return a.iCRC < b.iCRC; });
 
     /*
         Read File Infos
     */
     if (m_SgaHeader.iVersion == 2)
     {
-        m_pSgaFiles = (_SgaFileInfo *)(pDataHeader + m_pDataHeaderInfo->iFileOffset);
+        m_pSgaFiles = reinterpret_cast<_SgaFileInfo *>(pDataHeader + m_pDataHeaderInfo->iFileOffset);
     }
     else
     {
-        m_pSga4Files = (_SgaFileInfo4 *)(pDataHeader + m_pDataHeaderInfo->iFileOffset);
+        m_pSga4Files = reinterpret_cast<_SgaFileInfo4 *>(pDataHeader + m_pDataHeaderInfo->iFileOffset);
     }
 
     for (unsigned short i = 0; i < m_pDataHeaderInfo->iFileCount; ++i)
@@ -342,12 +313,12 @@ void CSgaFile::Load(IFileStore::IStream *pStream, tLastWriteTime oWriteTime)
         if (m_SgaHeader.iVersion == 2)
         {
             m_pSgaFileExts[i].sName =
-                (char *)(pDataHeader + m_pDataHeaderInfo->iItemOffset + m_pSgaFiles[i].iNameOffset);
+                reinterpret_cast<char *>(pDataHeader + m_pDataHeaderInfo->iItemOffset + m_pSgaFiles[i].iNameOffset);
         }
         else
         {
             m_pSgaFileExts[i].sName =
-                (char *)(pDataHeader + m_pDataHeaderInfo->iItemOffset + m_pSga4Files[i].iNameOffset);
+                reinterpret_cast<char *>(pDataHeader + m_pDataHeaderInfo->iItemOffset + m_pSga4Files[i].iNameOffset);
         }
     }
 
@@ -420,7 +391,7 @@ void CSgaFile::_Clean()
 void CSgaFile::VInit(void *pInitData)
 {
     RAINMAN_LOG_INFO("CSgaFile::VInit() — initialising SGA file store");
-    m_pFileStoreInputStream = (IFileStore::IStream *)pInitData;
+    m_pFileStoreInputStream = static_cast<IFileStore::IStream *>(pInitData);
     m_bInited = m_pFileStoreInputStream ? true : false;
     if (!m_bInited)
     {
@@ -444,8 +415,9 @@ IFileStore::IStream *CSgaFile::VOpenStream(const char *sIdentifier)
     }
 
     size_t iDirNameLength = 0;
-    unsigned short iDirID = -1;
-    unsigned short iFileID = 0;
+    uint16_t iDirID = static_cast<uint16_t>(-1);
+    uint16_t iFileID = 0;
+    bool bFileFound = false;
 
     /*
         Identify ToC
@@ -492,12 +464,11 @@ IFileStore::IStream *CSgaFile::VOpenStream(const char *sIdentifier)
         iBSM = Binary search middle
         iBSH = Binary search upper-bound
     */
-    unsigned short iBSL, iBSH, iBSM;
+    uint16_t iBSL, iBSH, iBSM;
     if (sFileNameBegin)
     {
         iDirNameLength = sFileNameBegin - sIdentifier;
-        unsigned long iCRC =
-            crc32_case_idt(crc32_case_idt(0L, Z_NULL, 0), (const Bytef *)sIdentifier, (uInt)iDirNameLength);
+        uint32_t iCRC = crc32_case_idt(crc32_case_idt(0L, Z_NULL, 0), (const Bytef *)sIdentifier, (uInt)iDirNameLength);
         ++sFileNameBegin;
         iBSL = m_pSgaToCs[iToC].iStartDir;
         iBSH = m_pSgaToCs[iToC].iEndDir;
@@ -561,17 +532,20 @@ IFileStore::IStream *CSgaFile::VOpenStream(const char *sIdentifier)
         else
         {
             iFileID = iBSM;
-            goto gotfile;
+            bFileFound = true;
+            break;
         }
     }
 
-    throw CRainmanException(nullptr, __FILE__, __LINE__, "File could not be found - %s", sIdentifier);
-gotfile:
+    if (!bFileFound)
+    {
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "File could not be found - %s", sIdentifier);
+    }
 
     /*
         Do the actual data reading and decompressing
     */
-    unsigned long iDataLength, iDataLengthCompressed, iDataOffset;
+    uint32_t iDataLength, iDataLengthCompressed, iDataOffset;
     if (m_SgaHeader.iVersion == 2)
     {
         iDataLength = m_pSgaFiles[iFileID].iDataLength;
@@ -587,7 +561,7 @@ gotfile:
 
     auto pData = std::make_unique<char[]>(iDataLengthCompressed);
 
-    signed long iPreDataSize;
+    int32_t iPreDataSize;
     iPreDataSize = (m_SgaHeader.iVersion == 2) ? 264 : 260;
     try
     {
@@ -596,12 +570,12 @@ gotfile:
     }
     catch (const CRainmanException &e)
     {
-        throw CRainmanException(e, __FILE__, __LINE__, "Cannot seek to %lu for \'%s\'",
+        throw CRainmanException(e, __FILE__, __LINE__, "Cannot seek to %u for \'%s\'",
                                 m_SgaHeader.iDataOffset + iDataOffset, sIdentifier);
     }
 
     char sName[256];
-    unsigned long iPreDataDate = 0, iPreDataCrc;
+    uint32_t iPreDataDate = 0, iPreDataCrc;
 
     try
     {
@@ -615,7 +589,7 @@ gotfile:
     }
     catch (const CRainmanException &e)
     {
-        throw CRainmanException(e, __FILE__, __LINE__, "Cannot read %lu bytes for \'%s\'", iDataLengthCompressed,
+        throw CRainmanException(e, __FILE__, __LINE__, "Cannot read %u bytes for \'%s\'", iDataLengthCompressed,
                                 sIdentifier);
     }
 
@@ -623,7 +597,7 @@ gotfile:
     {
         auto pDecompressedData = std::make_unique<char[]>(iDataLength);
 
-        unsigned long iTmp = iDataLength;
+        uint32_t iTmp = iDataLength;
         if (uncompress(reinterpret_cast<Bytef *>(pDecompressedData.get()), reinterpret_cast<uLongf *>(&iTmp),
                        reinterpret_cast<Bytef *>(pData.get()), iDataLengthCompressed) != Z_OK)
         {
@@ -762,7 +736,7 @@ IDirectoryTraverser::IIterator *CSgaFile::VIterate(const char *sPath)
     }
     try
     {
-        return CHECK_MEM(new CIterator(iDir, (CSgaFile *)this));
+        return CHECK_MEM(new CIterator(iDir, this));
     }
     catch (const CRainmanException &e)
     {
@@ -786,7 +760,7 @@ const char *CSgaFile::VGetEntryPoint(unsigned long iID)
     {
         throw CRainmanException(__FILE__, __LINE__, "No data header present");
     }
-    if (iID < 0 || iID >= (unsigned long)m_pDataHeaderInfo->iToCCount)
+    if (iID >= (unsigned long)m_pDataHeaderInfo->iToCCount)
     {
         throw CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0 -> %lu", iID,
                                 m_pDataHeaderInfo->iToCCount);
@@ -948,8 +922,6 @@ IDirectoryTraverser::IIterator::eErrors CSgaFile::CIterator::VNextItem()
                 return IDirectoryTraverser::IIterator::E_AtEnd;
             }
         }
-
-        goto work_out_name;
     }
     else
     {
@@ -960,21 +932,15 @@ IDirectoryTraverser::IIterator::eErrors CSgaFile::CIterator::VNextItem()
             m_iTraversingWhat = -1;
             return IDirectoryTraverser::IIterator::E_AtEnd;
         }
-
-        goto work_out_name;
     }
 
-    QUICK_THROW("Already at end / error")
-
-work_out_name:
     if (m_iTraversingWhat == 0)
     {
         m_sFullPath = m_sParentPath + m_pSga->m_pSgaDirExts[m_iCurrentItem].sShortName;
-        return IDirectoryTraverser::IIterator::E_OK;
     }
     else
     {
         m_sFullPath = m_sParentPath + m_pSga->m_pSgaFileExts[m_iCurrentItem].sName;
-        return IDirectoryTraverser::IIterator::E_OK;
     }
+    return IDirectoryTraverser::IIterator::E_OK;
 }
