@@ -51,7 +51,9 @@ void CSgaFile::VCreateFolderIn(const char *sPath, const char *sNewFolderName)
 IFileStore::IStream *CSgaFile::GetInputStream()
 {
     if (m_pFileStoreInputStream)
+    {
         return m_pFileStoreInputStream;
+    }
     throw CRainmanException(__FILE__, __LINE__, "No file store given");
 }
 
@@ -71,9 +73,13 @@ static int __cdecl CompareDirHash(const void *elem1, const void *elem2)
         with elem1 of 2 and elem2 of 3, e1 - e2 = INT_MAX = e1 > e2 , which is incorrect
     */
     if ((*(((const unsigned long *)elem1)) < (*((const unsigned long *)elem2))))
+    {
         return -1;
+    }
     if ((*(((const unsigned long *)elem1)) > (*((const unsigned long *)elem2))))
+    {
         return +1;
+    }
     return 0;
 }
 
@@ -96,7 +102,9 @@ void CSgaFile::Load(IFileStore::IStream *pStream, tLastWriteTime oWriteTime)
     _Clean(); // Reset the class to a blank state
 
     if (pStream == nullptr)
+    {
         QUICK_THROW("No stream");
+    }
     m_oSgaWriteTime = oWriteTime;
 
     /*
@@ -298,7 +306,9 @@ void CSgaFile::Load(IFileStore::IStream *pStream, tLastWriteTime oWriteTime)
 
         char *sTmp = strrchr(m_pSgaDirExts[i].sName, '\\');
         if (sTmp)
+        {
             ++sTmp;
+        }
         m_pSgaDirExts[i].sShortName = sTmp ? sTmp : m_pSgaDirExts[i].sName;
         m_pSgaDirHashMap[i].iID = i;
         m_pSgaDirHashMap[i].iCRC = crc32_case_idt(crc32_case_idt(0L, Z_NULL, 0), (const Bytef *)m_pSgaDirExts[i].sName,
@@ -319,18 +329,26 @@ void CSgaFile::Load(IFileStore::IStream *pStream, tLastWriteTime oWriteTime)
         Read File Infos
     */
     if (m_SgaHeader.iVersion == 2)
+    {
         m_pSgaFiles = (_SgaFileInfo *)(pDataHeader + m_pDataHeaderInfo->iFileOffset);
+    }
     else
+    {
         m_pSga4Files = (_SgaFileInfo4 *)(pDataHeader + m_pDataHeaderInfo->iFileOffset);
+    }
 
     for (unsigned short i = 0; i < m_pDataHeaderInfo->iFileCount; ++i)
     {
         if (m_SgaHeader.iVersion == 2)
+        {
             m_pSgaFileExts[i].sName =
                 (char *)(pDataHeader + m_pDataHeaderInfo->iItemOffset + m_pSgaFiles[i].iNameOffset);
+        }
         else
+        {
             m_pSgaFileExts[i].sName =
                 (char *)(pDataHeader + m_pDataHeaderInfo->iItemOffset + m_pSga4Files[i].iNameOffset);
+        }
     }
 
     /*
@@ -405,17 +423,25 @@ void CSgaFile::VInit(void *pInitData)
     m_pFileStoreInputStream = (IFileStore::IStream *)pInitData;
     m_bInited = m_pFileStoreInputStream ? true : false;
     if (!m_bInited)
+    {
         throw CRainmanException(__FILE__, __LINE__, "No stream passed");
+    }
 }
 
 IFileStore::IStream *CSgaFile::VOpenStream(const char *sIdentifier)
 {
     if (sIdentifier == nullptr)
+    {
         throw CRainmanException(__FILE__, __LINE__, "Identifier required");
+    }
     if (m_pFileStoreInputStream == nullptr)
+    {
         throw CRainmanException(__FILE__, __LINE__, "Input stream must have been set in VInit");
+    }
     if (m_pDataHeaderInfo == nullptr)
+    {
         throw CRainmanException(__FILE__, __LINE__, "No data header loaded");
+    }
 
     size_t iDirNameLength = 0;
     unsigned short iDirID = -1;
@@ -427,7 +453,9 @@ IFileStore::IStream *CSgaFile::VOpenStream(const char *sIdentifier)
     */
     const char *sTmp = strchr(sIdentifier, '\\');
     if (sTmp == nullptr)
+    {
         throw CRainmanException(nullptr, __FILE__, __LINE__, "ToC could not be seperated - %s", sIdentifier);
+    }
     long iToCLength = (long)(sTmp - sIdentifier);
     long iToC = -1;
     if (iToCLength == 4 && m_SgaHeader.iVersion == 4)
@@ -450,7 +478,9 @@ IFileStore::IStream *CSgaFile::VOpenStream(const char *sIdentifier)
             }
         }
         if (iToC == -1)
+        {
             throw CRainmanException(nullptr, __FILE__, __LINE__, "ToC could not be found - %s", sIdentifier);
+        }
     }
     sIdentifier += (iToCLength + 1);
     const char *sFileNameBegin = strrchr(sIdentifier, '\\');
@@ -577,7 +607,9 @@ gotfile:
     {
         m_pFileStoreInputStream->VRead(256, 1, sName);
         if (iPreDataSize == 264)
+        {
             m_pFileStoreInputStream->VRead(4, 1, &iPreDataDate);
+        }
         m_pFileStoreInputStream->VRead(4, 1, &iPreDataCrc);
         m_pFileStoreInputStream->VRead(iDataLengthCompressed, 1, pData.get());
     }
@@ -586,9 +618,6 @@ gotfile:
         throw CRainmanException(e, __FILE__, __LINE__, "Cannot read %lu bytes for \'%s\'", iDataLengthCompressed,
                                 sIdentifier);
     }
-
-    // CRC computed for potential future verification
-    (void)crc32(crc32(0L, Z_NULL, 0), reinterpret_cast<const Bytef *>(pData.get()), iDataLengthCompressed);
 
     if (iDataLengthCompressed != iDataLength)
     {
@@ -603,9 +632,6 @@ gotfile:
 
         pData = std::move(pDecompressedData);
     }
-
-    // CRC computed for potential future verification
-    (void)crc32(crc32(0L, Z_NULL, 0), reinterpret_cast<const Bytef *>(pData.get()), iDataLength);
 
     CMemoryStore CMS;
     CMS.VInit();
@@ -664,7 +690,9 @@ long CSgaFile::CStream::VTell()
 IDirectoryTraverser::IIterator *CSgaFile::VIterate(const char *sPath)
 {
     if (!m_pDataHeaderInfo)
+    {
         throw CRainmanException(__FILE__, __LINE__, "No data header present");
+    }
 
     const char *sPathRemember = sPath;
     const char *sTmp;
@@ -678,7 +706,9 @@ IDirectoryTraverser::IIterator *CSgaFile::VIterate(const char *sPath)
     sTmp = strchr(sPath, '\\');
     iPartLength = (sTmp ? (unsigned long)(sTmp - sPath) : (unsigned long)strlen(sPath));
     if (iPartLength == 0)
+    {
         return nullptr;
+    }
     for (unsigned short i = 0; i < m_pDataHeaderInfo->iToCCount; ++i)
     {
         /*
@@ -692,7 +722,9 @@ IDirectoryTraverser::IIterator *CSgaFile::VIterate(const char *sPath)
         }
     }
     if (iToC == -1)
+    {
         throw CRainmanException(nullptr, __FILE__, __LINE__, "Cannot iterate \'%s\' - ToC not found", sPath);
+    }
 
     sPath += iPartLength + (sTmp ? 1 : 0);
     sTmp = strchr(sPath, '\\');
@@ -718,8 +750,10 @@ IDirectoryTraverser::IIterator *CSgaFile::VIterate(const char *sPath)
             }
         }
         if (iSubDir == -1)
+        {
             throw CRainmanException(nullptr, __FILE__, __LINE__, "Cannot iterate \'%s\' - cannot find \'%s\'",
                                     sPathRemember, sPath);
+        }
         iDir = iSubDir;
 
         sPath += iPartLength + (sTmp ? 1 : 0);
@@ -740,17 +774,23 @@ IDirectoryTraverser::IIterator *CSgaFile::VIterate(const char *sPath)
 unsigned long CSgaFile::VGetEntryPointCount()
 {
     if (!m_pDataHeaderInfo)
+    {
         throw CRainmanException(__FILE__, __LINE__, "No data header present");
+    }
     return (unsigned long)m_pDataHeaderInfo->iToCCount;
 }
 
 const char *CSgaFile::VGetEntryPoint(unsigned long iID)
 {
     if (!m_pDataHeaderInfo)
+    {
         throw CRainmanException(__FILE__, __LINE__, "No data header present");
+    }
     if (iID < 0 || iID >= (unsigned long)m_pDataHeaderInfo->iToCCount)
+    {
         throw CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0 -> %lu", iID,
                                 m_pDataHeaderInfo->iToCCount);
+    }
     return m_pSgaToCs[iID].sAlias;
 }
 
@@ -788,7 +828,9 @@ CSgaFile::CIterator::CIterator(long iDir, CSgaFile *pSga)
         }
     }
     if (iToC == -1)
+    {
         throw CRainmanException(nullptr, __FILE__, __LINE__, "Directory %li does not fit into any ToC", iDir);
+    }
 
     m_sParentPath = (m_pSga->m_SgaHeader.iVersion == 4 ? "Data" : m_pSga->m_pSgaToCs[iToC].sAlias);
     m_sParentPath += "\\";
@@ -814,7 +856,9 @@ tLastWriteTime CSgaFile::VGetLastWriteTime(const char *)
 {
     //! \todo Update this method to work with version 4 SGA files
     if (IsValidWriteTime(m_oSgaWriteTime))
+    {
         return m_oSgaWriteTime;
+    }
     throw CRainmanException(__FILE__, __LINE__, "No modification date present");
 }
 
@@ -822,16 +866,22 @@ tLastWriteTime CSgaFile::CIterator::VGetLastWriteTime()
 {
     //! \todo Update this method to work with version 4 SGA files
     if (IsValidWriteTime(m_pSga->m_oSgaWriteTime))
+    {
         return m_pSga->m_oSgaWriteTime;
+    }
     throw CRainmanException(__FILE__, __LINE__, "No modification date present");
 }
 
 IDirectoryTraverser::IIterator::eTypes CSgaFile::CIterator::VGetType()
 {
     if (m_iTraversingWhat == 0)
+    {
         return IDirectoryTraverser::IIterator::T_Directory;
+    }
     if (m_iTraversingWhat == 1)
+    {
         return IDirectoryTraverser::IIterator::T_File;
+    }
     return IDirectoryTraverser::IIterator::T_Nothing;
 }
 

@@ -55,7 +55,9 @@ struct CResourceLoader::SgaPreloadResult
     ~SgaPreloadResult()
     {
         if (sActualModName)
+        {
             free(sActualModName); // NOLINT(clang-analyzer-unix.MismatchedDeallocator)
+        }
     }
     SgaPreloadResult(SgaPreloadResult &&o) noexcept
         : pSga(o.pSga), bIsThisMod(o.bIsThisMod), sActualModName(o.sActualModName)
@@ -113,7 +115,9 @@ CResourceLoader::SgaPreloadResult CResourceLoader::PreloadSga(CFileSystemStore *
                 result.sActualModName = strdup(sFullPath + strlen(saScenarioPackRootFolder) + 1);
                 char *sSlash = strrchr(result.sActualModName, '\\');
                 if (sSlash)
+                {
                     *sSlash = 0;
+                }
             }
             else
             {
@@ -121,10 +125,14 @@ CResourceLoader::SgaPreloadResult CResourceLoader::PreloadSga(CFileSystemStore *
                 result.sActualModName = strdup(sFullPath + strlen(sApplicationPath));
                 char *sSlash = strrchr(result.sActualModName, '\\');
                 if (sSlash)
+                {
                     *sSlash = 0;
+                }
                 sSlash = strrchr(result.sActualModName, '\\');
                 if (sSlash)
+                {
                     *sSlash = 0;
+                }
             }
         }
     }
@@ -162,12 +170,16 @@ void CResourceLoader::RegisterPreloadedSga(SgaPreloadResult &result, CModuleFile
         {
             void *pSrc;
             if (result.bIsThisMod)
+            {
                 pSrc = module.m_pNewFileMap->RegisterSource(module.m_iFileMapModNumber, true, iNum,
                                                             module.GetFileMapName(), sSlashChar, result.pSga,
                                                             result.pSga, false, false);
+            }
             else
+            {
                 pSrc = module.m_pNewFileMap->RegisterSource(15000, true, iNum, result.sActualModName, sSlashChar,
                                                             result.pSga, result.pSga, false, false);
+            }
             module.m_pNewFileMap->MapSga(pSrc, result.pSga);
         }
         delete pDirItr;
@@ -195,7 +207,9 @@ void CResourceLoader::RegisterPreloadedSga(SgaPreloadResult &result, CModuleFile
 void CResourceLoader::LoadArchivesParallel(std::vector<ArchiveTask> &tasks, CModuleFile &module, CALLBACK_ARG)
 {
     if (tasks.empty())
+    {
         return;
+    }
 
     auto tStart = std::chrono::steady_clock::now();
 
@@ -222,7 +236,9 @@ void CResourceLoader::LoadArchivesParallel(std::vector<ArchiveTask> &tasks, CMod
         catch (const CRainmanException &e)
         {
             if (!pFirstError)
+            {
                 pFirstError = e;
+            }
             continue;
         }
 
@@ -241,7 +257,9 @@ void CResourceLoader::LoadArchivesParallel(std::vector<ArchiveTask> &tasks, CMod
         catch (const CRainmanException &e)
         {
             if (!pFirstError)
+            {
                 pFirstError = e;
+            }
             *tasks[i].ppSgaOut = nullptr;
             continue;
         }
@@ -255,7 +273,9 @@ void CResourceLoader::LoadArchivesParallel(std::vector<ArchiveTask> &tasks, CMod
     RAINMAN_LOG_INFO("Parallel archive loading: {} archives in {}ms", tasks.size(), ms);
 
     if (pFirstError)
+    {
         throw *pFirstError;
+    }
 }
 
 // -- Free-function callbacks used with Util_ForEach --
@@ -313,9 +333,13 @@ void CModuleFile_UcsForEach(IDirectoryTraverser::IIterator *pItr, void *pModuleF
         {
             stream = std::unique_ptr<IFileStore::IStream>(pItr->VOpenFile());
             if (stricmp(sDot, ".ucs") == 0)
+            {
                 pUcsEntry->m_pHandle->Load(stream.get());
+            }
             else
+            {
                 pUcsEntry->m_pHandle->LoadDat(stream.get());
+            }
         }
         catch (const CRainmanException &e)
         {
@@ -356,11 +380,15 @@ void CResourceLoader::LoadUcsFilesParallel(CModuleFile &module, IDirectoryTraver
             }
         }
         if (pItr->VNextItem() != IDirectoryTraverser::IIterator::E_OK)
+        {
             break;
+        }
     }
 
     if (files.empty())
+    {
         return;
+    }
 
     auto startTime = std::chrono::steady_clock::now();
 
@@ -388,9 +416,13 @@ void CResourceLoader::LoadUcsFilesParallel(CModuleFile &module, IDirectoryTraver
                 {
                     std::unique_ptr<IFileStore::IStream> stream(pFSS->VOpenStream(fileInfo.fullPath.c_str()));
                     if (fileInfo.isUcs)
+                    {
                         result.pHandle->Load(stream.get());
+                    }
                     else
+                    {
                         result.pHandle->LoadDat(stream.get());
+                    }
                 }
                 catch (const CRainmanException &e)
                 {
@@ -455,7 +487,9 @@ CFileMap::DirEntry CResourceLoader::ScanDirectory(IDirectoryTraverser::IIterator
     root.isFile = false;
     root.lastWriteTime = 0;
     if (pItr == nullptr)
+    {
         return root;
+    }
 
     root.directoryPath = pItr->VGetDirectoryPath();
     root.children.reserve(32);
@@ -487,7 +521,9 @@ CFileMap::DirEntry CResourceLoader::ScanDirectory(IDirectoryTraverser::IIterator
         root.children.push_back(std::move(entry));
 
         if (pItr->VNextItem() != IDirectoryTraverser::IIterator::E_OK)
+        {
             break;
+        }
         eType = pItr->VGetType();
     }
     return root;
@@ -496,7 +532,9 @@ CFileMap::DirEntry CResourceLoader::ScanDirectory(IDirectoryTraverser::IIterator
 void CResourceLoader::LoadFoldersParallel(std::vector<FolderTask> &tasks, CModuleFile &module, CALLBACK_ARG)
 {
     if (tasks.empty())
+    {
         return;
+    }
 
     auto startTime = std::chrono::steady_clock::now();
 
@@ -541,7 +579,9 @@ void CResourceLoader::LoadFoldersParallel(std::vector<FolderTask> &tasks, CModul
     {
         ScanResult result = futures[i].get();
         if (!result.hasIterator)
+        {
             continue;
+        }
 
         const auto &task = tasks[i];
 
@@ -550,11 +590,17 @@ void CResourceLoader::LoadFoldersParallel(std::vector<FolderTask> &tasks, CModul
         {
             sSlashChar = strrchr(task.folderPath.c_str(), '\\');
             if (!sSlashChar)
+            {
                 sSlashChar = strrchr(task.folderPath.c_str(), '/');
+            }
             if (sSlashChar)
+            {
                 ++sSlashChar;
+            }
             else
+            {
                 sSlashChar = task.folderPath.c_str();
+            }
         }
 
         CallCallback(THE_CALLBACK, "Registering data folder '%s' for mod '%s'", sSlashChar,
@@ -571,7 +617,9 @@ void CResourceLoader::LoadFoldersParallel(std::vector<FolderTask> &tasks, CModul
                 sActualModName = strdup(task.folderPath.c_str() + module.m_sApplicationPath.size());
                 char *sSlash = strrchr(sActualModName, '\\');
                 if (sSlash)
+                {
                     *sSlash = 0;
+                }
             }
         }
 
@@ -582,7 +630,9 @@ void CResourceLoader::LoadFoldersParallel(std::vector<FolderTask> &tasks, CModul
                 module.m_iFileMapModNumber, false, task.iNum, module.GetFileMapName(), sSlashChar, module.m_pFSS,
                 module.m_pFSS, module.m_pParentModule ? false : true, task.bIsDefaultWrite);
             if (task.pDataSource)
+            {
                 task.pDataSource->m_bCanWriteToFolder = module.m_pParentModule ? false : true;
+            }
         }
         else
         {
@@ -593,7 +643,9 @@ void CResourceLoader::LoadFoldersParallel(std::vector<FolderTask> &tasks, CModul
         module.m_pNewFileMap->MapSnapshot(pSrc, task.tocName.c_str(), result.snapshot);
 
         if (sActualModName)
+        {
             free(sActualModName);
+        }
     }
 
     auto endTime = std::chrono::steady_clock::now();
@@ -633,12 +685,16 @@ void CResourceLoader::LoadDataGeneric(CModuleFile &module, CALLBACK_ARG)
             fclose(fModule);
             delete[] sSectionName;
             if (sDataGenericValue)
+            {
                 free(sDataGenericValue);
+            }
             throw CRainmanException(__FILE__, __LINE__, "Error reading from file");
         }
         char *sCommentBegin = strchr(sLine, ';');
         if (sCommentBegin)
+        {
             *sCommentBegin = 0;
+        }
         char *sEqualsChar = strchr(sLine, '=');
         if (sEqualsChar)
         {
@@ -654,7 +710,9 @@ void CResourceLoader::LoadDataGeneric(CModuleFile &module, CALLBACK_ARG)
                     if (stricmp(sKey, "DataGeneric") == 0)
                     {
                         if (sDataGenericValue)
+                        {
                             free(sDataGenericValue);
+                        }
                         sDataGenericValue = CHECK_MEM(strdup(sValue));
                     }
                 }
@@ -663,7 +721,9 @@ void CResourceLoader::LoadDataGeneric(CModuleFile &module, CALLBACK_ARG)
                     delete[] sLine;
                     delete[] sSectionName;
                     if (sDataGenericValue)
+                    {
                         free(sDataGenericValue);
+                    }
                     fclose(fModule);
                     throw e;
                 }
@@ -732,9 +792,13 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
     module._CleanResources();
 
     if (module.m_pFSS == nullptr)
+    {
         module.m_pFSS = new CFileSystemStore;
+    }
     if (module.m_pNewFileMap == nullptr)
+    {
         module.m_pNewFileMap = new CFileMap;
+    }
 
     // === Cross-phase parallelism: UCS, Folders, Archives ===
     // These three phases are independent:
@@ -760,7 +824,9 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
     auto ucsPhase = [&]() -> std::optional<CRainmanException>
     {
         if (!bRunUcs)
+        {
             return std::nullopt;
+        }
         auto tPhaseStart = std::chrono::steady_clock::now();
 
         std::string sUcsPath;
@@ -807,7 +873,9 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
     auto foldersPhase = [&]() -> std::optional<CRainmanException>
     {
         if (!bRunFolders)
+        {
             return std::nullopt;
+        }
         auto tPhaseStart = std::chrono::steady_clock::now();
 
         try
@@ -898,7 +966,9 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
     auto archivesPhase = [&]() -> std::optional<CRainmanException>
     {
         if (!bRunArchives)
+        {
             return std::nullopt;
+        }
         auto tPhaseStart = std::chrono::steady_clock::now();
 
         try
@@ -922,27 +992,48 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
             }
             else if (module.m_eModuleType == CModuleFile::MT_CompanyOfHeroesEarly)
             {
-                char *sArchivesPath =
-                    new char[module.m_sApplicationPath.size() + module.m_metadata.m_sModFolder.size() + 10];
-                sprintf(sArchivesPath, "%s%s\\Archives", module.m_sApplicationPath.c_str(),
-                        module.m_metadata.m_sModFolder.c_str());
+                std::string sArchivesPath = module.m_sApplicationPath + module.m_metadata.m_sModFolder + "\\Archives";
                 IDirectoryTraverser::IIterator *pItr = nullptr;
                 try
                 {
-                    pItr = module.m_pFSS->VIterate(sArchivesPath);
-                    CallCallback(THE_CALLBACK, "Loading data archives for mod \'%s\'", module.m_sFileMapName.c_str());
-                    Util_ForEach(pItr, CModuleFile_ArchiveForEach, static_cast<void *>(&module), false);
+                    pItr = module.m_pFSS->VIterate(sArchivesPath.c_str());
                 }
                 catch (const CRainmanException &e)
                 {
-                    CRainmanException wrapped(e, __FILE__, __LINE__, "Error loading archives from \'%s\'",
-                                              sArchivesPath);
-                    delete[] sArchivesPath;
                     delete pItr;
-                    throw wrapped;
+                    throw CRainmanException(e, __FILE__, __LINE__, "Error loading archives from \'%s\'",
+                                            sArchivesPath.c_str());
+                }
+
+                // Collect archive entries from the directory listing
+                std::vector<ArchiveTask> tasks;
+                if (pItr && pItr->VGetType() != IDirectoryTraverser::IIterator::T_Nothing)
+                {
+                    do
+                    {
+                        if (pItr->VGetType() == IDirectoryTraverser::IIterator::T_File)
+                        {
+                            auto pArchEntry = std::make_unique<CModuleFile::CArchiveHandler>();
+                            pArchEntry->m_iNumber = -7291;
+                            pArchEntry->m_sName = pItr->VGetName();
+
+                            ArchiveTask task;
+                            task.archivePath = pItr->VGetFullPath();
+                            task.uiName = pArchEntry->m_sName;
+                            task.iNum = 15000;
+                            task.ppSgaOut = &pArchEntry->m_pHandle;
+                            tasks.push_back(std::move(task));
+                            module.m_vArchives.push_back(std::move(pArchEntry));
+                        }
+                    } while (pItr->VNextItem() == IDirectoryTraverser::IIterator::E_OK);
                 }
                 delete pItr;
-                delete[] sArchivesPath;
+
+                if (!tasks.empty())
+                {
+                    CallCallback(THE_CALLBACK, "Loading data archives for mod \'%s\'", module.m_sFileMapName.c_str());
+                    LoadArchivesParallel(tasks, module, THE_CALLBACK);
+                }
             }
             else if (module.m_eModuleType == CModuleFile::MT_CompanyOfHeroes)
             {
@@ -996,18 +1087,30 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
             auto &crossPool = CThreadPool::Instance();
             std::future<std::optional<CRainmanException>> ucsFut, foldersFut, archivesFut;
             if (bRunUcs)
+            {
                 ucsFut = crossPool.Submit(ucsPhase);
+            }
             if (bRunFolders)
+            {
                 foldersFut = crossPool.Submit(foldersPhase);
+            }
             if (bRunArchives)
+            {
                 archivesFut = crossPool.Submit(archivesPhase);
+            }
 
             if (bRunUcs)
+            {
                 pUcsError = ucsFut.get();
+            }
             if (bRunFolders)
+            {
                 pFoldersError = foldersFut.get();
+            }
             if (bRunArchives)
+            {
                 pArchivesError = archivesFut.get();
+            }
 
             auto tParEnd = std::chrono::steady_clock::now();
             RAINMAN_LOG_INFO("Cross-phase parallel: all {} phases completed in {} ms", parallelCount,
@@ -1150,7 +1253,7 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
         RAINMAN_LOG_INFO("Load phase: Engines = {} ms",
                          std::chrono::duration_cast<std::chrono::milliseconds>(tPhaseEnd - tPhaseStart).count());
     }
-    if (iReloadWhat && CModuleFile::RR_DataGeneric)
+    if (iReloadWhat & CModuleFile::RR_DataGeneric)
     {
         LoadDataGeneric(module, THE_CALLBACK);
     }
@@ -1165,7 +1268,9 @@ void CResourceLoader::DoLoadFolder(CModuleFile &module, const char *sFullPath, b
                                    bool *bIsWritable)
 {
     if (bIsWritable != nullptr)
+    {
         *bIsWritable = false;
+    }
     const char *sSlashChar;
     if (sUiName)
     {
@@ -1175,7 +1280,9 @@ void CResourceLoader::DoLoadFolder(CModuleFile &module, const char *sFullPath, b
     {
         sSlashChar = strrchr(sFullPath, '\\');
         if (!sSlashChar)
+        {
             sSlashChar = strrchr(sFullPath, '/');
+        }
         ++sSlashChar;
     }
 
@@ -1189,7 +1296,9 @@ void CResourceLoader::DoLoadFolder(CModuleFile &module, const char *sFullPath, b
             sActualModName = strdup(sFullPath + module.m_sApplicationPath.size());
             char *sSlash = strrchr(sActualModName, '\\');
             if (sSlash)
+            {
                 *sSlash = 0;
+            }
         }
     }
 
@@ -1208,21 +1317,29 @@ void CResourceLoader::DoLoadFolder(CModuleFile &module, const char *sFullPath, b
                     module.m_iFileMapModNumber, false, iNum, module.GetFileMapName(), sSlashChar, module.m_pFSS,
                     module.m_pFSS, module.m_pParentModule ? false : true, bIsDefaultWrite);
                 if (bIsWritable != nullptr)
+                {
                     *bIsWritable = module.m_pParentModule ? false : true;
+                }
             }
             else
+            {
                 pSrc = module.m_pNewFileMap->RegisterSource(15000, false, iNum, sActualModName, sSlashChar,
                                                             module.m_pFSS, module.m_pFSS, false, false);
+            }
 
             module.m_pNewFileMap->MapIterator(pSrc, sTOC, pDirItr);
         }
     }
     IGNORE_EXCEPTIONS
     if (pDirItr)
+    {
         delete pDirItr;
+    }
     if (sActualModName)
+    {
         free(sActualModName); // NOLINT(clang-analyzer-unix.MismatchedDeallocator) -- strdup uses malloc; free() is
                               // correct
+    }
 }
 
 void CResourceLoader::DoLoadArchive(CModuleFile &module, const char *sFullPath, CSgaFile **ppSga, unsigned short iNum,
@@ -1237,7 +1354,9 @@ void CResourceLoader::DoLoadArchive(CModuleFile &module, const char *sFullPath, 
     {
         sSlashChar = strrchr(sFullPath, '\\');
         if (!sSlashChar)
+        {
             sSlashChar = strrchr(sFullPath, '/');
+        }
         ++sSlashChar;
     }
 
@@ -1269,7 +1388,9 @@ void CResourceLoader::DoLoadArchive(CModuleFile &module, const char *sFullPath, 
                 sActualModName = strdup(sFullPath + module.m_saScenarioPackRootFolder.size() + 1);
                 char *sSlash = strrchr(sActualModName, '\\');
                 if (sSlash)
+                {
                     *sSlash = 0;
+                }
             }
             else
             {
@@ -1277,10 +1398,14 @@ void CResourceLoader::DoLoadArchive(CModuleFile &module, const char *sFullPath, 
                 sActualModName = strdup(sFullPath + module.m_sApplicationPath.size());
                 char *sSlash = strrchr(sActualModName, '\\');
                 if (sSlash)
+                {
                     *sSlash = 0;
+                }
                 sSlash = strrchr(sActualModName, '\\');
                 if (sSlash)
+                {
                     *sSlash = 0;
+                }
             }
         }
     }
@@ -1296,12 +1421,16 @@ void CResourceLoader::DoLoadArchive(CModuleFile &module, const char *sFullPath, 
         {
             void *pSrc;
             if (bIsThisMod)
+            {
                 pSrc =
                     module.m_pNewFileMap->RegisterSource(module.m_iFileMapModNumber, true, iNum,
                                                          module.GetFileMapName(), sSlashChar, pSga, pSga, false, false);
+            }
             else
+            {
                 pSrc = module.m_pNewFileMap->RegisterSource(15000, true, iNum, sActualModName, sSlashChar, pSga, pSga,
                                                             false, false);
+            }
             module.m_pNewFileMap->MapSga(pSrc, pSga);
         }
         delete pDirItr;
@@ -1312,10 +1441,14 @@ void CResourceLoader::DoLoadArchive(CModuleFile &module, const char *sFullPath, 
         delete pDirItr;
         delete pSga;
         if (sActualModName)
+        {
             free(sActualModName); // NOLINT(clang-analyzer-unix.MismatchedDeallocator) -- strdup uses malloc
+        }
         throw CRainmanException(e, __FILE__, __LINE__, "(rethrow for \'%s\')", sFullPath);
     }
     *ppSga = pSga;
     if (sActualModName)
+    {
         free(sActualModName); // NOLINT(clang-analyzer-unix.MismatchedDeallocator) -- strdup uses malloc
+    }
 }
