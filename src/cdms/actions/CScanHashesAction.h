@@ -77,7 +77,7 @@ class CScanHashesAction : public frmFiles::IHandler
                         {
                             auto &stream = streamResult.value();
                             CRgdFile oRGD;
-                            oRGD.SetHashTable(TheConstruct->GetHashService().GetHashTable());
+                            oRGD.SetHashTable(TheConstruct->GetRgdHashTable());
                             oRGD.Load(stream.get());
                         }
                     }
@@ -129,7 +129,7 @@ class CScanHashesAction : public frmFiles::IHandler
         if (pFileDialog->ShowModal() == wxID_OK)
         {
             std::vector<unsigned long> oHashList;
-            TheConstruct->GetHashService().GetHashTable()->FillUnknownList(oHashList);
+            TheConstruct->GetRgdHashTable()->FillUnknownList(oHashList);
 
             auto sStr = std::make_unique<unsigned char[]>(4096);
             auto sStr2 = std::make_unique<unsigned char[]>(4096);
@@ -153,7 +153,9 @@ class CScanHashesAction : public frmFiles::IHandler
             while (!feof(fIn))
             {
                 if ((++iCount % iDiv) == 0)
+                {
                     m_pProgress->Update((int)(iCount / iDiv), wxT("Scanning file"));
+                }
                 fread(&iByte, 1, 1, fIn);
                 if (iByte > 31 && iByte < 128)
                 {
@@ -176,8 +178,7 @@ class CScanHashesAction : public frmFiles::IHandler
                                     if (*itr == iHash)
                                     {
                                         sStr[j + 1] = 0;
-                                        TheConstruct->GetHashService().GetHashTable()->ValueToHash(
-                                            (const char *)sStr.get() + i);
+                                        TheConstruct->GetRgdHashTable()->ValueToHash((const char *)sStr.get() + i);
                                         break;
                                     }
                                 }

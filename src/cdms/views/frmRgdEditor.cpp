@@ -49,10 +49,14 @@ std::map<unsigned long, frmRGDEditor::_NodeHelp> *frmRGDEditor::m_pNodeHelp = 0;
 static wxPGProperty *GetNextPGSibling(wxPGProperty *prop)
 {
     if (!prop)
+    {
         return nullptr;
+    }
     wxPGProperty *parent = prop->GetParent();
     if (!parent)
+    {
         return nullptr;
+    }
     unsigned int idx = prop->GetIndexInParent() + 1;
     return (idx < parent->GetChildCount()) ? parent->Item(idx) : nullptr;
 }
@@ -84,9 +88,13 @@ class CRGDTreeItemData : public wxTreeItemData
     ~CRGDTreeItemData()
     {
         if (DelNode)
+        {
             delete pNode;
+        }
         if (DelTable)
+        {
             delete pTable;
+        }
     }
     IMetaNode *pNode;
     IMetaNode::IMetaTable *pTable;
@@ -142,7 +150,9 @@ class MywxDataObjectSimple : public wxDataObjectSimple
     ~MywxDataObjectSimple()
     {
         if (pData)
+        {
             delete[] pData;
+        }
     }
 
     virtual size_t GetDataSize() const { return iLen; }
@@ -159,7 +169,9 @@ class MywxDataObjectSimple : public wxDataObjectSimple
     virtual bool SetData(size_t len, const void *buf)
     {
         if (pData)
+        {
             delete[] pData;
+        }
         memcpy(pData = new char[iLen = len], buf, len);
         return true;
     }
@@ -196,7 +208,9 @@ bool myUcsRefPropertyClass::OnButtonClick(wxPropertyGrid *propgrid, wxString &va
     if (iL > 0)
     {
         if (value[0] == '$')
+        {
             iN = 1;
+        }
         for (; iN < iL; ++iN)
         {
             if (value[iN] < '0' || value[iN] > '9')
@@ -212,9 +226,13 @@ bool myUcsRefPropertyClass::OnButtonClick(wxPropertyGrid *propgrid, wxString &va
     // launch UCS selector to find UCS
     unsigned long iVal, iVal2 = ULONG_MAX;
     if (value[0] == '$')
+    {
         iVal = wcstoul(value.c_str() + 1, 0, 10);
+    }
     else
+    {
         iVal = wcstoul(value.c_str(), 0, 10);
+    }
 
     frmUCSSelector *pSelector = new frmUCSSelector(wxT("Select UCS to get value from"));
 
@@ -229,14 +247,20 @@ bool myUcsRefPropertyClass::OnButtonClick(wxPropertyGrid *propgrid, wxString &va
                 if (i == 0 && value[0] == '$')
                     ;
                 else
+                {
                     bIsBlanko = false;
+                }
             }
         }
         if (!bIsBlanko)
+        {
             iVal2 = iVal;
+        }
         CUcsTool::HandleSelectorResponse(pSelector, pNewTabs->GetTabs(), &iVal2, true);
         if (!bIsBlanko)
+        {
             iVal2 = ULONG_MAX;
+        }
     }
     else
     {
@@ -264,7 +288,9 @@ bool myUcsRefPropertyClass::OnButtonClick(wxPropertyGrid *propgrid, wxString &va
         wchar_t sNumberBuffer[34];
         int iN = 0;
         if (value[0] == '$')
+        {
             iN = 1, sNumberBuffer[0] = '$';
+        }
         _ultow(iVal2, sNumberBuffer + iN, 10);
         value = sNumberBuffer;
         return true;
@@ -507,13 +533,19 @@ frmRGDEditor::frmRGDEditor(const wxTreeItemId &oFileParent, wxString sFilename, 
 frmRGDEditor::~frmRGDEditor()
 {
     if (m_iObjectType == 3)
+    {
         delete m_pTableObject;
+    }
     if (m_bDeleteWhenDone)
     {
         if (m_iObjectType == 1)
+        {
             delete m_pNodeObject;
+        }
         else if (m_iObjectType == 2)
+        {
             delete m_pTableObject;
+        }
         else if (m_iObjectType == 3)
         {
             m_pTables->DeleteAllItems();
@@ -541,7 +573,9 @@ wxPGProperty *frmRGDEditor::GetMetaNodeEditor(IMetaNode *pNode, wxString sName, 
     try
     {
         if (sName == wxT(""))
+        {
             sName = GetMetaNodeName(pNode);
+        }
         switch (pNode->VGetType())
         {
         case IMetaNode::DT_Bool:
@@ -656,11 +690,15 @@ wxString frmRGDEditor::GetMetaNodeHelp(IMetaNode *pNode)
 
     // Short Desc
     if (m_pNodeHelp == 0)
+    {
         return S;
+    }
 
     _NodeHelp oHelp = m_pNodeHelp->operator[](NodeNameToMultiHash(GetMetaNodeName(pNode)));
     if (bNeedGap)
+    {
         S.Append(wxT("\n"));
+    }
     if (oHelp.sShortDesc && *oHelp.sShortDesc)
     {
         S.Append(AsciiTowxString(oHelp.sShortDesc));
@@ -669,7 +707,9 @@ wxString frmRGDEditor::GetMetaNodeHelp(IMetaNode *pNode)
 
     // Long Desc
     if (bNeedGap)
+    {
         S.Append(wxT("\n"));
+    }
     if (oHelp.sLongDesc && *oHelp.sLongDesc)
     {
         S.Append(AsciiTowxString(oHelp.sLongDesc));
@@ -688,7 +728,9 @@ void frmRGDEditor::_DoFillRightSide(IMetaNode *pNode, IMetaNode::IMetaTable *pTa
         m_pPropertyGrid->Append(new wxStringProperty(wxT("Name"), wxT("Name"), GetMetaNodeName(pNode)));
     m_pPropertyGrid->SetPropertyHelpString(oName, wxT("The name of this item"));
     if (m_pLua2Object)
+    {
         oName->Enable(false);
+    }
 
     wxArrayString asDataTypes;
     wxArrayInt aiDataTypes;
@@ -747,6 +789,7 @@ void frmRGDEditor::_DoFillRightSide(IMetaNode *pNode, IMetaNode::IMetaTable *pTa
     }
 
     m_pPropertyGrid->Thaw();
+    m_pPropertyGrid->SetSplitterPosition(m_pPropertyGrid->GetClientSize().GetWidth() / 2);
     // m_pPropertyGrid->SelectProperty(oVal, false);
     m_pPropertyGrid->Refresh();
 }
@@ -781,7 +824,9 @@ void frmRGDEditor::OnTreeSelect(wxTreeEvent &event)
 wxString frmRGDEditor::GetMetaNodeName(IMetaNode *pNode)
 {
     if (pNode->VGetName())
+    {
         return CRgdEditorPresenter::FormatNodeName(pNode->VGetName(), 0);
+    }
 
     unsigned long iHash = 0;
     try
@@ -830,20 +875,26 @@ bool frmRGDEditor::_SyncTreeView(IMetaNode *pNode, wxTreeItemId &oNode)
     // Sync node name
     wxString sDesiredName = GetMetaNodeName(pNode);
     if (sDesiredName != m_pTables->GetItemText(oNode))
+    {
         m_pTables->SetItemText(oNode, sDesiredName);
+    }
 
     // Sync item data
     CRGDTreeItemData *pData = (CRGDTreeItemData *)m_pTables->GetItemData(oNode);
     if (pData->pNode != pNode)
     {
         if (pData->DelNode)
+        {
             delete pData->pNode;
+        }
         pData->pNode = pNode;
         pData->DelNode = true;
         bRet = false;
     }
     if (pData->pTable && pData->DelTable)
+    {
         delete pData->pTable;
+    }
     if (pNode->VGetType() == IMetaNode::DT_Table)
     {
         pData->pTable = pNode->VGetValueMetatable();
@@ -961,7 +1012,9 @@ bool frmRGDEditor::_SyncTreeView(IMetaNode *pNode, wxTreeItemId &oNode)
                         else
                         {
                             if (_SyncTreeView(pNodeChild, oNodeChild))
+                            {
                                 delete pNodeChild;
+                            }
                             oNodeChild = m_pTables->GetNextChild(oNodeChild, oCookie);
                             ++iChild;
                         }
@@ -1070,7 +1123,9 @@ void frmRGDEditor::_FillFromMetaTable(const wxTreeItemId &oParent, IMetaNode::IM
                                                             new CRGDTreeItemData(pNode, pChild, true, true, true));
                 m_pTables->SetItemHasChildren(oChild, true);
                 if (bSkipLuaGlobals)
+                {
                     m_pTables->Expand(oChild);
+                }
             }
             else
             {
@@ -1152,7 +1207,9 @@ void frmRGDEditor::OnPropertyChange(wxPropertyGridEvent &event)
                     m_pPropertyGrid->DeleteProperty(oChildren);
                     m_pTables->DeleteChildren(m_pTables->GetSelection());
                     if (pData->DelTable)
+                    {
                         delete pData->pTable;
+                    }
                     pData->pTable = 0;
                     pData->DelTable = false;
                 }
@@ -1302,9 +1359,13 @@ void frmRGDEditor::OnTreeRightClick(wxTreeEvent &event)
     int flags;
     wxTreeItemId oItemID = m_pTables->HitTest(event.GetPoint(), flags);
     if (oItemID.IsOk())
+    {
         m_pTables->SelectItem(oItemID);
+    }
     else
+    {
         return;
+    }
 
     wxMenu *pPopup = new wxMenu;
     pPopup->Append(IDC_AddChild, wxT("Add Child"), wxT("Add a new entry to this table"));
@@ -1316,7 +1377,9 @@ void frmRGDEditor::OnTreeRightClick(wxTreeEvent &event)
         pData->DelayedLoad = false;
     }
     if (pData->pNode->VGetType() != IMetaNode::DT_Table)
+    {
         pPopup->Enable(IDC_AddChild, false);
+    }
     pPopup->Append(IDC_Delete, wxT("Delete"), wxT("Delete this entry"));
 
     pPopup->Append(IDC_Copy, wxT("Copy"), wxT("Copy this entry"));
@@ -1330,7 +1393,9 @@ void frmRGDEditor::OnTreeRightClick(wxTreeEvent &event)
     {
         pPopup->Enable(IDC_Paste, true);
         if (pData->pNode->VGetType() == IMetaNode::DT_Table)
+        {
             pPopup->Enable(IDC_PasteInto, true);
+        }
     }
 
     PopupMenu(pPopup);
@@ -1453,9 +1518,13 @@ void frmRGDEditor::OnPasteInto(wxCommandEvent &event)
                 delete pChildNode;
             }
             if (sNodeName)
+            {
                 delete[] sNodeName;
+            }
             if (!pExistingChild)
+            {
                 pExistingChild = pData->pTable->VAddChild("__$ModStudioTemp$__");
+            }
             pExistingChild->SGetNodeFromRainmanRgd(pStream.get(), true);
             delete pExistingChild;
 
@@ -1601,7 +1670,9 @@ void frmRGDEditor::OnCloseWindow(wxCloseEvent &event)
         case wxID_CANCEL:
         default:
             if (event.CanVeto())
+            {
                 event.Veto();
+            }
         case wxID_NO:
             break;
         }

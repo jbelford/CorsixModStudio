@@ -5,7 +5,7 @@ Standard: c++17
 ColumnLimit: 120
 IndentWidth: 4
 InsertNewlineAtEOF: true
-InsertBraces: Always
+InsertBraces: true
 BreakBeforeBraces: Allman
 
 # Include sorting disabled: this legacy codebase has order-dependent includes

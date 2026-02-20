@@ -141,7 +141,9 @@ void CRgdFile::Save(IFileStore::IOutputStream *pStream)
     RAINMAN_LOG_INFO("CRgdFile::Save() — writing RGD to stream");
     // Write RGD Header
     if (pStream == nullptr)
+    {
         throw CRainmanException(__FILE__, __LINE__, "No stream present");
+    }
 
     try
     {
@@ -402,7 +404,9 @@ void CRgdFile::_LoadLua(lua_State *L, _RgdEntry *pDest, bool bSkipThisLevelRef)
             while (*sTmp && bIsUcsRef)
             {
                 if (*sTmp < '0' || *sTmp > '9')
+                {
                     bIsUcsRef = false;
+                }
                 ++sTmp;
             }
         }
@@ -414,7 +418,9 @@ void CRgdFile::_LoadLua(lua_State *L, _RgdEntry *pDest, bool bSkipThisLevelRef)
                 pDest->Data.ws = new wchar_t[iL + 1];
                 sTmp = lua_tostring(L, -1);
                 for (size_t i = 0; i <= iL; ++i)
+                {
                     pDest->Data.ws[i] = sTmp[i];
+                }
             }
             else
             {
@@ -435,12 +441,16 @@ void CRgdFile::_LoadLua(lua_State *L, _RgdEntry *pDest, bool bSkipThisLevelRef)
     {
         auto *pTmp = (tLuaTableProtector *)lua_touserdata(L, -1);
         if (pTmp->iMagic != 0x7291BEEF)
+        {
             throw CRainmanException(__FILE__, __LINE__, "Data type not supported");
+        }
         lua_pushlightuserdata(L, (void *)pTmp);
         lua_remove(L, -2);
         lua_gettable(L, LUA_REGISTRYINDEX);
         if (lua_type(L, -1) != LUA_TTABLE)
+        {
             throw CRainmanException(__FILE__, __LINE__, "Data type not supported");
+        }
         // flow onward / no break
     }
     case LUA_TTABLE:
@@ -542,7 +552,9 @@ void CRgdFile::Load(IFileStore::IStream *pStream)
     // Load RGD Header
     _Clean();
     if (pStream == nullptr)
+    {
         throw CRainmanException(__FILE__, __LINE__, "No stream present");
+    }
 
     m_RgdHeader.sHeader.resize(16, '\0');
 
@@ -703,16 +715,22 @@ void CRgdFile::Load(IFileStore::IStream *pStream)
 const char *CRgdFile::GetDescriptorString()
 {
     if (m_pDataChunk == nullptr)
+    {
         throw CRainmanException(__FILE__, __LINE__, "No main chunk present for string");
+    }
     return m_pDataChunk->sString.c_str();
 }
 
 void CRgdFile::SetDescriptorString(const char *sString)
 {
     if (m_pDataChunk == nullptr)
+    {
         throw CRainmanException(__FILE__, __LINE__, "No main chunk present for string");
+    }
     if (sString == nullptr)
+    {
         sString = "";
+    }
 
     m_pDataChunk->sString = sString;
     m_pDataChunk->iStringLength = static_cast<long>(m_pDataChunk->sString.size());
@@ -723,14 +741,18 @@ void CRgdFile::SetDescriptorString(const char *sString)
 long CRgdFile::GetChunkVersion()
 {
     if (m_pDataChunk == nullptr)
+    {
         throw CRainmanException(__FILE__, __LINE__, "No main chunk present for version");
+    }
     return m_pDataChunk->iVersion;
 }
 
 void CRgdFile::SetChunkVersion(long iVersion)
 {
     if (m_pDataChunk == nullptr)
+    {
         throw CRainmanException(__FILE__, __LINE__, "No main chunk present for version");
+    }
     m_pDataChunk->iVersion = iVersion;
     return;
 }
@@ -771,11 +793,15 @@ void CRgdFile::_CleanRgdTable(CRgdFile::_RgdEntry *pTable)
                     break;
                 case DT_String:
                     if ((**itr).Data.s)
+                    {
                         delete[] (**itr).Data.s;
+                    }
                     break;
                 case DT_WString:
                     if ((**itr).Data.ws)
+                    {
                         delete[] (**itr).Data.ws;
+                    }
                     break;
                 };
                 delete *itr;
@@ -794,12 +820,16 @@ bool CRgdFile::_SortOutEntriesNum(_RgdEntry *a, _RgdEntry *b)
 void CRgdFile::_WriteRawRgdData(IFileStore::IOutputStream *pStream, _RgdEntry *pSource, bool bTable101)
 {
     if (pSource->Type != DT_Table && pSource->Type != sk_TableInt)
+    {
         throw CRainmanException(nullptr, __FILE__, __LINE__, "Source is not a table (%i)", (int)pSource->Type);
+    }
     std::vector<_RgdEntry *> vEntries;
     for (auto itr = pSource->Data.t->begin(); itr != pSource->Data.t->end(); ++itr)
     {
         if ((**itr).Type != DT_NoData)
+        {
             vEntries.push_back(*itr);
+        }
     }
     sort(vEntries.begin(), vEntries.end(), bTable101 ? _SortOutEntriesNum : _SortOutEntries);
     size_t iKeyCount = vEntries.size();
@@ -877,12 +907,16 @@ void CRgdFile::_WriteRawRgdData(IFileStore::IOutputStream *pStream, _RgdEntry *p
                 for (auto itrT = (**itr).Data.t->begin(); itrT != (**itr).Data.t->end(); ++itrT)
                 {
                     if ((**itrT).sName == nullptr)
+                    {
                         goto not_all_numeric;
+                    }
                     const char *s = (**itrT).sName;
                     while (*s)
                     {
                         if (*s < '0' || *s > '9')
+                        {
                             goto not_all_numeric;
+                        }
                         ++s;
                     }
                 }
@@ -1053,9 +1087,13 @@ void CRgdFile::_ProcessRawRgdData(IFileStore::IStream *pStream, _RgdEntry *pDest
             pEntry->Data.t = nullptr; // in case of abort
         }
         if (pEntry->Type == DT_String)
+        {
             pEntry->Data.s = nullptr; // in case of abort
+        }
         if (pEntry->Type == DT_WString)
+        {
             pEntry->Data.ws = nullptr; // in case of abort
+        }
 
         try
         {
@@ -1099,7 +1137,9 @@ void CRgdFile::_ProcessRawRgdData(IFileStore::IStream *pStream, _RgdEntry *pDest
             unsigned long iStrLen = 8, iLen = 0;
             char *sTmp = new char[iStrLen];
             if (sTmp == nullptr)
+            {
                 QUICK_THROW("Memory error")
+            }
             do
             {
                 try
@@ -1129,7 +1169,9 @@ void CRgdFile::_ProcessRawRgdData(IFileStore::IStream *pStream, _RgdEntry *pDest
 
             pEntry->Data.s = sTmp;
             if (pEntry->iHash == 0x49D60FAE)
+            {
                 pDestination->pExt = pEntry;
+            }
         }
         break;
         case DT_WString:
@@ -1137,7 +1179,9 @@ void CRgdFile::_ProcessRawRgdData(IFileStore::IStream *pStream, _RgdEntry *pDest
             unsigned long iStrLen = 8, iLen = 0;
             auto *sTmp = new wchar_t[iStrLen];
             if (sTmp == nullptr)
+            {
                 QUICK_THROW("Memory error")
+            }
             do
             {
                 try
@@ -1167,14 +1211,18 @@ void CRgdFile::_ProcessRawRgdData(IFileStore::IStream *pStream, _RgdEntry *pDest
 
             pEntry->Data.ws = sTmp;
             if (pEntry->iHash == 0x49D60FAE)
+            {
                 pDestination->pExt = pEntry;
+            }
         }
         break;
         case DT_Table:
         case sk_TableInt:
             pEntry->Data.t = new std::vector<_RgdEntry *>;
             if (pEntry->Data.t == nullptr)
+            {
                 QUICK_THROW("Memory error")
+            }
             try
             {
                 _ProcessRawRgdData(pStream, pEntry);
@@ -1184,7 +1232,9 @@ void CRgdFile::_ProcessRawRgdData(IFileStore::IStream *pStream, _RgdEntry *pDest
                 throw CRainmanException(e, __FILE__, __LINE__, "Processing of child failed");
             }
             if (m_bConvertTableIntToTable)
+            {
                 pEntry->Type = DT_Table;
+            }
             break;
         default:
             QUICK_THROW("Should never execute this :/ (Unknown RGD data type)")
@@ -1224,13 +1274,17 @@ const wchar_t *CRgdFile::VGetValueWString() { QUICK_THROW("Is not a unicode stri
 void CRgdFile::VSetType(IMetaNode::eDataTypes eType)
 {
     if (eType != DT_Table)
+    {
         QUICK_THROW("Can only be table")
+    }
 }
 
 void CRgdFile::VSetName(const char *sName)
 {
     if (strcmp(sName, "GameData") != 0)
+    {
         QUICK_THROW("Must be called GameData")
+    }
 }
 
 void CRgdFile::VSetNameHash(long iHash) { QUICK_THROW("Must be a table") }
@@ -1267,51 +1321,67 @@ unsigned long CRgdFile::CMetaNode::VGetNameHash() { return m_pData->iHash; }
 float CRgdFile::CMetaNode::VGetValueFloat()
 {
     if (m_pData->Type == DT_Float)
+    {
         return m_pData->Data.f;
+    }
     QUICK_THROW("Is not a float")
 }
 
 unsigned long CRgdFile::CMetaNode::VGetValueInteger()
 {
     if (m_pData->Type == DT_Integer)
+    {
         return m_pData->Data.i;
+    }
     QUICK_THROW("Is not an integer")
 }
 
 bool CRgdFile::CMetaNode::VGetValueBool()
 {
     if (m_pData->Type == DT_Bool)
+    {
         return m_pData->Data.b;
+    }
     QUICK_THROW("Is not a bool")
 }
 
 const char *CRgdFile::CMetaNode::VGetValueString()
 {
     if (m_pData->Type == DT_String)
+    {
         return m_pData->Data.s;
+    }
     QUICK_THROW("Is not a string")
 }
 
 const wchar_t *CRgdFile::CMetaNode::VGetValueWString()
 {
     if (m_pData->Type == DT_WString)
+    {
         return m_pData->Data.ws;
+    }
     QUICK_THROW("Is not a unicode string")
 }
 
 IMetaNode::IMetaTable *CRgdFile::CMetaNode::VGetValueMetatable()
 {
     if (m_pData->Type == DT_Table || m_pData->Type == sk_TableInt)
+    {
         return new CMetaTable(m_pData);
+    }
     QUICK_THROW("Is not a metatable")
 }
 
 void CRgdFile::CMetaNode::VSetType(IMetaNode::eDataTypes eType)
 {
     if (eType == m_pData->Type)
+    {
         return;
+    }
     if (eType == DT_NoData)
+    {
         QUICK_THROW("Type cannot be set to DT_NoData")
+    }
     _RgdEntryData oOldData = m_pData->Data;
 
     // Make new data
@@ -1519,34 +1589,44 @@ void CRgdFile::CMetaNode::VSetNameHash(unsigned long iHash)
     m_pData->sName = nullptr;
     m_pData->iHash = iHash;
     if (m_pData->pParentFile && m_pData->pParentFile->m_pHashTable)
+    {
         m_pData->sName = m_pData->pParentFile->m_pHashTable->HashToValue(iHash);
+    }
 }
 
 void CRgdFile::CMetaNode::VSetValueFloat(float fValue)
 {
     if (m_pData->Type != DT_Float)
+    {
         QUICK_THROW("Is not a float")
+    }
     m_pData->Data.f = fValue;
 }
 
 void CRgdFile::CMetaNode::VSetValueInteger(unsigned long iValue)
 {
     if (m_pData->Type != DT_Integer)
+    {
         QUICK_THROW("Is not an integer")
+    }
     m_pData->Data.i = iValue;
 }
 
 void CRgdFile::CMetaNode::VSetValueBool(bool bValue)
 {
     if (m_pData->Type != DT_Bool)
+    {
         QUICK_THROW("Is not a bool")
+    }
     m_pData->Data.b = bValue;
 }
 
 void CRgdFile::CMetaNode::VSetValueString(const char *sValue)
 {
     if (m_pData->Type != DT_String)
+    {
         QUICK_THROW("Is not a string")
+    }
     delete[] m_pData->Data.s;
     m_pData->Data.s = mystrdup(sValue);
 }
@@ -1554,7 +1634,9 @@ void CRgdFile::CMetaNode::VSetValueString(const char *sValue)
 void CRgdFile::CMetaNode::VSetValueWString(const wchar_t *wsValue)
 {
     if (m_pData->Type != DT_WString)
+    {
         QUICK_THROW("Is not a unicode string")
+    }
     delete[] m_pData->Data.ws;
     m_pData->Data.ws = mywcsdup(wsValue);
 }
@@ -1586,14 +1668,20 @@ void CRgdFile::SGetNodeFromRainmanRgd(IFileStore::IStream *pInput, bool bSetName
 static bool IsALLNumerical(const char *s)
 {
     if (!s)
+    {
         return false;
+    }
     ++s;
     if (*s == 0)
+    {
         return false;
+    }
     while (*s)
     {
         if (*s < '0' || *s > '9')
+        {
             return false;
+        }
         ++s;
     }
     return true;
@@ -1604,30 +1692,31 @@ bool _SortCMetaTableChildren(CRgdFile::_RgdEntry *p1, CRgdFile::_RgdEntry *p2)
     if (p1->sName == nullptr || p2->sName == nullptr)
     {
         if (p1->sName == nullptr && p2->sName != nullptr)
+        {
             return true;
+        }
         if (p2->sName == nullptr && p1->sName != nullptr)
+        {
             return false;
+        }
         return (p1->iHash < p2->iHash);
     }
 
-    char *sUnderPos1, *sUnderPos2;
-    sUnderPos1 = strrchr((char *)p1->sName, '_');
-    sUnderPos2 = strrchr((char *)p2->sName, '_');
+    // sName may point into std::string::c_str() storage, so compare
+    // without modifying the underlying string (avoiding UB).
+    const char *sUnderPos1 = strrchr(p1->sName, '_');
+    const char *sUnderPos2 = strrchr(p2->sName, '_');
     if (IsALLNumerical(sUnderPos1) && IsALLNumerical(sUnderPos2))
     {
-        *sUnderPos1 = *sUnderPos2 = 0;
-        if (stricmp(p1->sName, p2->sName) == 0)
+        auto iPrefixLen1 = static_cast<size_t>(sUnderPos1 - p1->sName);
+        auto iPrefixLen2 = static_cast<size_t>(sUnderPos2 - p2->sName);
+        if (iPrefixLen1 == iPrefixLen2 && strnicmp(p1->sName, p2->sName, iPrefixLen1) == 0)
         {
-            *sUnderPos1 = *sUnderPos2 = '_';
             long l1 = atol(sUnderPos1 + 1);
             long l2 = atol(sUnderPos2 + 1);
             return (l1 < l2);
         }
-        else
-        {
-            *sUnderPos1 = *sUnderPos2 = '_';
-            return (stricmp(p1->sName, p2->sName) < 0);
-        }
+        return (stricmp(p1->sName, p2->sName) < 0);
     }
     return (stricmp(p1->sName, p2->sName) < 0);
 }
@@ -1638,7 +1727,9 @@ CRgdFile::CMetaTable::CMetaTable(_RgdEntry *pData)
     for (auto itr = m_pData->Data.t->begin(); itr != m_pData->Data.t->end(); ++itr)
     {
         if ((*itr) != m_pData->pExt)
+        {
             m_vecChildren.push_back(*itr);
+        }
     }
     sort(m_vecChildren.begin(), m_vecChildren.end(), _SortCMetaTableChildren);
 }
@@ -1650,28 +1741,36 @@ unsigned long CRgdFile::CMetaTable::VGetChildCount() { return static_cast<unsign
 IMetaNode *CRgdFile::CMetaTable::VGetChild(unsigned long iIndex)
 {
     if (iIndex >= VGetChildCount())
+    {
         throw CRainmanException(nullptr, __FILE__, __LINE__, "Index %lu beyond %lu", iIndex, VGetChildCount());
+    }
     return new CRgdFile::CMetaNode(m_vecChildren[iIndex]);
 }
 
 IMetaNode::eDataTypes CRgdFile::CMetaTable::VGetReferenceType()
 {
     if (m_pData->pExt)
+    {
         return m_pData->pExt->Type;
+    }
     return DT_NoData;
 }
 
 const char *CRgdFile::CMetaTable::VGetReferenceString()
 {
     if (VGetReferenceType() == DT_String)
+    {
         return m_pData->pExt->Data.s;
+    }
     QUICK_THROW("No reference string")
 }
 
 const wchar_t *CRgdFile::CMetaTable::VGetReferenceWString()
 {
     if (VGetReferenceType() == DT_WString)
+    {
         return m_pData->pExt->Data.ws;
+    }
     QUICK_THROW("No reference unicode string")
 }
 
@@ -1690,9 +1789,13 @@ void CRgdFile::CMetaTable::VSetReferenceType(IMetaNode::eDataTypes eType)
                 }
             }
             if (m_pData->pExt->Type == DT_String)
+            {
                 delete[] m_pData->pExt->Data.s;
+            }
             else if (m_pData->pExt->Type == DT_WString)
+            {
                 delete[] m_pData->pExt->Data.ws;
+            }
             delete m_pData->pExt;
             m_pData->pExt = nullptr;
         }
@@ -1709,16 +1812,24 @@ void CRgdFile::CMetaTable::VSetReferenceType(IMetaNode::eDataTypes eType)
             m_pData->pExt->Type = eType;
             m_pData->Data.t->push_back(m_pData->pExt);
             if (eType == DT_String)
+            {
                 m_pData->pExt->Data.s = mystrdup("");
+            }
             else
+            {
                 m_pData->pExt->Data.ws = mywcsdup(L"");
+            }
         }
         else
         {
             if (m_pData->pExt->Type == DT_String)
+            {
                 delete[] m_pData->pExt->Data.s;
+            }
             else if (m_pData->pExt->Type == DT_WString)
+            {
                 delete[] m_pData->pExt->Data.ws;
+            }
             if (eType == DT_String)
             {
                 m_pData->pExt->Data.s = mystrdup("");
@@ -1738,7 +1849,9 @@ void CRgdFile::CMetaTable::VSetReferenceType(IMetaNode::eDataTypes eType)
 void CRgdFile::CMetaTable::VSetReferenceString(const char *sValue)
 {
     if (!m_pData->pExt || m_pData->pExt->Type != DT_String)
+    {
         QUICK_THROW("Reference type is not string")
+    }
     delete[] m_pData->pExt->Data.s;
     m_pData->pExt->Data.s = mystrdup(sValue);
 }
@@ -1746,7 +1859,9 @@ void CRgdFile::CMetaTable::VSetReferenceString(const char *sValue)
 void CRgdFile::CMetaTable::VSetReferenceWString(const wchar_t *wsValue)
 {
     if (!m_pData->pExt || m_pData->pExt->Type != DT_WString)
+    {
         QUICK_THROW("Reference type is not unicode string")
+    }
     delete[] m_pData->pExt->Data.ws;
     m_pData->pExt->Data.ws = mywcsdup(wsValue);
 }
@@ -1755,13 +1870,17 @@ IMetaNode *CRgdFile::CMetaTable::VAddChild(const char *sName)
 {
     auto *pNew = new _RgdEntry;
     if (!pNew)
+    {
         QUICK_THROW("Memory allocate error")
+    }
     pNew->Data.b = false;
     pNew->Type = IMetaNode::DT_Bool;
     pNew->pExt = nullptr;
     pNew->pParentFile = m_pData->pParentFile;
     if (!m_pData->pParentFile->m_pHashTable)
+    {
         m_pData->pParentFile->m_pHashTable = new CRgdHashTable;
+    }
     pNew->sName = m_pData->pParentFile->m_pHashTable->HashToValue(
         pNew->iHash = m_pData->pParentFile->m_pHashTable->ValueToHash(sName));
     for (auto itr = m_pData->Data.t->begin(); itr != m_pData->Data.t->end(); ++itr)
@@ -1782,7 +1901,9 @@ IMetaNode *CRgdFile::CMetaTable::VAddChild(const char *sName)
 void CRgdFile::CMetaTable::VDeleteChild(unsigned long iIndex)
 {
     if (iIndex >= VGetChildCount())
+    {
         throw CRainmanException(nullptr, __FILE__, __LINE__, "Index %lu beyond %lu", iIndex, VGetChildCount());
+    }
     _RgdEntry *pToDelete = m_vecChildren[iIndex];
     for (auto itr = m_pData->Data.t->begin(); itr != m_pData->Data.t->end(); ++itr)
     {
@@ -1796,11 +1917,15 @@ void CRgdFile::CMetaTable::VDeleteChild(unsigned long iIndex)
                 break;
             case DT_String:
                 if ((**itr).Data.s)
+                {
                     delete[] (**itr).Data.s;
+                }
                 break;
             case DT_WString:
                 if ((**itr).Data.ws)
+                {
                     delete[] (**itr).Data.ws;
+                }
                 break;
             };
             delete *itr;
@@ -1826,7 +1951,9 @@ void CRgdFile::_ReadRainmanRgdData(IFileStore::IStream *pInput, CRgdFile::_RgdEn
             pDestination->sName = nullptr;
             pDestination->iHash = iHash;
             if (pDestination->pParentFile && pDestination->pParentFile->m_pHashTable)
+            {
                 pDestination->sName = pDestination->pParentFile->m_pHashTable->HashToValue(iHash);
+            }
         }
         else
         {
@@ -1965,11 +2092,15 @@ void CRgdFile::_ReadRainmanRgdData(IFileStore::IStream *pInput, CRgdFile::_RgdEn
             // NOLINTNEXTLINE(clang-analyzer-core.NullDereference) — pParentFile is always set by caller before this
             // path
             if (!pDestination->pParentFile->m_pHashTable)
+            {
                 pDestination->pParentFile->m_pHashTable = new CRgdHashTable;
+            }
             _ReadRainmanRgdData(pInput, pNew, true);
             pDestination->Data.t->push_back(pNew);
             if (pNew->iHash == 0x49D60FAE)
+            {
                 pDestination->pExt = pNew;
+            }
         }
         break;
     }
@@ -1984,7 +2115,9 @@ void CRgdFile::_WriteRainmanRgdData(CMemoryStore::COutStream *pOutput, CRgdFile:
     unsigned long iL = pSource->sName ? strlen(pSource->sName) : 0;
     pOutput->VWrite(1, sizeof(uint32_t), &iL);
     if (iL)
+    {
         pOutput->VWrite(iL, 1, pSource->sName);
+    }
     unsigned char cType = pSource->Type;
     pOutput->VWrite(1, 1, &cType);
     switch (pSource->Type)
@@ -2011,14 +2144,18 @@ void CRgdFile::_WriteRainmanRgdData(CMemoryStore::COutStream *pOutput, CRgdFile:
         iL = pSource->Data.s ? strlen(pSource->Data.s) : 0;
         pOutput->VWrite(1, sizeof(uint32_t), &iL);
         if (iL)
+        {
             pOutput->VWrite(iL, 1, pSource->Data.s);
+        }
         break;
 
     case DT_WString:
         iL = pSource->Data.ws ? wcslen(pSource->Data.ws) : 0;
         pOutput->VWrite(1, sizeof(uint32_t), &iL);
         if (iL)
+        {
             pOutput->VWrite(iL, 2, pSource->Data.ws);
+        }
         break;
 
     case DT_Table:

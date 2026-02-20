@@ -69,7 +69,7 @@ TEST_F(RgdFileTest, SaveAndLoadRoundTrip) {
 
     EXPECT_GT(outStream->GetDataLength(), 0u);
 
-    // Load into new RGD
+    // Load into new RGD with the same hash table
     CRgdFile rgd2;
     rgd2.SetHashTable(&hashTable);
     auto* inStream = CMemoryStore::OpenStreamExt(
@@ -83,17 +83,21 @@ TEST_F(RgdFileTest, SaveAndLoadRoundTrip) {
     ASSERT_NE(table2, nullptr);
     EXPECT_EQ(table2->VGetChildCount(), 3u);
 
-    // Find the float child
+    // Find children and verify both values AND names
     bool foundFloat = false, foundString = false, foundBool = false;
     for (unsigned long i = 0; i < table2->VGetChildCount(); ++i) {
         auto* c = table2->VGetChild(i);
+        ASSERT_NE(c->VGetName(), nullptr) << "Child " << i << " name should resolve via hash table";
         if (c->VGetType() == IMetaNode::DT_Float) {
+            EXPECT_STREQ(c->VGetName(), "test_float");
             EXPECT_NEAR(c->VGetValueFloat(), 3.14f, 0.001f);
             foundFloat = true;
         } else if (c->VGetType() == IMetaNode::DT_String) {
+            EXPECT_STREQ(c->VGetName(), "test_string");
             EXPECT_STREQ(c->VGetValueString(), "hello");
             foundString = true;
         } else if (c->VGetType() == IMetaNode::DT_Bool) {
+            EXPECT_STREQ(c->VGetName(), "test_bool");
             EXPECT_TRUE(c->VGetValueBool());
             foundBool = true;
         }
@@ -103,6 +107,43 @@ TEST_F(RgdFileTest, SaveAndLoadRoundTrip) {
     EXPECT_TRUE(foundString);
     EXPECT_TRUE(foundBool);
 
+    delete table2;
+    delete inStream;
+    delete outStream;
+}
+
+TEST_F(RgdFileTest, LoadWithoutHashTableLeavesNamesNull) {
+    rgd.New(3);
+    auto* table = rgd.VGetValueMetatable();
+    ASSERT_NE(table, nullptr);
+
+    auto* child = table->VAddChild("some_attribute");
+    child->VSetType(IMetaNode::DT_Float);
+    child->VSetValueFloat(1.0f);
+    delete child;
+    delete table;
+
+    // Save
+    auto* outStream = CMemoryStore::OpenOutputStreamExt();
+    rgd.Save(outStream);
+
+    // Load into a new RGD with NO hash table
+    CRgdFile rgd2;
+    auto* inStream = CMemoryStore::OpenStreamExt(
+        const_cast<char*>(outStream->GetData()), outStream->GetDataLength(), false);
+    rgd2.Load(inStream);
+
+    auto* table2 = rgd2.VGetValueMetatable();
+    ASSERT_NE(table2, nullptr);
+    EXPECT_EQ(table2->VGetChildCount(), 1u);
+
+    auto* c = table2->VGetChild(0);
+    // Without a hash table, names cannot be resolved from the binary hashes
+    EXPECT_EQ(c->VGetName(), nullptr);
+    // But the value should still load correctly
+    EXPECT_NEAR(c->VGetValueFloat(), 1.0f, 0.001f);
+
+    delete c;
     delete table2;
     delete inStream;
     delete outStream;
@@ -150,6 +191,59 @@ TEST_F(RgdFileTest, IntegerRoundTrip) {
     EXPECT_EQ(c->VGetValueInteger(), 42u);
     delete c;
     delete table2;
+    delete inStream;
+    delete outStream;
+}
+
+TEST_F(RgdFileTest, SortedChildrenWithNumericSuffix) {
+    rgd.New(3);
+    auto* root = rgd.VGetValueMetatable();
+    ASSERT_NE(root, nullptr);
+
+    // Add children with numeric suffixes in reverse order
+    const char* names[] = {"item_3", "item_1", "item_10", "item_2"};
+    for (auto* name : names) {
+        auto* child = root->VAddChild(name);
+        child->VSetType(IMetaNode::DT_Float);
+        child->VSetValueFloat(1.0f);
+        delete child;
+    }
+    delete root;
+
+    // Save and reload to get proper hash-based storage
+    auto* outStream = CMemoryStore::OpenOutputStreamExt();
+    rgd.Save(outStream);
+
+    CRgdFile rgd2;
+    rgd2.SetHashTable(&hashTable);
+    auto* inStream = CMemoryStore::OpenStreamExt(
+        const_cast<char*>(outStream->GetData()), outStream->GetDataLength(), false);
+    rgd2.Load(inStream);
+
+    // VGetValueMetatable sorts children — verify numeric suffix order
+    auto* root2 = rgd2.VGetValueMetatable();
+    ASSERT_NE(root2, nullptr);
+    EXPECT_EQ(root2->VGetChildCount(), 4u);
+
+    // Should be sorted as item_1, item_2, item_3, item_10 (numeric, not lexicographic)
+    auto* c0 = root2->VGetChild(0);
+    auto* c1 = root2->VGetChild(1);
+    auto* c2 = root2->VGetChild(2);
+    auto* c3 = root2->VGetChild(3);
+    EXPECT_STREQ(c0->VGetName(), "item_1");
+    EXPECT_STREQ(c1->VGetName(), "item_2");
+    EXPECT_STREQ(c2->VGetName(), "item_3");
+    EXPECT_STREQ(c3->VGetName(), "item_10");
+
+    // Verify names weren't corrupted by the sort
+    EXPECT_STREQ(hashTable.HashToValue(c0->VGetNameHash()), "item_1");
+    EXPECT_STREQ(hashTable.HashToValue(c3->VGetNameHash()), "item_10");
+
+    delete c0;
+    delete c1;
+    delete c2;
+    delete c3;
+    delete root2;
     delete inStream;
     delete outStream;
 }

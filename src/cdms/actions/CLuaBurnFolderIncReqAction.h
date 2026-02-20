@@ -43,7 +43,9 @@ class CLuaBurnFolderIncReqAction : public frmFiles::IHandler
         m_iRGDVersion = 1;
         m_bCheckSkip = true;
         if (TheConstruct->GetModuleService().GetModuleType() != CModuleFile::MT_DawnOfWar)
+        {
             m_iRGDVersion = 3;
+        }
     }
     virtual wxString VGetExt() const { return wxT(""); }
 
@@ -72,7 +74,9 @@ class CLuaBurnFolderIncReqAction : public frmFiles::IHandler
                     if (!bCountOnly)
                     {
                         if (((iCountBase + iCount) % 256) == 0)
+                        {
                             m_pCache->Clear();
+                        }
                         int iPVal = (int)((iCountBase + iCount) / iCountDiv);
                         m_pProgress->Update(iPVal, sFile);
 
@@ -119,7 +123,7 @@ class CLuaBurnFolderIncReqAction : public frmFiles::IHandler
                             if (pLua)
                             {
                                 auto pRgd = std::make_unique<CRgdFile>();
-                                pRgd->SetHashTable(TheConstruct->GetHashService().GetHashTable());
+                                pRgd->SetHashTable(TheConstruct->GetRgdHashTable());
                                 try
                                 {
                                     pRgd->Load(pLua.get(), m_iRGDVersion);
@@ -137,7 +141,9 @@ class CLuaBurnFolderIncReqAction : public frmFiles::IHandler
                                         auto outResult = TheConstruct->GetFileService().OpenOutputStream(
                                             AsciiTowxString(saRgd), true);
                                         if (outResult)
+                                        {
                                             outStream = std::move(outResult.value());
+                                        }
                                     }
                                     catch (const CRainmanException &e)
                                     {
@@ -165,7 +171,9 @@ class CLuaBurnFolderIncReqAction : public frmFiles::IHandler
                             }
                             free(saRgd);
                             if (pLua)
+                            {
                                 m_pCache->FreeState(pLua->m_pLua);
+                            }
                         }
                         if (sError != wxT(""))
                         {

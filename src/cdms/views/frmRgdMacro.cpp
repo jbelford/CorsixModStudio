@@ -230,16 +230,22 @@ frmRgdMacro::frmRgdMacro(wxString sFile, wxTreeItemId &oFolder)
         wxFont font(curType.fontsize, wxMODERN, wxNORMAL, wxNORMAL, false, curType.fontname);
         m_pSTC->StyleSetFont(g_LuaWords[i].type, font);
         if (curType.foreground)
+        {
             m_pSTC->StyleSetForeground(g_LuaWords[i].type, wxColour(curType.foreground));
+        }
         if (curType.background)
+        {
             m_pSTC->StyleSetBackground(g_LuaWords[i].type, wxColour(curType.background));
+        }
         m_pSTC->StyleSetBold(g_LuaWords[i].type, (curType.fontstyle & mySTC_STYLE_BOLD) > 0);
         m_pSTC->StyleSetItalic(g_LuaWords[i].type, (curType.fontstyle & mySTC_STYLE_ITALIC) > 0);
         m_pSTC->StyleSetUnderline(g_LuaWords[i].type, (curType.fontstyle & mySTC_STYLE_UNDERL) > 0);
         m_pSTC->StyleSetVisible(g_LuaWords[i].type, (curType.fontstyle & mySTC_STYLE_HIDDEN) == 0);
         m_pSTC->StyleSetCase(g_LuaWords[i].type, curType.lettercase);
         if (g_LuaWords[i].words)
+        {
             m_pSTC->SetKeyWords(iWordSet++, g_LuaWords[i].words);
+        }
     }
 
     m_pSTC->SetMarginWidth(0, m_pSTC->TextWidth(wxSTC_STYLE_LINENUMBER, _T("_9999")));
@@ -294,7 +300,9 @@ void frmRgdMacro::OnCharAdded(wxStyledTextEvent &event)
             iLineIndentation = m_pSTC->GetLineIndentation(iCurrentLine - 1);
         }
         if (iLineIndentation == 0)
+        {
             return;
+        }
         m_pSTC->SetLineIndentation(iCurrentLine, iLineIndentation);
         m_pSTC->LineEnd();
     }
@@ -349,9 +357,13 @@ void frmRgdMacro::OnMacroComplete(const std::vector<wxString> &vFoldersToUpdate)
                 }
             }
             if (bMoveNext)
+            {
                 oChild = pTree->GetNextChild(oParent, oCookie);
+            }
             else
+            {
                 bMoveNext = true;
+            }
         }
         if (sPart.IsEmpty())
         {
@@ -390,7 +402,7 @@ void frmRgdMacro::OnRunClick(wxCommandEvent &event)
 
     // Validate macro by loading it synchronously (fast, needs UI for error reporting)
     CRgdFileMacro oTestMacro;
-    oTestMacro.setHashTable(TheConstruct->GetHashService().GetHashTable());
+    oTestMacro.setHashTable(TheConstruct->GetRgdHashTable());
     try
     {
         oTestMacro.loadMacro(saContent.get());
@@ -425,7 +437,7 @@ void frmRgdMacro::OnRunClick(wxCommandEvent &event)
 
     IFileStore *pFileStore = TheConstruct->GetModuleService().GetModule();
 
-    m_pPresenter->RunMacro(sContent, std::move(vFiles), pFileStore, TheConstruct->GetHashService().GetHashTable(),
+    m_pPresenter->RunMacro(sContent, std::move(vFiles), pFileStore, TheConstruct->GetRgdHashTable(),
                            TheConstruct->GetModuleService().GetModule(),
                            TheConstruct->GetModuleService().GetModuleType() == CModuleFile::MT_DawnOfWar, m_iPathLen,
                            m_iPathHash);

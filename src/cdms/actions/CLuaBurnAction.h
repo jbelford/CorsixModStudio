@@ -56,7 +56,9 @@ class CLuaBurnAction : public frmFiles::IHandler
         UNUSED(oFile);
         long iRGDVersion = 1;
         if (TheConstruct->GetModuleService().GetModuleType() != CModuleFile::MT_DawnOfWar)
+        {
             iRGDVersion = 3;
+        }
 
         auto streamResult = TheConstruct->GetFileService().OpenStream(sFile);
         if (!streamResult)
@@ -73,7 +75,7 @@ class CLuaBurnAction : public frmFiles::IHandler
             auto pRgd = std::make_unique<CRgdFile>();
             if (pRgd)
             {
-                pRgd->SetHashTable(TheConstruct->GetHashService().GetHashTable());
+                pRgd->SetHashTable(TheConstruct->GetRgdHashTable());
                 try
                 {
                     pRgd->Load(pLua.get(), iRGDVersion);
@@ -98,10 +100,14 @@ class CLuaBurnAction : public frmFiles::IHandler
                                         : nullptr;
                         frmFiles *pFiles = TheConstruct->GetFilesList();
                         if (bMovedTOC)
+                        {
                             pFiles->UpdateDirectoryChildren(pFiles->FindFile(AsciiTowxString(saFile.get()), true),
                                                             pDir.get());
+                        }
                         else
+                        {
                             pFiles->UpdateDirectoryChildren(oParent, pDir.get());
+                        }
                         try
                         {
                             pRgd->Save(outStream.get());

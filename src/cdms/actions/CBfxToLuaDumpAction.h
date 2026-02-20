@@ -49,9 +49,13 @@ class CBfxToLuaDumpAction : public frmFiles::IHandler
         char *saDir = strdup(saFile.get()), *pSlash;
         pSlash = strrchr(saDir, '\\');
         if (pSlash)
+        {
             *pSlash = 0;
+        }
         else
+        {
             *saDir = 0;
+        }
         auto itrResult = TheConstruct->GetFileService().Iterate(AsciiTowxString(saDir));
         free(saDir);
         IDirectoryTraverser::IIterator *pDir = itrResult ? itrResult.value().release() : nullptr;
@@ -64,7 +68,9 @@ class CBfxToLuaDumpAction : public frmFiles::IHandler
     {
         char *saOutFile = strdup(saFile);
         if (!saOutFile)
+        {
             throw CModStudioException(__FILE__, __LINE__, "Memory allocation error");
+        }
         strcpy(strchr(saOutFile, '.'), ".lua");
 
         IFileStore::IStream *pIn = 0;
@@ -73,7 +79,9 @@ class CBfxToLuaDumpAction : public frmFiles::IHandler
         {
             auto inResult = TheConstruct->GetFileService().OpenStream(AsciiTowxString(saFile));
             if (!inResult)
+            {
                 throw CModStudioException(0, __FILE__, __LINE__, "Cannot open streams for \'%s\'", saFile);
+            }
             pIn = inResult.value().release();
             auto outResult = TheConstruct->GetFileService().OpenOutputStream(AsciiTowxString(saOutFile), true);
             if (!outResult)
@@ -93,7 +101,7 @@ class CBfxToLuaDumpAction : public frmFiles::IHandler
         }
 
         CBfxFile oRgd;
-        oRgd.SetHashTable(TheConstruct->GetHashService().GetHashTable());
+        oRgd.SetHashTable(TheConstruct->GetRgdHashTable());
         try
         {
             oRgd.Load(pIn);

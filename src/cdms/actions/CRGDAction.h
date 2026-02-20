@@ -50,7 +50,7 @@ class CRGDAction : public frmFiles::IHandler
         auto &stream = streamResult.value();
 
         auto pRgd = std::make_unique<CRgdFile>();
-        pRgd->SetHashTable(TheConstruct->GetHashService().GetHashTable());
+        pRgd->SetHashTable(TheConstruct->GetRgdHashTable());
         pRgd->Load(stream.get());
 
         if (!pForm->FillFromMetaNode(pRgd.get()))
