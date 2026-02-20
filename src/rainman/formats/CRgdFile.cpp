@@ -87,7 +87,6 @@ static wchar_t *mywcsdup(const wchar_t *sStr)
 
 CRgdFile::CRgdFile()
 {
-    m_RgdHeader.sHeader = nullptr;
     m_RgdHeader.iVersion = 0;
     m_RgdHeader.iUnknown3 = 0;
     m_RgdHeader.iUnknown4 = 0;
@@ -107,60 +106,32 @@ void CRgdFile::SetHashTable(CRgdHashTable *pTable) { m_pHashTable = pTable; };
 void CRgdFile::New(long iVersion)
 {
     _Clean();
-    m_RgdHeader.sHeader = CHECK_MEM(new char[16]);
-    strcpy(m_RgdHeader.sHeader, "Relic Chunky\x0D\x0A\x1A");
+    m_RgdHeader.sHeader.assign("Relic Chunky\x0D\x0A\x1A\x00", 16);
     m_RgdHeader.iVersion = iVersion;
     m_RgdHeader.iUnknown3 = 1;
     m_RgdHeader.iUnknown4 = 0x24;
     m_RgdHeader.iUnknown5 = 0x1C;
     m_RgdHeader.iUnknown6 = 0x01;
 
-    m_pDataChunk = new _RgdChunk;
-    if (m_pDataChunk == nullptr)
-    {
-        _Clean();
-        throw CRainmanException(__FILE__, __LINE__, "Memory allocation error");
-    }
-    m_vRgdChunks.push_back(m_pDataChunk);
+    auto pNewChunk = std::make_unique<_RgdChunk>();
+    m_pDataChunk = pNewChunk.get();
     m_pDataChunk->RootEntry.Type = DT_Bool;
-    m_pDataChunk->RootEntry.pParentFile = (CRgdFile *)this;
-    m_pDataChunk->sChunkyType = nullptr;
+    m_pDataChunk->RootEntry.pParentFile = this;
+    m_pDataChunk->sChunkyType = "DATAAEGD";
     m_pDataChunk->iVersion = 1;
     m_pDataChunk->iChunkLength = sizeof(uint32_t) + sizeof(uint32_t);
     m_pDataChunk->iStringLength = 0;
-    m_pDataChunk->sString = nullptr;
     m_pDataChunk->iUnknown1 = 0xffffffff;
     m_pDataChunk->iUnknown2 = 0;
     m_pDataChunk->iCRC = crc32(0L, Z_NULL, 0);
     m_pDataChunk->iDataLength = 0;
-    m_pDataChunk->pData = nullptr;
-
-    m_pDataChunk->sChunkyType = new char[9];
-    if (m_pDataChunk->sChunkyType == nullptr)
-    {
-        _Clean();
-        throw CRainmanException(__FILE__, __LINE__, "Memory allocation error");
-    }
-    strcpy(m_pDataChunk->sChunkyType, "DATAAEGD");
-
-    m_pDataChunk->sString = new char[1];
-    if (m_pDataChunk->sString == nullptr)
-    {
-        _Clean();
-        throw CRainmanException(__FILE__, __LINE__, "Memory allocation error");
-    }
-    strcpy(m_pDataChunk->sString, "");
 
     m_pDataChunk->RootEntry.iHash = 0;
     m_pDataChunk->RootEntry.sName = "";
     m_pDataChunk->RootEntry.Type = DT_Table;
     m_pDataChunk->RootEntry.pExt = nullptr;
     m_pDataChunk->RootEntry.Data.t = new std::vector<_RgdEntry *>;
-    if (m_pDataChunk->RootEntry.Data.t == nullptr)
-    {
-        _Clean();
-        throw CRainmanException(__FILE__, __LINE__, "Memory allocation error");
-    }
+    m_vRgdChunks.push_back(std::move(pNewChunk));
 }
 
 bool CRgdFile::_SortOutEntries(CRgdFile::_RgdEntry *a, CRgdFile::_RgdEntry *b) { return a->iHash < b->iHash; }
@@ -174,7 +145,7 @@ void CRgdFile::Save(IFileStore::IOutputStream *pStream)
 
     try
     {
-        pStream->VWrite(16, 1, (void *)m_RgdHeader.sHeader);
+        pStream->VWrite(16, 1, m_RgdHeader.sHeader.data());
         pStream->VWrite(1, 4, (void *)&m_RgdHeader.iVersion);
         pStream->VWrite(1, 4, (void *)&m_RgdHeader.iUnknown3);
         if (m_RgdHeader.iVersion == 3)
@@ -190,9 +161,10 @@ void CRgdFile::Save(IFileStore::IOutputStream *pStream)
     }
 
     // Write chunks
-    for (auto itr = m_vRgdChunks.begin(); itr != m_vRgdChunks.end(); ++itr)
+    for (auto &pChunkPtr : m_vRgdChunks)
     {
-        if (*itr == m_pDataChunk)
+        _RgdChunk &chunk = *pChunkPtr;
+        if (pChunkPtr.get() == m_pDataChunk)
         {
             // We need to update the data chunk
             CMemoryStore CMem;
@@ -208,7 +180,7 @@ void CRgdFile::Save(IFileStore::IOutputStream *pStream)
             }
             try
             {
-                _WriteRawRgdData(pDataStr, &(**itr).RootEntry);
+                _WriteRawRgdData(pDataStr, &chunk.RootEntry);
             }
             catch (const CRainmanException &e)
             {
@@ -217,23 +189,17 @@ void CRgdFile::Save(IFileStore::IOutputStream *pStream)
             }
             try
             {
-                (**itr).iDataLength = (long)pDataStr->GetDataLength();
-                delete[] (**itr).pData;
-                (**itr).pData = new char[pDataStr->GetDataLength()];
+                chunk.iDataLength = (long)pDataStr->GetDataLength();
+                chunk.vData.resize(pDataStr->GetDataLength());
             }
             catch (const CRainmanException &e)
             {
                 delete pDataStr;
                 throw CRainmanException(e, __FILE__, __LINE__, "Cannot get data length");
             }
-            if ((**itr).pData == nullptr)
-            {
-                delete pDataStr;
-                throw CRainmanException(__FILE__, __LINE__, "Memory allocation error");
-            }
             try
             {
-                memcpy((**itr).pData, pDataStr->GetData(), pDataStr->GetDataLength());
+                memcpy(chunk.vData.data(), pDataStr->GetData(), pDataStr->GetDataLength());
             }
             catch (const CRainmanException &e)
             {
@@ -241,24 +207,24 @@ void CRgdFile::Save(IFileStore::IOutputStream *pStream)
                 throw CRainmanException(e, __FILE__, __LINE__, "Cannot copy data");
             }
             delete pDataStr;
-            (**itr).iChunkLength = (**itr).iStringLength + sizeof(uint32_t) + sizeof(uint32_t) + (**itr).iDataLength;
-            (**itr).iCRC = crc32(crc32(0L, Z_NULL, 0), (const Bytef *)(**itr).pData, (**itr).iDataLength);
+            chunk.iChunkLength = chunk.iStringLength + sizeof(uint32_t) + sizeof(uint32_t) + chunk.iDataLength;
+            chunk.iCRC = crc32(crc32(0L, Z_NULL, 0), (const Bytef *)chunk.vData.data(), chunk.iDataLength);
         }
         try
         {
-            pStream->VWrite(1, 8, (void *)(**itr).sChunkyType);
-            pStream->VWrite(1, 4, (void *)&(**itr).iVersion);
-            pStream->VWrite(1, 4, (void *)&(**itr).iChunkLength);
-            pStream->VWrite(1, 4, (void *)&(**itr).iStringLength);
-            pStream->VWrite((**itr).iStringLength, 1, (void *)(**itr).sString);
+            pStream->VWrite(1, 8, chunk.sChunkyType.data());
+            pStream->VWrite(1, 4, (void *)&chunk.iVersion);
+            pStream->VWrite(1, 4, (void *)&chunk.iChunkLength);
+            pStream->VWrite(1, 4, (void *)&chunk.iStringLength);
+            pStream->VWrite(chunk.iStringLength, 1, chunk.sString.data());
             if (m_RgdHeader.iVersion == 3)
             {
-                pStream->VWrite(1, 4, (void *)&(**itr).iUnknown1);
-                pStream->VWrite(1, 4, (void *)&(**itr).iUnknown2);
+                pStream->VWrite(1, 4, (void *)&chunk.iUnknown1);
+                pStream->VWrite(1, 4, (void *)&chunk.iUnknown2);
             }
-            pStream->VWrite(1, 4, (void *)&(**itr).iCRC);
-            pStream->VWrite(1, 4, (void *)&(**itr).iDataLength);
-            pStream->VWrite((**itr).iDataLength, 1, (void *)(**itr).pData);
+            pStream->VWrite(1, 4, (void *)&chunk.iCRC);
+            pStream->VWrite(1, 4, (void *)&chunk.iDataLength);
+            pStream->VWrite(chunk.iDataLength, 1, chunk.vData.data());
         }
         catch (const CRainmanException &e)
         {
@@ -578,14 +544,11 @@ void CRgdFile::Load(IFileStore::IStream *pStream)
     if (pStream == nullptr)
         throw CRainmanException(__FILE__, __LINE__, "No stream present");
 
-    m_RgdHeader.sHeader = new char[16];
-    if (m_RgdHeader.sHeader == nullptr)
-        throw CRainmanException(__FILE__, __LINE__, "Memory allocation error");
-    memset((void *)m_RgdHeader.sHeader, 0, 16);
+    m_RgdHeader.sHeader.resize(16, '\0');
 
     try
     {
-        pStream->VRead(16, 1, (void *)m_RgdHeader.sHeader);
+        pStream->VRead(16, 1, m_RgdHeader.sHeader.data());
         pStream->VRead(1, 4, (void *)&m_RgdHeader.iVersion);
         pStream->VRead(1, 4, (void *)&m_RgdHeader.iUnknown3);
         if (m_RgdHeader.iVersion == 3)
@@ -601,22 +564,16 @@ void CRgdFile::Load(IFileStore::IStream *pStream)
         throw CRainmanException(e, __FILE__, __LINE__, "Input error");
     }
 
-    if ((strcmp(m_RgdHeader.sHeader, "Relic Chunky\x0D\x0A\x1A") != 0) ||
+    if ((strcmp(m_RgdHeader.sHeader.c_str(), "Relic Chunky\x0D\x0A\x1A") != 0) ||
         !(m_RgdHeader.iVersion == 1 || m_RgdHeader.iVersion == 3) || m_RgdHeader.iUnknown3 != 1)
     {
         _Clean();
-        throw CRainmanException(nullptr, __FILE__, __LINE__, "Unrecognised header (%s,%li,%li)", m_RgdHeader.sHeader,
-                                m_RgdHeader.iVersion, m_RgdHeader.iUnknown3);
+        throw CRainmanException(nullptr, __FILE__, __LINE__, "Unrecognised header (%s,%li,%li)",
+                                m_RgdHeader.sHeader.c_str(), m_RgdHeader.iVersion, m_RgdHeader.iUnknown3);
     }
 
     // Attempt to read chunks
-    char *sChunkHeadTempBuffer = new char[9];
-    if (sChunkHeadTempBuffer == nullptr)
-    {
-        _Clean();
-        throw CRainmanException(__FILE__, __LINE__, "Memory allocation error");
-    }
-    memset(sChunkHeadTempBuffer, 0, 9);
+    char sChunkHeadTempBuffer[9] = {};
 
     while (1)
     {
@@ -628,32 +585,17 @@ void CRgdFile::Load(IFileStore::IStream *pStream)
         {
             break;
         }
-        auto *pChunk = new _RgdChunk;
-        if (pChunk == nullptr)
-        {
-            delete[] sChunkHeadTempBuffer;
-            _Clean();
-            throw CRainmanException(__FILE__, __LINE__, "Memory allocation error");
-        }
-        pChunk->sChunkyType = nullptr;
-        pChunk->sString = nullptr;
-        pChunk->pData = nullptr;
+        auto pChunkOwner = std::make_unique<_RgdChunk>();
+        _RgdChunk *pChunk = pChunkOwner.get();
         pChunk->RootEntry.Type = DT_Bool;
-        pChunk->RootEntry.pParentFile = (CRgdFile *)this;
-        m_vRgdChunks.push_back(pChunk);
+        pChunk->RootEntry.pParentFile = this;
+        m_vRgdChunks.push_back(std::move(pChunkOwner));
         if (m_pDataChunk == nullptr && (strcmp(sChunkHeadTempBuffer, "DATAAEGD") == 0))
         {
             m_pDataChunk = pChunk;
         }
 
-        pChunk->sChunkyType = new char[9]; // 8 bytes + 1
-        if (pChunk->sChunkyType == nullptr)
-        {
-            delete[] sChunkHeadTempBuffer;
-            _Clean();
-            throw CRainmanException(__FILE__, __LINE__, "Memory allocation error");
-        }
-        strcpy(pChunk->sChunkyType, sChunkHeadTempBuffer);
+        pChunk->sChunkyType = sChunkHeadTempBuffer;
 
         try
         {
@@ -663,23 +605,15 @@ void CRgdFile::Load(IFileStore::IStream *pStream)
         }
         catch (const CRainmanException &e)
         {
-            delete[] sChunkHeadTempBuffer;
             _Clean();
             throw CRainmanException(e, __FILE__, __LINE__, "Input error");
         }
 
-        pChunk->sString = new char[pChunk->iStringLength + 1]; // n bytes + 1
-        if (pChunk->sString == nullptr)
-        {
-            delete[] sChunkHeadTempBuffer;
-            _Clean();
-            throw CRainmanException(__FILE__, __LINE__, "Memory allocation error");
-        }
-        memset((void *)pChunk->sString, 0, pChunk->iStringLength + 1);
+        pChunk->sString.resize(pChunk->iStringLength, '\0');
 
         try
         {
-            pStream->VRead(pChunk->iStringLength, 1, (void *)pChunk->sString);
+            pStream->VRead(pChunk->iStringLength, 1, pChunk->sString.data());
             if (m_RgdHeader.iVersion == 3)
             {
                 pStream->VRead(1, 4, (void *)&pChunk->iUnknown1);
@@ -690,32 +624,22 @@ void CRgdFile::Load(IFileStore::IStream *pStream)
         }
         catch (const CRainmanException &e)
         {
-            delete[] sChunkHeadTempBuffer;
             _Clean();
             throw CRainmanException(e, __FILE__, __LINE__, "Input error");
         }
 
-        pChunk->pData = new char[pChunk->iDataLength]; // n bytes
-        if (pChunk->pData == nullptr)
-        {
-            delete[] sChunkHeadTempBuffer;
-            _Clean();
-            throw CRainmanException(__FILE__, __LINE__, "Memory allocation error");
-        }
+        pChunk->vData.resize(pChunk->iDataLength);
 
         try
         {
-            pStream->VRead(pChunk->iDataLength, 1, (void *)pChunk->pData);
+            pStream->VRead(pChunk->iDataLength, 1, pChunk->vData.data());
         }
         catch (const CRainmanException &e)
         {
-            delete[] sChunkHeadTempBuffer;
             _Clean();
             throw CRainmanException(e, __FILE__, __LINE__, "Input error");
         }
     }
-
-    delete[] sChunkHeadTempBuffer;
 
     if (m_pDataChunk == nullptr)
     {
@@ -725,7 +649,7 @@ void CRgdFile::Load(IFileStore::IStream *pStream)
 
     // Process binary data into table
     unsigned long iCRC = crc32(0L, Z_NULL, 0);
-    iCRC = crc32(iCRC, (const Bytef *)m_pDataChunk->pData, m_pDataChunk->iDataLength);
+    iCRC = crc32(iCRC, (const Bytef *)m_pDataChunk->vData.data(), m_pDataChunk->iDataLength);
 
     if (iCRC != m_pDataChunk->iCRC)
     {
@@ -757,7 +681,7 @@ void CRgdFile::Load(IFileStore::IStream *pStream)
     {
         MemStore.VInit();
         memStream = std::unique_ptr<IFileStore::IStream>(
-            MemStore.VOpenStream(MemStore.MemoryRange(m_pDataChunk->pData, m_pDataChunk->iDataLength)));
+            MemStore.VOpenStream(MemStore.MemoryRange(m_pDataChunk->vData.data(), m_pDataChunk->iDataLength)));
     }
     catch (const CRainmanException &e)
     {
@@ -780,7 +704,7 @@ const char *CRgdFile::GetDescriptorString()
 {
     if (m_pDataChunk == nullptr)
         throw CRainmanException(__FILE__, __LINE__, "No main chunk present for string");
-    return m_pDataChunk->sString;
+    return m_pDataChunk->sString.c_str();
 }
 
 void CRgdFile::SetDescriptorString(const char *sString)
@@ -788,17 +712,10 @@ void CRgdFile::SetDescriptorString(const char *sString)
     if (m_pDataChunk == nullptr)
         throw CRainmanException(__FILE__, __LINE__, "No main chunk present for string");
     if (sString == nullptr)
-        sString = ""; // The blank string is a const char* to the res section and thus can be used
+        sString = "";
 
-    if (((long)strlen(sString)) > m_pDataChunk->iStringLength) // Only allocate / deallocate if needed
-    {
-        char *sTmp = CHECK_MEM(new char[strlen(sString) + 1]);
-        delete[] m_pDataChunk->sString;
-        m_pDataChunk->sString = sTmp;
-    }
-
-    strcpy(m_pDataChunk->sString, sString);
-    m_pDataChunk->iStringLength = (long)strlen(sString);
+    m_pDataChunk->sString = sString;
+    m_pDataChunk->iStringLength = static_cast<long>(m_pDataChunk->sString.size());
     m_pDataChunk->iChunkLength =
         m_pDataChunk->iStringLength + sizeof(uint32_t) + sizeof(uint32_t) + m_pDataChunk->iDataLength;
 }
@@ -820,11 +737,7 @@ void CRgdFile::SetChunkVersion(long iVersion)
 
 void CRgdFile::_Clean()
 {
-    if (m_RgdHeader.sHeader != nullptr)
-    {
-        delete[] m_RgdHeader.sHeader;
-        m_RgdHeader.sHeader = nullptr;
-    }
+    m_RgdHeader.sHeader.clear();
     m_RgdHeader.iVersion = 0;
     m_RgdHeader.iUnknown3 = 0;
     m_RgdHeader.iUnknown4 = 0;
@@ -832,39 +745,14 @@ void CRgdFile::_Clean()
     m_RgdHeader.iUnknown6 = 0;
     m_pDataChunk = nullptr;
 
-    for (auto itr = m_vRgdChunks.begin(); itr != m_vRgdChunks.end(); ++itr)
+    for (auto &pChunk : m_vRgdChunks)
     {
-        if ((**itr).sString != nullptr)
+        if (pChunk->RootEntry.Type == DT_Table || pChunk->RootEntry.Type == sk_TableInt)
         {
-            delete[] (**itr).sString;
-            (**itr).sString = nullptr;
+            _CleanRgdTable(&pChunk->RootEntry);
         }
-
-        if ((**itr).sChunkyType != nullptr)
-        {
-            delete[] (**itr).sChunkyType;
-            (**itr).sChunkyType = nullptr;
-        }
-
-        if ((**itr).pData != nullptr)
-        {
-            delete[] (**itr).pData;
-            (**itr).pData = nullptr;
-        }
-
-        (**itr).iVersion = 0;
-        (**itr).iChunkLength = sizeof(uint32_t) + sizeof(uint32_t);
-        (**itr).iStringLength = 0;
-        (**itr).iCRC = crc32(0L, Z_NULL, 0);
-        (**itr).iDataLength = 0;
-
-        if ((**itr).RootEntry.Type == DT_Table || (**itr).RootEntry.Type == sk_TableInt)
-        {
-            _CleanRgdTable(&(**itr).RootEntry);
-        }
-
-        delete (*itr);
     }
+    m_vRgdChunks.clear();
 }
 
 void CRgdFile::_CleanRgdTable(CRgdFile::_RgdEntry *pTable)
