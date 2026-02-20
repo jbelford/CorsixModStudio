@@ -20,15 +20,16 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #ifdef _DO_INCLUDE_C_DOW_MODULE_H_
 #pragma once
 
-#include <vector>
 #include <map>
+#include <memory>
+#include <string>
+#include <vector>
 
 #include "rainman/core/gnuc_defines.h"
 #include "rainman/io/CFileSystemStore.h" // MODULEs are only in file system, not in SGAs
 #include "rainman/module/CDoWFileView.h"
 #include "rainman/archive/CSgaFile.h"
 #include "rainman/localization/CUcsFile.h"
-#include <memory>
 #include <zlib.h>
 #include "rainman/core/Callbacks.h"
 #include "rainman/core/Api.h"
@@ -193,16 +194,16 @@ class RAINMAN_API CDoWModule : public IFileStore, public IDirectoryTraverser
     void RegisterNewUCS(const char *sFile, std::shared_ptr<CUcsFile> pUcs);
 
   protected:
-    char *m_sUIName;      // DoW
-    char *m_sName;        // CoH
-    char *m_sDescription; // Both
-    char *m_sDllName;     // Both
-    char *m_sModFolder;   // Both
-    char *m_sPatcherUrl;  // CoH
-    char *m_sModFileName;
+    std::string m_sUIName;      // DoW
+    std::string m_sName;        // CoH
+    std::string m_sDescription; // Both
+    std::string m_sDllName;     // Both
+    std::string m_sModFolder;   // Both
+    std::string m_sPatcherUrl;  // CoH
+    std::string m_sModFileName;
     long m_iModVersionMajor, m_iModVersionMinor, m_iModVersionRevision; // DoW: A.B.C   CoH: A.B
-    char *m_sTextureFE;                                                 // DoW
-    char *m_sTextureIcon;                                               // DoW
+    std::string m_sTextureFE;                                           // DoW
+    std::string m_sTextureIcon;                                         // DoW
     bool m_bInvalidVersionNumber;
     bool m_bLoadFSToCustom;
     bool m_bNoEngine;
@@ -210,26 +211,26 @@ class RAINMAN_API CDoWModule : public IFileStore, public IDirectoryTraverser
     bool m_bIsCohMod;
     long m_iSgaOutVer;
 
-    std::map<long, char *> m_mapDataFolders;    // DoW
-    std::map<long, char *> m_mapArchiveFiles;   // DoW
-    std::map<long, char *> m_mapRequiredMods;   // DoW [CoH method unknown]
-    std::map<long, char *> m_mapCompatableMods; // DoW [CoH method unknown]
+    std::map<long, std::string> m_mapDataFolders;    // DoW
+    std::map<long, std::string> m_mapArchiveFiles;   // DoW
+    std::map<long, std::string> m_mapRequiredMods;   // DoW [CoH method unknown]
+    std::map<long, std::string> m_mapCompatableMods; // DoW [CoH method unknown]
 
     // Filesystem stuff
     CDoWFileView *m_pFiles;
-    CFileSystemStore *m_pFSO;
-    std::vector<CSgaFile *> m_vSgas;
-    std::vector<CDoWModule *> m_vInheritedMods;
+    std::unique_ptr<CFileSystemStore> m_pFSO;
+    std::vector<std::unique_ptr<CSgaFile>> m_vSgas;
+    std::vector<std::unique_ptr<CDoWModule>> m_vInheritedMods;
     unsigned long m_iFileViewState;
     void _TryLoadDataGeneric(const char *sModName, const char *sDoWPath, bool bReq, const char *sModFSName);
 
     // UCS Stuff
     std::vector<std::shared_ptr<CUcsFile>> m_vUcsFiles;
-    std::vector<char *> m_vUcsNames;
+    std::vector<std::string> m_vUcsNames;
 
     // Random
     void _Clean();
-    char *m_sLocale;
+    std::string m_sLocale;
     unsigned long _MakeFileSourcesHash(unsigned long iBase = crc32(0, 0, 0));
 };
 
