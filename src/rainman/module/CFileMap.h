@@ -28,7 +28,9 @@ class CSgaFile;
 
 #include <vector>
 #include <map>
+#include <memory>
 #include <mutex>
+#include <string>
 
 class RAINMAN_API CFileMap : public IFileStore, public IDirectoryTraverser
 {
@@ -154,8 +156,8 @@ class RAINMAN_API CFileMap : public IFileStore, public IDirectoryTraverser
             iSortNumber &= (0xffff0000 | iN);
         }
 
-        char *sModName;    //!< eg. "RelicCOH" or "WXP"
-        char *sSourceName; //!< eg. "WW2\Archives\Attrib.sga" or "Data"
+        std::string sModName;    //!< eg. "RelicCOH" or "WXP"
+        std::string sSourceName; //!< eg. "WW2\Archives\Attrib.sga" or "Data"
 
         IFileStore *pStore;
         IDirectoryTraverser *pTraverser;
@@ -171,8 +173,8 @@ class RAINMAN_API CFileMap : public IFileStore, public IDirectoryTraverser
 
     struct _File
     {
-        char *sName;      //!< Short name of this file
-        _Folder *pParent; //!< Parent of this file
+        std::string sName; //!< Short name of this file
+        _Folder *pParent;  //!< Parent of this file
 
         //! Sorted list of sources which have this file, also stores the last write time given by that source
         //! First item in this map (eg .begin() ) is the highest priority source
@@ -181,26 +183,26 @@ class RAINMAN_API CFileMap : public IFileStore, public IDirectoryTraverser
 
     struct _Folder
     {
-        _Folder *pParent; //!< Parent of this folder (set to 0 on ToC Root folders)
-        char *sName;      //!< Short name of this folder (points to a place in sFullName)
-        char *sFullName;  //!< Full name of this folder
+        _Folder *pParent;      //!< Parent of this folder (set to 0 on ToC Root folders)
+        std::string sName;     //!< Short name of this folder
+        std::string sFullName; //!< Full name of this folder
 
-        std::map<_DataSource *, char *> mapSourceNames; //!< maps DataSources to their names for this folder
+        std::map<_DataSource *, std::string> mapSourceNames; //!< maps DataSources to their names for this folder
 
-        std::vector<_Folder *> vChildFolders;
-        std::vector<_File *> vChildFiles;
+        std::vector<std::unique_ptr<_Folder>> vChildFolders;
+        std::vector<std::unique_ptr<_File>> vChildFiles;
     };
 
     struct _TOC
     {
-        char *sName; //!< Name of this ToC
-        _Folder *pRootFolder;
+        std::string sName; //!< Name of this ToC
+        std::unique_ptr<_Folder> pRootFolder;
     };
 
     std::map<_TOC *, _TOC *> m_mapTOCRewrites;
 
-    std::vector<_TOC *> m_vTOCs;
-    std::vector<_DataSource *> m_vDataSources;
+    std::vector<std::unique_ptr<_TOC>> m_vTOCs;
+    std::vector<std::unique_ptr<_DataSource>> m_vDataSources;
 
     /*!
         Makes sure that pFolder has a data source suitable for saving pFile.
@@ -237,7 +239,6 @@ class RAINMAN_API CFileMap : public IFileStore, public IDirectoryTraverser
   protected:
     void _RawMapFromSnapshot(_DataSource *pSource, const DirEntry &snapshot, _Folder *pFolder);
     void _EraseSourceFromFolder(_DataSource *pSource, _Folder *pFolder);
-    void _CleanFolder(_Folder *pFolder);
     void _FolderSetupSourceNameFromSingleFileMap(_Folder *pFolder, _DataSource *pDataSource, const char *sPathFull,
                                                  const char *sPathPartLeft);
 
@@ -263,8 +264,8 @@ class RAINMAN_API CFileMap : public IFileStore, public IDirectoryTraverser
     */
     IFileStore::IStream *_OpenFile(CFileMap::_File *pFile, CFileMap::_Folder *pFolder, const char *sFile);
 
-    static bool _SortFolds(_Folder *a, _Folder *b);
-    static bool _SortFiles(_File *a, _File *b);
+    static bool _SortFolds(const std::unique_ptr<_Folder> &a, const std::unique_ptr<_Folder> &b);
+    static bool _SortFiles(const std::unique_ptr<_File> &a, const std::unique_ptr<_File> &b);
 
     std::recursive_mutex m_mtxMap; //!< Guards mutation of m_vDataSources, m_vTOCs, and the folder/file tree
     tAuxOutputSupply m_fAuxOutputSupply;
@@ -291,8 +292,8 @@ class RAINMAN_API CFileMap : public IFileStore, public IDirectoryTraverser
 
         CFileMap::_Folder *m_pDirectory;
 
-        std::vector<CFileMap::_Folder *>::iterator m_FoldIter;
-        std::vector<CFileMap::_File *>::iterator m_FileIter;
+        std::vector<std::unique_ptr<CFileMap::_Folder>>::iterator m_FoldIter;
+        std::vector<std::unique_ptr<CFileMap::_File>>::iterator m_FileIter;
 
         void _MakeFullName();
 

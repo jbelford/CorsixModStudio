@@ -53,32 +53,24 @@ IFileStore::IStream *CFileMap::_OpenFile(CFileMap::_File *pFile, CFileMap::_Fold
     if (pFile->mapSources.empty())
         throw CRainmanException(nullptr, __FILE__, __LINE__, "Found \'%s\', but it is not mapped to a source", sFile);
     _DataSource *pSrc = pFile->mapSources.begin()->first;
-    char *sSourceFolder = pFolder->mapSourceNames[pSrc];
-    if (sSourceFolder == nullptr)
+    const auto &sSourceFolder = pFolder->mapSourceNames[pSrc];
+    if (sSourceFolder.empty())
         throw CRainmanException(nullptr, __FILE__, __LINE__, "Found \'%s\', but folder is not mapped to the source",
                                 sFile);
 
-    char *sFullPath = new char[strlen(sSourceFolder) + strlen(pFile->sName) + 2];
+    std::string sFullPath = sSourceFolder;
+    if (!sFullPath.empty() && sFullPath.back() != '\\')
+        sFullPath += '\\';
+    sFullPath += pFile->sName;
 
-    strcpy(sFullPath, sSourceFolder);
-    if (*sFullPath && sFullPath[strlen(sFullPath) - 1] != '\\')
-        strcat(sFullPath, "\\");
-    strcat(sFullPath, pFile->sName);
-    ;
-
-    IFileStore::IStream *pStream = nullptr;
     try
     {
-        pStream = pSrc->pStore->VOpenStream(sFullPath);
+        return pSrc->pStore->VOpenStream(sFullPath.c_str());
     }
     catch (const CRainmanException &e)
     {
-        delete[] sFullPath;
         throw CRainmanException(e, __FILE__, __LINE__, "Error opening \'%s\' from file source", sFile);
     }
-
-    delete[] sFullPath;
-    return pStream;
 }
 
 void CFileMap::VCreateFolderIn(const char *sPath, const char *sNewFolderName)
@@ -143,40 +135,39 @@ CFileMap::_DataSource *CFileMap::_MakeFolderWritable(CFileMap::_Folder *pFolder,
         catch (const CRainmanException &e)
         {
             throw CRainmanException(e, __FILE__, __LINE__, "Unable to make \'%s\' writable for \'%s\'",
-                                    pFolder->sFullName, pFile->sName);
+                                    pFolder->sFullName.c_str(), pFile->sName.c_str());
         }
 
-        char *sSourceName = pFolder->pParent->mapSourceNames[pDS];
+        const auto &sSourceName = pFolder->pParent->mapSourceNames[pDS];
 
         try
         {
-            pDS->pTraverser->VCreateFolderIn(sSourceName, pFolder->sName);
+            pDS->pTraverser->VCreateFolderIn(sSourceName.c_str(), pFolder->sName.c_str());
         }
         catch (const CRainmanException &e)
         {
             throw CRainmanException(e, __FILE__, __LINE__,
-                                    "Cannot create folder in \'%s\' to make \'%s\' writable for \'%s\'", sSourceName,
-                                    pFolder->sFullName, pFile->sName);
+                                    "Cannot create folder in \'%s\' to make \'%s\' writable for \'%s\'",
+                                    sSourceName.c_str(), pFolder->sFullName.c_str(), pFile->sName.c_str());
         }
 
-        size_t iL = strlen(sSourceName);
-        char *sNewFolderName = CHECK_MEM((char *)malloc(iL + 2 + strlen(pFolder->sName)));
-        if ((sSourceName[iL - 1] == '/') || (sSourceName[iL - 1] == '\\'))
+        std::string sNewFolderName;
+        if (!sSourceName.empty() && (sSourceName.back() == '/' || sSourceName.back() == '\\'))
         {
-            sprintf(sNewFolderName, "%s%s%c", sSourceName, pFolder->sName, sSourceName[iL - 1]);
+            sNewFolderName = sSourceName + pFolder->sName + sSourceName.back();
         }
         else
         {
-            sprintf(sNewFolderName, "%s\\%s", sSourceName, pFolder->sName);
+            sNewFolderName = sSourceName + "\\" + pFolder->sName;
         }
 
-        pFolder->mapSourceNames[pDS] = sNewFolderName;
+        pFolder->mapSourceNames[pDS] = std::move(sNewFolderName);
 
         return pDS;
     }
 
     throw CRainmanException(nullptr, __FILE__, __LINE__, "Unable to make \'%s\' writable for \'%s\'",
-                            pFolder->sFullName, pFile->sName);
+                            pFolder->sFullName.c_str(), pFile->sName.c_str());
 }
 
 IFileStore::IOutputStream *CFileMap::VOpenOutputStream(const char *sFile, bool bEraseIfPresent)
@@ -184,6 +175,7 @@ IFileStore::IOutputStream *CFileMap::VOpenOutputStream(const char *sFile, bool b
     bool bFileWasCreated = false;
     _File *pFile;
     _Folder *pFolder = nullptr;
+    std::unique_ptr<_File> pNewFile;
 
     try
     {
@@ -199,11 +191,12 @@ IFileStore::IOutputStream *CFileMap::VOpenOutputStream(const char *sFile, bool b
 
     if (pFile == nullptr)
     {
-        pFile = new _File;
+        pNewFile = std::make_unique<_File>();
+        pFile = pNewFile.get();
         bFileWasCreated = true;
 
         pFile->pParent = pFolder;
-        pFile->sName = strdup(sFile + strlen(pFolder->sFullName) + 1);
+        pFile->sName = std::string(sFile + pFolder->sFullName.size() + 1);
     }
 
     _DataSource *pDS = nullptr;
@@ -214,11 +207,7 @@ IFileStore::IOutputStream *CFileMap::VOpenOutputStream(const char *sFile, bool b
     }
     catch (const CRainmanException &e)
     {
-        if (bFileWasCreated)
-        {
-            free(pFile->sName);
-            delete pFile;
-        }
+        pNewFile.reset();
         if (m_fAuxOutputSupply)
         {
             try
@@ -247,58 +236,41 @@ IFileStore::IOutputStream *CFileMap::VOpenOutputStream(const char *sFile, bool b
     {
         if (!pFile->mapSources.empty() && pDS != pFile->mapSources.begin()->first)
         {
-            if (bFileWasCreated)
-            {
-                free(pFile->sName);
-                delete pFile;
-            }
             throw CRainmanException(nullptr, __FILE__, __LINE__,
                                     "The output location for \'%s\' is incompatible with \'bEraseIfPresent = false\'",
                                     sFile);
         }
     }
 
-    char *sFolderPath = pFolder->mapSourceNames[pDS];
-    size_t iL = strlen(sFolderPath);
-    char *sFullFilePath = new char[iL + 2 + strlen(pFile->sName)];
-
-    strcpy(sFullFilePath, sFolderPath);
-    if (!((sFolderPath[iL - 1] == '\\') || (sFolderPath[iL - 1] == '/')))
+    const auto &sFolderPath = pFolder->mapSourceNames[pDS];
+    std::string sFullFilePath = sFolderPath;
+    if (!sFolderPath.empty() && sFolderPath.back() != '\\' && sFolderPath.back() != '/')
     {
-        strcat(sFullFilePath, "\\");
+        sFullFilePath += '\\';
     }
-    strcat(sFullFilePath, pFile->sName);
+    sFullFilePath += pFile->sName;
 
     std::unique_ptr<IFileStore::IOutputStream> pOutStr;
 
     try
     {
-        pOutStr =
-            std::unique_ptr<IFileStore::IOutputStream>(pDS->pStore->VOpenOutputStream(sFullFilePath, bEraseIfPresent));
+        pOutStr = std::unique_ptr<IFileStore::IOutputStream>(
+            pDS->pStore->VOpenOutputStream(sFullFilePath.c_str(), bEraseIfPresent));
         if (!pDS->bIsPureOutput)
-            pFile->mapSources[pDS] = pDS->pTraverser->VGetLastWriteTime(sFullFilePath);
+            pFile->mapSources[pDS] = pDS->pTraverser->VGetLastWriteTime(sFullFilePath.c_str());
 
         if (bFileWasCreated)
-            pFolder->vChildFiles.push_back(pFile);
+            pFolder->vChildFiles.push_back(std::move(pNewFile));
         bFileWasCreated = false;
         std::sort(pFolder->vChildFiles.begin(), pFolder->vChildFiles.end(), _SortFiles);
     }
     catch (const CRainmanException &e)
     {
-        PAUSE_THROW(e, __FILE__, __LINE__, "Error opening \'%s\' from file store (\'%s\')", sFile, sFullFilePath);
-
-        delete[] sFullFilePath;
-
-        if (bFileWasCreated)
-        {
-            free(pFile->sName);
-            delete pFile;
-        }
+        PAUSE_THROW(e, __FILE__, __LINE__, "Error opening \'%s\' from file store (\'%s\')", sFile,
+                    sFullFilePath.c_str());
 
         UNPAUSE_THROW;
     }
-
-    delete[] sFullFilePath;
 
     return pOutStr.release();
 }
@@ -326,7 +298,7 @@ const char *CFileMap::VGetEntryPoint(unsigned long iID)
     if (iID >= VGetEntryPointCount())
         throw CRainmanException(nullptr, __FILE__, __LINE__, "TOC %lu is beyond maximum of %lu", iID,
                                 VGetEntryPointCount());
-    return m_vTOCs[iID]->sName;
+    return m_vTOCs[iID]->sName.c_str();
 }
 
 void CFileMap::CIterator::_MakeFullName()
@@ -334,11 +306,11 @@ void CFileMap::CIterator::_MakeFullName()
     const char *sPartB = "";
     if (m_eWhat == IW_Folders)
     {
-        sPartB = (**m_FoldIter).sName;
+        sPartB = (*m_FoldIter)->sName.c_str();
     }
     else if (m_eWhat == IW_Files)
     {
-        sPartB = (**m_FileIter).sName;
+        sPartB = (*m_FileIter)->sName.c_str();
     }
 
     if (m_sFullPath)
@@ -357,8 +329,8 @@ CFileMap::CIterator::CIterator(CFileMap::_Folder *pFolder, CFileMap *pFileMap)
     m_pFileMap = pFileMap;
     m_sFullPath = nullptr;
 
-    m_sParentPath = CHECK_MEM(new char[strlen(pFolder->sFullName) + 2]);
-    sprintf(m_sParentPath, "%s\\", pFolder->sFullName);
+    m_sParentPath = CHECK_MEM(new char[pFolder->sFullName.size() + 2]);
+    sprintf(m_sParentPath, "%s\\", pFolder->sFullName.c_str());
 
     m_eWhat = IW_Folders;
     m_FoldIter = pFolder->vChildFolders.begin();
@@ -403,7 +375,7 @@ IDirectoryTraverser::IIterator *CFileMap::CIterator::VOpenSubDir()
         throw CRainmanException(__FILE__, __LINE__, "Current item is not a folder");
     try
     {
-        return new CIterator(*m_FoldIter, m_pFileMap);
+        return new CIterator(m_FoldIter->get(), m_pFileMap);
     }
     catch (const CRainmanException &e)
     {
@@ -417,7 +389,7 @@ IFileStore::IStream *CFileMap::CIterator::VOpenFile()
         throw CRainmanException(__FILE__, __LINE__, "Current item is not a file");
     try
     {
-        return m_pFileMap->_OpenFile(*m_FileIter, m_pDirectory, m_sFullPath);
+        return m_pFileMap->_OpenFile(m_FileIter->get(), m_pDirectory, m_sFullPath);
     }
     catch (const CRainmanException &e)
     {
@@ -447,10 +419,10 @@ const char *CFileMap::CIterator::VGetName()
     switch (m_eWhat)
     {
     case IW_Folders:
-        return (**m_FoldIter).sName;
+        return (*m_FoldIter)->sName.c_str();
 
     case IW_Files:
-        return (**m_FileIter).sName;
+        return (*m_FileIter)->sName.c_str();
 
     default:
         throw CRainmanException(__FILE__, __LINE__, "Only files and folders can have names");
@@ -512,9 +484,9 @@ void *CFileMap::CIterator::VGetTag(long iTag)
         pSrc = (**m_FileIter).mapSources.begin()->first;
 
         if (iTag == 0)
-            return (void *)pSrc->sModName;
+            return (void *)pSrc->sModName.c_str();
         if (iTag == 1)
-            return (void *)pSrc->sSourceName;
+            return (void *)pSrc->sSourceName.c_str();
         if (iTag == 2)
             return (void *)(uintptr_t)pSrc->GetMod();
         if (iTag == 3)
@@ -531,23 +503,24 @@ void CFileMap::RewriteToC(const char *sOld, const char *sNew)
 
     for (auto itr = m_vTOCs.begin(); itr != m_vTOCs.end(); ++itr)
     {
-        if (stricmp((**itr).sName, sOld) == 0)
+        if (stricmp((**itr).sName.c_str(), sOld) == 0)
         {
-            pTocKey = *itr;
+            pTocKey = itr->get();
             break;
         }
     }
 
     if (pTocKey == nullptr)
     {
-        pTocKey = new _TOC;
-        pTocKey->sName = strdup(sOld);
-        pTocKey->pRootFolder = new _Folder;
-        pTocKey->pRootFolder->pParent = nullptr;
-        pTocKey->pRootFolder->sFullName = strdup(sOld);
-        pTocKey->pRootFolder->sName = pTocKey->pRootFolder->sFullName;
+        auto pNewToc = std::make_unique<_TOC>();
+        pNewToc->sName = sOld;
+        pNewToc->pRootFolder = std::make_unique<_Folder>();
+        pNewToc->pRootFolder->pParent = nullptr;
+        pNewToc->pRootFolder->sFullName = sOld;
+        pNewToc->pRootFolder->sName = sOld;
 
-        m_vTOCs.push_back(pTocKey);
+        pTocKey = pNewToc.get();
+        m_vTOCs.push_back(std::move(pNewToc));
     }
 
     if (sNew == nullptr)
@@ -558,23 +531,24 @@ void CFileMap::RewriteToC(const char *sOld, const char *sNew)
 
         for (auto itr = m_vTOCs.begin(); itr != m_vTOCs.end(); ++itr)
         {
-            if (stricmp((**itr).sName, sNew) == 0)
+            if (stricmp((**itr).sName.c_str(), sNew) == 0)
             {
-                pTocVal = *itr;
+                pTocVal = itr->get();
                 break;
             }
         }
 
         if (pTocVal == nullptr)
         {
-            pTocVal = new _TOC;
-            pTocVal->sName = strdup(sNew);
-            pTocVal->pRootFolder = new _Folder;
-            pTocVal->pRootFolder->pParent = nullptr;
-            pTocVal->pRootFolder->sFullName = strdup(sNew);
-            pTocVal->pRootFolder->sName = pTocVal->pRootFolder->sFullName;
+            auto pNewToc = std::make_unique<_TOC>();
+            pNewToc->sName = sNew;
+            pNewToc->pRootFolder = std::make_unique<_Folder>();
+            pNewToc->pRootFolder->pParent = nullptr;
+            pNewToc->pRootFolder->sFullName = sNew;
+            pNewToc->pRootFolder->sName = sNew;
 
-            m_vTOCs.push_back(pTocVal);
+            pTocVal = pNewToc.get();
+            m_vTOCs.push_back(std::move(pNewToc));
         }
 
         m_mapTOCRewrites[pTocKey] = pTocVal;
@@ -595,9 +569,9 @@ CFileMap::_File *CFileMap::_FindFile(const char *sName, CFileMap::_Folder **ppFo
 
     for (auto itr = m_vTOCs.begin(); itr != m_vTOCs.end(); ++itr)
     {
-        if ((strlen((**itr).sName) == iPartLen) && (strnicmp((**itr).sName, sName, iPartLen) == 0))
+        if (((**itr).sName.size() == iPartLen) && (strnicmp((**itr).sName.c_str(), sName, iPartLen) == 0))
         {
-            pToc = *itr;
+            pToc = itr->get();
             break;
         }
     }
@@ -618,7 +592,7 @@ CFileMap::_File *CFileMap::_FindFile(const char *sName, CFileMap::_Folder **ppFo
                                 (int)iPartLen, sName, sName, sAvailable.empty() ? "(none)" : sAvailable.c_str());
     }
 
-    _Folder *pFolder = pToc->pRootFolder;
+    _Folder *pFolder = pToc->pRootFolder.get();
     const char *sNameLeft = nullptr;
     while (sSlashLoc)
     {
@@ -639,7 +613,7 @@ CFileMap::_File *CFileMap::_FindFile(const char *sName, CFileMap::_Folder **ppFo
         size_t iBSM = (iBSL + iBSH) >> 1;
         while (!bFound && iBSH > iBSL)
         {
-            int iNiRes = strnicmp(pFolder->vChildFolders[iBSM]->sName, sNameLeft, iPartLen);
+            int iNiRes = strnicmp(pFolder->vChildFolders[iBSM]->sName.c_str(), sNameLeft, iPartLen);
             if (iNiRes > 0)
             {
                 iBSH = iBSM;
@@ -652,31 +626,30 @@ CFileMap::_File *CFileMap::_FindFile(const char *sName, CFileMap::_Folder **ppFo
             }
             else
             {
-                if (strlen(pFolder->vChildFolders[iBSM]->sName) != iPartLen)
+                if (pFolder->vChildFolders[iBSM]->sName.size() != iPartLen)
                 {
                     iBSH = iBSM;
                     iBSM = (iBSL + iBSH) >> 1;
                 }
                 else
                 {
-                    pFolder = pFolder->vChildFolders[iBSM];
+                    pFolder = pFolder->vChildFolders[iBSM].get();
                     bFound = true;
                 }
             }
         }
         if (!bFound)
         {
-            auto *pNewFolder = new _Folder;
+            auto pNewFolder = std::make_unique<_Folder>();
             pNewFolder->pParent = pFolder;
-            size_t iLParent = strlen(pFolder->sFullName);
-            pNewFolder->sFullName = new char[iLParent + iPartLen + 2];
-            sprintf(pNewFolder->sFullName, "%s\\%.*s", pFolder->sFullName, (int)iPartLen, sNameLeft);
-            pNewFolder->sName = pNewFolder->sFullName + iLParent + 1;
+            pNewFolder->sName = std::string(sNameLeft, iPartLen);
+            pNewFolder->sFullName = pFolder->sFullName + "\\" + pNewFolder->sName;
 
-            pFolder->vChildFolders.push_back(pNewFolder);
+            auto *pRaw = pNewFolder.get();
+            pFolder->vChildFolders.push_back(std::move(pNewFolder));
             std::sort(pFolder->vChildFolders.begin(), pFolder->vChildFolders.end(), _SortFolds);
 
-            pFolder = pNewFolder;
+            pFolder = pRaw;
         }
 
         if (bIsFolder && sSlashLoc == nullptr)
@@ -700,7 +673,7 @@ CFileMap::_File *CFileMap::_FindFile(const char *sName, CFileMap::_Folder **ppFo
     size_t iBSM = (iBSL + iBSH) >> 1;
     while (iBSH > iBSL)
     {
-        int iNiRes = stricmp(pFolder->vChildFiles[iBSM]->sName, sNameLeft);
+        int iNiRes = stricmp(pFolder->vChildFiles[iBSM]->sName.c_str(), sNameLeft);
         if (iNiRes > 0)
         {
             iBSH = iBSM;
@@ -713,7 +686,7 @@ CFileMap::_File *CFileMap::_FindFile(const char *sName, CFileMap::_Folder **ppFo
         }
         else
         {
-            return pFolder->vChildFiles[iBSM];
+            return pFolder->vChildFiles[iBSM].get();
         }
     }
 
@@ -721,32 +694,39 @@ CFileMap::_File *CFileMap::_FindFile(const char *sName, CFileMap::_Folder **ppFo
     return nullptr;
 }
 
-bool CFileMap::_SortFolds(CFileMap::_Folder *a, CFileMap::_Folder *b) { return (stricmp(a->sName, b->sName) < 0); }
+bool CFileMap::_SortFolds(const std::unique_ptr<CFileMap::_Folder> &a, const std::unique_ptr<CFileMap::_Folder> &b)
+{
+    return (stricmp(a->sName.c_str(), b->sName.c_str()) < 0);
+}
 
-bool CFileMap::_SortFiles(CFileMap::_File *a, CFileMap::_File *b) { return (stricmp(a->sName, b->sName) < 0); }
+bool CFileMap::_SortFiles(const std::unique_ptr<CFileMap::_File> &a, const std::unique_ptr<CFileMap::_File> &b)
+{
+    return (stricmp(a->sName.c_str(), b->sName.c_str()) < 0);
+}
 
 void *CFileMap::RegisterSource(unsigned short iModNum, bool bIsSga, unsigned short iSourceNum, const char *sModName,
                                const char *sSourceName, IFileStore *pStore, IDirectoryTraverser *pTraverser,
                                bool bIsWritable, bool bIsOutput, bool bIsPureOutput)
 {
     std::lock_guard<std::recursive_mutex> lock(m_mtxMap);
-    _DataSource *pSource = CHECK_MEM(new _DataSource);
+    auto pSource = std::make_unique<_DataSource>();
 
     pSource->iSortNumber = 0;
     pSource->SetMod(iModNum);
     pSource->SetSourceType(bIsSga ? 1 : 0);
     pSource->SetSourceNumber(iSourceNum);
-    pSource->sModName = strdup(sModName);
-    pSource->sSourceName = strdup(sSourceName);
+    pSource->sModName = sModName;
+    pSource->sSourceName = sSourceName;
     pSource->pStore = pStore;
     pSource->pTraverser = pTraverser;
     pSource->bIsWritable = bIsWritable;
     pSource->bIsDefaultOutput = bIsOutput;
     pSource->bIsPureOutput = bIsPureOutput;
 
-    m_vDataSources.push_back(pSource);
+    auto *pRaw = pSource.get();
+    m_vDataSources.push_back(std::move(pSource));
 
-    return (void *)pSource;
+    return static_cast<void *>(pRaw);
 }
 
 void CFileMap::MapSga(void *pSource, CSgaFile *pSga)
@@ -762,44 +742,11 @@ void CFileMap::MapSga(void *pSource, CSgaFile *pSga)
     }
 }
 
-void CFileMap::_CleanFolder(_Folder *pFolder)
-{
-    free(pFolder->sFullName);
-
-    for (auto itr = pFolder->vChildFiles.begin(); itr != pFolder->vChildFiles.end(); ++itr)
-    {
-        free((**itr).sName);
-        delete *itr;
-    }
-
-    for (auto itr = pFolder->vChildFolders.begin(); itr != pFolder->vChildFolders.end(); ++itr)
-    {
-        _CleanFolder(*itr);
-    }
-
-    for (auto itr = pFolder->mapSourceNames.begin(); itr != pFolder->mapSourceNames.end(); ++itr)
-    {
-        free(itr->second);
-    }
-
-    delete pFolder;
-}
-
 void CFileMap::_Clean()
 {
-    for (auto itr = m_vTOCs.begin(); itr != m_vTOCs.end(); ++itr)
-    {
-        free((**itr).sName);
-        _CleanFolder((**itr).pRootFolder);
-        delete *itr;
-    }
-
-    for (auto itr = m_vDataSources.begin(); itr != m_vDataSources.end(); ++itr)
-    {
-        free((**itr).sModName);
-        free((**itr).sSourceName);
-        delete *itr;
-    }
+    m_mapTOCRewrites.clear();
+    m_vTOCs.clear();
+    m_vDataSources.clear();
 }
 
 void CFileMap::MapSingleFile(void *pSource, const char *sTocName, const char *sFullPath, const char *sPathPartial)
@@ -809,28 +756,29 @@ void CFileMap::MapSingleFile(void *pSource, const char *sTocName, const char *sF
     _TOC *pToc = nullptr;
     for (auto itr = m_vTOCs.begin(); itr != m_vTOCs.end(); ++itr)
     {
-        if (stricmp((**itr).sName, sTocName) == 0)
+        if (stricmp((**itr).sName.c_str(), sTocName) == 0)
         {
-            pToc = *itr;
+            pToc = itr->get();
             break;
         }
     }
     if (!pToc)
     {
-        pToc = new _TOC;
-        pToc->sName = strdup(sTocName);
-        pToc->pRootFolder = new _Folder;
-        pToc->pRootFolder->pParent = nullptr;
-        pToc->pRootFolder->sFullName = strdup(sTocName);
-        pToc->pRootFolder->sName = pToc->pRootFolder->sFullName;
+        auto pNewToc = std::make_unique<_TOC>();
+        pNewToc->sName = sTocName;
+        pNewToc->pRootFolder = std::make_unique<_Folder>();
+        pNewToc->pRootFolder->pParent = nullptr;
+        pNewToc->pRootFolder->sFullName = sTocName;
+        pNewToc->pRootFolder->sName = sTocName;
 
-        m_vTOCs.push_back(pToc);
+        pToc = pNewToc.get();
+        m_vTOCs.push_back(std::move(pNewToc));
     }
 
     // Get Folder
     if (*sPathPartial == '\\')
         ++sPathPartial;
-    _Folder *pCurrentFolder = pToc->pRootFolder;
+    _Folder *pCurrentFolder = pToc->pRootFolder.get();
     _FolderSetupSourceNameFromSingleFileMap(pCurrentFolder, (_DataSource *)pSource, sFullPath, sPathPartial);
     const char *sPathSeperator = strchr(sPathPartial, '\\');
     while (sPathSeperator)
@@ -840,23 +788,21 @@ void CFileMap::MapSingleFile(void *pSource, const char *sTocName, const char *sF
         _Folder *pTheFolder = nullptr;
         for (auto itr = pCurrentFolder->vChildFolders.begin(); itr != pCurrentFolder->vChildFolders.end(); ++itr)
         {
-            if (strlen((**itr).sName) == iPartL && strnicmp((**itr).sName, sPathPartial, iPartL) == 0)
+            if ((**itr).sName.size() == iPartL && strnicmp((**itr).sName.c_str(), sPathPartial, iPartL) == 0)
             {
-                pTheFolder = *itr;
+                pTheFolder = itr->get();
                 break;
             }
         }
         if (pTheFolder == nullptr)
         {
-            pTheFolder = new _Folder;
-            pTheFolder->pParent = pCurrentFolder;
-            size_t iLParent = strlen(pCurrentFolder->sFullName);
-            pTheFolder->sFullName = new char[iLParent + iPartL + 2];
-            sprintf(pTheFolder->sFullName, "%s\\", pCurrentFolder->sFullName);
-            strncat(pTheFolder->sFullName, sPathPartial, iPartL);
-            pTheFolder->sName = pTheFolder->sFullName + iLParent + 1;
+            auto pNewFolder = std::make_unique<_Folder>();
+            pNewFolder->pParent = pCurrentFolder;
+            pNewFolder->sName = std::string(sPathPartial, iPartL);
+            pNewFolder->sFullName = pCurrentFolder->sFullName + "\\" + pNewFolder->sName;
 
-            pCurrentFolder->vChildFolders.push_back(pTheFolder);
+            pTheFolder = pNewFolder.get();
+            pCurrentFolder->vChildFolders.push_back(std::move(pNewFolder));
             std::sort(pCurrentFolder->vChildFolders.begin(), pCurrentFolder->vChildFolders.end(), _SortFolds);
 
             pCurrentFolder = pTheFolder;
@@ -876,18 +822,19 @@ void CFileMap::MapSingleFile(void *pSource, const char *sTocName, const char *sF
     _File *pTheFile = nullptr;
     for (auto itr = pCurrentFolder->vChildFiles.begin(); itr != pCurrentFolder->vChildFiles.end(); ++itr)
     {
-        if (stricmp(sPathPartial, (**itr).sName) == 0)
+        if (stricmp(sPathPartial, (**itr).sName.c_str()) == 0)
         {
-            pTheFile = *itr;
+            pTheFile = itr->get();
             break;
         }
     }
     if (pTheFile == nullptr)
     {
-        pTheFile = new _File;
-        pTheFile->pParent = pCurrentFolder;
-        pTheFile->sName = strdup(sPathPartial);
-        pCurrentFolder->vChildFiles.push_back(pTheFile);
+        auto pNewFile = std::make_unique<_File>();
+        pNewFile->pParent = pCurrentFolder;
+        pNewFile->sName = sPathPartial;
+        pTheFile = pNewFile.get();
+        pCurrentFolder->vChildFiles.push_back(std::move(pNewFile));
         std::sort(pCurrentFolder->vChildFiles.begin(), pCurrentFolder->vChildFiles.end(), _SortFiles);
     }
     pTheFile->mapSources[(_DataSource *)pSource] = ((_DataSource *)pSource)->pTraverser->VGetLastWriteTime(sFullPath);
@@ -902,26 +849,25 @@ void CFileMap::MapIteratorDeep(void *pSource, const char *sPath, IDirectoryTrave
     _TOC *pToc = nullptr;
     for (auto itr = m_vTOCs.begin(); itr != m_vTOCs.end(); ++itr)
     {
-        if (strlen((**itr).sName) == iPartLen && strnicmp((**itr).sName, sPath, iPartLen) == 0)
+        if ((**itr).sName.size() == iPartLen && strnicmp((**itr).sName.c_str(), sPath, iPartLen) == 0)
         {
-            pToc = *itr;
+            pToc = itr->get();
             break;
         }
     }
     if (!pToc)
     {
-        pToc = new _TOC;
-        pToc->sName = (char *)malloc(iPartLen + 1);
-        memcpy(pToc->sName, sPath, iPartLen);
-        pToc->sName[iPartLen] = 0;
-        pToc->pRootFolder = new _Folder;
-        pToc->pRootFolder->pParent = nullptr;
-        pToc->pRootFolder->sFullName = strdup(pToc->sName);
-        pToc->pRootFolder->sName = pToc->pRootFolder->sFullName;
+        auto pNewToc = std::make_unique<_TOC>();
+        pNewToc->sName = std::string(sPath, iPartLen);
+        pNewToc->pRootFolder = std::make_unique<_Folder>();
+        pNewToc->pRootFolder->pParent = nullptr;
+        pNewToc->pRootFolder->sFullName = pNewToc->sName;
+        pNewToc->pRootFolder->sName = pNewToc->sName;
 
-        m_vTOCs.push_back(pToc);
+        pToc = pNewToc.get();
+        m_vTOCs.push_back(std::move(pNewToc));
     }
-    _Folder *pFolder = pToc->pRootFolder, *pChild = nullptr;
+    _Folder *pFolder = pToc->pRootFolder.get(), *pChild = nullptr;
     while (sPathSplit)
     {
         sPath = sPathSplit + 1;
@@ -931,23 +877,21 @@ void CFileMap::MapIteratorDeep(void *pSource, const char *sPath, IDirectoryTrave
         pChild = nullptr;
         for (auto itr = pFolder->vChildFolders.begin(); itr != pFolder->vChildFolders.end(); ++itr)
         {
-            if (strlen((**itr).sName) == iPartLen && strnicmp((**itr).sName, sPath, iPartLen) == 0)
+            if ((**itr).sName.size() == iPartLen && strnicmp((**itr).sName.c_str(), sPath, iPartLen) == 0)
             {
-                pChild = *itr;
+                pChild = itr->get();
                 break;
             }
         }
         if (pChild == nullptr)
         {
-            pChild = new _Folder;
-            pChild->pParent = pFolder;
-            pChild->sName = (char *)malloc(iPartLen + 1);
-            memcpy(pChild->sName, sPath, iPartLen);
-            pChild->sName[iPartLen] = 0;
-            pChild->sFullName = (char *)malloc(strlen(pFolder->sFullName) + iPartLen + 2);
-            sprintf(pChild->sFullName, "%s\\%s", pFolder->sFullName, pChild->sName);
+            auto pNewChild = std::make_unique<_Folder>();
+            pNewChild->pParent = pFolder;
+            pNewChild->sName = std::string(sPath, iPartLen);
+            pNewChild->sFullName = pFolder->sFullName + "\\" + pNewChild->sName;
 
-            pFolder->vChildFolders.push_back(pChild);
+            pChild = pNewChild.get();
+            pFolder->vChildFolders.push_back(std::move(pNewChild));
             std::sort(pFolder->vChildFolders.begin(), pFolder->vChildFolders.end(), _SortFolds);
         }
 
@@ -962,25 +906,26 @@ void CFileMap::MapIterator(void *pSource, const char *sTocName, IDirectoryTraver
     _TOC *pToc = nullptr;
     for (auto itr = m_vTOCs.begin(); itr != m_vTOCs.end(); ++itr)
     {
-        if (stricmp((**itr).sName, sTocName) == 0)
+        if (stricmp((**itr).sName.c_str(), sTocName) == 0)
         {
-            pToc = *itr;
+            pToc = itr->get();
             break;
         }
     }
     if (!pToc)
     {
-        pToc = new _TOC;
-        pToc->sName = strdup(sTocName);
-        pToc->pRootFolder = new _Folder;
-        pToc->pRootFolder->pParent = nullptr;
-        pToc->pRootFolder->sFullName = strdup(sTocName);
-        pToc->pRootFolder->sName = pToc->pRootFolder->sFullName;
+        auto pNewToc = std::make_unique<_TOC>();
+        pNewToc->sName = sTocName;
+        pNewToc->pRootFolder = std::make_unique<_Folder>();
+        pNewToc->pRootFolder->pParent = nullptr;
+        pNewToc->pRootFolder->sFullName = sTocName;
+        pNewToc->pRootFolder->sName = sTocName;
 
-        m_vTOCs.push_back(pToc);
+        pToc = pNewToc.get();
+        m_vTOCs.push_back(std::move(pNewToc));
     }
 
-    _RawMap((_DataSource *)pSource, pItr, pToc->pRootFolder);
+    _RawMap((_DataSource *)pSource, pItr, pToc->pRootFolder.get());
 }
 
 void CFileMap::MapSnapshot(void *pSource, const char *sTocName, const DirEntry &snapshot)
@@ -989,32 +934,33 @@ void CFileMap::MapSnapshot(void *pSource, const char *sTocName, const DirEntry &
     _TOC *pToc = nullptr;
     for (auto itr = m_vTOCs.begin(); itr != m_vTOCs.end(); ++itr)
     {
-        if (stricmp((**itr).sName, sTocName) == 0)
+        if (stricmp((**itr).sName.c_str(), sTocName) == 0)
         {
-            pToc = *itr;
+            pToc = itr->get();
             break;
         }
     }
     if (!pToc)
     {
-        pToc = new _TOC;
-        pToc->sName = strdup(sTocName);
-        pToc->pRootFolder = new _Folder;
-        pToc->pRootFolder->pParent = nullptr;
-        pToc->pRootFolder->sFullName = strdup(sTocName);
-        pToc->pRootFolder->sName = pToc->pRootFolder->sFullName;
+        auto pNewToc = std::make_unique<_TOC>();
+        pNewToc->sName = sTocName;
+        pNewToc->pRootFolder = std::make_unique<_Folder>();
+        pNewToc->pRootFolder->pParent = nullptr;
+        pNewToc->pRootFolder->sFullName = sTocName;
+        pNewToc->pRootFolder->sName = sTocName;
 
-        m_vTOCs.push_back(pToc);
+        pToc = pNewToc.get();
+        m_vTOCs.push_back(std::move(pNewToc));
     }
 
-    _RawMapFromSnapshot((_DataSource *)pSource, snapshot, pToc->pRootFolder);
+    _RawMapFromSnapshot((_DataSource *)pSource, snapshot, pToc->pRootFolder.get());
 }
 
 void CFileMap::_RawMapFromSnapshot(_DataSource *pSource, const DirEntry &snapshot, _Folder *pFolder)
 {
-    if (pFolder->mapSourceNames[pSource] == nullptr && !snapshot.directoryPath.empty())
+    if (pFolder->mapSourceNames[pSource].empty() && !snapshot.directoryPath.empty())
     {
-        pFolder->mapSourceNames[pSource] = strdup(snapshot.directoryPath.c_str());
+        pFolder->mapSourceNames[pSource] = snapshot.directoryPath;
     }
 
     for (const auto &entry : snapshot.children)
@@ -1026,18 +972,19 @@ void CFileMap::_RawMapFromSnapshot(_DataSource *pSource, const DirEntry &snapsho
                 _File *pTheFile = nullptr;
                 for (auto itr = pFolder->vChildFiles.begin(); itr != pFolder->vChildFiles.end(); ++itr)
                 {
-                    if (stricmp((**itr).sName, entry.name.c_str()) == 0)
+                    if (stricmp((**itr).sName.c_str(), entry.name.c_str()) == 0)
                     {
-                        pTheFile = *itr;
+                        pTheFile = itr->get();
                         break;
                     }
                 }
                 if (pTheFile == nullptr)
                 {
-                    pTheFile = new _File;
-                    pTheFile->pParent = pFolder;
-                    pTheFile->sName = strdup(entry.name.c_str());
-                    pFolder->vChildFiles.push_back(pTheFile);
+                    auto pNewFile = std::make_unique<_File>();
+                    pNewFile->pParent = pFolder;
+                    pNewFile->sName = entry.name;
+                    pTheFile = pNewFile.get();
+                    pFolder->vChildFiles.push_back(std::move(pNewFile));
                 }
                 pTheFile->mapSources[pSource] = entry.lastWriteTime;
             }
@@ -1047,23 +994,21 @@ void CFileMap::_RawMapFromSnapshot(_DataSource *pSource, const DirEntry &snapsho
             _Folder *pTheFolder = nullptr;
             for (auto itr = pFolder->vChildFolders.begin(); itr != pFolder->vChildFolders.end(); ++itr)
             {
-                if (stricmp((**itr).sName, entry.name.c_str()) == 0)
+                if (stricmp((**itr).sName.c_str(), entry.name.c_str()) == 0)
                 {
-                    pTheFolder = *itr;
+                    pTheFolder = itr->get();
                     break;
                 }
             }
             if (pTheFolder == nullptr)
             {
-                pTheFolder = new _Folder;
-                pTheFolder->pParent = pFolder;
-                size_t iLParent = strlen(pFolder->sFullName);
-                size_t iLThis = entry.name.size();
-                pTheFolder->sFullName = new char[iLParent + iLThis + 2];
-                sprintf(pTheFolder->sFullName, "%s\\%s", pFolder->sFullName, entry.name.c_str());
-                pTheFolder->sName = pTheFolder->sFullName + iLParent + 1;
+                auto pNewFolder = std::make_unique<_Folder>();
+                pNewFolder->pParent = pFolder;
+                pNewFolder->sName = entry.name;
+                pNewFolder->sFullName = pFolder->sFullName + "\\" + pNewFolder->sName;
 
-                pFolder->vChildFolders.push_back(pTheFolder);
+                pTheFolder = pNewFolder.get();
+                pFolder->vChildFolders.push_back(std::move(pNewFolder));
             }
 
             _RawMapFromSnapshot(pSource, entry, pTheFolder);
@@ -1077,15 +1022,12 @@ void CFileMap::_RawMapFromSnapshot(_DataSource *pSource, const DirEntry &snapsho
 void CFileMap::_FolderSetupSourceNameFromSingleFileMap(_Folder *pFolder, _DataSource *pDataSource,
                                                        const char *sPathFull, const char *sPathPartLeft)
 {
-    if (pFolder->mapSourceNames[pDataSource] == nullptr)
+    if (pFolder->mapSourceNames[pDataSource].empty())
     {
         size_t iLFull = strlen(sPathFull);
         size_t iLPart = strlen(sPathPartLeft);
         size_t iL = iLFull - iLPart - 1;
-        char *sVal = (char *)malloc(iL + 1);
-        memcpy(sVal, sPathFull, iL);
-        sVal[iL] = 0;
-        pFolder->mapSourceNames[pDataSource] = sVal;
+        pFolder->mapSourceNames[pDataSource] = std::string(sPathFull, iL);
     }
 }
 
@@ -1095,16 +1037,13 @@ void CFileMap::EraseSource(void *_pSource)
     auto *pSource = (_DataSource *)_pSource;
     for (auto itr = m_vTOCs.begin(); itr != m_vTOCs.end(); ++itr)
     {
-        _EraseSourceFromFolder(pSource, (**itr).pRootFolder);
+        _EraseSourceFromFolder(pSource, (**itr).pRootFolder.get());
     }
 
     for (auto itr = m_vDataSources.begin(); itr != m_vDataSources.end(); ++itr)
     {
-        if (*itr == pSource)
+        if (itr->get() == pSource)
         {
-            free((**itr).sModName);
-            free((**itr).sSourceName);
-            delete *itr;
             m_vDataSources.erase(itr);
             break;
         }
@@ -1113,15 +1052,11 @@ void CFileMap::EraseSource(void *_pSource)
 
 void CFileMap::_EraseSourceFromFolder(_DataSource *pSource, _Folder *pFolder)
 {
-    if (pFolder->mapSourceNames.find(pSource) != pFolder->mapSourceNames.end())
-    {
-        free(pFolder->mapSourceNames[pSource]);
-        pFolder->mapSourceNames.erase(pSource);
-    }
+    pFolder->mapSourceNames.erase(pSource);
 
     for (auto itr = pFolder->vChildFolders.begin(); itr != pFolder->vChildFolders.end(); ++itr)
     {
-        _EraseSourceFromFolder(pSource, *itr);
+        _EraseSourceFromFolder(pSource, itr->get());
     }
 
     for (auto itr = pFolder->vChildFiles.begin(); itr != pFolder->vChildFiles.end(); ++itr)
@@ -1135,9 +1070,9 @@ void CFileMap::_EraseSourceFromFolder(_DataSource *pSource, _Folder *pFolder)
 
 void CFileMap::_RawMap(_DataSource *pSource, IDirectoryTraverser::IIterator *pItr, _Folder *pFolder)
 {
-    if (pFolder->mapSourceNames[pSource] == nullptr)
+    if (pFolder->mapSourceNames[pSource].empty())
     {
-        pFolder->mapSourceNames[pSource] = strdup(pItr->VGetDirectoryPath());
+        pFolder->mapSourceNames[pSource] = pItr->VGetDirectoryPath();
     }
 
     while (pItr->VGetType() != IDirectoryTraverser::IIterator::T_Nothing)
@@ -1149,18 +1084,19 @@ void CFileMap::_RawMap(_DataSource *pSource, IDirectoryTraverser::IIterator *pIt
                 _File *pTheFile = nullptr;
                 for (auto itr = pFolder->vChildFiles.begin(); itr != pFolder->vChildFiles.end(); ++itr)
                 {
-                    if (stricmp((**itr).sName, pItr->VGetName()) == 0)
+                    if (stricmp((**itr).sName.c_str(), pItr->VGetName()) == 0)
                     {
-                        pTheFile = *itr;
+                        pTheFile = itr->get();
                         break;
                     }
                 }
                 if (pTheFile == nullptr)
                 {
-                    pTheFile = new _File;
-                    pTheFile->pParent = pFolder;
-                    pTheFile->sName = strdup(pItr->VGetName());
-                    pFolder->vChildFiles.push_back(pTheFile);
+                    auto pNewFile = std::make_unique<_File>();
+                    pNewFile->pParent = pFolder;
+                    pNewFile->sName = pItr->VGetName();
+                    pTheFile = pNewFile.get();
+                    pFolder->vChildFiles.push_back(std::move(pNewFile));
                 }
                 pTheFile->mapSources[pSource] = pItr->VGetLastWriteTime();
             }
@@ -1170,23 +1106,21 @@ void CFileMap::_RawMap(_DataSource *pSource, IDirectoryTraverser::IIterator *pIt
             _Folder *pTheFolder = nullptr;
             for (auto itr = pFolder->vChildFolders.begin(); itr != pFolder->vChildFolders.end(); ++itr)
             {
-                if (stricmp((**itr).sName, pItr->VGetName()) == 0)
+                if (stricmp((**itr).sName.c_str(), pItr->VGetName()) == 0)
                 {
-                    pTheFolder = *itr;
+                    pTheFolder = itr->get();
                     break;
                 }
             }
             if (pTheFolder == nullptr)
             {
-                pTheFolder = new _Folder;
-                pTheFolder->pParent = pFolder;
-                size_t iLParent = strlen(pFolder->sFullName);
-                size_t iLThis = strlen(pItr->VGetName());
-                pTheFolder->sFullName = new char[iLParent + iLThis + 2];
-                sprintf(pTheFolder->sFullName, "%s\\%s", pFolder->sFullName, pItr->VGetName());
-                pTheFolder->sName = pTheFolder->sFullName + iLParent + 1;
+                auto pNewFolder = std::make_unique<_Folder>();
+                pNewFolder->pParent = pFolder;
+                pNewFolder->sName = pItr->VGetName();
+                pNewFolder->sFullName = pFolder->sFullName + "\\" + pNewFolder->sName;
 
-                pFolder->vChildFolders.push_back(pTheFolder);
+                pTheFolder = pNewFolder.get();
+                pFolder->vChildFolders.push_back(std::move(pNewFolder));
             }
 
             IDirectoryTraverser::IIterator *pSubItr = pItr->VOpenSubDir();
@@ -1197,7 +1131,7 @@ void CFileMap::_RawMap(_DataSource *pSource, IDirectoryTraverser::IIterator *pIt
             catch (const CRainmanException &e)
             {
                 delete pSubItr;
-                throw CRainmanException(e, __FILE__, __LINE__, "Raw map of \'%s\' failed", pFolder->sFullName);
+                throw CRainmanException(e, __FILE__, __LINE__, "Raw map of \'%s\' failed", pFolder->sFullName.c_str());
             }
             delete pSubItr;
         }
