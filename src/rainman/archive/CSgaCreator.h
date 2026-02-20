@@ -23,6 +23,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "rainman/io/IFileStore.h"
 #include "rainman/io/IDirectoryTraverser.h"
 #include "rainman/core/Api.h"
+#include <memory>
+#include <string>
 #include <vector>
 
 //! Creates DoW and CoH SGA archives
@@ -40,12 +42,12 @@ class RAINMAN_API CSgaCreator
         friend class CSgaCreator;
         size_t iNameOffset; //!< Where in sFullPath the actual file name begins
         tLastWriteTime oLastWriteTime;
-        char *sFullPath; //!< The full path of the file in pFileStore
+        std::string sFullPath; //!< The full path of the file in pFileStore
         IFileStore *pFileStore;
 
       public:
-        static bool OpLT(CInputFile *oA, CInputFile *oB); //!< Is oA less than oB?
-        ~CInputFile();
+        static bool OpLT(const std::unique_ptr<CInputFile> &oA,
+                         const std::unique_ptr<CInputFile> &oB); //!< Is oA less than oB?
     };
 
     //! Stores information about directories that are to be packed
@@ -53,14 +55,14 @@ class RAINMAN_API CSgaCreator
     {
       private:
         friend class CSgaCreator;
-        std::vector<CSgaCreator::CInputDirectory *> vDirsList; //!< Sub-directories
-        std::vector<CSgaCreator::CInputFile *> vFilesList;
-        char *sNameFull;
+        std::vector<std::unique_ptr<CSgaCreator::CInputDirectory>> vDirsList; //!< Sub-directories
+        std::vector<std::unique_ptr<CSgaCreator::CInputFile>> vFilesList;
+        std::string sNameFull;
 
       public:
-        static bool OpLT(CInputDirectory *oA, CInputDirectory *oB); //!< Is oA less than oB?
-        void FullCount(size_t &iDirCount, size_t &iFileCount);      //!< Count the number of directories and files
-        ~CInputDirectory();
+        static bool OpLT(const std::unique_ptr<CInputDirectory> &oA,
+                         const std::unique_ptr<CInputDirectory> &oB); //!< Is oA less than oB?
+        void FullCount(size_t &iDirCount, size_t &iFileCount);        //!< Count the number of directories and files
     };
 
     //! Create a new SGA archive
@@ -76,6 +78,6 @@ class RAINMAN_API CSgaCreator
                           const char *sTocTitle = 0);
 
   private:
-    static CInputDirectory *_ScanDirectory(IDirectoryTraverser::IIterator *pDirectory, IFileStore *pStore,
-                                           size_t iDirBaseL = 0);
+    static std::unique_ptr<CInputDirectory> _ScanDirectory(IDirectoryTraverser::IIterator *pDirectory,
+                                                           IFileStore *pStore, size_t iDirBaseL = 0);
 };

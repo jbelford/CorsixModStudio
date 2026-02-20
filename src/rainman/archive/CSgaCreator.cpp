@@ -35,56 +35,38 @@ extern "C"
 #include "rainman/core/Exception.h"
 #include "rainman/core/memdebug.h"
 
-bool CSgaCreator::CInputFile::OpLT(CSgaCreator::CInputFile *oA, CSgaCreator::CInputFile *oB)
+bool CSgaCreator::CInputFile::OpLT(const std::unique_ptr<CSgaCreator::CInputFile> &oA,
+                                   const std::unique_ptr<CSgaCreator::CInputFile> &oB)
 {
-    return (strcmp(oA->sFullPath + oA->iNameOffset, oB->sFullPath + oB->iNameOffset) < 0);
+    return (strcmp(oA->sFullPath.c_str() + oA->iNameOffset, oB->sFullPath.c_str() + oB->iNameOffset) < 0);
 }
 
-CSgaCreator::CInputFile::~CInputFile() { free(sFullPath); }
-
-bool CSgaCreator::CInputDirectory::OpLT(CSgaCreator::CInputDirectory *oA, CSgaCreator::CInputDirectory *oB)
+bool CSgaCreator::CInputDirectory::OpLT(const std::unique_ptr<CSgaCreator::CInputDirectory> &oA,
+                                        const std::unique_ptr<CSgaCreator::CInputDirectory> &oB)
 {
-    return (strcmp(oA->sNameFull, oB->sNameFull) < 0);
+    return (oA->sNameFull < oB->sNameFull);
 }
 
 void CSgaCreator::CInputDirectory::FullCount(size_t &iDirCount, size_t &iFileCount)
 {
     ++iDirCount;
-    for (auto itr = vFilesList.begin(); itr != vFilesList.end(); ++itr)
+    iFileCount += vFilesList.size();
+    for (const auto &pDir : vDirsList)
     {
-        if (*itr)
-            ++iFileCount;
-    }
-    for (auto itr = vDirsList.begin(); itr != vDirsList.end(); ++itr)
-    {
-        if (*itr)
-            (*itr)->FullCount(iDirCount, iFileCount);
+        if (pDir)
+            pDir->FullCount(iDirCount, iFileCount);
     }
 }
 
-CSgaCreator::CInputDirectory::~CInputDirectory()
-{
-    free(sNameFull);
-    for (auto itr = vFilesList.begin(); itr != vFilesList.end(); ++itr)
-    {
-        delete *itr;
-    }
-    for (auto itr = vDirsList.begin(); itr != vDirsList.end(); ++itr)
-    {
-        delete *itr;
-    }
-}
-
-CSgaCreator::CInputDirectory *CSgaCreator::_ScanDirectory(IDirectoryTraverser::IIterator *pDirectory,
-                                                          IFileStore *pStore, size_t iDirBaseL)
+std::unique_ptr<CSgaCreator::CInputDirectory> CSgaCreator::_ScanDirectory(IDirectoryTraverser::IIterator *pDirectory,
+                                                                          IFileStore *pStore, size_t iDirBaseL)
 {
     if (pDirectory == nullptr)
         QUICK_THROW("No input directory")
     if (pStore == nullptr)
         QUICK_THROW("No input file store")
 
-    // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDeleteLeaks) — ownership transferred to caller; cleaned up in catch
-    CSgaCreator::CInputDirectory *pUs = CHECK_MEM(new CSgaCreator::CInputDirectory);
+    auto pUs = std::make_unique<CSgaCreator::CInputDirectory>();
     const char *sDirectory;
 
     try
@@ -93,7 +75,6 @@ CSgaCreator::CInputDirectory *CSgaCreator::_ScanDirectory(IDirectoryTraverser::I
     }
     catch (const CRainmanException &e)
     {
-        delete pUs;
         throw CRainmanException(e, __FILE__, __LINE__, "Cannot get directory path");
     }
 
@@ -101,19 +82,18 @@ CSgaCreator::CInputDirectory *CSgaCreator::_ScanDirectory(IDirectoryTraverser::I
     if (iDirBaseL != 0)
     {
         if (sDirectory[iDirLen - 1] != '\\')
-            pUs->sNameFull = strdup(sDirectory + iDirBaseL + 1);
+            pUs->sNameFull = sDirectory + iDirBaseL + 1;
         else
         {
-            pUs->sNameFull = strdup(sDirectory + iDirBaseL);
-            pUs->sNameFull[strlen(pUs->sNameFull) - 1] = 0;
+            pUs->sNameFull.assign(sDirectory + iDirBaseL, iDirLen - iDirBaseL - 1);
         }
     }
     else
     {
         iDirBaseL = iDirLen;
-        pUs->sNameFull = strdup(sDirectory + iDirBaseL);
+        pUs->sNameFull.clear();
     }
-    Util_strtolower(pUs->sNameFull);
+    Util_strtolower(pUs->sNameFull.data());
     try
     {
         while (pDirectory->VGetType() != IDirectoryTraverser::IIterator::T_Nothing)
@@ -132,7 +112,7 @@ CSgaCreator::CInputDirectory *CSgaCreator::_ScanDirectory(IDirectoryTraverser::I
                 }
                 if (pChild != nullptr)
                 {
-                    CSgaCreator::CInputDirectory *pChildIn = nullptr;
+                    std::unique_ptr<CSgaCreator::CInputDirectory> pChildIn;
                     try
                     {
                         pChildIn = _ScanDirectory(pChild, pStore, iDirBaseL);
@@ -144,25 +124,24 @@ CSgaCreator::CInputDirectory *CSgaCreator::_ScanDirectory(IDirectoryTraverser::I
                                                 pDirectory->VGetFullPath());
                     }
                     delete pChild;
-                    pUs->vDirsList.push_back(pChildIn);
+                    pUs->vDirsList.push_back(std::move(pChildIn));
                 }
             }
             else
             {
-                // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDeleteLeaks) — ownership transferred to vFilesList
-                CSgaCreator::CInputFile *pFile = CHECK_MEM(new CSgaCreator::CInputFile);
+                auto pFile = std::make_unique<CSgaCreator::CInputFile>();
                 try
                 {
                     pFile->oLastWriteTime = pDirectory->VGetLastWriteTime();
-                    pFile->sFullPath = strdup(pDirectory->VGetFullPath());
-                    Util_strtolower(pFile->sFullPath);
+                    pFile->sFullPath = pDirectory->VGetFullPath();
+                    Util_strtolower(pFile->sFullPath.data());
                 }
                 CATCH_THROW("pDirectory problem")
                 pFile->iNameOffset = iDirLen;
                 if (pFile->sFullPath[iDirLen] == '\\')
                     pFile->iNameOffset += 1;
                 pFile->pFileStore = pStore;
-                pUs->vFilesList.push_back(pFile);
+                pUs->vFilesList.push_back(std::move(pFile));
             }
             switch (pDirectory->VNextItem())
             {
@@ -175,7 +154,6 @@ CSgaCreator::CInputDirectory *CSgaCreator::_ScanDirectory(IDirectoryTraverser::I
     }
     catch (const CRainmanException &e)
     {
-        delete pUs;
         throw CRainmanException(e, __FILE__, __LINE__, "(rethrow)");
     }
 endwhile:
@@ -279,7 +257,7 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
                      iVersion);
     if (iVersion != 2 && iVersion != 4)
         throw CRainmanException(nullptr, __FILE__, __LINE__, "Version %li not supported", iVersion);
-    CSgaCreator::CInputDirectory *pInput = nullptr;
+    std::unique_ptr<CSgaCreator::CInputDirectory> pInput;
     try
     {
         pInput = _ScanDirectory(pDirectory, pStore);
@@ -291,7 +269,6 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
 
     FILE *fOut = nullptr;
     std::unique_ptr<IFileStore::IOutputStream> dataHeader;
-    char *pFileBuffer = nullptr, *pCompressedBuffer = nullptr;
     try
     {
         unsigned long iTmp = 0;
@@ -433,7 +410,7 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
             dataHeader->VSeek(24 + iTocOutLength, IFileStore::IStream::SL_Root);
 
             std::queue<CInputDirectory *> qDirsTodo;
-            qDirsTodo.push(pInput);
+            qDirsTodo.push(pInput.get());
             vFilesList.reserve(iFileCount);
             size_t iDirC = 1, iFileC = 0;
             while (!qDirsTodo.empty())
@@ -447,8 +424,8 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
                 // Name
                 long iRestorePos = dataHeader->VTell();
                 dataHeader->VSeek(iNamesStartLocation + iNamesLength, IFileStore::IStream::SL_Root);
-                size_t iNameL = strlen(pDir->sNameFull) + 1;
-                dataHeader->VWrite((unsigned long)iNameL, (unsigned long)sizeof(char), pDir->sNameFull);
+                size_t iNameL = pDir->sNameFull.size() + 1;
+                dataHeader->VWrite((unsigned long)iNameL, (unsigned long)sizeof(char), pDir->sNameFull.c_str());
                 iNamesLength += (long)iNameL;
                 dataHeader->VSeek(iRestorePos, IFileStore::IStream::SL_Root);
 
@@ -467,13 +444,13 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
                 dataHeader->VWrite(1, (unsigned long)sizeof(unsigned short), &iSTmp);
 
                 // Identify child folders/files
-                for (auto itr = pDir->vDirsList.begin(); itr != pDir->vDirsList.end(); ++itr)
+                for (const auto &pChild : pDir->vDirsList)
                 {
-                    qDirsTodo.push(*itr);
+                    qDirsTodo.push(pChild.get());
                 }
-                for (auto itr = pDir->vFilesList.begin(); itr != pDir->vFilesList.end(); ++itr)
+                for (const auto &pFile : pDir->vFilesList)
                 {
-                    vFilesList.push_back(*itr);
+                    vFilesList.push_back(pFile.get());
                 }
             }
 
@@ -488,9 +465,9 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
 
                 // Name
                 dataHeader->VSeek(iNamesStartLocation + iNamesLength, IFileStore::IStream::SL_Root);
-                size_t iNameL = strlen(((**itr).sFullPath + (**itr).iNameOffset)) + 1;
-                dataHeader->VWrite((unsigned long)iNameL, (unsigned long)sizeof(char),
-                                   ((**itr).sFullPath + (**itr).iNameOffset));
+                const char *pFileName = (**itr).sFullPath.c_str() + (**itr).iNameOffset;
+                size_t iNameL = strlen(pFileName) + 1;
+                dataHeader->VWrite((unsigned long)iNameL, (unsigned long)sizeof(char), pFileName);
                 iNamesLength += (long)iNameL;
             }
         }
@@ -511,7 +488,8 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
         compressionFutures.reserve(vFilesList.size());
         for (auto itr = vFilesList.begin(); itr != vFilesList.end(); ++itr)
         {
-            compressionFutures.push_back(pool.Submit(CompressOneFile, (**itr).pFileStore, (**itr).sFullPath, iVersion));
+            compressionFutures.push_back(
+                pool.Submit(CompressOneFile, (**itr).pFileStore, (**itr).sFullPath.c_str(), iVersion));
         }
 
         // Phase 2: Sequential header writing and data output
@@ -568,7 +546,7 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
             {
                 char sPreDataName[256];
                 memset(sPreDataName, 0, 256);
-                strcpy(sPreDataName, (**itr).sFullPath + (**itr).iNameOffset);
+                strcpy(sPreDataName, (**itr).sFullPath.c_str() + (**itr).iNameOffset);
                 sPreDataName[255] = 0;
 
                 if (fwrite(sPreDataName, 1, 256, fOut) != 256)
@@ -633,20 +611,10 @@ void CSgaCreator::CreateSga(IDirectoryTraverser::IIterator *pDirectory, IFileSto
     }
     catch (const CRainmanException &e)
     {
-        delete pInput;
         if (fOut)
             fclose(fOut);
-        if (pFileBuffer)
-            delete[] pFileBuffer;
-        if (pCompressedBuffer)
-            delete[] pCompressedBuffer;
         throw e;
     }
-    delete pInput;
     if (fOut)
         fclose(fOut);
-    if (pFileBuffer)
-        delete[] pFileBuffer;
-    if (pCompressedBuffer)
-        delete[] pCompressedBuffer;
 }
