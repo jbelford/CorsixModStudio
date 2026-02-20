@@ -26,11 +26,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "rainman/core/Callbacks.h"
 #include "rainman/module/CModuleMetadata.h"
 #include <memory>
+#include <string>
 #include <vector>
 
 class CSgaFile;
 class CUcsFile;
-class CDoWFileView;
 class CFileMap;
 class CFileSystemStore;
 class CResourceLoader;
@@ -125,14 +125,15 @@ class RAINMAN_API CModuleFile : public IFileStore, public IDirectoryTraverser
         signed long GetNumber() const;
         const char *GetName() const;
 
-      protected:
         CFolderHandler();
         ~CFolderHandler();
 
         friend class CModuleFile;
         friend class CResourceLoader;
+
+      private:
         signed long m_iNumber;
-        char *m_sName;
+        std::string m_sName;
     };
 
     size_t GetFolderCount();
@@ -148,7 +149,6 @@ class RAINMAN_API CModuleFile : public IFileStore, public IDirectoryTraverser
         const char *GetFileName() const;
         CSgaFile *GetFileHandle() const;
 
-      protected:
         CArchiveHandler();
         ~CArchiveHandler();
 
@@ -156,8 +156,10 @@ class RAINMAN_API CModuleFile : public IFileStore, public IDirectoryTraverser
         friend class CResourceLoader;
         friend void CModuleFile_ArchiveForEach(IDirectoryTraverser::IIterator *, void *);
         friend void CModuleFile_ArchiveForEachNoErrors(IDirectoryTraverser::IIterator *, void *);
+
+      private:
         signed long m_iNumber;
-        char *m_sName;
+        std::string m_sName;
         CSgaFile *m_pHandle; //!< This is a "resource"
     };
 
@@ -179,14 +181,15 @@ class RAINMAN_API CModuleFile : public IFileStore, public IDirectoryTraverser
         const CModuleFile *GetModHandle() const;
         CModuleFile *GetModHandle();
 
-      protected:
         CRequiredHandler();
         ~CRequiredHandler();
 
         friend class CModuleFile;
         friend class CResourceLoader;
+
+      private:
         signed long m_iNumber;
-        char *m_sName;
+        std::string m_sName;
         CModuleFile *m_pHandle; //!< This is a "resource"
     };
 
@@ -200,13 +203,14 @@ class RAINMAN_API CModuleFile : public IFileStore, public IDirectoryTraverser
         signed long GetNumber() const;
         const char *GetFileName() const;
 
-      protected:
         CCompatibleHandler();
         ~CCompatibleHandler();
 
         friend class CModuleFile;
+
+      private:
         signed long m_iNumber;
-        char *m_sName;
+        std::string m_sName;
     };
 
     size_t GetCompatibleCount();
@@ -234,19 +238,20 @@ class RAINMAN_API CModuleFile : public IFileStore, public IDirectoryTraverser
 
         inline bool IsFolderWritable() const { return m_bCanWriteToFolder; }
 
-      protected:
         CCohDataSource();
         ~CCohDataSource();
 
         friend class CModuleFile;
         friend class CResourceLoader;
+
+      private:
         signed long m_iNumber;
-        char *m_sToc;
-        char *m_sOption;
-        char *m_sFolder;
+        std::string m_sToc;
+        std::string m_sOption;
+        std::string m_sFolder;
         bool m_bIsLoaded;
         bool m_bCanWriteToFolder;
-        std::vector<CArchiveHandler *> m_vArchives;
+        std::vector<std::unique_ptr<CArchiveHandler>> m_vArchives;
     };
 
     size_t GetDataSourceCount();
@@ -260,14 +265,15 @@ class RAINMAN_API CModuleFile : public IFileStore, public IDirectoryTraverser
         std::shared_ptr<CUcsFile> GetUcsHandle();
         std::shared_ptr<const CUcsFile> GetUcsHandle() const;
 
-      protected:
         CUcsHandler();
         ~CUcsHandler();
 
         friend class CModuleFile;
         friend class CResourceLoader;
         friend void CModuleFile_UcsForEach(IDirectoryTraverser::IIterator *, void *);
-        char *m_sName;                       //!< This is a "resource" (because CUcsHandler is)
+
+      private:
+        std::string m_sName;                 //!< This is a "resource" (because CUcsHandler is)
         std::shared_ptr<CUcsFile> m_pHandle; //!< This is a "resource" (because CUcsHandler is)
     };
 
@@ -306,43 +312,42 @@ class RAINMAN_API CModuleFile : public IFileStore, public IDirectoryTraverser
         If sAlsoAppend is specified then that will be appended to the result.
         \return Returns a valid string, or 0 on error
     */
-    char *_DawnOfWarRemoveDynamics(const char *sStr, const char *sAlsoAppend = 0);
+    std::string _DawnOfWarRemoveDynamics(const char *sStr, const char *sAlsoAppend = nullptr);
 
     // Module settings
     eModuleType m_eModuleType;
-    char *m_sLocale; // This is NOT cleaned by _Clean()
-    char *m_sApplicationPath;
-    char *m_sFilename;
-    char *m_sFileMapName;
+    std::string m_sLocale; // This is NOT cleaned by _Clean()
+    std::string m_sApplicationPath;
+    std::string m_sFilename;
+    std::string m_sFileMapName;
     CModuleFile *m_pParentModule;
     unsigned short int m_iFileMapModNumber;
-    wchar_t *m_sScenarioPackRootFolder;
-    char *m_saScenarioPackRootFolder;
+    std::wstring m_sScenarioPackRootFolder;
+    std::string m_saScenarioPackRootFolder;
     bool m_bIsFauxModule;
 
     // Parsed directive fields from .module file
     CModuleMetadata m_metadata;
 
     // Object collections for MT_DawnOfWar & MT_CompanyOfHeroesEarly
-    std::vector<CFolderHandler *> m_vFolders;
-    std::vector<CArchiveHandler *> m_vArchives;
+    std::vector<std::unique_ptr<CFolderHandler>> m_vFolders;
+    std::vector<std::unique_ptr<CArchiveHandler>> m_vArchives;
 
     // Object collections for MT_DawnOfWar
-    std::vector<CRequiredHandler *> m_vRequireds;
-    std::vector<CCompatibleHandler *> m_vCompatibles;
+    std::vector<std::unique_ptr<CRequiredHandler>> m_vRequireds;
+    std::vector<std::unique_ptr<CCompatibleHandler>> m_vCompatibles;
 
     // Object collections for MT_CompanyOfHeroes
-    std::vector<CCohDataSource *> m_vDataSources;
+    std::vector<std::unique_ptr<CCohDataSource>> m_vDataSources;
 
     // Object collections for all
-    std::vector<CModuleFile *> m_vEngines;     //!< This is a "resource"
-    std::vector<CUcsHandler *> m_vLocaleTexts; //!< This is a "resource"
+    std::vector<std::unique_ptr<CModuleFile>> m_vEngines;     //!< This is a "resource"
+    std::vector<std::unique_ptr<CUcsHandler>> m_vLocaleTexts; //!< This is a "resource"
 
     // Internal usefuls
     CFileSystemStore *m_pFSS;
-    char *m_sCohThisModFolder;
+    std::string m_sCohThisModFolder;
 
     // Resource holders
-    CDoWFileView *m_pFileMap;
     CFileMap *m_pNewFileMap;
 };

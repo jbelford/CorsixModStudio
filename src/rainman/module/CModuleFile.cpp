@@ -22,7 +22,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "rainman/module/CResourceLoader.h"
 #include "rainman/archive/CSgaFile.h"
 #include "rainman/localization/CUcsFile.h"
-#include "rainman/module/CDoWFileView.h"
 #include "rainman/module/CFileMap.h"
 #include "rainman/io/CFileSystemStore.h"
 #include <memory>
@@ -34,17 +33,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 CModuleFile::CModuleFile()
 {
     m_eModuleType = MT_DawnOfWar;
-    m_sLocale = strdup("");
-    m_sApplicationPath = nullptr;
-    m_sFilename = nullptr;
     m_pParentModule = nullptr;
-    m_sScenarioPackRootFolder = nullptr;
-    m_saScenarioPackRootFolder = nullptr;
-
-    m_sFileMapName = nullptr;
 
     m_pFSS = nullptr;
-    m_sCohThisModFolder = nullptr;
     m_pNewFileMap = nullptr;
 
     m_iFileMapModNumber = 0;
@@ -54,46 +45,26 @@ CModuleFile::CModuleFile()
 
 CModuleFile::~CModuleFile()
 {
+    _Clean();
     if (!m_pParentModule)
     {
-        _Clean();
-        if (m_pFSS)
-            delete m_pFSS;
-        if (m_sLocale)
-            free(m_sLocale);
-    }
-    else
-    {
-        _Clean();
+        delete m_pFSS;
     }
 }
 
-void CModuleFile::SetLocale(const char *sLocale)
-{
-    if (m_sLocale)
-        free(m_sLocale);
-    m_sLocale = strdup(sLocale);
-}
+void CModuleFile::SetLocale(const char *sLocale) { m_sLocale = sLocale; }
 
-const char *CModuleFile::GetLocale() const { return m_sLocale; }
+const char *CModuleFile::GetLocale() const { return m_sLocale.c_str(); }
 
 void CModuleFile::SetMapPackRootFolder(const wchar_t *sFolder)
 {
-    if (m_sScenarioPackRootFolder)
-        free(m_sScenarioPackRootFolder);
-    free(m_saScenarioPackRootFolder);
-    m_sScenarioPackRootFolder = wcsdup(sFolder);
-    m_saScenarioPackRootFolder = (char *)malloc(wcslen(sFolder) + 1);
-
-    int i = -1;
-    do
-    {
-        ++i;
-        m_saScenarioPackRootFolder[i] = (char)m_sScenarioPackRootFolder[i];
-    } while (m_sScenarioPackRootFolder[i]);
+    m_sScenarioPackRootFolder = sFolder;
+    m_saScenarioPackRootFolder.resize(m_sScenarioPackRootFolder.size());
+    for (size_t i = 0; i < m_sScenarioPackRootFolder.size(); ++i)
+        m_saScenarioPackRootFolder[i] = static_cast<char>(m_sScenarioPackRootFolder[i]);
 }
 
-const wchar_t *CModuleFile::GetMapPackRootFolder() const { return m_sScenarioPackRootFolder; }
+const wchar_t *CModuleFile::GetMapPackRootFolder() const { return m_sScenarioPackRootFolder.c_str(); }
 
 #define GET_SET_DIRECTIVE(name, int_name)                                                                              \
     const char *CModuleFile::Get##name() const { return (int_name).c_str(); }                                          \
@@ -126,7 +97,7 @@ CModuleFile *CModuleFile::GetEngine(size_t iId)
     if (iId < 0 || iId >= GetEngineCount())
         throw CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
                                 (unsigned long)GetEngineCount());
-    return m_vEngines[iId];
+    return m_vEngines[iId].get();
 }
 
 const CModuleFile *CModuleFile::GetEngine(size_t iId) const
@@ -134,7 +105,7 @@ const CModuleFile *CModuleFile::GetEngine(size_t iId) const
     if (iId < 0 || iId >= GetEngineCount())
         throw CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
                                 (unsigned long)GetEngineCount());
-    return m_vEngines[iId];
+    return m_vEngines[iId].get();
 }
 
 CModuleFile::eModuleType CModuleFile::GetModuleType() const { return m_eModuleType; }
@@ -255,23 +226,19 @@ long CModuleFile::GetSgaOutputVersion()
     return 2;
 }
 
-CModuleFile::CUcsHandler::CUcsHandler() { m_sName = nullptr; }
+CModuleFile::CUcsHandler::CUcsHandler() {}
 
 CModuleFile::CUcsHandler::~CUcsHandler() {}
 
-const char *CModuleFile::CUcsHandler::GetFileName() const { return m_sName; }
+const char *CModuleFile::CUcsHandler::GetFileName() const { return m_sName.c_str(); }
 
 std::shared_ptr<const CUcsFile> CModuleFile::CUcsHandler::GetUcsHandle() const { return m_pHandle; }
 
 std::shared_ptr<CUcsFile> CModuleFile::CUcsHandler::GetUcsHandle() { return m_pHandle; }
 
-CModuleFile::CFolderHandler::CFolderHandler()
-{
-    m_iNumber = 0;
-    m_sName = nullptr;
-}
+CModuleFile::CFolderHandler::CFolderHandler() { m_iNumber = 0; }
 
-const char *CModuleFile::CFolderHandler::GetName() const { return m_sName; }
+const char *CModuleFile::CFolderHandler::GetName() const { return m_sName.c_str(); }
 
 long CModuleFile::CFolderHandler::GetNumber() const { return m_iNumber; }
 
@@ -280,11 +247,10 @@ CModuleFile::CFolderHandler::~CFolderHandler() {}
 CModuleFile::CArchiveHandler::CArchiveHandler()
 {
     m_iNumber = 0;
-    m_sName = nullptr;
     m_pHandle = nullptr;
 }
 
-const char *CModuleFile::CArchiveHandler::GetFileName() const { return m_sName; }
+const char *CModuleFile::CArchiveHandler::GetFileName() const { return m_sName.c_str(); }
 
 CSgaFile *CModuleFile::CArchiveHandler::GetFileHandle() const { return m_pHandle; }
 
@@ -295,11 +261,10 @@ CModuleFile::CArchiveHandler::~CArchiveHandler() {}
 CModuleFile::CRequiredHandler::CRequiredHandler()
 {
     m_iNumber = 0;
-    m_sName = nullptr;
     m_pHandle = nullptr;
 }
 
-const char *CModuleFile::CRequiredHandler::GetFileName() const { return m_sName; }
+const char *CModuleFile::CRequiredHandler::GetFileName() const { return m_sName.c_str(); }
 
 CModuleFile *CModuleFile::CRequiredHandler::GetModHandle() { return m_pHandle; }
 
@@ -309,13 +274,9 @@ long CModuleFile::CRequiredHandler::GetNumber() const { return m_iNumber; }
 
 CModuleFile::CRequiredHandler::~CRequiredHandler() {}
 
-CModuleFile::CCompatibleHandler::CCompatibleHandler()
-{
-    m_iNumber = 0;
-    m_sName = nullptr;
-}
+CModuleFile::CCompatibleHandler::CCompatibleHandler() { m_iNumber = 0; }
 
-const char *CModuleFile::CCompatibleHandler::GetFileName() const { return m_sName; }
+const char *CModuleFile::CCompatibleHandler::GetFileName() const { return m_sName.c_str(); }
 
 long CModuleFile::CCompatibleHandler::GetNumber() const { return m_iNumber; }
 
@@ -324,9 +285,6 @@ CModuleFile::CCompatibleHandler::~CCompatibleHandler() {}
 CModuleFile::CCohDataSource::CCohDataSource()
 {
     m_iNumber = 0;
-    m_sToc = nullptr;
-    m_sOption = nullptr;
-    m_sFolder = nullptr;
     m_bIsLoaded = false;
     m_bCanWriteToFolder = true;
 }
@@ -336,30 +294,15 @@ CModuleFile::CCohDataSource::~CCohDataSource() {}
 void CModuleFile::_Clean()
 {
     m_eModuleType = MT_DawnOfWar;
-    if (!m_pParentModule)
-    {
-        if (m_sApplicationPath)
-            free(m_sApplicationPath);
-    }
-    m_sApplicationPath = nullptr;
-    if (m_sFilename)
-        free(m_sFilename);
-    m_sFilename = nullptr;
-    if (m_sScenarioPackRootFolder)
-        free(m_sScenarioPackRootFolder);
-    m_sScenarioPackRootFolder = nullptr;
-    if (m_saScenarioPackRootFolder)
-        free(m_saScenarioPackRootFolder);
-    m_saScenarioPackRootFolder = nullptr;
+    m_sApplicationPath.clear();
+    m_sFilename.clear();
+    m_sScenarioPackRootFolder.clear();
+    m_saScenarioPackRootFolder.clear();
 
-    if (m_sFileMapName)
-        free(m_sFileMapName);
-    m_sFileMapName = nullptr;
+    m_sFileMapName.clear();
     m_metadata.Reset();
 
-    if (m_sCohThisModFolder)
-        delete[] m_sCohThisModFolder;
-    m_sCohThisModFolder = nullptr;
+    m_sCohThisModFolder.clear();
 
     m_iFileMapModNumber = 0;
 
@@ -367,57 +310,10 @@ void CModuleFile::_Clean()
 
     m_pParentModule = nullptr;
 
-    for (auto itr = m_vFolders.begin(); itr != m_vFolders.end(); ++itr)
-    {
-        if ((**itr).m_sName)
-            free((**itr).m_sName);
-        delete *itr;
-    }
     m_vFolders.clear();
-
-    for (auto itr = m_vArchives.begin(); itr != m_vArchives.end(); ++itr)
-    {
-        if ((**itr).m_sName)
-            free((**itr).m_sName);
-        delete *itr;
-    }
     m_vArchives.clear();
-
-    for (auto itr = m_vRequireds.begin(); itr != m_vRequireds.end(); ++itr)
-    {
-        if ((**itr).m_sName)
-            free((**itr).m_sName);
-        delete *itr;
-    }
     m_vRequireds.clear();
-
-    for (auto itr = m_vCompatibles.begin(); itr != m_vCompatibles.end(); ++itr)
-    {
-        if ((**itr).m_sName)
-            free((**itr).m_sName);
-        delete *itr;
-    }
     m_vCompatibles.clear();
-
-    for (auto itr = m_vDataSources.begin(); itr != m_vDataSources.end(); ++itr)
-    {
-        if ((**itr).m_sToc)
-            free((**itr).m_sToc);
-        if ((**itr).m_sOption)
-            free((**itr).m_sOption);
-        if ((**itr).m_sFolder)
-            free((**itr).m_sFolder);
-
-        for (auto itr2 = (**itr).m_vArchives.begin(); itr2 != (**itr).m_vArchives.end(); ++itr2)
-        {
-            if ((**itr2).m_sName)
-                free((**itr2).m_sName);
-            delete *itr2;
-        }
-        (**itr).m_vArchives.clear();
-
-        delete *itr;
-    }
     m_vDataSources.clear();
 
     m_vEngines.clear();
@@ -429,56 +325,43 @@ void CModuleFile::_CleanResources()
 {
     if (!m_pParentModule)
     {
-        if (m_pNewFileMap)
-            delete m_pNewFileMap;
+        delete m_pNewFileMap;
         m_pNewFileMap = nullptr;
     }
 
-    for (auto itr = m_vArchives.begin(); itr != m_vArchives.end(); ++itr)
+    for (auto &pArch : m_vArchives)
     {
-        if ((**itr).m_pHandle)
+        if (pArch->m_pHandle)
         {
-            if ((**itr).m_pHandle->GetInputStream())
-                delete (**itr).m_pHandle->GetInputStream();
-            delete (**itr).m_pHandle;
+            if (pArch->m_pHandle->GetInputStream())
+                delete pArch->m_pHandle->GetInputStream();
+            delete pArch->m_pHandle;
         }
-        (**itr).m_pHandle = nullptr;
+        pArch->m_pHandle = nullptr;
     }
 
-    for (auto itr = m_vRequireds.begin(); itr != m_vRequireds.end(); ++itr)
+    for (auto &pReq : m_vRequireds)
     {
-        if ((**itr).m_pHandle)
-            delete (**itr).m_pHandle;
-        (**itr).m_pHandle = nullptr;
+        delete pReq->m_pHandle;
+        pReq->m_pHandle = nullptr;
     }
 
-    for (auto itr = m_vLocaleTexts.begin(); itr != m_vLocaleTexts.end(); ++itr)
-    {
-        (**itr).m_pHandle.reset();
-        if ((**itr).m_sName)
-            free((**itr).m_sName);
-        delete *itr;
-    }
     m_vLocaleTexts.clear();
 
-    for (auto itr = m_vDataSources.begin(); itr != m_vDataSources.end(); ++itr)
+    for (auto &pDS : m_vDataSources)
     {
-        for (auto itr2 = (**itr).m_vArchives.begin(); itr2 != (**itr).m_vArchives.end(); ++itr2)
+        for (auto &pArch : pDS->m_vArchives)
         {
-            if ((**itr2).m_pHandle)
+            if (pArch->m_pHandle)
             {
-                if ((**itr2).m_pHandle->GetInputStream())
-                    delete (**itr2).m_pHandle->GetInputStream();
-                delete (**itr2).m_pHandle;
+                if (pArch->m_pHandle->GetInputStream())
+                    delete pArch->m_pHandle->GetInputStream();
+                delete pArch->m_pHandle;
             }
-            (**itr2).m_pHandle = nullptr;
+            pArch->m_pHandle = nullptr;
         }
     }
 
-    for (auto itr = m_vEngines.begin(); itr != m_vEngines.end(); ++itr)
-    {
-        delete *itr;
-    }
     m_vEngines.clear();
 }
 
@@ -495,18 +378,18 @@ void CModuleFile::LoadSgaAsMod(const char *sFileName, CALLBACK_ARG)
         m_pNewFileMap = new CFileMap;
 
     { // Set m_sApplicationPath and m_sFilename from sFileName
-        m_sApplicationPath = CHECK_MEM(strdup(sFileName));
-        char *sSlashLocation = strrchr(m_sApplicationPath, '\\');
-        if (sSlashLocation == nullptr)
-            sSlashLocation = strrchr(m_sApplicationPath, '/');
-        ++sSlashLocation;
-        m_sFilename = CHECK_MEM(strdup(sSlashLocation));
-        m_sFileMapName = CHECK_MEM(strdup(sSlashLocation));
-        *sSlashLocation = 0;
+        m_sApplicationPath = sFileName;
+        auto slashPos = m_sApplicationPath.find_last_of("\\/");
+        if (slashPos != std::string::npos)
+        {
+            m_sFilename = m_sApplicationPath.substr(slashPos + 1);
+            m_sFileMapName = m_sFilename;
+            m_sApplicationPath.resize(slashPos + 1);
+        }
     }
 
     CSgaFile *pSga;
-    CResourceLoader::DoLoadArchive(*this, sFileName, &pSga, 0, m_sFileMapName, THE_CALLBACK);
+    CResourceLoader::DoLoadArchive(*this, sFileName, &pSga, 0, m_sFileMapName.c_str(), THE_CALLBACK);
 
     switch (pSga->GetVersion())
     {
@@ -523,11 +406,11 @@ void CModuleFile::LoadSgaAsMod(const char *sFileName, CALLBACK_ARG)
 
     m_metadata.m_sModFolder = "";
 
-    auto *pHandler = new CArchiveHandler;
+    auto pHandler = std::make_unique<CArchiveHandler>();
     pHandler->m_iNumber = 0;
     pHandler->m_pHandle = pSga;
-    pHandler->m_sName = strdup(m_sFilename);
-    m_vArchives.push_back(pHandler);
+    pHandler->m_sName = m_sFilename;
+    m_vArchives.push_back(std::move(pHandler));
 }
 
 void CModuleFile::LoadModuleFile(const char *sFileName, CALLBACK_ARG)
@@ -536,18 +419,18 @@ void CModuleFile::LoadModuleFile(const char *sFileName, CALLBACK_ARG)
     _Clean();
 
     // Set m_sApplicationPath and m_sFilename from sFileName
-    m_sApplicationPath = CHECK_MEM(strdup(sFileName));
-    char *sSlashLocation = strrchr(m_sApplicationPath, '\\');
-    if (sSlashLocation == nullptr)
-        sSlashLocation = strrchr(m_sApplicationPath, '/');
-    ++sSlashLocation;
-    m_sFilename = CHECK_MEM(strdup(sSlashLocation));
-    *sSlashLocation = 0;
+    m_sApplicationPath = sFileName;
+    auto slashPos = m_sApplicationPath.find_last_of("\\/");
+    if (slashPos != std::string::npos)
+    {
+        m_sFilename = m_sApplicationPath.substr(slashPos + 1);
+        m_sApplicationPath.resize(slashPos + 1);
+    }
 
-    m_sFileMapName = CHECK_MEM(strdup(m_sFilename));
-    char *sDotLocation = strrchr(m_sFileMapName, '.');
-    if (sDotLocation)
-        *sDotLocation = 0;
+    m_sFileMapName = m_sFilename;
+    auto dotPos = m_sFileMapName.rfind('.');
+    if (dotPos != std::string::npos)
+        m_sFileMapName.resize(dotPos);
 
     // Parse the module file
     auto result = CModuleParser::Parse(sFileName);
@@ -557,85 +440,71 @@ void CModuleFile::LoadModuleFile(const char *sFileName, CALLBACK_ARG)
     // Populate folder handlers from parse result
     for (auto &entry : result.folders)
     {
-        CFolderHandler *pHandler = CHECK_MEM(new CFolderHandler);
+        auto pHandler = std::make_unique<CFolderHandler>();
         pHandler->m_iNumber = entry.iNumber;
-        pHandler->m_sName = CHECK_MEM(strdup(entry.sName.c_str()));
-        m_vFolders.push_back(pHandler);
+        pHandler->m_sName = entry.sName;
+        m_vFolders.push_back(std::move(pHandler));
     }
 
     // Populate archive handlers
     for (auto &entry : result.archives)
     {
-        CArchiveHandler *pHandler = CHECK_MEM(new CArchiveHandler);
+        auto pHandler = std::make_unique<CArchiveHandler>();
         pHandler->m_iNumber = entry.iNumber;
-        pHandler->m_sName = CHECK_MEM(strdup(entry.sName.c_str()));
-        m_vArchives.push_back(pHandler);
+        pHandler->m_sName = entry.sName;
+        m_vArchives.push_back(std::move(pHandler));
     }
 
     // Populate required handlers
     for (auto &entry : result.requireds)
     {
-        CRequiredHandler *pHandler = CHECK_MEM(new CRequiredHandler);
+        auto pHandler = std::make_unique<CRequiredHandler>();
         pHandler->m_iNumber = entry.iNumber;
-        pHandler->m_sName = CHECK_MEM(strdup(entry.sName.c_str()));
-        m_vRequireds.push_back(pHandler);
+        pHandler->m_sName = entry.sName;
+        m_vRequireds.push_back(std::move(pHandler));
     }
 
     // Populate compatible handlers
     for (auto &entry : result.compatibles)
     {
-        CCompatibleHandler *pHandler = CHECK_MEM(new CCompatibleHandler);
+        auto pHandler = std::make_unique<CCompatibleHandler>();
         pHandler->m_iNumber = entry.iNumber;
-        pHandler->m_sName = CHECK_MEM(strdup(entry.sName.c_str()));
-        m_vCompatibles.push_back(pHandler);
+        pHandler->m_sName = entry.sName;
+        m_vCompatibles.push_back(std::move(pHandler));
     }
 
     // Populate data source handlers
     for (auto &ds : result.dataSources)
     {
-        CCohDataSource *pDS = CHECK_MEM(new CCohDataSource);
-        pDS->m_sToc = CHECK_MEM(strdup(ds.sToc.c_str()));
-        pDS->m_sOption = CHECK_MEM(strdup(ds.sOption.c_str()));
+        auto pDS = std::make_unique<CCohDataSource>();
+        pDS->m_sToc = ds.sToc;
+        pDS->m_sOption = ds.sOption;
         pDS->m_iNumber = ds.iNumber;
-        if (!ds.sFolder.empty())
-            pDS->m_sFolder = CHECK_MEM(strdup(ds.sFolder.c_str()));
+        pDS->m_sFolder = ds.sFolder;
         for (auto &arch : ds.archives)
         {
-            CArchiveHandler *pHandler = CHECK_MEM(new CArchiveHandler);
+            auto pHandler = std::make_unique<CArchiveHandler>();
             pHandler->m_iNumber = arch.iNumber;
-            pHandler->m_sName = CHECK_MEM(strdup(arch.sName.c_str()));
-            pDS->m_vArchives.push_back(pHandler);
+            pHandler->m_sName = arch.sName;
+            pDS->m_vArchives.push_back(std::move(pHandler));
         }
-        m_vDataSources.push_back(pDS);
+        m_vDataSources.push_back(std::move(pDS));
     }
 
     // CoH post-processing
     if (m_eModuleType == MT_CompanyOfHeroes)
     {
-        m_sCohThisModFolder = new char[strlen(m_sApplicationPath) + m_metadata.m_sModFolder.size() + 1];
-        sprintf(m_sCohThisModFolder, "%s%s", m_sApplicationPath, m_metadata.m_sModFolder.c_str());
-        char *sSlashLoc = strrchr(m_sCohThisModFolder, '\\');
-        ++sSlashLoc;
-        *sSlashLoc = 0;
+        m_sCohThisModFolder = m_sApplicationPath + m_metadata.m_sModFolder;
+        auto sSlashLoc = m_sCohThisModFolder.rfind('\\');
+        if (sSlashLoc != std::string::npos)
+            m_sCohThisModFolder.resize(sSlashLoc + 1);
     }
 }
 
-char *CModuleFile::_DawnOfWarRemoveDynamics(const char *sStr, const char *sAlsoAppend)
+std::string CModuleFile::_DawnOfWarRemoveDynamics(const char *sStr, const char *sAlsoAppend)
 {
-    size_t iLocaleCount =
-        0; // %LOCALE% expands to a value longer than itself, so we need to know how many of these there are
-    {
-        const char *sLocalePosition;
-        const char *sSearchFrom = sStr;
-        while (sLocalePosition = strstr(sSearchFrom, "%LOCALE%"))
-            ++iLocaleCount, sSearchFrom = sLocalePosition + 1;
-    }
-
-    size_t iNewLength = strlen(sStr) + (strlen(m_sLocale) * iLocaleCount) + (sAlsoAppend ? strlen(sAlsoAppend) : 0) + 1;
-    char *sNewString = new char[iNewLength];
-    if (sNewString == nullptr)
-        return nullptr;
-    char *sNewPosition = sNewString;
+    std::string result;
+    result.reserve(strlen(sStr) + (sAlsoAppend ? strlen(sAlsoAppend) : 0) + 64);
 
     while (*sStr)
     {
@@ -643,48 +512,41 @@ char *CModuleFile::_DawnOfWarRemoveDynamics(const char *sStr, const char *sAlsoA
         {
             if (strncmp(sStr, "%LOCALE%", 8) == 0)
             {
-                strcpy(sNewPosition, "Locale\\");
-                strcat(sNewPosition, m_sLocale);
-                sNewPosition += 7 + strlen(m_sLocale);
+                result += "Locale\\";
+                result += m_sLocale;
                 sStr += 8;
                 continue;
             }
             if (strncmp(sStr, "%TEXTURE-LEVEL%", 15) == 0)
             {
-                strcpy(sNewPosition, "Full");
-                sNewPosition += 4;
+                result += "Full";
                 sStr += 15;
                 continue;
             }
             if (strncmp(sStr, "%SOUND-LEVEL%", 13) == 0)
             {
-                strcpy(sNewPosition, "Full");
-                sNewPosition += 4;
+                result += "Full";
                 sStr += 13;
                 continue;
             }
             if (strncmp(sStr, "%MODEL-LEVEL%", 13) == 0)
             {
-                strcpy(sNewPosition, "High");
-                sNewPosition += 4;
+                result += "High";
                 sStr += 13;
                 continue;
             }
         }
-        *sNewPosition = *sStr;
-
+        result += *sStr;
         ++sStr;
-        ++sNewPosition;
     }
-    *sNewPosition = 0;
     if (sAlsoAppend)
-        strcat(sNewString, sAlsoAppend);
-    return sNewString;
+        result += sAlsoAppend;
+    return result;
 }
 
-const char *CModuleFile::GetFileMapName() const { return m_sFileMapName; }
+const char *CModuleFile::GetFileMapName() const { return m_sFileMapName.c_str(); }
 
-const char *CModuleFile::GetFileMapName() { return m_sFileMapName; }
+const char *CModuleFile::GetFileMapName() { return m_sFileMapName.c_str(); }
 
 void CModuleFile::ReloadResources(unsigned long iReloadWhat, unsigned long iReloadWhatRequiredMods,
                                   unsigned long iReloadWhatEngines, CALLBACK_ARG)
@@ -692,15 +554,15 @@ void CModuleFile::ReloadResources(unsigned long iReloadWhat, unsigned long iRelo
     CResourceLoader::Load(*this, iReloadWhat, iReloadWhatRequiredMods, iReloadWhatEngines, THE_CALLBACK);
 }
 
-const char *CModuleFile::GetApplicationPath() const { return m_sApplicationPath; }
+const char *CModuleFile::GetApplicationPath() const { return m_sApplicationPath.c_str(); }
 
 void CModuleFile::NewUCS(const char *sName, std::shared_ptr<CUcsFile> pUcs)
 {
-    auto *pHandler = new CUcsHandler;
-    pHandler->m_sName = strdup(sName);
+    auto pHandler = std::make_unique<CUcsHandler>();
+    pHandler->m_sName = sName;
     pHandler->m_pHandle = std::move(pUcs);
 
-    m_vLocaleTexts.push_back(pHandler);
+    m_vLocaleTexts.push_back(std::move(pHandler));
 }
 
 const wchar_t *CModuleFile::ResolveUCS(const char *sDollarString)
@@ -729,23 +591,23 @@ const wchar_t *CModuleFile::ResolveUCS(unsigned long iStringID)
 {
     const wchar_t *t;
 
-    for (auto itr = m_vLocaleTexts.begin(); itr != m_vLocaleTexts.end(); ++itr)
+    for (auto &pUcs : m_vLocaleTexts)
     {
-        if ((*itr) && (**itr).m_pHandle &&
-            (t = (**itr).m_pHandle->ResolveStringID(iStringID))) // NOLINT(bugprone-assignment-in-if-condition)
+        if (pUcs && pUcs->m_pHandle &&
+            (t = pUcs->m_pHandle->ResolveStringID(iStringID))) // NOLINT(bugprone-assignment-in-if-condition)
             return t;
     }
 
-    for (auto itr = m_vRequireds.begin(); itr != m_vRequireds.end(); ++itr)
+    for (auto &pReq : m_vRequireds)
     {
-        if ((*itr) && (**itr).m_pHandle &&
-            (t = (**itr).m_pHandle->ResolveUCS(iStringID))) // NOLINT(bugprone-assignment-in-if-condition)
+        if (pReq && pReq->m_pHandle &&
+            (t = pReq->m_pHandle->ResolveUCS(iStringID))) // NOLINT(bugprone-assignment-in-if-condition)
             return t;
     }
 
-    for (auto itr = m_vEngines.begin(); itr != m_vEngines.end(); ++itr)
+    for (auto &pEngine : m_vEngines)
     {
-        if ((*itr) && (t = (*itr)->ResolveUCS(iStringID))) // NOLINT(bugprone-assignment-in-if-condition)
+        if (pEngine && (t = pEngine->ResolveUCS(iStringID))) // NOLINT(bugprone-assignment-in-if-condition)
             return t;
     }
 
@@ -759,7 +621,7 @@ CModuleFile::CUcsHandler *CModuleFile::GetUcs(size_t iId)
     if (iId < 0 || iId >= GetUcsCount())
         throw CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
                                 (unsigned long)GetUcsCount());
-    return m_vLocaleTexts[iId];
+    return m_vLocaleTexts[iId].get();
 }
 
 const CModuleFile::CUcsHandler *CModuleFile::GetUcs(size_t iId) const
@@ -767,7 +629,7 @@ const CModuleFile::CUcsHandler *CModuleFile::GetUcs(size_t iId) const
     if (iId < 0 || iId >= GetUcsCount())
         throw CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
                                 (unsigned long)GetUcsCount());
-    return m_vLocaleTexts[iId];
+    return m_vLocaleTexts[iId].get();
 }
 
 void CModuleFile::DeleteUcs(size_t iId)
@@ -785,7 +647,7 @@ CModuleFile::CRequiredHandler *CModuleFile::GetRequired(size_t iId)
     if (iId < 0 || iId >= GetRequiredCount())
         throw CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
                                 (unsigned long)GetRequiredCount());
-    return m_vRequireds[iId];
+    return m_vRequireds[iId].get();
 }
 
 const CModuleFile::CRequiredHandler *CModuleFile::GetRequired(size_t iId) const
@@ -793,7 +655,7 @@ const CModuleFile::CRequiredHandler *CModuleFile::GetRequired(size_t iId) const
     if (iId < 0 || iId >= GetRequiredCount())
         throw CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
                                 (unsigned long)GetRequiredCount());
-    return m_vRequireds[iId];
+    return m_vRequireds[iId].get();
 }
 
 size_t CModuleFile::GetFolderCount() { return m_vFolders.size(); }
@@ -803,7 +665,7 @@ CModuleFile::CFolderHandler *CModuleFile::GetFolder(size_t iId)
     if (iId < 0 || iId >= GetFolderCount())
         throw CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
                                 (unsigned long)GetFolderCount());
-    return m_vFolders[iId];
+    return m_vFolders[iId].get();
 }
 
 size_t CModuleFile::GetArchiveCount() { return m_vArchives.size(); }
@@ -813,7 +675,7 @@ CModuleFile::CArchiveHandler *CModuleFile::GetArchive(size_t iId)
     if (iId < 0 || iId >= GetArchiveCount())
         throw CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
                                 (unsigned long)GetArchiveCount());
-    return m_vArchives[iId];
+    return m_vArchives[iId].get();
 }
 
 size_t CModuleFile::GetArchiveFullPath(size_t iId, char *sOutput)
@@ -821,29 +683,29 @@ size_t CModuleFile::GetArchiveFullPath(size_t iId, char *sOutput)
     if (iId < 0 || iId >= GetArchiveCount())
         throw CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
                                 (unsigned long)GetArchiveCount());
-    CModuleFile::CArchiveHandler *pHandler = m_vArchives[iId];
+    auto &pHandler = m_vArchives[iId];
 
     size_t iLen;
     if (m_eModuleType == MT_DawnOfWar)
     {
-        char *sWithoutDynamics = _DawnOfWarRemoveDynamics(pHandler->m_sName);
-        iLen = strlen(m_sApplicationPath) + m_metadata.m_sModFolder.size() + strlen(sWithoutDynamics) + 2;
+        std::string sWithoutDynamics = _DawnOfWarRemoveDynamics(pHandler->m_sName.c_str());
+        iLen = m_sApplicationPath.size() + m_metadata.m_sModFolder.size() + sWithoutDynamics.size() + 2;
         if (sOutput)
-            sprintf(sOutput, "%s%s\\%s", m_sApplicationPath, m_metadata.m_sModFolder.c_str(), sWithoutDynamics);
-        delete[] sWithoutDynamics;
+            sprintf(sOutput, "%s%s\\%s", m_sApplicationPath.c_str(), m_metadata.m_sModFolder.c_str(),
+                    sWithoutDynamics.c_str());
     }
     else if (m_eModuleType == MT_CompanyOfHeroesEarly)
     {
-        iLen = strlen(m_sApplicationPath) + m_metadata.m_sModFolder.size() + strlen(pHandler->m_sName) + 11;
+        iLen = m_sApplicationPath.size() + m_metadata.m_sModFolder.size() + pHandler->m_sName.size() + 11;
         if (sOutput)
-            sprintf(sOutput, "%s%s\\Archives\\%s", m_sApplicationPath, m_metadata.m_sModFolder.c_str(),
-                    pHandler->m_sName);
+            sprintf(sOutput, "%s%s\\Archives\\%s", m_sApplicationPath.c_str(), m_metadata.m_sModFolder.c_str(),
+                    pHandler->m_sName.c_str());
     }
     else if (m_eModuleType == MT_CompanyOfHeroes)
     {
-        iLen = strlen(m_sApplicationPath) + strlen(pHandler->m_sName) + 1;
+        iLen = m_sApplicationPath.size() + pHandler->m_sName.size() + 1;
         if (sOutput)
-            sprintf(sOutput, "%s%s", m_sApplicationPath, pHandler->m_sName);
+            sprintf(sOutput, "%s%s", m_sApplicationPath.c_str(), pHandler->m_sName.c_str());
     }
     else
     {
@@ -861,7 +723,7 @@ CModuleFile::CCompatibleHandler *CModuleFile::GetCompatible(size_t iId)
     if (iId < 0 || iId >= GetCompatibleCount())
         throw CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
                                 (unsigned long)GetCompatibleCount());
-    return m_vCompatibles[iId];
+    return m_vCompatibles[iId].get();
 }
 
 size_t CModuleFile::GetDataSourceCount() { return m_vDataSources.size(); }
@@ -871,7 +733,7 @@ CModuleFile::CCohDataSource *CModuleFile::GetDataSource(size_t iId)
     if (iId < 0 || iId >= GetDataSourceCount())
         throw CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
                                 (unsigned long)GetDataSourceCount());
-    return m_vDataSources[iId];
+    return m_vDataSources[iId].get();
 }
 
 size_t CModuleFile::CCohDataSource::GetArchiveCount() { return m_vArchives.size(); }
@@ -881,38 +743,23 @@ CModuleFile::CArchiveHandler *CModuleFile::CCohDataSource::GetArchive(size_t iId
     if (iId < 0 || iId >= GetArchiveCount())
         throw CRainmanException(nullptr, __FILE__, __LINE__, "ID %lu is outside of range 0-%lu", (unsigned long)iId,
                                 (unsigned long)GetArchiveCount());
-    return m_vArchives[iId];
+    return m_vArchives[iId].get();
 }
 
-const char *CModuleFile::CCohDataSource::GetToc() const { return m_sToc; }
+const char *CModuleFile::CCohDataSource::GetToc() const { return m_sToc.c_str(); }
 
-void CModuleFile::CCohDataSource::SetToc(const char *sToc)
-{
-    if (m_sToc)
-        free(m_sToc);
-    m_sToc = strdup(sToc);
-}
+void CModuleFile::CCohDataSource::SetToc(const char *sToc) { m_sToc = sToc; }
 
-const char *CModuleFile::CCohDataSource::GetOption() const { return m_sOption; }
+const char *CModuleFile::CCohDataSource::GetOption() const { return m_sOption.c_str(); }
 
-void CModuleFile::CCohDataSource::SetOption(const char *sOption)
-{
-    if (m_sOption)
-        free(m_sOption);
-    m_sOption = strdup(sOption);
-}
+void CModuleFile::CCohDataSource::SetOption(const char *sOption) { m_sOption = sOption; }
 
 signed long CModuleFile::CCohDataSource::GetNumber() const { return m_iNumber; }
 
 void CModuleFile::CCohDataSource::SetNumber(signed long iNumber) { m_iNumber = iNumber; }
 
-const char *CModuleFile::CCohDataSource::GetFolder() const { return m_sFolder; }
+const char *CModuleFile::CCohDataSource::GetFolder() const { return m_sFolder.c_str(); }
 
-void CModuleFile::CCohDataSource::SetFolder(const char *sFolder)
-{
-    if (m_sFolder)
-        free(m_sFolder);
-    m_sFolder = strdup(sFolder);
-}
+void CModuleFile::CCohDataSource::SetFolder(const char *sFolder) { m_sFolder = sFolder; }
 
 bool CModuleFile::CCohDataSource::IsLoaded() const { return m_bIsLoaded; }

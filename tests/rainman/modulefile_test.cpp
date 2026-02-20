@@ -402,8 +402,8 @@ TEST_F(ModuleFileTest, LoadCohDataSourceWithoutFolder) {
 
     ASSERT_EQ(mod.GetDataSourceCount(), 1u);
     auto* ds = mod.GetDataSource(0);
-    // Folder was never set, should be null
-    EXPECT_EQ(ds->GetFolder(), nullptr);
+    // Folder was never set, should be empty
+    EXPECT_STREQ(ds->GetFolder(), "");
     EXPECT_EQ(ds->GetArchiveCount(), 1u);
 }
 
@@ -902,11 +902,10 @@ TEST_F(ModuleFileTest, GetApplicationPathAfterLoad) {
 TEST_F(ModuleFileTest, SetAndGetMapPackRootFolder) {
     CModuleFile mod;
 
-    // Initially null
-    EXPECT_EQ(mod.GetMapPackRootFolder(), nullptr);
+    // Initially empty
+    EXPECT_STREQ(mod.GetMapPackRootFolder(), L"");
 
     mod.SetMapPackRootFolder(L"C:\\Maps\\Scenarios");
-    ASSERT_NE(mod.GetMapPackRootFolder(), nullptr);
     EXPECT_STREQ(mod.GetMapPackRootFolder(), L"C:\\Maps\\Scenarios");
 
     // Setting again should free old value
@@ -921,8 +920,8 @@ TEST_F(ModuleFileTest, GetEngineCountInitiallyZero) {
 
 TEST_F(ModuleFileTest, GetApplicationPathBeforeLoad) {
     CModuleFile mod;
-    // Before loading, application path should be null
-    EXPECT_EQ(mod.GetApplicationPath(), nullptr);
+    // Before loading, application path should be empty
+    EXPECT_STREQ(mod.GetApplicationPath(), "");
 }
 
 TEST_F(ModuleFileTest, IsFauxModuleDefaultFalse) {

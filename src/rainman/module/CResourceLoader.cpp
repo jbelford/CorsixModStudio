@@ -106,7 +106,7 @@ CResourceLoader::SgaPreloadResult CResourceLoader::PreloadSga(CFileSystemStore *
     {
         if (strnicmp(sCohThisModFolder, sFullPath, strlen(sCohThisModFolder)) != 0)
         {
-            if (saScenarioPackRootFolder &&
+            if (saScenarioPackRootFolder && *saScenarioPackRootFolder &&
                 strnicmp(saScenarioPackRootFolder, sFullPath, strlen(saScenarioPackRootFolder)) == 0)
             {
                 result.bIsThisMod = false;
@@ -206,8 +206,8 @@ void CResourceLoader::LoadArchivesParallel(std::vector<ArchiveTask> &tasks, CMod
     for (auto &task : tasks)
     {
         futures.push_back(pool.Submit(&CResourceLoader::PreloadSga, module.m_pFSS, task.archivePath.c_str(),
-                                      module.m_eModuleType, module.m_sCohThisModFolder, module.m_sApplicationPath,
-                                      module.m_saScenarioPackRootFolder));
+                                      module.m_eModuleType, module.m_sCohThisModFolder.c_str(),
+                                      module.m_sApplicationPath.c_str(), module.m_saScenarioPackRootFolder.c_str()));
     }
 
     // Phase 2: Collect results and register sequentially
@@ -235,7 +235,7 @@ void CResourceLoader::LoadArchivesParallel(std::vector<ArchiveTask> &tasks, CMod
         try
         {
             CallCallback(THE_CALLBACK, "Registering archive \'%s\' for mod \'%s\'", tasks[i].uiName.c_str(),
-                         module.m_sFileMapName);
+                         module.m_sFileMapName.c_str());
             RegisterPreloadedSga(result, module, tasks[i].iNum, tasks[i].uiName.c_str(), tasks[i].archivePath.c_str());
         }
         catch (const CRainmanException &e)
@@ -266,12 +266,13 @@ void CModuleFile_ArchiveForEach(IDirectoryTraverser::IIterator *pItr, void *pMod
 {
     auto *pThis = static_cast<CModuleFile *>(pModuleFile);
 
-    auto *pArchEntry = new CModuleFile::CArchiveHandler;
+    auto pArchEntry = std::make_unique<CModuleFile::CArchiveHandler>();
     pArchEntry->m_iNumber = -7291;
-    pArchEntry->m_sName = strdup(pItr->VGetName());
-    pThis->m_vArchives.push_back(pArchEntry);
+    pArchEntry->m_sName = pItr->VGetName();
+    auto *pRaw = pArchEntry.get();
+    pThis->m_vArchives.push_back(std::move(pArchEntry));
 
-    CResourceLoader::DoLoadArchive(*pThis, pItr->VGetFullPath(), &pArchEntry->m_pHandle, 15000, pArchEntry->m_sName);
+    CResourceLoader::DoLoadArchive(*pThis, pItr->VGetFullPath(), &pRaw->m_pHandle, 15000, pRaw->m_sName.c_str());
 }
 
 void CModuleFile_ArchiveForEachNoErrors(IDirectoryTraverser::IIterator *pItr, void *pModuleFile)
@@ -279,22 +280,21 @@ void CModuleFile_ArchiveForEachNoErrors(IDirectoryTraverser::IIterator *pItr, vo
     auto *pThis = static_cast<CModuleFile *>(pModuleFile);
 
     CSgaFile *pFile = nullptr;
-    char *s = strdup(pItr->VGetName());
+    std::string sName = pItr->VGetName();
     try
     {
-        CResourceLoader::DoLoadArchive(*pThis, pItr->VGetFullPath(), &pFile, 15000, s);
+        CResourceLoader::DoLoadArchive(*pThis, pItr->VGetFullPath(), &pFile, 15000, sName.c_str());
     }
     catch (const CRainmanException &e)
     {
-        free(s);
         return;
     }
 
-    auto *pArchEntry = new CModuleFile::CArchiveHandler;
+    auto pArchEntry = std::make_unique<CModuleFile::CArchiveHandler>();
     pArchEntry->m_iNumber = -7291;
-    pArchEntry->m_sName = s;
+    pArchEntry->m_sName = std::move(sName);
     pArchEntry->m_pHandle = pFile;
-    pThis->m_vArchives.push_back(pArchEntry);
+    pThis->m_vArchives.push_back(std::move(pArchEntry));
 }
 
 void CModuleFile_UcsForEach(IDirectoryTraverser::IIterator *pItr, void *pModuleFile)
@@ -304,8 +304,8 @@ void CModuleFile_UcsForEach(IDirectoryTraverser::IIterator *pItr, void *pModuleF
     const char *sDot = strrchr(sName, '.');
     if (sDot && ((stricmp(sDot, ".ucs") == 0) || (stricmp(sDot, ".dat") == 0)))
     {
-        auto *pUcsEntry = new CModuleFile::CUcsHandler;
-        pUcsEntry->m_sName = strdup(sName);
+        auto pUcsEntry = std::make_unique<CModuleFile::CUcsHandler>();
+        pUcsEntry->m_sName = sName;
         pUcsEntry->m_pHandle = std::make_shared<CUcsFile>();
 
         std::unique_ptr<IFileStore::IStream> stream;
@@ -319,12 +319,10 @@ void CModuleFile_UcsForEach(IDirectoryTraverser::IIterator *pItr, void *pModuleF
         }
         catch (const CRainmanException &e)
         {
-            free(pUcsEntry->m_sName);
-            delete pUcsEntry;
             throw CRainmanException(e, __FILE__, __LINE__, "Error loading UCS file \'%s\'", sName);
         }
 
-        pThis->m_vLocaleTexts.push_back(pUcsEntry);
+        pThis->m_vLocaleTexts.push_back(std::move(pUcsEntry));
     }
 }
 
@@ -420,10 +418,10 @@ void CResourceLoader::LoadUcsFilesParallel(CModuleFile &module, IDirectoryTraver
             continue;
         }
 
-        auto *pUcsEntry = new CModuleFile::CUcsHandler;
-        pUcsEntry->m_sName = strdup(result.name.c_str());
+        auto pUcsEntry = std::make_unique<CModuleFile::CUcsHandler>();
+        pUcsEntry->m_sName = std::move(result.name);
         pUcsEntry->m_pHandle = std::move(result.pHandle);
-        module.m_vLocaleTexts.push_back(pUcsEntry);
+        module.m_vLocaleTexts.push_back(std::move(pUcsEntry));
     }
 
     auto endTime = std::chrono::steady_clock::now();
@@ -559,16 +557,18 @@ void CResourceLoader::LoadFoldersParallel(std::vector<FolderTask> &tasks, CModul
                 sSlashChar = task.folderPath.c_str();
         }
 
-        CallCallback(THE_CALLBACK, "Registering data folder '%s' for mod '%s'", sSlashChar, module.m_sFileMapName);
+        CallCallback(THE_CALLBACK, "Registering data folder '%s' for mod '%s'", sSlashChar,
+                     module.m_sFileMapName.c_str());
 
         bool bIsThisMod = true;
         char *sActualModName = nullptr;
         if (module.m_eModuleType == CModuleFile::MT_CompanyOfHeroes)
         {
-            if (strnicmp(module.m_sCohThisModFolder, task.folderPath.c_str(), strlen(module.m_sCohThisModFolder)) != 0)
+            if (strnicmp(module.m_sCohThisModFolder.c_str(), task.folderPath.c_str(),
+                         module.m_sCohThisModFolder.size()) != 0)
             {
                 bIsThisMod = false;
-                sActualModName = strdup(task.folderPath.c_str() + strlen(module.m_sApplicationPath));
+                sActualModName = strdup(task.folderPath.c_str() + module.m_sApplicationPath.size());
                 char *sSlash = strrchr(sActualModName, '\\');
                 if (sSlash)
                     *sSlash = 0;
@@ -605,24 +605,21 @@ void CResourceLoader::LoadFoldersParallel(std::vector<FolderTask> &tasks, CModul
 
 bool CResourceLoader::IsToBeLoaded(const CModuleFile &module, CModuleFile::CCohDataSource *pDataSource)
 {
-    return ((strcmp(pDataSource->m_sOption, "common") == 0) || (strcmp(pDataSource->m_sOption, "sound_high") == 0) ||
-            (strcmp(pDataSource->m_sOption, "art_high") == 0) ||
-            (stricmp(pDataSource->m_sOption, module.m_sLocale) == 0));
+    return ((pDataSource->m_sOption == "common") || (pDataSource->m_sOption == "sound_high") ||
+            (pDataSource->m_sOption == "art_high") ||
+            (stricmp(pDataSource->m_sOption.c_str(), module.m_sLocale.c_str()) == 0));
 }
 
 void CResourceLoader::LoadDataGeneric(CModuleFile &module, CALLBACK_ARG)
 {
     char *sDataGenericValue = nullptr;
-    char *sPipelineFile = new char[strlen(module.m_sApplicationPath) + 16];
-    sprintf(sPipelineFile, "%spipeline.ini", module.m_sApplicationPath);
-    FILE *fModule = fopen(sPipelineFile, "rb");
+    std::string sPipelineFile = module.m_sApplicationPath + "pipeline.ini";
+    FILE *fModule = fopen(sPipelineFile.c_str(), "rb");
     if (fModule == nullptr)
     {
-        delete[] sPipelineFile;
         return;
     }
     CallCallback(THE_CALLBACK, "Parsing file \'pipeline.ini\'");
-    delete[] sPipelineFile;
 
     char *sSectionName = new char[16 + module.m_metadata.m_sModFolder.size()];
     sprintf(sSectionName, "project:%s", module.m_metadata.m_sModFolder.c_str());
@@ -694,11 +691,9 @@ void CResourceLoader::LoadDataGeneric(CModuleFile &module, CALLBACK_ARG)
 
     if (sDataGenericValue)
     {
-        char *sDataGenericFullPath = new char[strlen(module.m_sApplicationPath) + strlen(sDataGenericValue) + 1];
-        sprintf(sDataGenericFullPath, "%s%s", module.m_sApplicationPath, sDataGenericValue);
-        CResourceLoader::DoLoadFolder(module, sDataGenericFullPath, (module.m_pParentModule == nullptr), 99, "Generic",
-                                      "DataGeneric", THE_CALLBACK);
-        delete[] sDataGenericFullPath;
+        std::string sDataGenericFullPath = module.m_sApplicationPath + sDataGenericValue;
+        CResourceLoader::DoLoadFolder(module, sDataGenericFullPath.c_str(), (module.m_pParentModule == nullptr), 99,
+                                      "Generic", "DataGeneric", THE_CALLBACK);
         // NOLINTNEXTLINE(clang-analyzer-unix.MismatchedDeallocator) -- strdup uses malloc; free() is correct
         free(sDataGenericValue);
     }
@@ -707,15 +702,14 @@ void CResourceLoader::LoadDataGeneric(CModuleFile &module, CALLBACK_ARG)
 void CResourceLoader::LoadCohEngine(CModuleFile &module, const char *sFolder, const char *sUiName,
                                     unsigned long iLoadWhat, unsigned short iNum, CALLBACK_ARG)
 {
-    CModuleFile *pEngine = CHECK_MEM(new CModuleFile);
+    auto pEngine = std::make_unique<CModuleFile>();
 
     pEngine->m_eModuleType = CModuleFile::MT_CompanyOfHeroesEarly;
     pEngine->m_metadata.m_sUiName = sUiName;
     pEngine->m_metadata.m_sDescription = sUiName;
-    pEngine->m_sFileMapName = strdup(sUiName);
+    pEngine->m_sFileMapName = sUiName;
     pEngine->m_metadata.m_sModFolder = sFolder;
 
-    free(pEngine->m_sLocale);
     pEngine->m_sLocale = module.m_sLocale;
     pEngine->m_pParentModule = &module;
     pEngine->m_pNewFileMap = module.m_pNewFileMap;
@@ -723,9 +717,10 @@ void CResourceLoader::LoadCohEngine(CModuleFile &module, const char *sFolder, co
     pEngine->m_sApplicationPath = module.m_sApplicationPath;
     pEngine->m_iFileMapModNumber = iNum;
 
-    module.m_vEngines.push_back(pEngine);
+    auto *pRawEngine = pEngine.get();
+    module.m_vEngines.push_back(std::move(pEngine));
 
-    pEngine->ReloadResources(iLoadWhat & (~CModuleFile::RR_Engines), 0, 0, THE_CALLBACK);
+    pRawEngine->ReloadResources(iLoadWhat & (~CModuleFile::RR_Engines), 0, 0, THE_CALLBACK);
 }
 
 // -- Public entry point --
@@ -754,9 +749,9 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
     // Pre-compute CoH data source load flags to avoid write races between phases
     if ((bRunFolders || bRunArchives) && module.m_eModuleType == CModuleFile::MT_CompanyOfHeroes)
     {
-        for (auto *pDS : module.m_vDataSources)
+        for (auto &pDS : module.m_vDataSources)
         {
-            pDS->m_bIsLoaded = IsToBeLoaded(module, pDS);
+            pDS->m_bIsLoaded = IsToBeLoaded(module, pDS.get());
             pDS->m_bCanWriteToFolder = false;
         }
     }
@@ -791,7 +786,7 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
         {
             try
             {
-                CallCallback(THE_CALLBACK, "Loading UCS files for mod \'%s\'", module.m_sFileMapName);
+                CallCallback(THE_CALLBACK, "Loading UCS files for mod \'%s\'", module.m_sFileMapName.c_str());
                 LoadUcsFilesParallel(module, pItr);
             }
             catch (const CRainmanException &e)
@@ -819,46 +814,46 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
         {
             if (module.m_eModuleType == CModuleFile::MT_DawnOfWar)
             {
-                char *sOutFolder = nullptr;
-                for (auto *pFolder : module.m_vFolders)
+                size_t iDefaultWriteIdx = SIZE_MAX;
+                for (size_t i = 0; i < module.m_vFolders.size(); ++i)
                 {
-                    if (stricmp(pFolder->m_sName, "data") == 0)
+                    if (stricmp(module.m_vFolders[i]->m_sName.c_str(), "data") == 0)
                     {
-                        sOutFolder = pFolder->m_sName;
+                        iDefaultWriteIdx = i;
                         break;
                     }
                 }
-                if (!sOutFolder)
+                if (iDefaultWriteIdx == SIZE_MAX)
                 {
-                    for (auto *pFolder : module.m_vFolders)
+                    for (size_t i = 0; i < module.m_vFolders.size(); ++i)
                     {
-                        if (strchr(pFolder->m_sName, '%') == nullptr)
+                        if (module.m_vFolders[i]->m_sName.find('%') == std::string::npos)
                         {
-                            sOutFolder = pFolder->m_sName;
+                            iDefaultWriteIdx = i;
                             break;
                         }
                     }
                 }
 
                 std::vector<FolderTask> folderTasks;
-                for (auto *pFolder : module.m_vFolders)
+                for (size_t i = 0; i < module.m_vFolders.size(); ++i)
                 {
-                    char *sWithoutDynamics = module._DawnOfWarRemoveDynamics(pFolder->m_sName);
+                    auto &pFolder = module.m_vFolders[i];
+                    std::string sWithoutDynamics = module._DawnOfWarRemoveDynamics(pFolder->m_sName.c_str());
                     FolderTask task;
-                    task.folderPath = std::string(module.m_sApplicationPath) + module.m_metadata.m_sModFolder + "\\" +
-                                      sWithoutDynamics;
+                    task.folderPath =
+                        module.m_sApplicationPath + module.m_metadata.m_sModFolder + "\\" + sWithoutDynamics;
                     task.uiName = sWithoutDynamics;
                     task.tocName = "Data";
                     task.iNum = static_cast<unsigned short>(15000 + pFolder->m_iNumber);
-                    task.bIsDefaultWrite = (sOutFolder == pFolder->m_sName);
+                    task.bIsDefaultWrite = (i == iDefaultWriteIdx);
                     folderTasks.push_back(std::move(task));
-                    delete[] sWithoutDynamics;
                 }
                 LoadFoldersParallel(folderTasks, module, THE_CALLBACK);
             }
             else if (module.m_eModuleType == CModuleFile::MT_CompanyOfHeroesEarly)
             {
-                std::string sBasePath = std::string(module.m_sApplicationPath) + module.m_metadata.m_sModFolder;
+                std::string sBasePath = module.m_sApplicationPath + module.m_metadata.m_sModFolder;
                 std::vector<FolderTask> folderTasks;
                 folderTasks.push_back({sBasePath + "\\Data", "", "Data", 15000, true});
                 folderTasks.push_back({sBasePath + "\\Movies", "", "Movies", 15000, true});
@@ -867,18 +862,18 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
             else if (module.m_eModuleType == CModuleFile::MT_CompanyOfHeroes)
             {
                 std::vector<FolderTask> folderTasks;
-                for (auto *pDS : module.m_vDataSources)
+                for (auto &pDS : module.m_vDataSources)
                 {
                     // m_bIsLoaded already pre-computed above
-                    if (pDS->m_bIsLoaded && pDS->m_sFolder && *pDS->m_sFolder)
+                    if (pDS->m_bIsLoaded && !pDS->m_sFolder.empty())
                     {
                         FolderTask task;
-                        task.folderPath = std::string(module.m_sApplicationPath) + pDS->m_sFolder;
+                        task.folderPath = module.m_sApplicationPath + pDS->m_sFolder;
                         task.uiName = pDS->m_sFolder;
                         task.tocName = pDS->m_sToc;
                         task.iNum = static_cast<unsigned short>(15000 + pDS->m_iNumber);
-                        task.bIsDefaultWrite = ((strcmp(pDS->m_sOption, "common") == 0) && (pDS->m_iNumber < 2));
-                        task.pDataSource = pDS;
+                        task.bIsDefaultWrite = ((pDS->m_sOption == "common") && (pDS->m_iNumber < 2));
+                        task.pDataSource = pDS.get();
                         folderTasks.push_back(std::move(task));
                     }
                 }
@@ -911,32 +906,31 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
             if (module.m_eModuleType == CModuleFile::MT_DawnOfWar)
             {
                 std::vector<ArchiveTask> tasks;
-                for (auto *pArch : module.m_vArchives)
+                for (auto &pArch : module.m_vArchives)
                 {
-                    char *sWithoutDynamics = module._DawnOfWarRemoveDynamics(pArch->m_sName);
+                    std::string sWithoutDynamics = module._DawnOfWarRemoveDynamics(pArch->m_sName.c_str());
                     ArchiveTask task;
-                    task.archivePath = std::string(module.m_sApplicationPath) + module.m_metadata.m_sModFolder + "\\" +
-                                       sWithoutDynamics;
+                    task.archivePath =
+                        module.m_sApplicationPath + module.m_metadata.m_sModFolder + "\\" + sWithoutDynamics;
                     task.uiName = pArch->m_sName;
                     task.iNum = static_cast<unsigned short>(15000 + pArch->m_iNumber);
                     task.ppSgaOut = &pArch->m_pHandle;
                     tasks.push_back(std::move(task));
-                    delete[] sWithoutDynamics;
                 }
-                CallCallback(THE_CALLBACK, "Loading data archives for mod \'%s\'", module.m_sFileMapName);
+                CallCallback(THE_CALLBACK, "Loading data archives for mod \'%s\'", module.m_sFileMapName.c_str());
                 LoadArchivesParallel(tasks, module, THE_CALLBACK);
             }
             else if (module.m_eModuleType == CModuleFile::MT_CompanyOfHeroesEarly)
             {
                 char *sArchivesPath =
-                    new char[strlen(module.m_sApplicationPath) + module.m_metadata.m_sModFolder.size() + 10];
-                sprintf(sArchivesPath, "%s%s\\Archives", module.m_sApplicationPath,
+                    new char[module.m_sApplicationPath.size() + module.m_metadata.m_sModFolder.size() + 10];
+                sprintf(sArchivesPath, "%s%s\\Archives", module.m_sApplicationPath.c_str(),
                         module.m_metadata.m_sModFolder.c_str());
                 IDirectoryTraverser::IIterator *pItr = nullptr;
                 try
                 {
                     pItr = module.m_pFSS->VIterate(sArchivesPath);
-                    CallCallback(THE_CALLBACK, "Loading data archives for mod \'%s\'", module.m_sFileMapName);
+                    CallCallback(THE_CALLBACK, "Loading data archives for mod \'%s\'", module.m_sFileMapName.c_str());
                     Util_ForEach(pItr, CModuleFile_ArchiveForEach, static_cast<void *>(&module), false);
                 }
                 catch (const CRainmanException &e)
@@ -953,15 +947,15 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
             else if (module.m_eModuleType == CModuleFile::MT_CompanyOfHeroes)
             {
                 std::vector<ArchiveTask> tasks;
-                for (auto *pDS : module.m_vDataSources)
+                for (auto &pDS : module.m_vDataSources)
                 {
                     // m_bIsLoaded already pre-computed above
                     if (pDS->m_bIsLoaded)
                     {
-                        for (auto *pArch : pDS->m_vArchives)
+                        for (auto &pArch : pDS->m_vArchives)
                         {
                             ArchiveTask task;
-                            task.archivePath = std::string(module.m_sApplicationPath) + pArch->m_sName;
+                            task.archivePath = module.m_sApplicationPath + pArch->m_sName;
                             task.uiName = pArch->m_sName;
                             task.iNum = static_cast<unsigned short>(15000 + (500 * pDS->m_iNumber) + pArch->m_iNumber);
                             task.ppSgaOut = &pArch->m_pHandle;
@@ -969,7 +963,7 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
                         }
                     }
                 }
-                CallCallback(THE_CALLBACK, "Loading data archives for mod \'%s\'", module.m_sFileMapName);
+                CallCallback(THE_CALLBACK, "Loading data archives for mod \'%s\'", module.m_sFileMapName.c_str());
                 LoadArchivesParallel(tasks, module, THE_CALLBACK);
             }
         }
@@ -1039,12 +1033,11 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
     }
     if (iReloadWhat & CModuleFile::RR_MapArchives)
     {
-        if (module.m_sScenarioPackRootFolder && *module.m_sScenarioPackRootFolder &&
-            !module.m_metadata.m_sScenarioPackFolder.empty())
+        if (!module.m_sScenarioPackRootFolder.empty() && !module.m_metadata.m_sScenarioPackFolder.empty())
         {
-            auto *sArchivesPath = new wchar_t[wcslen(module.m_sScenarioPackRootFolder) +
+            auto *sArchivesPath = new wchar_t[module.m_sScenarioPackRootFolder.size() +
                                               module.m_metadata.m_sScenarioPackFolder.size() + 2];
-            swprintf(sArchivesPath, L"%s\\%S", module.m_sScenarioPackRootFolder,
+            swprintf(sArchivesPath, L"%s\\%S", module.m_sScenarioPackRootFolder.c_str(),
                      module.m_metadata.m_sScenarioPackFolder.c_str());
             IDirectoryTraverser::IIterator *pItr = nullptr;
             try
@@ -1059,7 +1052,7 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
             {
                 try
                 {
-                    CallCallback(THE_CALLBACK, "Loading map archives for mod \'%s\'", module.m_sFileMapName);
+                    CallCallback(THE_CALLBACK, "Loading map archives for mod \'%s\'", module.m_sFileMapName.c_str());
                     Util_ForEach(pItr, CModuleFile_ArchiveForEachNoErrors, static_cast<void *>(&module), false);
                 }
                 catch (const CRainmanException &e)
@@ -1079,21 +1072,17 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
         auto tPhaseStart = std::chrono::steady_clock::now();
         if (module.m_eModuleType == CModuleFile::MT_DawnOfWar)
         {
-            for (auto *pReqHandler : module.m_vRequireds)
+            for (auto &pReqHandler : module.m_vRequireds)
             {
                 CModuleFile *pReq = CHECK_MEM(new CModuleFile);
-                free(pReq->m_sLocale);
                 pReq->m_sLocale = module.m_sLocale;
 
-                char *sFilePath = new char[strlen(module.m_sApplicationPath) + strlen(pReqHandler->m_sName) + 8];
-                sprintf(sFilePath, "%s%s.module", module.m_sApplicationPath, pReqHandler->m_sName);
-                pReq->LoadModuleFile(sFilePath);
-                delete[] sFilePath;
+                std::string sFilePath = module.m_sApplicationPath + pReqHandler->m_sName + ".module";
+                pReq->LoadModuleFile(sFilePath.c_str());
 
                 pReq->m_pParentModule = &module;
                 pReq->m_pNewFileMap = module.m_pNewFileMap;
                 pReq->m_pFSS = module.m_pFSS;
-                free(pReq->m_sApplicationPath);
                 pReq->m_sApplicationPath = module.m_sApplicationPath;
                 pReq->m_iFileMapModNumber = static_cast<unsigned short>(15000 + pReqHandler->m_iNumber);
 
@@ -1113,15 +1102,15 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
         auto tPhaseStart = std::chrono::steady_clock::now();
         if (module.m_eModuleType == CModuleFile::MT_DawnOfWar)
         {
-            CModuleFile *pEngine = CHECK_MEM(new CModuleFile);
+            auto pEngineOwner = std::make_unique<CModuleFile>();
+            auto *pEngine = pEngineOwner.get();
 
             pEngine->m_eModuleType = CModuleFile::MT_DawnOfWar;
             pEngine->m_metadata.m_sUiName = "(Engine)";
-            pEngine->m_sFileMapName = strdup("(Engine)");
+            pEngine->m_sFileMapName = "(Engine)";
             pEngine->m_metadata.m_sDescription = "(Engine)";
             pEngine->m_metadata.m_sModFolder = "Engine";
 
-            free(pEngine->m_sLocale);
             pEngine->m_sLocale = module.m_sLocale;
             pEngine->m_pParentModule = &module;
             pEngine->m_pNewFileMap = module.m_pNewFileMap;
@@ -1130,19 +1119,19 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
             pEngine->m_iFileMapModNumber = static_cast<unsigned short>(30001);
 
             {
-                auto *pObject = CHECK_MEM(new CModuleFile::CFolderHandler);
-                pEngine->m_vFolders.push_back(pObject);
-                pObject->m_sName = CHECK_MEM(strdup("Data"));
+                auto pObject = std::make_unique<CModuleFile::CFolderHandler>();
+                pObject->m_sName = "Data";
                 pObject->m_iNumber = 1;
+                pEngine->m_vFolders.push_back(std::move(pObject));
             }
             {
-                auto *pObject = CHECK_MEM(new CModuleFile::CArchiveHandler);
-                pEngine->m_vArchives.push_back(pObject);
-                pObject->m_sName = CHECK_MEM(strdup("Engine.sga"));
+                auto pObject = std::make_unique<CModuleFile::CArchiveHandler>();
+                pObject->m_sName = "Engine.sga";
                 pObject->m_iNumber = 1;
+                pEngine->m_vArchives.push_back(std::move(pObject));
             }
 
-            module.m_vEngines.push_back(pEngine);
+            module.m_vEngines.push_back(std::move(pEngineOwner));
 
             pEngine->ReloadResources(iReloadWhatEngines & (~CModuleFile::RR_Engines), 0, 0, THE_CALLBACK);
         }
@@ -1166,7 +1155,8 @@ void CResourceLoader::Load(CModuleFile &module, unsigned long iReloadWhat, unsig
         LoadDataGeneric(module, THE_CALLBACK);
     }
     auto tLoadEnd = std::chrono::steady_clock::now();
-    RAINMAN_LOG_INFO("Load TOTAL for '{}' = {} ms", module.m_sFileMapName ? module.m_sFileMapName : "(unknown)",
+    RAINMAN_LOG_INFO("Load TOTAL for '{}' = {} ms",
+                     module.m_sFileMapName.empty() ? "(unknown)" : module.m_sFileMapName.c_str(),
                      std::chrono::duration_cast<std::chrono::milliseconds>(tLoadEnd - tLoadStart).count());
 }
 
@@ -1193,10 +1183,10 @@ void CResourceLoader::DoLoadFolder(CModuleFile &module, const char *sFullPath, b
     char *sActualModName = nullptr;
     if (module.m_eModuleType == CModuleFile::MT_CompanyOfHeroes)
     {
-        if (strnicmp(module.m_sCohThisModFolder, sFullPath, strlen(module.m_sCohThisModFolder)) != 0)
+        if (strnicmp(module.m_sCohThisModFolder.c_str(), sFullPath, module.m_sCohThisModFolder.size()) != 0)
         {
             bIsThisMod = false;
-            sActualModName = strdup(sFullPath + strlen(module.m_sApplicationPath));
+            sActualModName = strdup(sFullPath + module.m_sApplicationPath.size());
             char *sSlash = strrchr(sActualModName, '\\');
             if (sSlash)
                 *sSlash = 0;
@@ -1206,7 +1196,8 @@ void CResourceLoader::DoLoadFolder(CModuleFile &module, const char *sFullPath, b
     IDirectoryTraverser::IIterator *pDirItr = nullptr;
     try
     {
-        CallCallback(THE_CALLBACK, "Loading data folder \'%s\' for mod \'%s\'", sSlashChar, module.m_sFileMapName);
+        CallCallback(THE_CALLBACK, "Loading data folder \'%s\' for mod \'%s\'", sSlashChar,
+                     module.m_sFileMapName.c_str());
         pDirItr = module.m_pFSS->VIterate(sFullPath);
         if (pDirItr)
         {
@@ -1268,13 +1259,14 @@ void CResourceLoader::DoLoadArchive(CModuleFile &module, const char *sFullPath, 
     char *sActualModName = nullptr;
     if (module.m_eModuleType == CModuleFile::MT_CompanyOfHeroes)
     {
-        if (strnicmp(module.m_sCohThisModFolder, sFullPath, strlen(module.m_sCohThisModFolder)) != 0)
+        if (strnicmp(module.m_sCohThisModFolder.c_str(), sFullPath, module.m_sCohThisModFolder.size()) != 0)
         {
-            if (module.m_saScenarioPackRootFolder &&
-                strnicmp(module.m_saScenarioPackRootFolder, sFullPath, strlen(module.m_saScenarioPackRootFolder)) == 0)
+            if (!module.m_saScenarioPackRootFolder.empty() &&
+                strnicmp(module.m_saScenarioPackRootFolder.c_str(), sFullPath,
+                         module.m_saScenarioPackRootFolder.size()) == 0)
             {
                 bIsThisMod = false;
-                sActualModName = strdup(sFullPath + strlen(module.m_saScenarioPackRootFolder) + 1);
+                sActualModName = strdup(sFullPath + module.m_saScenarioPackRootFolder.size() + 1);
                 char *sSlash = strrchr(sActualModName, '\\');
                 if (sSlash)
                     *sSlash = 0;
@@ -1282,7 +1274,7 @@ void CResourceLoader::DoLoadArchive(CModuleFile &module, const char *sFullPath, 
             else
             {
                 bIsThisMod = false;
-                sActualModName = strdup(sFullPath + strlen(module.m_sApplicationPath));
+                sActualModName = strdup(sFullPath + module.m_sApplicationPath.size());
                 char *sSlash = strrchr(sActualModName, '\\');
                 if (sSlash)
                     *sSlash = 0;
@@ -1295,7 +1287,8 @@ void CResourceLoader::DoLoadArchive(CModuleFile &module, const char *sFullPath, 
 
     try
     {
-        CallCallback(THE_CALLBACK, "Loading data archive \'%s\' for mod \'%s\'", sSlashChar, module.m_sFileMapName);
+        CallCallback(THE_CALLBACK, "Loading data archive \'%s\' for mod \'%s\'", sSlashChar,
+                     module.m_sFileMapName.c_str());
         pSga->Load(inputStream.get(), module.m_pFSS->VGetLastWriteTime(sFullPath));
         pSga->VInit(inputStream.get());
         pDirItr = pSga->VIterate(pSga->VGetEntryPoint(0));
