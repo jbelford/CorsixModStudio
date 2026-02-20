@@ -24,7 +24,9 @@ extern "C"
 #include <lua.h>
 };
 #include "rainman/core/Api.h"
+#include <memory>
 #include <mutex>
+#include <string>
 
 //! Cache for lua_State objects
 /*!
@@ -33,8 +35,8 @@ extern "C"
 class RAINMAN_API CLuaFileCache
 {
   public:
-    CLuaFileCache(void);
-    ~CLuaFileCache(void);
+    CLuaFileCache();
+    ~CLuaFileCache();
     void Clear();
 
     //! Make a new lua state
@@ -70,16 +72,17 @@ class RAINMAN_API CLuaFileCache
 
   protected:
     mutable std::recursive_mutex m_mtx; //!< Guards all public methods for thread safety
-    lua_State *m_pMother;
 
     struct _tEntry
     {
-        _tEntry(char *, lua_State *, bool b = false);
+        _tEntry(std::string name, lua_State *L, bool b = false);
         lua_State *L;
-        char *sName;
-        _tEntry *pNext;
+        std::string sName;
+        std::unique_ptr<_tEntry> pNext;
         bool bUseful;
     };
 
-    _tEntry m_oEntires, *m_pEntriesEnd;
+    std::unique_ptr<lua_State, decltype(&lua_close)> m_pMother;
+    std::unique_ptr<_tEntry> m_pHead;
+    _tEntry *m_pTail;
 };
