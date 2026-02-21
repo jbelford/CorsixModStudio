@@ -20,11 +20,15 @@
 
 class wxFrame;
 class ToolRegistry;
+class RelicToolResolver;
 
 class MenuController
 {
   public:
     // Build all menus and set them on the frame.
     // Binds dynamic tool menu items to the given event handler method.
-    void Build(wxFrame *pFrame, ToolRegistry &registry);
+    void Build(wxFrame *pFrame, ToolRegistry &registry, RelicToolResolver &relicResolver);
+
+    // Enable/disable Relic tool menu items based on resolver scan results.
+    void UpdateRelicToolsState(wxFrame *pFrame, const RelicToolResolver &resolver);
 };

@@ -30,6 +30,7 @@ EVT_BUTTON(IDC_LoadSga, frmWelcome::OnLoadSga)
 EVT_BUTTON(IDC_LoadMod, frmWelcome::OnLoadMod)
 EVT_BUTTON(IDC_LoadModDC, frmWelcome::OnLoadModDC)
 EVT_BUTTON(IDC_LoadModSS, frmWelcome::OnLoadModSS)
+EVT_BUTTON(IDC_LoadModDE, frmWelcome::OnLoadModDE)
 EVT_BUTTON(IDC_LoadModCoH, frmWelcome::OnLoadModCoH)
 EVT_BUTTON(IDC_Help, ConstructFrame::LaunchHelp)
 EVT_BUTTON(IDC_Donate, ConstructFrame::LaunchDonate)
@@ -55,70 +56,94 @@ frmWelcome::frmWelcome(wxWindow *parent, wxWindowID id, const wxPoint &pos, cons
     int iShowDonate = 1;
     TheConfig->Read(AppStr(config_donate), &iShowDonate, iShowDonate);
     if (iShowDonate == 0)
+    {
         iDonatePos = -1;
+    }
 
     pTopSizer->Add(new wxStaticText(this, -1, AppStr(welcome_caption)), 0, wxALIGN_CENTER | wxALL, 3);
     if (iDonatePos == 0)
+    {
         pTopSizer->Add(SBT(new wxBitmapButton(this, IDC_Donate, *m_pDonateBitmap, wxDefaultPosition, wxDefaultSize, 0),
                            AppStr(donate_help)),
                        0, wxALL | wxALIGN_CENTER, 3);
+    }
     pTopSizer->Add(SBT(pNewMod, AppStr(new_mod_help)), 0, wxALL | wxALIGN_CENTER, 3);
     if (iDonatePos == 1)
+    {
         pTopSizer->Add(SBT(new wxBitmapButton(this, IDC_Donate, *m_pDonateBitmap, wxDefaultPosition, wxDefaultSize, 0),
                            AppStr(donate_help)),
                        0, wxALL | wxALIGN_CENTER, 3);
+    }
     pTopSizer->Add(SBT(new wxButton(this, IDC_LoadMod, AppStr(open_mod), wxDefaultPosition, FromDIP(wxSize(150, -1))),
                        AppStr(open_mod_help)),
                    0, wxALL | wxALIGN_CENTER, 3);
     if (iDonatePos == 2)
+    {
         pTopSizer->Add(SBT(new wxBitmapButton(this, IDC_Donate, *m_pDonateBitmap, wxDefaultPosition, wxDefaultSize, 0),
                            AppStr(donate_help)),
                        0, wxALL | wxALIGN_CENTER, 3);
+    }
     pTopSizer->Add(
         SBT(new wxButton(this, IDC_LoadModDC, AppStr(open_moddc), wxDefaultPosition, FromDIP(wxSize(150, -1))),
             AppStr(open_moddc_help)),
         0, wxALL | wxALIGN_CENTER, 3);
     if (iDonatePos == 3)
+    {
         pTopSizer->Add(SBT(new wxBitmapButton(this, IDC_Donate, *m_pDonateBitmap, wxDefaultPosition, wxDefaultSize, 0),
                            AppStr(donate_help)),
                        0, wxALL | wxALIGN_CENTER, 3);
+    }
     pTopSizer->Add(
         SBT(new wxButton(this, IDC_LoadModSS, AppStr(open_modss), wxDefaultPosition, FromDIP(wxSize(150, -1))),
             AppStr(open_modss_help)),
         0, wxALL | wxALIGN_CENTER, 3);
+    pTopSizer->Add(
+        SBT(new wxButton(this, IDC_LoadModDE, AppStr(open_modde), wxDefaultPosition, FromDIP(wxSize(150, -1))),
+            AppStr(open_modde_help)),
+        0, wxALL | wxALIGN_CENTER, 3);
     if (iDonatePos == 4)
+    {
         pTopSizer->Add(SBT(new wxBitmapButton(this, IDC_Donate, *m_pDonateBitmap, wxDefaultPosition, wxDefaultSize, 0),
                            AppStr(donate_help)),
                        0, wxALL | wxALIGN_CENTER, 3);
+    }
     pTopSizer->Add(
         SBT(new wxButton(this, IDC_LoadModCoH, AppStr(open_modcoh), wxDefaultPosition, FromDIP(wxSize(150, -1))),
             AppStr(open_modcoh_help)),
         0, wxALL | wxALIGN_CENTER, 3);
     if (iDonatePos == 5)
+    {
         pTopSizer->Add(SBT(new wxBitmapButton(this, IDC_Donate, *m_pDonateBitmap, wxDefaultPosition, wxDefaultSize, 0),
                            AppStr(donate_help)),
                        0, wxALL | wxALIGN_CENTER, 3);
+    }
     pTopSizer->Add(SBT(new wxButton(this, IDC_LoadSga, AppStr(open_sga), wxDefaultPosition, FromDIP(wxSize(150, -1))),
                        AppStr(open_sga_help)),
                    0, wxALL | wxALIGN_CENTER, 3);
     if (iDonatePos == 6)
+    {
         pTopSizer->Add(SBT(new wxBitmapButton(this, IDC_Donate, *m_pDonateBitmap, wxDefaultPosition, wxDefaultSize, 0),
                            AppStr(donate_help)),
                        0, wxALL | wxALIGN_CENTER, 3);
+    }
     pTopSizer->Add(SBT(new wxButton(this, IDC_Help, AppStr(help_index), wxDefaultPosition, FromDIP(wxSize(150, -1))),
                        AppStr(help_index_help)),
                    0, wxALL | wxALIGN_CENTER, 3);
     if (iDonatePos == 7)
+    {
         pTopSizer->Add(SBT(new wxBitmapButton(this, IDC_Donate, *m_pDonateBitmap, wxDefaultPosition, wxDefaultSize, 0),
                            AppStr(donate_help)),
                        0, wxALL | wxALIGN_CENTER, 3);
+    }
     pTopSizer->Add(
         SBT(new wxButton(this, IDC_Quit, AppStr(exit), wxDefaultPosition, FromDIP(wxSize(150, -1))), AppStr(exit_help)),
         0, wxALL | wxALIGN_CENTER, 3);
     if (iDonatePos == 8)
+    {
         pTopSizer->Add(SBT(new wxBitmapButton(this, IDC_Donate, *m_pDonateBitmap, wxDefaultPosition, wxDefaultSize, 0),
                            AppStr(donate_help)),
                        0, wxALL | wxALIGN_CENTER, 3);
+    }
 
     SetSizer(pTopSizer);
     pTopSizer->SetSizeHints(this);
@@ -137,7 +162,9 @@ void frmWelcome::OnMouseEvent(wxMouseEvent &event)
         {
             wxMessageDialog oMsg(this, AppStr(welcome_firstrun), AppStr(app_name), wxYES_NO);
             if (oMsg.ShowModal() == wxID_YES)
+            {
                 ConstructFrame::StaticLaunchHelp();
+            }
         }
 
         TheConfig->Write(AppStr(config_firstrun), (const wxString &)wxT("0"));
@@ -184,6 +211,12 @@ void frmWelcome::OnLoadModSS(wxCommandEvent &event)
 {
     UNUSED(event);
     TheConstruct->DoLoadMod(wxT(""), ConstructFrame::LM_SS);
+}
+
+void frmWelcome::OnLoadModDE(wxCommandEvent &event)
+{
+    UNUSED(event);
+    TheConstruct->DoLoadMod(wxT(""), ConstructFrame::LM_DE);
 }
 
 void frmWelcome::OnLoadModCoH(wxCommandEvent &event)

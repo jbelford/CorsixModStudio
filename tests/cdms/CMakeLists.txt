@@ -33,6 +33,7 @@ add_executable(cdms_tests
     scareditorpresenter_test.cpp
     filetreepresenter_test.cpp
     rgdeditorpresenter_test.cpp
+    relictoolresolver_test.cpp
     ${CDMS_SRC_DIR}/common/strconv.cpp
     ${CDMS_SRC_DIR}/common/strings.cpp
     ${CDMS_SRC_DIR}/common/Utility.cpp
@@ -60,6 +61,7 @@ add_executable(cdms_tests
     ${CDMS_SRC_DIR}/tools/Tool_AutoDPS.cpp
     ${CDMS_SRC_DIR}/tools/Tool_AESetup.cpp
     ${CDMS_SRC_DIR}/views/CtrlStatusText.cpp
+    ${CDMS_SRC_DIR}/frame/RelicToolResolver.cpp
 )
 
 target_include_directories(cdms_tests PRIVATE

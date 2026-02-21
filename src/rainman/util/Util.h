@@ -78,6 +78,17 @@ RAINMAN_API char *Rainman_GetSSPath();
 */
 RAINMAN_API char *Rainman_GetCoHPath();
 
+//! Retrieves the Dawn of War Definitive Edition installation path
+/*!
+    Looks for the DoW DE installation path via Steam uninstall registry,
+    if not found returns default Steam install location
+
+    \return Returns a valid pointer or throws a CRainmanException
+
+    \attention You MUST delete[] the result
+*/
+RAINMAN_API char *Rainman_GetDEPath();
+
 RAINMAN_API void Rainman_DeleteCharArray(char *pString);
 
 typedef void (*Rainman_ForEachFunction)(IDirectoryTraverser::IIterator *, void *pTag);

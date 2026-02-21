@@ -49,6 +49,7 @@ class frmWelcome : public wxWindow
     void OnLoadMod(wxCommandEvent &event);
     void OnLoadModDC(wxCommandEvent &event);
     void OnLoadModSS(wxCommandEvent &event);
+    void OnLoadModDE(wxCommandEvent &event);
     void OnLoadModCoH(wxCommandEvent &event);
     void OnNewMod(wxCommandEvent &event);
     void OnMouseEvent(wxMouseEvent &event);
@@ -64,6 +65,7 @@ enum
     IDC_LoadSga,
     IDC_LoadModDC,
     IDC_LoadModSS,
+    IDC_LoadModDE,
     IDC_LoadModCoH,
     IDC_Help,
     IDC_Quit,

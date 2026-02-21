@@ -88,6 +88,7 @@ class frmFiles : public wxWindow
     void OnSize(wxSizeEvent &event);
     void OnNodeTooltip(wxTreeEvent &event);
     void OnNodeActivate(wxTreeEvent &event);
+    void OnNodeSelected(wxTreeEvent &event);
     void OnNodeRightClick(wxTreeEvent &event);
     void OnTreeExpanding(wxTreeEvent &event);
     void OnPageChange(wxAuiNotebookEvent &event);

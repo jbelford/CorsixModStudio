@@ -20,8 +20,9 @@
 #include "Construct.h"
 #include "common/strings.h"
 #include "ToolRegistry.h"
+#include "RelicToolResolver.h"
 
-void MenuController::Build(wxFrame *pFrame, ToolRegistry &registry)
+void MenuController::Build(wxFrame *pFrame, ToolRegistry &registry, RelicToolResolver &relicResolver)
 {
     auto *pConstruct = static_cast<ConstructFrame *>(pFrame);
 
@@ -31,6 +32,7 @@ void MenuController::Build(wxFrame *pFrame, ToolRegistry &registry)
     pMenu_File->Append(IDM_LoadModDoWWA, AppStr(open_mod_menu), AppStr(open_mod_help));
     pMenu_File->Append(IDM_LoadModDC, AppStr(open_moddc_menu), AppStr(open_moddc_help));
     pMenu_File->Append(IDM_LoadModSS, AppStr(open_modss_menu), AppStr(open_modss_help));
+    pMenu_File->Append(IDM_LoadModDE, AppStr(open_modde_menu), AppStr(open_modde_help));
     pMenu_File->Append(IDM_LoadModCoH, AppStr(open_modcoh_menu), AppStr(open_modcoh_help));
     pMenu_File->Append(IDM_LoadSga, AppStr(open_sga_menu), AppStr(open_sga_help));
     pMenu_File->Append(wxID_CLOSE, AppStr(close_mod_menu), AppStr(close_mod_help));
@@ -49,15 +51,16 @@ void MenuController::Build(wxFrame *pFrame, ToolRegistry &registry)
         pConstruct->Bind(wxEVT_MENU, &ConstructFrame::OnToolMenuCommand, pConstruct, id);
     }
 
-    // Relic tools menu
+    // Relic tools menu — built from resolver's tool list
     auto *pMenu_RelicTools = new wxMenu;
-    pMenu_RelicTools->Append(IDM_AttributeEditor, AppStr(attr_editor_menu), AppStr(attr_editor_help));
-    pMenu_RelicTools->Append(IDM_AudioEditor, AppStr(audio_editor_menu), AppStr(audio_editor_help));
-    pMenu_RelicTools->Append(IDM_ChunkyViewer, AppStr(chunky_view_menu), AppStr(chunky_view_help));
-    pMenu_RelicTools->Append(IDM_FXTool, AppStr(fx_tools_menu), AppStr(fx_tools_help));
-    pMenu_RelicTools->Append(IDM_MissionEditor, AppStr(mission_edit_menu), AppStr(mission_edit_help));
-    pMenu_RelicTools->Append(IDM_ModPackager, AppStr(mod_packager_menu), AppStr(mod_packager_help));
-    pMenu_RelicTools->Append(IDM_ObjectEditor, AppStr(object_editor_menu), AppStr(object_editor_help));
+    for (size_t i = 0; i < relicResolver.GetToolCount(); ++i)
+    {
+        const auto &tool = relicResolver.GetTool(i);
+        int id = IDM_RelicToolBase + static_cast<int>(i);
+        pMenu_RelicTools->Append(id, tool.sMenuLabel, tool.sHelpString);
+        pMenu_RelicTools->Enable(id, tool.bFound);
+        pConstruct->Bind(wxEVT_MENU, &ConstructFrame::OnRelicToolCommand, pConstruct, id);
+    }
 
     // Play menu
     auto *pMenu_Play = new wxMenu;
@@ -100,4 +103,23 @@ void MenuController::Build(wxFrame *pFrame, ToolRegistry &registry)
     pMenuBar->Append(pMenu_Help, AppStr(help_menu));
     pFrame->SetMenuBar(pMenuBar);
     pMenuBar->EnableTop(1, false);
+}
+
+void MenuController::UpdateRelicToolsState(wxFrame *pFrame, const RelicToolResolver &resolver)
+{
+    wxMenuBar *pMenuBar = pFrame->GetMenuBar();
+    if (!pMenuBar)
+    {
+        return;
+    }
+
+    for (size_t i = 0; i < resolver.GetToolCount(); ++i)
+    {
+        int id = IDM_RelicToolBase + static_cast<int>(i);
+        wxMenuItem *pItem = pMenuBar->FindItem(id);
+        if (pItem)
+        {
+            pItem->Enable(resolver.GetTool(i).bFound);
+        }
+    }
 }

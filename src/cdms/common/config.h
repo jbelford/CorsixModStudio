@@ -61,3 +61,8 @@ wxString ConfGetCoHFolder();
     may throw a CRainmanException
 */
 wxString ConfGetModToolsFolder();
+
+/*!
+    may throw a CRainmanException
+*/
+wxString ConfGetDEFolder();

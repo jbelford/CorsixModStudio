@@ -53,6 +53,7 @@ EVT_SIZE(frmFiles::OnSize)
 EVT_TREE_ITEM_GETTOOLTIP(IDC_FilesTree, frmFiles::OnNodeTooltip)
 EVT_LIST_ITEM_ACTIVATED(IDC_ToolsList, frmFiles::LaunchTool)
 EVT_TREE_ITEM_ACTIVATED(IDC_FilesTree, frmFiles::OnNodeActivate)
+EVT_TREE_SEL_CHANGED(IDC_FilesTree, frmFiles::OnNodeSelected)
 EVT_TREE_ITEM_EXPANDING(IDC_FilesTree, frmFiles::OnTreeExpanding)
 EVT_TREE_ITEM_MENU(IDC_FilesTree, frmFiles::OnNodeRightClick)
 EVT_MENU(wxID_ANY, frmFiles::OnMenu)
@@ -151,11 +152,17 @@ CLuaFile2 *CLuaAction::DoLoad2(IFileStore::IStream *pStream, const char *sFile, 
 
     pLua->setCache(pCache, false);
     if (sFile[0] == 'G' || sFile[0] == 'g')
+    {
         pLua->setRootFolder("generic\\attrib\\");
+    }
     else if (sFile[0] == 'A' || sFile[0] == 'a')
+    {
         pLua->setRootFolder("attrib\\attrib\\");
+    }
     else
+    {
         pLua->setRootFolder("data\\attrib\\");
+    }
 
     try
     {
@@ -252,22 +259,30 @@ wxTreeItemId frmFiles::FindFile(wxString sFile, bool bParent)
             if (!m_pTree->ItemHasChildren(oChild) || sPart.IsEmpty())
             {
                 if (sPart.IsEmpty())
+                {
                     m_pTree->SelectItem(oChild);
+                }
                 return bParent ? oParent : oChild;
             }
             else
             {
                 oParent = oChild;
                 if (!m_pTree->IsExpanded(oParent))
+                {
                     m_pTree->Expand(oParent);
+                }
                 oChild = m_pTree->GetFirstChild(oParent, oCookie);
                 bMoveNext = false;
             }
         }
         if (bMoveNext)
+        {
             oChild = m_pTree->GetNextChild(oParent, oCookie);
+        }
         else
+        {
             bMoveNext = true;
+        }
     }
 
     return oParent;
@@ -281,7 +296,9 @@ bool frmFiles::_IsEngineFileMapName(const char *sName, CModuleFile *pMod)
     for (size_t i = 0; i < iC; ++i)
     {
         if (strcmp(pMod->GetEngine(i)->GetFileMapName(), sName) == 0)
+        {
             return true;
+        }
     }
     return false;
 }
@@ -464,6 +481,15 @@ void frmFiles::OnNodeActivate(wxTreeEvent &event)
         }
 
         sPath.Remove(0, 1);
+
+        // If the preview tab already shows this file, just pin it
+        auto &tabMgr = TheConstruct->GetTabManager();
+        if (tabMgr.HasPreviewTab() && tabMgr.GetPreviewFilePath() == sPath)
+        {
+            tabMgr.PinPreviewTab();
+            return;
+        }
+
         sExt = sPath.AfterLast('.');
         sExt.LowerCase();
         for (std::vector<IHandler *>::iterator itr = m_vHandlers.begin(); itr != m_vHandlers.end(); ++itr)
@@ -486,14 +512,75 @@ void frmFiles::OnNodeActivate(wxTreeEvent &event)
     }
 }
 
+void frmFiles::OnNodeSelected(wxTreeEvent &event)
+{
+    auto *pData = static_cast<CFilesTreeItemData *>(m_pTree->GetItemData(event.GetItem()));
+    if (!pData || !pData->sMod || !pData->sSource)
+    {
+        return;
+    }
+
+    wxString sPath;
+    wxTreeItemId oCurrent = event.GetItem();
+    wxTreeItemId oParent = m_pTree->GetItemParent(oCurrent);
+    wxTreeItemId oRoot = m_pTree->GetRootItem();
+    while (oCurrent != oRoot)
+    {
+        sPath.Prepend(m_pTree->GetItemText(oCurrent));
+        sPath.Prepend(wxT("\\"));
+        oCurrent = m_pTree->GetItemParent(oCurrent);
+    }
+    sPath.Remove(0, 1);
+
+    auto &tabMgr = TheConstruct->GetTabManager();
+
+    // Skip if this file is already the preview tab
+    if (tabMgr.HasPreviewTab() && tabMgr.GetPreviewFilePath() == sPath)
+    {
+        return;
+    }
+
+    wxString sExt = sPath.AfterLast('.');
+    sExt.LowerCase();
+    for (auto *pHandler : m_vHandlers)
+    {
+        if (pHandler->VGetExt() == sExt)
+        {
+            try
+            {
+                tabMgr.ClosePreviewTab();
+                size_t countBefore = tabMgr.GetTabs()->GetPageCount();
+                oCurrent = event.GetItem();
+                pHandler->VHandle(sPath, oParent, oCurrent);
+
+                // If the handler added a new page, mark it as the preview tab
+                if (tabMgr.GetTabs()->GetPageCount() > countBefore)
+                {
+                    size_t lastIdx = tabMgr.GetTabs()->GetPageCount() - 1;
+                    tabMgr.SetPreviewPage(tabMgr.GetTabs()->GetPage(lastIdx), sPath);
+                }
+            }
+            catch (const CRainmanException &e)
+            {
+                _ErrorBox(e, __FILE__, __LINE__, false);
+            }
+            return;
+        }
+    }
+}
+
 void frmFiles::OnNodeRightClick(wxTreeEvent &event)
 {
     int flags;
     wxTreeItemId oItemID = m_pTree->HitTest(event.GetPoint(), flags);
     if (oItemID.IsOk())
+    {
         m_pTree->SelectItem(oItemID);
+    }
     else
+    {
         return;
+    }
 
     CFilesTreeItemData *pData = (CFilesTreeItemData *)m_pTree->GetItemData(oItemID);
 
@@ -555,11 +642,15 @@ void frmFiles::OnMenu(wxCommandEvent &event)
         try
         {
             if (m_bPopupIsFolder)
+            {
                 m_vFolderHandlers[event.GetId() - (wxID_HIGHEST + 1337)]->VHandle(m_sPopupFileName, m_oPopupTreeParent,
                                                                                   m_oPopupTreeItem);
+            }
             else
+            {
                 m_vHandlers[event.GetId() - (wxID_HIGHEST + 1337)]->VHandle(m_sPopupFileName, m_oPopupTreeParent,
                                                                             m_oPopupTreeItem);
+            }
         }
         catch (const CRainmanException &e)
         {
@@ -727,7 +818,9 @@ bool frmFiles::FillFromIDirectoryTraverser(IDirectoryTraverser *pTraverser)
 void frmFiles::_FillOneLevelFromIterator(wxTreeItemId oParent, IDirectoryTraverser::IIterator *pChildren)
 {
     if (!pChildren || pChildren->VGetType() == IDirectoryTraverser::IIterator::T_Nothing)
+    {
         return;
+    }
 
     do
     {
@@ -765,9 +858,13 @@ void frmFiles::_FillOneLevelFromIterator(wxTreeItemId oParent, IDirectoryTravers
             m_pTree->SetItemImage(oChild, 5, wxTreeItemIcon_Expanded);
 
             if (bHasChildren)
+            {
                 m_pTree->SetItemHasChildren(oChild, true);
+            }
             else
+            {
                 delete pSubDir;
+            }
             break;
         }
         default:
@@ -780,7 +877,9 @@ void frmFiles::PopulateChildren(const wxTreeItemId &oParent)
 {
     auto *pData = static_cast<CFilesTreeItemData *>(m_pTree->GetItemData(oParent));
     if (!pData || !pData->pToFillWith)
+    {
         return;
+    }
 
     m_pTree->Freeze();
     _FillOneLevelFromIterator(oParent, pData->pToFillWith.get());
@@ -797,7 +896,9 @@ bool frmFiles::_FillPartialFromIDirectoryTraverserIIterator(wxTreeItemId oParent
                                                             bool bOnlyOne, wxTreeItemId *pAfter)
 {
     if (!pChildren)
+    {
         return false;
+    }
 
     if (pChildren->VGetType() != IDirectoryTraverser::IIterator::T_Nothing)
     {
@@ -812,14 +913,20 @@ bool frmFiles::_FillPartialFromIDirectoryTraverserIIterator(wxTreeItemId oParent
                 int iImg = CFileTreePresenter::ClassifyFileIcon(sName);
                 wxTreeItemId oChild;
                 if (pAfter)
+                {
                     oChild =
                         m_pTree->InsertItem(oParent, *pAfter, sName, iImg, iImg, new CFilesTreeItemData(pChildren));
+                }
                 else
                 {
                     if (bOnlyOne)
+                    {
                         oChild = m_pTree->InsertItem(oParent, 0, sName, iImg, iImg, new CFilesTreeItemData(pChildren));
+                    }
                     else
+                    {
                         oChild = m_pTree->AppendItem(oParent, sName, iImg, iImg, new CFilesTreeItemData(pChildren));
+                    }
                 }
                 //! \todo pull file colours out of config file
                 if (AsciiTowxString((const char *)pChildren->VGetTag(0)) ==
@@ -850,21 +957,31 @@ bool frmFiles::_FillPartialFromIDirectoryTraverserIIterator(wxTreeItemId oParent
                 auto *pItemData = new CFilesTreeItemData(pChildren, bHasChildren ? pSubDir : nullptr);
                 wxTreeItemId oChild;
                 if (pAfter)
+                {
                     oChild =
                         m_pTree->InsertItem(oParent, *pAfter, AsciiTowxString(pChildren->VGetName()), 4, 4, pItemData);
+                }
                 else
+                {
                     oChild = m_pTree->AppendItem(oParent, AsciiTowxString(pChildren->VGetName()), 4, 4, pItemData);
+                }
                 m_pTree->SetItemImage(oChild, 5, wxTreeItemIcon_Expanded);
 
                 if (bHasChildren)
+                {
                     m_pTree->SetItemHasChildren(oChild, true);
+                }
                 else
+                {
                     delete pSubDir;
+                }
                 break;
             }
             };
             if (bOnlyOne)
+            {
                 return true;
+            }
         } while ((eNextError = pChildren->VNextItem()) == IDirectoryTraverser::IIterator::E_OK);
     }
     return true;

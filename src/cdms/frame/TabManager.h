@@ -31,7 +31,7 @@ class frmFiles;
 class TabManager
 {
   public:
-    TabManager() : m_pSplitter(nullptr), m_pTabs(nullptr) {}
+    TabManager() : m_pSplitter(nullptr), m_pTabs(nullptr), m_pPreviewPage(nullptr) {}
 
     // Initialize splitter and notebook. Called from ConstructFrame constructor.
     void Init(wxWindow *parent, wxWindowID splitterId);
@@ -44,6 +44,15 @@ class TabManager
     // Tab page management
     void AddPage(wxWindow *page, const wxString &caption, bool select = true);
     void ShowWelcomePage();
+
+    // Preview tab support (VS Code-style single-click preview)
+    void SetPreviewPage(wxWindow *page, const wxString &filePath);
+    void PinPreviewTab();
+    void ClosePreviewTab();
+    bool HasPreviewTab() const { return m_pPreviewPage != nullptr; }
+    bool IsPreviewTab(wxWindow *page) const { return page == m_pPreviewPage; }
+    const wxString &GetPreviewFilePath() const { return m_sPreviewFilePath; }
+    void OnPageClosed(wxWindow *page);
 
     // Split/unsplit management
     void SplitWithFileTree(frmFiles *pFiles, int sashPosition);
@@ -58,4 +67,6 @@ class TabManager
   private:
     wxSplitterWindow *m_pSplitter;
     wxAuiNotebook *m_pTabs;
+    wxWindow *m_pPreviewPage;
+    wxString m_sPreviewFilePath;
 };

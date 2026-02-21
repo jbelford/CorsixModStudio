@@ -55,7 +55,9 @@ RAINMAN_API char *Rainman_GetDoWPath()
         iReturnVal = RegQueryValueEx(hkey, "InstallLocation", nullptr, nullptr, (LPBYTE)sDoWPath, &t);
         RegCloseKey(hkey);
         if (iReturnVal == ERROR_SUCCESS)
+        {
             return sDoWPath;
+        }
     }
 
     // Try to open the DoW Demo registry key
@@ -66,7 +68,9 @@ RAINMAN_API char *Rainman_GetDoWPath()
         iReturnVal = RegQueryValueEx(hkey, "InstallLocation", nullptr, nullptr, (LPBYTE)sDoWPath, &t);
         RegCloseKey(hkey);
         if (iReturnVal == ERROR_SUCCESS)
+        {
             return sDoWPath;
+        }
     }
 
 #endif
@@ -102,7 +106,9 @@ RAINMAN_API char *Rainman_GetDCPath()
         iReturnVal = RegQueryValueEx(hkey, "InstallLocation", nullptr, nullptr, (LPBYTE)sDoWPath, &t);
         RegCloseKey(hkey);
         if (iReturnVal == ERROR_SUCCESS)
+        {
             return sDoWPath;
+        }
     }
 
 #endif
@@ -138,7 +144,9 @@ RAINMAN_API char *Rainman_GetSSPath()
         iReturnVal = RegQueryValueEx(hkey, "InstallLocation", nullptr, nullptr, (LPBYTE)sDoWPath, &t);
         RegCloseKey(hkey);
         if (iReturnVal == ERROR_SUCCESS)
+        {
             return sDoWPath;
+        }
     }
 
 #endif
@@ -183,7 +191,9 @@ RAINMAN_API char *Rainman_GetCoHPath()
         iReturnVal = RegQueryValueEx(hkey, "InstallDir", nullptr, nullptr, (LPBYTE)sCoHPath, &t);
         RegCloseKey(hkey);
         if (iReturnVal == ERROR_SUCCESS)
+        {
             return sCoHPath;
+        }
     }
 
     // Try to open the CoH Demo registry key if CoH registry key wasn't found
@@ -195,7 +205,9 @@ RAINMAN_API char *Rainman_GetCoHPath()
         iReturnVal = RegQueryValueEx(hkey, "InstallDir", nullptr, nullptr, (LPBYTE)sCoHPath, &t);
         RegCloseKey(hkey);
         if (iReturnVal == ERROR_SUCCESS)
+        {
             return sCoHPath;
+        }
     }
 
     // Try to open the CoH Beta registry key if CoH registry key wasn't found
@@ -207,13 +219,70 @@ RAINMAN_API char *Rainman_GetCoHPath()
         iReturnVal = RegQueryValueEx(hkey, "InstallLocation", nullptr, nullptr, (LPBYTE)sCoHPath, &t);
         RegCloseKey(hkey);
         if (iReturnVal == ERROR_SUCCESS)
+        {
             return sCoHPath;
+        }
     }
 
 #endif
 
     // Return the default path if the registry failed us :/ (This value is guessed as CoH is not released yet)
     return strcpy(sCoHPath, "C:\\Program Files\\THQ\\Company of Heroes");
+}
+
+RAINMAN_API char *Rainman_GetDEPath()
+{
+    /*
+        Checks the Windows registry for the Dawn of War Definitive Edition installation path.
+        Looks at (in order):
+        HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 3556750\
+        If not found, returns default Steam install location.
+    */
+    char *sDEPath = nullptr;
+    DWORD dataLen = MAX_PATH + 1,
+          t; // dataLen is copied into t for each call to RegQueryValueEx, as that function modifies the value passed
+    sDEPath = CHECK_MEM(new char[dataLen]);
+
+#ifndef RAINMAN_GNUC
+
+    long iReturnVal;
+    HKEY hkey;
+
+    // Try the Steam uninstall registry key for DE
+    iReturnVal =
+        RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Steam App 3556750\\",
+                     NULL, KEY_QUERY_VALUE, &hkey);
+    if (iReturnVal == ERROR_SUCCESS)
+    {
+        t = dataLen;
+        iReturnVal = RegQueryValueEx(hkey, "InstallLocation", nullptr, nullptr, (LPBYTE)sDEPath, &t);
+        RegCloseKey(hkey);
+        if (iReturnVal == ERROR_SUCCESS)
+        {
+            return sDEPath;
+        }
+    }
+
+    // Try the Steam path and construct DE location from it
+    iReturnVal =
+        RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\WOW6432Node\\Valve\\Steam\\", NULL, KEY_QUERY_VALUE, &hkey);
+    if (iReturnVal == ERROR_SUCCESS)
+    {
+        char sSteamPath[MAX_PATH + 1];
+        t = sizeof(sSteamPath);
+        iReturnVal = RegQueryValueEx(hkey, "InstallPath", nullptr, nullptr, (LPBYTE)sSteamPath, &t);
+        RegCloseKey(hkey);
+        if (iReturnVal == ERROR_SUCCESS)
+        {
+            snprintf(sDEPath, dataLen, "%s\\steamapps\\common\\Dawn of War Definitive Edition", sSteamPath);
+            return sDEPath;
+        }
+    }
+
+#endif
+
+    // Return the default path as the registry failed us :/
+    return strcpy(sDEPath, "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Dawn of War Definitive Edition");
 }
 
 RAINMAN_API CRgdHashTable *Rainman_LoadDictionaries(const char *sPath, char **sCustom, bool bIgnoreLoadErrors)
@@ -225,7 +294,9 @@ RAINMAN_API CRgdHashTable *Rainman_LoadDictionaries(const char *sPath, char **sC
 
     // Check our input is valid (non-null, etc.)
     if (sPath == nullptr)
+    {
         QUICK_THROW("No path");
+    }
 
     CFileSystemStore oFSO;
     CRgdHashTable *pRgdHashTable = CHECK_MEM(new CRgdHashTable());
@@ -256,7 +327,9 @@ RAINMAN_API CRgdHashTable *Rainman_LoadDictionaries(const char *sPath, char **sC
                         bCustom = true;
                         // Set the sCustom parameter if it was passed
                         if (sCustom)
+                        {
                             *sCustom = strdup(pItr->VGetFullPath());
+                        }
                     }
 
                     // Load the dictionary
@@ -270,8 +343,10 @@ RAINMAN_API CRgdHashTable *Rainman_LoadDictionaries(const char *sPath, char **sC
                         {
                         }
                         else
+                        {
                             throw CRainmanException(e, __FILE__, __LINE__, "Error loading \'%s\'",
                                                     pItr->VGetFullPath());
+                        }
                     }
                 }
             } while (pItr->VNextItem() == IDirectoryTraverser::IIterator::E_OK);

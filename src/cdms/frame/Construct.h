@@ -40,6 +40,7 @@
 #include "MenuController.h"
 #include "views/interfaces/IMainFrameView.h"
 #include "presenters/CModuleLoadPresenter.h"
+#include "RelicToolResolver.h"
 
 class ConstructFrame : public wxFrame, public IMainFrameView
 {
@@ -56,6 +57,7 @@ class ConstructFrame : public wxFrame, public IMainFrameView
     ToolRegistry m_toolRegistry;
     MenuController m_menuController;
     CModuleLoadPresenter m_moduleLoadPresenter;
+    RelicToolResolver m_relicToolResolver;
 
   public:
     ConstructFrame(const wxString &sTitle, const wxPoint &oPos, const wxSize &oSize);
@@ -66,6 +68,7 @@ class ConstructFrame : public wxFrame, public IMainFrameView
     void OnOpenModDoW(wxCommandEvent &event);
     void OnOpenModDC(wxCommandEvent &event);
     void OnOpenModSS(wxCommandEvent &event);
+    void OnOpenModDE(wxCommandEvent &event);
     void OnOpenModCoH(wxCommandEvent &event);
     void OnOpenModOF(wxCommandEvent &event);
     void OnOpenSga(wxCommandEvent &event);
@@ -77,19 +80,15 @@ class ConstructFrame : public wxFrame, public IMainFrameView
         LM_DoW_WA,
         LM_DC,
         LM_SS,
+        LM_DE,
         LM_CoH_OF,
     };
 
     void DoLoadSga();
     void DoLoadMod(wxString sPath = wxT(""), eLoadModGames eGame = LM_Any);
     void OnToolMenuCommand(wxCommandEvent &event);
-    void LaunchRelicAttributeEditor(wxCommandEvent &event);
-    void LaunchRelicAudioEditor(wxCommandEvent &event);
-    void LaunchRelicChunkyViewer(wxCommandEvent &event);
-    void LaunchRelicFXTool(wxCommandEvent &event);
-    void LaunchRelicMisionEditor(wxCommandEvent &event);
-    void LaunchRelicModPackager(wxCommandEvent &event);
-    void LaunchRelicObjectEditor(wxCommandEvent &event);
+    void OnRelicToolCommand(wxCommandEvent &event);
+    void UpdateRelicToolsState();
     void LaunchCOH(wxCommandEvent &event);
     void LaunchW40k(wxCommandEvent &event);
     void LaunchW40kWA(wxCommandEvent &event);
@@ -108,17 +107,18 @@ class ConstructFrame : public wxFrame, public IMainFrameView
     void LaunchRDNWiki(wxCommandEvent &event);
     void HideDonate(wxCommandEvent &event);
 
-    void LaunchTool(wxString sExeName, bool bIsInModTools = true);
     static void LaunchURL(wxString sURL);
 
     void OnCloseWindow(wxCloseEvent &event);
 
     void OnSashMove(wxSplitterEvent &event);
+    void OnTabClosing(wxAuiNotebookEvent &event);
 
     CModuleFile *GetModule() const;
     const wxString &GetModuleFile() const;
     void SetModule(CModuleFile *pMod, const wxString &sModuleFile = wxT(""));
     wxAuiNotebook *GetTabs();
+    TabManager &GetTabManager() { return m_tabManager; }
     frmLoading *GetLoadingForm();
     frmFiles *GetFilesList();
 
@@ -162,6 +162,7 @@ enum
     IDM_LoadModDoWWA,
     IDM_LoadModDC,
     IDM_LoadModSS,
+    IDM_LoadModDE,
     IDM_LoadModCoH,
     IDM_LoadSga,
     IDM_Quit,
@@ -172,14 +173,9 @@ enum
     IDM_ModToolBase,
     IDM_ModToolLast = IDM_ModToolBase + 99, // Reserve 100 dynamic tool slots
                                             // Relic's Tools Menu
-    IDM_AttributeEditor,
-    IDM_AudioEditor,
-    IDM_ChunkyViewer,
-    IDM_FXTool,
-    IDM_MissionEditor,
-    IDM_ModPackager,
-    IDM_ObjectEditor,
-    // Play Menu
+    IDM_RelicToolBase,
+    IDM_RelicToolLast = IDM_RelicToolBase + 19, // Reserve 20 slots for Relic tools
+                                                // Play Menu
     IDM_PlayCOH,
     IDM_PlayW40k,
     IDM_PlayWXP,

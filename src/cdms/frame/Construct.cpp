@@ -53,18 +53,12 @@ BEGIN_EVENT_TABLE(ConstructFrame, wxFrame)
 EVT_MENU(IDM_LoadModDoWWA, ConstructFrame::OnOpenModDoW)
 EVT_MENU(IDM_LoadModDC, ConstructFrame::OnOpenModDC)
 EVT_MENU(IDM_LoadModSS, ConstructFrame::OnOpenModSS)
+EVT_MENU(IDM_LoadModDE, ConstructFrame::OnOpenModDE)
 EVT_MENU(IDM_LoadModCoH, ConstructFrame::OnOpenModCoH)
 EVT_MENU(IDM_LoadSga, ConstructFrame::OnOpenSga)
 EVT_MENU(wxID_EXIT, ConstructFrame::OnQuit)
 EVT_MENU(wxID_CLOSE, ConstructFrame::OnCloseMod)
 
-EVT_MENU(IDM_AttributeEditor, ConstructFrame::LaunchRelicAttributeEditor)
-EVT_MENU(IDM_AudioEditor, ConstructFrame::LaunchRelicAudioEditor)
-EVT_MENU(IDM_ChunkyViewer, ConstructFrame::LaunchRelicChunkyViewer)
-EVT_MENU(IDM_FXTool, ConstructFrame::LaunchRelicFXTool)
-EVT_MENU(IDM_MissionEditor, ConstructFrame::LaunchRelicMisionEditor)
-EVT_MENU(IDM_ModPackager, ConstructFrame::LaunchRelicModPackager)
-EVT_MENU(IDM_ObjectEditor, ConstructFrame::LaunchRelicObjectEditor)
 EVT_MENU(IDM_PlayCOH, ConstructFrame::LaunchCOH)
 EVT_MENU(IDM_PlayW40k, ConstructFrame::LaunchW40k)
 EVT_MENU(IDM_PlayWXP, ConstructFrame::LaunchW40kWA)
@@ -85,11 +79,23 @@ EVT_MENU(IDM_KresjahWiki, ConstructFrame::LaunchKresjahWiki)
 EVT_SPLITTER_SASH_POS_CHANGED(IDC_Splitter, ConstructFrame::OnSashMove)
 
 EVT_CLOSE(ConstructFrame::OnCloseWindow)
+EVT_AUINOTEBOOK_PAGE_CLOSE(wxID_ANY, ConstructFrame::OnTabClosing)
 END_EVENT_TABLE()
 
 frmFiles *ConstructFrame::GetFilesList() { return m_tabManager.GetFilesList(); }
 
 void ConstructFrame::OnSashMove(wxSplitterEvent &event) { m_tabManager.OnSashMoved(event.GetSashPosition()); }
+
+void ConstructFrame::OnTabClosing(wxAuiNotebookEvent &event)
+{
+    int idx = event.GetSelection();
+    if (idx != wxNOT_FOUND)
+    {
+        wxWindow *page = m_tabManager.GetTabs()->GetPage(idx);
+        m_tabManager.OnPageClosed(page);
+    }
+    event.Skip();
+}
 
 void ConstructFrame::OnOpenSga(wxCommandEvent &event)
 {
@@ -97,17 +103,43 @@ void ConstructFrame::OnOpenSga(wxCommandEvent &event)
     DoLoadSga();
 }
 
-void ConstructFrame::LaunchTool(wxString sExeName, bool bIsInModTools)
+void ConstructFrame::OnRelicToolCommand(wxCommandEvent &event)
 {
-    wxString sCommand, sFolder;
-    sFolder = m_moduleManager.GetModuleFile().BeforeLast('\\');
-    if (bIsInModTools)
-        sFolder.Append(wxT("\\ModTools"));
-    sFolder.Append(wxT("\\"));
-    sCommand = sFolder;
-    sCommand.Append(sExeName);
+    size_t index = static_cast<size_t>(event.GetId() - IDM_RelicToolBase);
+    if (index >= m_relicToolResolver.GetToolCount())
+    {
+        return;
+    }
 
-    ShellExecute((HWND)TheConstruct->GetHandle(), wxT("open"), sCommand, wxT(""), sFolder, 3);
+    const auto &tool = m_relicToolResolver.GetTool(index);
+    if (!tool.bFound)
+    {
+        wxMessageBox(wxT("Tool not found: ") + tool.sExeName, wxT("Error"), wxOK | wxICON_ERROR);
+        return;
+    }
+
+    wxString sFolder = tool.sResolvedPath.BeforeLast('\\');
+    auto result = reinterpret_cast<INT_PTR>(
+        ShellExecute((HWND)GetHandle(), wxT("open"), tool.sResolvedPath, wxT(""), sFolder, SW_SHOWNORMAL));
+    if (result <= 32)
+    {
+        wxMessageBox(wxT("Failed to launch ") + tool.sExeName, wxT("Error"), wxOK | wxICON_ERROR);
+    }
+}
+
+void ConstructFrame::UpdateRelicToolsState()
+{
+    if (m_moduleManager.HasModule())
+    {
+        m_relicToolResolver.ScanWithModule(m_moduleManager.GetModuleFile(),
+                                           m_moduleManager.GetModule()->GetModuleType());
+    }
+    else
+    {
+        m_relicToolResolver.ScanNoModule();
+    }
+
+    m_menuController.UpdateRelicToolsState(this, m_relicToolResolver);
 }
 
 CRgdHashTable *ConstructFrame::GetRgdHashTable()
@@ -181,48 +213,6 @@ void ConstructFrame::LaunchRDNWiki(wxCommandEvent &event)
     LaunchURL(wxT("http://www.relic.com/rdn/wiki/RDNWikiHome"));
 }
 
-void ConstructFrame::LaunchRelicAttributeEditor(wxCommandEvent &event)
-{
-    UNUSED(event);
-    LaunchTool(wxT("AttributeEditor.exe"));
-}
-
-void ConstructFrame::LaunchRelicAudioEditor(wxCommandEvent &event)
-{
-    UNUSED(event);
-    LaunchTool(wxT("AudioEditor.exe"));
-}
-
-void ConstructFrame::LaunchRelicChunkyViewer(wxCommandEvent &event)
-{
-    UNUSED(event);
-    LaunchTool(wxT("ChunkyViewer.exe"));
-}
-
-void ConstructFrame::LaunchRelicFXTool(wxCommandEvent &event)
-{
-    UNUSED(event);
-    LaunchTool(wxT("FxTool.exe"));
-}
-
-void ConstructFrame::LaunchRelicMisionEditor(wxCommandEvent &event)
-{
-    UNUSED(event);
-    LaunchTool(wxT("W40kME.exe"), false);
-}
-
-void ConstructFrame::LaunchRelicModPackager(wxCommandEvent &event)
-{
-    UNUSED(event);
-    LaunchTool(wxT("ModPackager.exe"));
-}
-
-void ConstructFrame::LaunchRelicObjectEditor(wxCommandEvent &event)
-{
-    UNUSED(event);
-    LaunchTool(wxT("ObjectEditor.exe"));
-}
-
 wxAuiNotebook *ConstructFrame::GetTabs() { return m_tabManager.GetTabs(); }
 
 void ConstructFrame::LaunchW40k(wxCommandEvent &event)
@@ -250,9 +240,13 @@ void ConstructFrame::LaunchW40k(wxCommandEvent &event)
     }
 
     if (GetMenuBar()->GetMenu(3)->FindItem(IDM_PlayDev)->IsChecked())
+    {
         sCmdLine.Append(wxT(" -dev"));
+    }
     if (GetMenuBar()->GetMenu(3)->FindItem(IDM_PlayNoMovies)->IsChecked())
+    {
         sCmdLine.Append(wxT(" -nomovies"));
+    }
 
     ShellExecute((HWND)TheConstruct->GetHandle(), wxT("open"), sCommand, sCmdLine, sFolder, 3);
 }
@@ -282,9 +276,13 @@ void ConstructFrame::LaunchDC(wxCommandEvent &event)
     }
 
     if (GetMenuBar()->GetMenu(3)->FindItem(IDM_PlayDev)->IsChecked())
+    {
         sCmdLine.Append(wxT(" -dev"));
+    }
     if (GetMenuBar()->GetMenu(3)->FindItem(IDM_PlayNoMovies)->IsChecked())
+    {
         sCmdLine.Append(wxT(" -nomovies"));
+    }
 
     ShellExecute((HWND)TheConstruct->GetHandle(), wxT("open"), sCommand, sCmdLine, sFolder, 3);
 }
@@ -314,9 +312,13 @@ void ConstructFrame::LaunchSS(wxCommandEvent &event)
     }
 
     if (GetMenuBar()->GetMenu(3)->FindItem(IDM_PlayDev)->IsChecked())
+    {
         sCmdLine.Append(wxT(" -dev"));
+    }
     if (GetMenuBar()->GetMenu(3)->FindItem(IDM_PlayNoMovies)->IsChecked())
+    {
         sCmdLine.Append(wxT(" -nomovies"));
+    }
 
     ShellExecute((HWND)TheConstruct->GetHandle(), wxT("open"), sCommand, sCmdLine, sFolder, 3);
 }
@@ -336,7 +338,9 @@ void ConstructFrame::LaunchCOH(wxCommandEvent &event)
     }
     sCommand = sFolder;
     if (sCommand.Last() != wxChar('\\'))
+    {
         sCommand.Append(wxT("\\"));
+    }
     sCommand.Append(wxT("RelicCOH.exe"));
     sCmdLine = wxT("");
     if (m_moduleManager.GetModule())
@@ -346,9 +350,13 @@ void ConstructFrame::LaunchCOH(wxCommandEvent &event)
     }
 
     if (GetMenuBar()->GetMenu(3)->FindItem(IDM_PlayDev)->IsChecked())
+    {
         sCmdLine.Append(wxT(" -dev"));
+    }
     if (GetMenuBar()->GetMenu(3)->FindItem(IDM_PlayNoMovies)->IsChecked())
+    {
         sCmdLine.Append(wxT(" -nomovies"));
+    }
 
     ShellExecute((HWND)TheConstruct->GetHandle(), wxT("open"), sCommand, sCmdLine, sFolder, 3);
 }
@@ -378,9 +386,13 @@ void ConstructFrame::LaunchW40kWA(wxCommandEvent &event)
     }
 
     if (GetMenuBar()->GetMenu(3)->FindItem(IDM_PlayDev)->IsChecked())
+    {
         sCmdLine.Append(wxT(" -dev"));
+    }
     if (GetMenuBar()->GetMenu(3)->FindItem(IDM_PlayNoMovies)->IsChecked())
+    {
         sCmdLine.Append(wxT(" -nomovies"));
+    }
 
     ShellExecute((HWND)TheConstruct->GetHandle(), wxT("open"), sCommand, sCmdLine, sFolder, 3);
 }
@@ -442,7 +454,10 @@ ConstructFrame::ConstructFrame(const wxString &sTitle, const wxPoint &oPos, cons
     m_tabManager.AddPage(new frmWelcome(m_tabManager.GetTabs(), -1), AppStr(welcome_tabname), false);
 
     // Build menus
-    m_menuController.Build(this, m_toolRegistry);
+    m_menuController.Build(this, m_toolRegistry, m_relicToolResolver);
+
+    // Initial scan for Relic tools (no module loaded yet)
+    UpdateRelicToolsState();
 
     // Make Statusbar
     CreateStatusBar();
@@ -493,6 +508,7 @@ void ConstructFrame::SetModule(CModuleFile *pMod, const wxString &sModuleFile)
             GetMenuBar()->GetMenu(0)->Enable(IDM_LoadModDoWWA, false);
             GetMenuBar()->GetMenu(0)->Enable(IDM_LoadModDC, false);
             GetMenuBar()->GetMenu(0)->Enable(IDM_LoadModSS, false);
+            GetMenuBar()->GetMenu(0)->Enable(IDM_LoadModDE, false);
             GetMenuBar()->GetMenu(0)->Enable(IDM_LoadModCoH, false);
             GetMenuBar()->GetMenu(0)->Enable(IDM_LoadSga, false);
             GetMenuBar()->GetMenu(0)->Enable(wxID_NEW, false);
@@ -507,7 +523,9 @@ void ConstructFrame::SetModule(CModuleFile *pMod, const wxString &sModuleFile)
                                      .Append(wxT("]")),
                                  true);
             while (m_tabManager.GetTabs()->GetPageCount() > 1)
+            {
                 m_tabManager.GetTabs()->DeletePage(0);
+            }
 
             GetMenuBar()->GetMenu(3)->Enable(IDM_PlayCOH, false);
             GetMenuBar()->GetMenu(3)->Enable(IDM_PlayW40k, false);
@@ -530,6 +548,8 @@ void ConstructFrame::SetModule(CModuleFile *pMod, const wxString &sModuleFile)
                 break;
             }
         }
+
+        UpdateRelicToolsState();
     }
     else
     {
@@ -545,6 +565,7 @@ void ConstructFrame::SetModule(CModuleFile *pMod, const wxString &sModuleFile)
             GetMenuBar()->GetMenu(0)->Enable(IDM_LoadModDoWWA, true);
             GetMenuBar()->GetMenu(0)->Enable(IDM_LoadModDC, true);
             GetMenuBar()->GetMenu(0)->Enable(IDM_LoadModSS, true);
+            GetMenuBar()->GetMenu(0)->Enable(IDM_LoadModDE, true);
             GetMenuBar()->GetMenu(0)->Enable(IDM_LoadModCoH, true);
             GetMenuBar()->GetMenu(0)->Enable(IDM_LoadSga, true);
             GetMenuBar()->GetMenu(0)->Enable(wxID_NEW, true);
@@ -557,6 +578,8 @@ void ConstructFrame::SetModule(CModuleFile *pMod, const wxString &sModuleFile)
         }
 
         m_moduleManager.SetModule(nullptr, sModuleFile);
+
+        UpdateRelicToolsState();
     }
 }
 
@@ -587,7 +610,9 @@ void ConstructFrame::HideLoadingDialog()
 void ConstructFrame::UpdateLoadingProgress(const wxString &sMessage)
 {
     if (m_pLoadingForm)
+    {
         m_pLoadingForm->SetMessage(sMessage);
+    }
 }
 
 void ConstructFrame::ShowError(const wxString &sMessage) { ErrorBoxS(sMessage); }
@@ -595,12 +620,16 @@ void ConstructFrame::ShowError(const wxString &sMessage) { ErrorBoxS(sMessage); 
 void ConstructFrame::OnModuleLoaded(CModuleFile *pMod, const wxString &sPath, bool bIsSga)
 {
     if (bIsSga)
+    {
         pMod->GetFileMap()->SetAuxOutputSupply(SaveFileCallback, (void *)this);
+    }
 
     SetModule(pMod, sPath);
 
     if (bIsSga)
+    {
         GetMenuBar()->EnableTop(3, false);
+    }
 
     Refresh();
 }
@@ -610,6 +639,7 @@ void ConstructFrame::DisableLoadMenuItems()
     GetMenuBar()->GetMenu(0)->Enable(IDM_LoadModDoWWA, false);
     GetMenuBar()->GetMenu(0)->Enable(IDM_LoadModDC, false);
     GetMenuBar()->GetMenu(0)->Enable(IDM_LoadModSS, false);
+    GetMenuBar()->GetMenu(0)->Enable(IDM_LoadModDE, false);
     GetMenuBar()->GetMenu(0)->Enable(IDM_LoadModCoH, false);
     GetMenuBar()->GetMenu(0)->Enable(IDM_LoadSga, false);
     GetMenuBar()->GetMenu(0)->Enable(wxID_NEW, false);
@@ -623,6 +653,7 @@ void ConstructFrame::EnableLoadMenuItems()
         GetMenuBar()->GetMenu(0)->Enable(IDM_LoadModDoWWA, true);
         GetMenuBar()->GetMenu(0)->Enable(IDM_LoadModDC, true);
         GetMenuBar()->GetMenu(0)->Enable(IDM_LoadModSS, true);
+        GetMenuBar()->GetMenu(0)->Enable(IDM_LoadModDE, true);
         GetMenuBar()->GetMenu(0)->Enable(IDM_LoadModCoH, true);
         GetMenuBar()->GetMenu(0)->Enable(IDM_LoadSga, true);
         GetMenuBar()->GetMenu(0)->Enable(wxID_NEW, true);
@@ -645,6 +676,12 @@ void ConstructFrame::OnOpenModSS(wxCommandEvent &event)
 {
     UNUSED(event);
     DoLoadMod(wxT(""), LM_SS);
+}
+
+void ConstructFrame::OnOpenModDE(wxCommandEvent &event)
+{
+    UNUSED(event);
+    DoLoadMod(wxT(""), LM_DE);
 }
 
 void ConstructFrame::OnOpenModCoH(wxCommandEvent &event)
@@ -672,7 +709,9 @@ IFileStore::IOutputStream *ConstructFrame::SaveFileCallback(const char *sFile, b
                          AsciiTowxString(sFileextPart), wxT("*.*"), wxFD_SAVE | wxFD_OVERWRITE_PROMPT, pConstruct);
 
     if (sSavename.IsEmpty())
+    {
         return 0;
+    }
 
     return pConstruct->GetModuleService().GetModule()->GetFileSystem()->OpenOutputStreamW(sSavename, bEraseIfPresent);
 }
@@ -680,7 +719,9 @@ IFileStore::IOutputStream *ConstructFrame::SaveFileCallback(const char *sFile, b
 void ConstructFrame::DoLoadSga()
 {
     if (m_moduleLoadPresenter.IsLoading())
+    {
         return;
+    }
 
     std::unique_ptr<wxFileDialog> pFileDialog(
         new wxFileDialog(this, AppStr(mod_select_sga), wxT(""), wxT(""), AppStr(mod_sga_filter), wxFD_OPEN));
@@ -694,7 +735,9 @@ void ConstructFrame::DoLoadSga()
 void ConstructFrame::DoLoadMod(wxString sPath, eLoadModGames eGame)
 {
     if (m_moduleLoadPresenter.IsLoading())
+    {
         return;
+    }
 
     wxFileDialog *pFileDialog = 0;
     if (sPath == wxT(""))
@@ -703,13 +746,25 @@ void ConstructFrame::DoLoadMod(wxString sPath, eLoadModGames eGame)
         try
         {
             if (eGame == LM_CoH_OF)
+            {
                 sDoWPath = ConfGetCoHFolder();
+            }
             else if (eGame == LM_DC)
+            {
                 sDoWPath = ConfGetDCFolder();
+            }
             else if (eGame == LM_SS)
+            {
                 sDoWPath = ConfGetSSFolder();
+            }
+            else if (eGame == LM_DE)
+            {
+                sDoWPath = ConfGetDEFolder();
+            }
             else if (eGame == LM_DoW_WA || eGame == LM_Any)
+            {
                 sDoWPath = ConfGetDoWFolder();
+            }
         }
         catch (const CRainmanException &e)
         {
@@ -732,13 +787,25 @@ void ConstructFrame::DoLoadMod(wxString sPath, eLoadModGames eGame)
             wxString sAppFolder = sFilePath.BeforeLast('\\');
             sAppFolder.Append(wxT("\\"));
             if (eGame == LM_CoH_OF)
+            {
                 TheConfig->Write(AppStr(config_cohfolder), sAppFolder);
+            }
             else if (eGame == LM_DC)
+            {
                 TheConfig->Write(AppStr(config_dcfolder), sAppFolder);
+            }
             else if (eGame == LM_SS)
+            {
                 TheConfig->Write(AppStr(config_ssfolder), sAppFolder);
+            }
+            else if (eGame == LM_DE)
+            {
+                TheConfig->Write(AppStr(config_defolder), sAppFolder);
+            }
             else if (eGame == LM_DoW_WA)
+            {
                 TheConfig->Write(AppStr(config_dowfolder), sAppFolder);
+            }
         }
 
         // Compute MD5-based config key for per-mod settings

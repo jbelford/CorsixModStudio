@@ -120,3 +120,19 @@ wxString ConfGetModToolsFolder()
     sDoWFolder.Append(wxT("ModTools\\"));
     return TheConfig->Read(AppStr(config_modtoolsfolder), sDoWFolder);
 }
+
+wxString ConfGetDEFolder()
+{
+    char *sDefault;
+    try
+    {
+        sDefault = Rainman_GetDEPath();
+    }
+    catch (const CRainmanException &e)
+    {
+        throw CModStudioException(e, __FILE__, __LINE__, "Unable to get DoW:DE path");
+    }
+    wxString wsDefault = AsciiTowxString(sDefault);
+    Rainman_DeleteCharArray(sDefault);
+    return TheConfig->Read(AppStr(config_defolder), wsDefault);
+}

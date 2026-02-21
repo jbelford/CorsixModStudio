@@ -36,7 +36,9 @@ void TabManager::Init(wxWindow *parent, wxWindowID splitterId)
 frmFiles *TabManager::GetFilesList() const
 {
     if (!m_pSplitter->IsSplit())
+    {
         return nullptr;
+    }
     return static_cast<frmFiles *>(m_pSplitter->GetWindow1());
 }
 
@@ -44,14 +46,76 @@ bool TabManager::IsSplit() const { return m_pSplitter->IsSplit(); }
 
 void TabManager::AddPage(wxWindow *page, const wxString &caption, bool select)
 {
+    ClosePreviewTab();
     m_pTabs->AddPage(page, caption, select);
+}
+
+void TabManager::SetPreviewPage(wxWindow *page, const wxString &filePath)
+{
+    m_pPreviewPage = page;
+    m_sPreviewFilePath = filePath;
+
+    int idx = m_pTabs->GetPageIndex(page);
+    if (idx != wxNOT_FOUND)
+    {
+        wxString caption = m_pTabs->GetPageText(idx);
+        m_pTabs->SetPageText(idx, wxString::Format(wxT("\u231C%s\u231D"), caption));
+    }
+}
+
+void TabManager::PinPreviewTab()
+{
+    if (!m_pPreviewPage)
+    {
+        return;
+    }
+
+    int idx = m_pTabs->GetPageIndex(m_pPreviewPage);
+    if (idx != wxNOT_FOUND)
+    {
+        wxString caption = m_pTabs->GetPageText(idx);
+        if (caption.StartsWith(wxT("\u231C")) && caption.EndsWith(wxT("\u231D")))
+        {
+            caption = caption.Mid(1, caption.Length() - 2);
+        }
+        m_pTabs->SetPageText(idx, caption);
+    }
+    m_pPreviewPage = nullptr;
+    m_sPreviewFilePath.clear();
+}
+
+void TabManager::ClosePreviewTab()
+{
+    if (!m_pPreviewPage)
+    {
+        return;
+    }
+
+    int idx = m_pTabs->GetPageIndex(m_pPreviewPage);
+    if (idx != wxNOT_FOUND)
+    {
+        m_pTabs->DeletePage(idx);
+    }
+    m_pPreviewPage = nullptr;
+    m_sPreviewFilePath.clear();
+}
+
+void TabManager::OnPageClosed(wxWindow *page)
+{
+    if (page == m_pPreviewPage)
+    {
+        m_pPreviewPage = nullptr;
+        m_sPreviewFilePath.clear();
+    }
 }
 
 void TabManager::ShowWelcomePage()
 {
     m_pTabs->AddPage(new frmWelcome(m_pTabs, -1), AppStr(welcome_tabname), true);
     while (m_pTabs->GetPageCount() > 1)
+    {
         m_pTabs->DeletePage(0);
+    }
 }
 
 void TabManager::SplitWithFileTree(frmFiles *pFiles, int sashPosition)
@@ -80,7 +144,9 @@ bool TabManager::CanCloseAll(bool canVeto)
         e.SetCanVeto(canVeto);
         m_pTabs->GetPage(i)->GetEventHandler()->ProcessEvent(e);
         if (e.GetVeto())
+        {
             return false;
+        }
     }
     return true;
 }
