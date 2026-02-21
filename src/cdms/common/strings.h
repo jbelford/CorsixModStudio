@@ -55,7 +55,7 @@ S(app_title, "Corsix\'s Mod Studio DEBUG")
 #else
 S(app_title, "Corsix\'s Mod Studio")
 #endif
-S(app_version, "0.5.6")
+S(app_version, "0.5.7")
 SE(app_name, wxString().Append(AppStr(app_title)).Append(wxT(" ")).Append(AppStr(app_version)))
 S(app_filespath, ".\\Mod_Studio_Files\\")
 SE(app_dictionariespath, wxString().Append(AppStr(app_filespath)).Append(wxT("dictionaries\\")))
