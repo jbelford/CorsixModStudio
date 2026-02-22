@@ -667,23 +667,23 @@ lsp::CLspClient *ConstructFrame::GetLspClient()
 
     CDMS_LOG_INFO("LSP: Found LuaLS at: {}", serverPath.ToStdString());
 
-    // Build workspace root and library paths
+    // Build workspace root and library paths.
+    // LuaLS workspace.library expects directories, not individual files.
     std::string workspaceRoot;
     std::vector<std::string> libraryPaths;
 
     wxString lspDir = exeDir.GetPath() + wxT("\\Mod_Studio_Files\\lsp");
-    libraryPaths.push_back(wxStringToAscii(lspDir + wxT("\\scar-types.lua")).get());
+    libraryPaths.push_back(wxStringToAscii(lspDir + wxT("\\common")).get());
 
     bool isDow =
         m_moduleManager.HasModule() && m_moduleManager.GetModuleService().GetModuleType() == CModuleFile::MT_DawnOfWar;
     if (isDow)
     {
-        libraryPaths.push_back(wxStringToAscii(lspDir + wxT("\\lua502-compat.lua")).get());
-        libraryPaths.push_back(wxStringToAscii(lspDir + wxT("\\scar-dow.lua")).get());
+        libraryPaths.push_back(wxStringToAscii(lspDir + wxT("\\dow")).get());
     }
     else
     {
-        libraryPaths.push_back(wxStringToAscii(lspDir + wxT("\\scar-coh.lua")).get());
+        libraryPaths.push_back(wxStringToAscii(lspDir + wxT("\\coh")).get());
     }
 
     // LuaLS settings
