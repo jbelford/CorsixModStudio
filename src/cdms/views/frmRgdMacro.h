@@ -32,15 +32,19 @@
 // ----------------------------
 #include "presenters/CRgdMacroPresenter.h"
 #include "views/interfaces/IRgdMacroView.h"
+#include "views/interfaces/ISearchable.h"
 #include <memory>
 #include <rainman/formats/CRgdFileMacro.h>
 #include <wx/stc/stc.h>
 #include <wx/treectrl.h>
 
-class frmRgdMacro : public wxDialog, public IRgdMacroView
+class FindBar;
+
+class frmRgdMacro : public wxDialog, public IRgdMacroView, public ISearchable
 {
   protected:
     wxStyledTextCtrl *m_pSTC;
+    FindBar *m_pFindBar;
     wxTextCtrl *m_pTextbox;
 
     wxStaticText *m_pCaption;
@@ -79,6 +83,10 @@ class frmRgdMacro : public wxDialog, public IRgdMacroView
     void OnMacroComplete(const std::vector<wxString> &vFoldersToUpdate) override;
     void DisableControls() override;
     void EnableControls() override;
+
+    // ISearchable
+    void ShowFindBar() override;
+    void HideFindBar() override;
 
     enum
     {

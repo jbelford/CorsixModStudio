@@ -17,6 +17,7 @@
 */
 
 #include "frmScarEditor.h"
+#include "FindBar.h"
 #include "frame/Construct.h"
 #include "common/strconv.h"
 #include "common/strings.h"
@@ -922,7 +923,11 @@ frmScarEditor::frmScarEditor(const wxTreeItemId &oFileParent, wxString sFilename
     pToolbar->AddTool(IDC_ToolCheck, AppStr(scar_checklua), oCheckBundle, AppStr(scar_checklua));
     pToolbar->Realize();
 
-    pTopSizer->Add(m_pSTC = new wxStyledTextCtrl(this, IDC_Text), 1, wxEXPAND | wxALL, 0);
+    m_pSTC = new wxStyledTextCtrl(this, IDC_Text);
+    m_pFindBar = new FindBar(this, m_pSTC);
+    pTopSizer->Add(m_pFindBar, 0, wxEXPAND);
+
+    pTopSizer->Add(m_pSTC, 1, wxEXPAND | wxALL, 0);
     FillFunctionDrop(wxString());
 
     m_pSTC->StyleClearAll();
@@ -1740,3 +1745,7 @@ void frmScarEditor::OnSize(wxSizeEvent &event)
     UNUSED(event);
     Layout();
 }
+
+void frmScarEditor::ShowFindBar() { m_pFindBar->Activate(); }
+
+void frmScarEditor::HideFindBar() { m_pFindBar->Deactivate(); }

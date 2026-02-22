@@ -18,6 +18,7 @@
 
 #include "frame/Construct.h"
 #include "frmRgdMacro.h"
+#include "FindBar.h"
 #include "common/strings.h"
 #include "common/strconv.h"
 #include "common/Utility.h"
@@ -173,7 +174,10 @@ frmRgdMacro::frmRgdMacro(wxString sFile, wxTreeItemId &oFolder)
                    1, wxEXPAND | wxALL, 3);
     pTopSizer->Hide(m_pTextbox);
 
-    pTopSizer->Add(m_pSTC = new wxStyledTextCtrl(this, -1), 1, wxEXPAND | wxALL, 3);
+    m_pSTC = new wxStyledTextCtrl(this, -1);
+    m_pFindBar = new FindBar(this, m_pSTC);
+    pTopSizer->Add(m_pFindBar, 0, wxEXPAND);
+    pTopSizer->Add(m_pSTC, 1, wxEXPAND | wxALL, 3);
 
     wxBoxSizer *pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
     pButtonSizer->Add(new wxButton(this, IDC_Cancel, AppStr(rgdmacro_cancel)), 0, wxFIXED_MINSIZE | wxALL, 3);
@@ -243,6 +247,13 @@ frmRgdMacro::frmRgdMacro(wxString sFile, wxTreeItemId &oFolder)
     m_pSTC->AddText(sDefaultContent);
 
     CentreOnParent();
+
+    // Local Ctrl+F binding for find bar (dialog doesn't use ConstructFrame accelerators)
+    wxAcceleratorEntry accel[] = {
+        wxAcceleratorEntry(wxACCEL_CTRL, (int)'F', wxID_FIND),
+    };
+    SetAcceleratorTable(wxAcceleratorTable(1, accel));
+    Bind(wxEVT_MENU, [this](wxCommandEvent &) { ShowFindBar(); }, wxID_FIND);
 }
 
 void frmRgdMacro::OnModeClick(wxCommandEvent &event)
@@ -523,3 +534,7 @@ void frmRgdMacro::OnLoadClick(wxCommandEvent &event)
         delete[] pBuffer;
     }
 }
+
+void frmRgdMacro::ShowFindBar() { m_pFindBar->Activate(); }
+
+void frmRgdMacro::HideFindBar() { m_pFindBar->Deactivate(); }

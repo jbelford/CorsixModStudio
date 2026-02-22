@@ -39,12 +39,16 @@
 #include <wx/popupwin.h>
 #include "common/strings.h"
 #include "interfaces/ISaveable.h"
+#include "interfaces/ISearchable.h"
 #include <lsp/Protocol.h>
 
-class frmScarEditor : public wxWindow, public ISaveable
+class FindBar;
+
+class frmScarEditor : public wxWindow, public ISaveable, public ISearchable
 {
   protected:
     wxStyledTextCtrl *m_pSTC;
+    FindBar *m_pFindBar;
     wxString m_sFilename;
     wxChoice *m_pFunctionDropdown;
     wxTreeItemId m_oFileParent;
@@ -111,6 +115,11 @@ class frmScarEditor : public wxWindow, public ISaveable
     // ISaveable
     bool IsModified() const override { return m_bNeedsSaving; }
     void DoSave() override;
+
+    // ISearchable
+    void ShowFindBar() override;
+    void HideFindBar() override;
+
     void OnSave(wxCommandEvent &event);
     void OnCheckLua(wxCommandEvent &event);
     void OnAutoCompChoose(wxStyledTextEvent &event);

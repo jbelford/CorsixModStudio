@@ -68,6 +68,7 @@ EVT_MENU(wxID_PROPERTIES, ConstructFrame::OnModProperties)
 EVT_MENU(IDM_SaveActive, ConstructFrame::OnSaveActive)
 EVT_MENU(IDM_CloseActiveTab, ConstructFrame::OnCloseActiveTab)
 EVT_MENU(IDM_NextTab, ConstructFrame::OnNextTab)
+EVT_MENU(IDM_FindInFile, ConstructFrame::OnFindInFile)
 
 EVT_MENU(IDM_PlayCOH, ConstructFrame::LaunchCOH)
 EVT_MENU(IDM_PlayW40k, ConstructFrame::LaunchW40k)
@@ -188,6 +189,23 @@ void ConstructFrame::OnNextTab(wxCommandEvent &event)
 
     int sel = pTabs->GetSelection();
     pTabs->SetSelection((sel + 1) % count);
+}
+
+void ConstructFrame::OnFindInFile(wxCommandEvent &event)
+{
+    UNUSED(event);
+    wxAuiNotebook *pTabs = m_tabManager.GetTabs();
+    int sel = pTabs->GetSelection();
+    if (sel == wxNOT_FOUND)
+    {
+        return;
+    }
+
+    wxWindow *pPage = pTabs->GetPage(static_cast<size_t>(sel));
+    if (auto *pSearchable = dynamic_cast<ISearchable *>(pPage))
+    {
+        pSearchable->ShowFindBar();
+    }
 }
 
 void ConstructFrame::OnOpenSga(wxCommandEvent &event)
@@ -630,8 +648,9 @@ ConstructFrame::ConstructFrame(const wxString &sTitle, const wxPoint &oPos, cons
         wxAcceleratorEntry(wxACCEL_CTRL, (int)'S', IDM_SaveActive),
         wxAcceleratorEntry(wxACCEL_CTRL, (int)'W', IDM_CloseActiveTab),
         wxAcceleratorEntry(wxACCEL_CTRL, WXK_TAB, IDM_NextTab),
+        wxAcceleratorEntry(wxACCEL_CTRL, (int)'F', IDM_FindInFile),
     };
-    SetAcceleratorTable(wxAcceleratorTable(3, accel));
+    SetAcceleratorTable(wxAcceleratorTable(4, accel));
 }
 
 void ConstructFrame::DoNewMod()

@@ -39,6 +39,7 @@
 #include "ToolRegistry.h"
 #include "MenuController.h"
 #include "views/interfaces/IMainFrameView.h"
+#include "views/interfaces/ISearchable.h"
 #include "presenters/CModuleLoadPresenter.h"
 #include "RelicToolResolver.h"
 #include <lsp/LspClient.h>
@@ -123,6 +124,7 @@ class ConstructFrame : public wxFrame, public IMainFrameView
     void OnSaveActive(wxCommandEvent &event);
     void OnCloseActiveTab(wxCommandEvent &event);
     void OnNextTab(wxCommandEvent &event);
+    void OnFindInFile(wxCommandEvent &event);
 
     CModuleFile *GetModule() const;
     const wxString &GetModuleFile() const;
@@ -220,6 +222,7 @@ enum
     IDM_SaveActive,
     IDM_CloseActiveTab,
     IDM_NextTab,
+    IDM_FindInFile,
 
     // Stuff
     IDC_Splitter
