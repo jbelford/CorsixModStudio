@@ -852,6 +852,8 @@ frmScarEditor::frmScarEditor(const wxTreeItemId &oFileParent, wxString sFilename
     m_pSTC->AutoCompSetIgnoreCase(true);
     m_pSTC->AutoCompSetAutoHide(true);
     m_pSTC->AutoCompSetChooseSingle(false);
+    m_pSTC->AutoCompSetMaxHeight(15);
+    m_pSTC->AutoCompSetMaxWidth(40);
 
     // Register autocomplete type icons
     m_pSTC->RegisterImage(ACT_Keyword, g_xpmKeyword);
