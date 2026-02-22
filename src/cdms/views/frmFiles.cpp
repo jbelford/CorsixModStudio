@@ -516,9 +516,15 @@ void frmFiles::OnNodeActivate(wxTreeEvent &event)
 
 void frmFiles::OnNodeSelected(wxTreeEvent &event)
 {
-    auto *pData = static_cast<CFilesTreeItemData *>(m_pTree->GetItemData(event.GetItem()));
+    wxTreeItemId oItem = event.GetItem();
+    auto *pData = static_cast<CFilesTreeItemData *>(m_pTree->GetItemData(oItem));
     if (!pData || !pData->sMod || !pData->sSource)
     {
+        // Toggle expand/collapse for folder items on click
+        if (m_pTree->ItemHasChildren(oItem))
+        {
+            m_pTree->Toggle(oItem);
+        }
         return;
     }
 
