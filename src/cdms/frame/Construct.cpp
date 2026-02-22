@@ -673,17 +673,22 @@ lsp::CLspClient *ConstructFrame::GetLspClient()
     std::vector<std::string> libraryPaths;
 
     wxString lspDir = exeDir.GetPath() + wxT("\\Mod_Studio_Files\\lsp");
-    libraryPaths.push_back(wxStringToAscii(lspDir + wxT("\\common")).get());
+    libraryPaths.push_back(std::string(wxString(lspDir + wxT("\\common")).ToUTF8()));
 
     bool isDow =
         m_moduleManager.HasModule() && m_moduleManager.GetModuleService().GetModuleType() == CModuleFile::MT_DawnOfWar;
     if (isDow)
     {
-        libraryPaths.push_back(wxStringToAscii(lspDir + wxT("\\dow")).get());
+        libraryPaths.push_back(std::string(wxString(lspDir + wxT("\\dow")).ToUTF8()));
     }
     else
     {
-        libraryPaths.push_back(wxStringToAscii(lspDir + wxT("\\coh")).get());
+        libraryPaths.push_back(std::string(wxString(lspDir + wxT("\\coh")).ToUTF8()));
+    }
+
+    for (const auto &path : libraryPaths)
+    {
+        CDMS_LOG_INFO("LSP: Library path: {}", path);
     }
 
     // LuaLS settings
@@ -697,6 +702,8 @@ lsp::CLspClient *ConstructFrame::GetLspClient()
     settings["Lua"]["diagnostics"]["disable"] = {"lowercase-global", "trailing-space"};
     settings["Lua"]["files"]["associations"]["*.scar"] = "lua";
     settings["Lua"]["workspace"]["library"] = libraryPaths;
+
+    CDMS_LOG_DEBUG("LSP: Settings JSON: {}", settings.dump(2));
 
     m_pLspClient = std::make_unique<lsp::CLspClient>();
     if (!m_pLspClient->Start(serverPath.ToStdWstring(), workspaceRoot, libraryPaths, settings))

@@ -109,6 +109,12 @@ bool CLspClient::Start(const std::wstring &serverPath, const std::string &worksp
 
     // Send initialized notification
     SendNotification("initialized", nlohmann::json::object());
+
+    // Send settings via workspace/didChangeConfiguration so LuaLS
+    // picks up workspace.library and other configuration.
+    nlohmann::json configParams = {{"settings", settings}};
+    SendNotification("workspace/didChangeConfiguration", configParams);
+
     m_initialized = true;
 
     CDMS_LOG_INFO("LSP: Language server initialized successfully");
