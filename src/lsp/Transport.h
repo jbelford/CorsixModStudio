@@ -57,6 +57,12 @@ class CProcess
     /// @returns the data read, or empty string if nothing is available.
     std::string Read(size_t bufferSize = 65536);
 
+    /// Blocking read from the child's stdout with a timeout.
+    /// Waits up to @p timeoutMs milliseconds for data to become available,
+    /// then reads whatever is available (up to bufferSize bytes).
+    /// @returns the data read, or empty string on timeout or error.
+    std::string ReadWithTimeout(DWORD timeoutMs, size_t bufferSize = 65536);
+
     /// Check if the child process is still running.
     [[nodiscard]] bool IsRunning() const;
 

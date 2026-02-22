@@ -694,8 +694,9 @@ lsp::CLspClient *ConstructFrame::GetLspClient()
         return nullptr;
     }
 
-    if (m_pLspClient && m_pLspClient->IsRunning())
+    if (m_pLspClient)
     {
+        // Client exists — return it whether it's still initializing or ready
         return m_pLspClient.get();
     }
 
@@ -776,12 +777,18 @@ lsp::CLspClient *ConstructFrame::GetLspClient()
     CDMS_LOG_INFO("LSP: Settings: {}", settings.dump());
 
     m_pLspClient = std::make_unique<lsp::CLspClient>();
-    if (!m_pLspClient->Start(serverPath.ToStdWstring(), workspaceRoot, runtimeConfigPath.ToStdWstring()))
-    {
-        CDMS_LOG_WARN("Failed to start Lua Language Server");
-        m_pLspClient.reset();
-        return nullptr;
-    }
+    m_pLspClient->StartAsync(serverPath.ToStdWstring(), workspaceRoot, runtimeConfigPath.ToStdWstring(),
+                             [](bool success)
+                             {
+                                 if (success)
+                                 {
+                                     CDMS_LOG_INFO("LSP: Language server ready");
+                                 }
+                                 else
+                                 {
+                                     CDMS_LOG_WARN("LSP: Language server failed to initialize");
+                                 }
+                             });
 
     return m_pLspClient.get();
 }

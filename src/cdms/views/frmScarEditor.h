@@ -59,6 +59,7 @@ class frmScarEditor : public wxWindow, public ISaveable, public ISearchable
     wxTimer m_lspTimer;
     std::string m_sLspUri;
     bool m_bLspOpen = false;
+    bool m_bLspNeedsOpen = false; // Deferred open: set when LSP not yet ready
     int m_iLspVersion = 0;
     bool m_bLspNeedsSync = false;
     std::vector<lsp::Diagnostic> m_vDiagnostics;

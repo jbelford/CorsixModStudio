@@ -746,6 +746,16 @@ void frmScarEditor::LspOpenDocument()
         return;
     }
 
+    // If the server hasn't finished initializing, defer the open to the next timer tick
+    if (!pClient->IsReady())
+    {
+        m_bLspNeedsOpen = true;
+        CDMS_LOG_DEBUG("LSP: Server not ready yet, deferring document open");
+        return;
+    }
+
+    m_bLspNeedsOpen = false;
+
     // Build a file:// URI from the filename
     m_sLspUri = "file:///" + std::string(m_sFilename.ToUTF8());
     // Normalize backslashes to forward slashes for URI
@@ -834,6 +844,12 @@ void frmScarEditor::OnLspTimer(wxTimerEvent &event)
     if (!pClient)
     {
         return;
+    }
+
+    // Retry deferred document open if the server is now ready
+    if (m_bLspNeedsOpen && !m_bLspOpen)
+    {
+        LspOpenDocument();
     }
 
     if (m_bLspNeedsSync && m_bLspOpen)

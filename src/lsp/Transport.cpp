@@ -153,6 +153,24 @@ std::string CProcess::Read(size_t bufferSize)
     return result;
 }
 
+std::string CProcess::ReadWithTimeout(DWORD timeoutMs, size_t bufferSize)
+{
+    if (m_hStdoutRead == INVALID_HANDLE_VALUE)
+    {
+        return {};
+    }
+
+    // Wait for the pipe handle to become signalled (data available)
+    DWORD waitResult = WaitForSingleObject(m_hStdoutRead, timeoutMs);
+    if (waitResult != WAIT_OBJECT_0)
+    {
+        return {};
+    }
+
+    // Data should be available — do a non-blocking read
+    return Read(bufferSize);
+}
+
 bool CProcess::IsRunning() const
 {
     if (m_hProcess == INVALID_HANDLE_VALUE)

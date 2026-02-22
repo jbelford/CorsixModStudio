@@ -30,16 +30,18 @@ CLspClient::~CLspClient() { Stop(); }
 // Lifecycle
 // ---------------------------------------------------------------------------
 
-bool CLspClient::Start(const std::wstring &serverPath, const std::string &workspaceRoot, const std::wstring &configPath)
+void CLspClient::StartAsync(const std::wstring &serverPath, const std::string &workspaceRoot,
+                            const std::wstring &configPath, ReadyCallback onReady)
 {
-    CDMS_LOG_INFO("LSP: Starting language server...");
+    Stop(); // Clean up any previous session
+
+    CDMS_LOG_INFO("LSP: Starting language server (async)...");
 
     // Build command-line args: always use --stdio, optionally add --configpath
     std::wstring args = L"--stdio";
     if (!configPath.empty())
     {
         args += L" --configpath=\"" + configPath + L"\"";
-        // Convert wstring for logging
         std::string configPathUtf8(configPath.begin(), configPath.end());
         CDMS_LOG_INFO("LSP: Using config file: {}", configPathUtf8);
     }
@@ -47,10 +49,123 @@ bool CLspClient::Start(const std::wstring &serverPath, const std::string &worksp
     if (!m_process.Start(serverPath, args, L""))
     {
         CDMS_LOG_ERROR("LSP: Failed to spawn language server process");
-        return false;
+        m_bStartFailed.store(true);
+        if (onReady)
+        {
+            // Deliver failure callback via Poll()
+            std::lock_guard lock(m_mtx);
+            m_pendingCallbacks.push_back([cb = std::move(onReady)]() { cb(false); });
+        }
+        return;
     }
-    CDMS_LOG_INFO("LSP: Process spawned, sending initialize request");
+    CDMS_LOG_INFO("LSP: Process spawned, starting I/O thread");
 
+    m_bStopRequested.store(false);
+    m_bReady.store(false);
+    m_bStartFailed.store(false);
+
+    // Capture workspace root for init handshake on I/O thread
+    m_ioThread = std::thread(
+        [this, workspaceRoot, onReady = std::move(onReady)]() mutable
+        {
+            bool ok = RunInitHandshake(workspaceRoot);
+
+            if (ok)
+            {
+                m_bReady.store(true);
+                CDMS_LOG_INFO("LSP: Language server initialized successfully");
+            }
+            else
+            {
+                m_bStartFailed.store(true);
+                CDMS_LOG_ERROR("LSP: Init handshake failed");
+            }
+
+            // Notify blocking Start() waiters
+            m_cvReady.notify_all();
+
+            // Queue the ready callback for UI thread dispatch via Poll()
+            if (onReady)
+            {
+                std::lock_guard lock(m_mtx);
+                m_pendingCallbacks.push_back([cb = std::move(onReady), ok]() { cb(ok); });
+            }
+
+            if (!ok)
+            {
+                return;
+            }
+
+            // Enter the main I/O loop
+            IoThreadMain();
+        });
+}
+
+bool CLspClient::Start(const std::wstring &serverPath, const std::string &workspaceRoot, const std::wstring &configPath)
+{
+    StartAsync(serverPath, workspaceRoot, configPath, nullptr);
+
+    // Wait for initialization to complete
+    std::unique_lock lock(m_mtx);
+    m_cvReady.wait(lock, [this] { return m_bReady.load() || m_bStartFailed.load(); });
+
+    return m_bReady.load();
+}
+
+void CLspClient::Stop()
+{
+    if (!m_ioThread.joinable())
+    {
+        return;
+    }
+
+    CDMS_LOG_INFO("LSP: Shutting down language server");
+
+    // Signal the I/O thread to stop
+    m_bStopRequested.store(true);
+
+    // Enqueue shutdown request + exit notification so the I/O thread sends them
+    {
+        std::lock_guard lock(m_mtx);
+        nlohmann::json shutdownRequest = {{"jsonrpc", "2.0"}, {"id", m_nextRequestId++}, {"method", "shutdown"}};
+        m_outQueue.push_back(JsonRpc::Encode(shutdownRequest));
+
+        nlohmann::json exitNotif = {{"jsonrpc", "2.0"}, {"method", "exit"}, {"params", nlohmann::json::object()}};
+        m_outQueue.push_back(JsonRpc::Encode(exitNotif));
+    }
+
+    // Wait for the I/O thread to finish (it drains outbound queue before exiting)
+    if (m_ioThread.joinable())
+    {
+        m_ioThread.join();
+    }
+
+    m_process.Kill();
+    m_framing.Reset();
+
+    m_bReady.store(false);
+    m_bStartFailed.store(false);
+
+    std::lock_guard lock(m_mtx);
+    m_outQueue.clear();
+    m_pendingCallbacks.clear();
+    m_completionCallbacks.clear();
+    m_signatureHelpCallbacks.clear();
+    m_hoverCallbacks.clear();
+    m_diagnosticsCallbacks.clear();
+    m_documentVersions.clear();
+}
+
+bool CLspClient::IsReady() const { return m_bReady.load(); }
+
+bool CLspClient::IsRunning() const { return m_bReady.load() && m_process.IsRunning(); }
+
+// ---------------------------------------------------------------------------
+// I/O thread
+// ---------------------------------------------------------------------------
+
+bool CLspClient::RunInitHandshake(const std::string &workspaceRoot)
+{
     // Build initialize params
     nlohmann::json capabilities = {
         {"textDocument",
@@ -67,22 +182,18 @@ bool CLspClient::Start(const std::wstring &serverPath, const std::string &worksp
         {"capabilities", capabilities},
         {"rootUri", workspaceRoot.empty() ? nlohmann::json(nullptr) : nlohmann::json("file:///" + workspaceRoot)}};
 
-    // Send initialize request (id=0, special)
     nlohmann::json initRequest = {{"jsonrpc", "2.0"}, {"id", 0}, {"method", "initialize"}, {"params", initParams}};
-    Send(initRequest);
+    std::string encoded = JsonRpc::Encode(initRequest);
+    m_process.Write(encoded);
 
-    // Wait for initialize response (blocking, with timeout).
-    // TODO(perf): This blocks the UI thread for up to 10 seconds. Move to a
-    // background thread using CTaskRunner and expose a state machine
-    // (Disconnected → Connecting → Ready → Error) so editors can poll IsReady().
-    constexpr int kMaxWaitMs = 10000;
-    constexpr int kPollIntervalMs = 50;
-    int waited = 0;
-    bool gotResponse = false;
+    // Wait for initialize response with timeout (blocking reads on I/O thread)
+    constexpr DWORD kMaxWaitMs = 10000;
+    constexpr DWORD kReadTimeoutMs = 200;
+    DWORD totalWaited = 0;
 
-    while (waited < kMaxWaitMs)
+    while (totalWaited < kMaxWaitMs && !m_bStopRequested.load())
     {
-        std::string data = m_process.Read();
+        std::string data = m_process.ReadWithTimeout(kReadTimeoutMs);
         if (!data.empty())
         {
             m_framing.Feed(data);
@@ -92,70 +203,76 @@ bool CLspClient::Start(const std::wstring &serverPath, const std::string &worksp
         {
             if (msg->contains("id") && (*msg)["id"].get<int>() == 0)
             {
-                gotResponse = true;
-                break;
+                // Got init response — send initialized notification
+                nlohmann::json initializedNotif = {
+                    {"jsonrpc", "2.0"}, {"method", "initialized"}, {"params", nlohmann::json::object()}};
+                m_process.Write(JsonRpc::Encode(initializedNotif));
+                return true;
             }
         }
 
-        if (gotResponse)
+        totalWaited += kReadTimeoutMs;
+    }
+
+    CDMS_LOG_ERROR("LSP: Initialize handshake timed out after {}ms", kMaxWaitMs);
+    return false;
+}
+
+void CLspClient::IoThreadMain()
+{
+    constexpr DWORD kReadTimeoutMs = 100;
+
+    while (!m_bStopRequested.load())
+    {
+        // 1. Drain outbound message queue
         {
-            break;
+            std::vector<std::string> toSend;
+            {
+                std::lock_guard lock(m_mtx);
+                toSend.swap(m_outQueue);
+            }
+            for (const auto &msg : toSend)
+            {
+                m_process.Write(msg);
+            }
         }
 
-        Sleep(kPollIntervalMs);
-        waited += kPollIntervalMs;
+        // 2. Read from pipe (blocking with timeout so we can check stop flag)
+        std::string data = m_process.ReadWithTimeout(kReadTimeoutMs);
+        if (!data.empty())
+        {
+            m_framing.Feed(data);
+        }
+
+        // 3. Parse complete messages and produce callbacks
+        std::vector<std::function<void()>> newCallbacks;
+        while (auto msg = m_framing.TryParse())
+        {
+            HandleMessage(*msg);
+        }
+
+        // If the process died, stop the loop
+        if (!m_process.IsRunning())
+        {
+            CDMS_LOG_WARN("LSP: Language server process exited unexpectedly");
+            m_bReady.store(false);
+            break;
+        }
     }
 
-    if (!gotResponse)
+    // Final drain: send any remaining outbound messages (shutdown/exit)
+    std::vector<std::string> finalMessages;
     {
-        CDMS_LOG_ERROR("LSP: Initialize handshake timed out after {}ms", kMaxWaitMs);
-        m_process.Kill();
-        return false;
+        std::lock_guard lock(m_mtx);
+        finalMessages.swap(m_outQueue);
     }
-
-    // Send initialized notification
-    SendNotification("initialized", nlohmann::json::object());
-
-    m_initialized = true;
-
-    CDMS_LOG_INFO("LSP: Language server initialized successfully");
-    return true;
-}
-
-void CLspClient::Stop()
-{
-    if (!m_initialized)
+    for (const auto &msg : finalMessages)
     {
-        return;
+        m_process.Write(msg);
     }
 
-    CDMS_LOG_INFO("LSP: Shutting down language server");
-    m_initialized = false;
-
-    // Send shutdown request
-    nlohmann::json shutdownRequest = {{"jsonrpc", "2.0"}, {"id", m_nextRequestId++}, {"method", "shutdown"}};
-    Send(shutdownRequest);
-
-    // Brief wait for response
-    // TODO(perf): These Sleep calls block ~400ms on the UI thread during shutdown.
-    Sleep(200);
-
-    // Send exit notification
-    SendNotification("exit", nlohmann::json::object());
-
-    // Give the server a moment to exit gracefully
-    Sleep(200);
-
-    m_process.Kill();
-    m_framing.Reset();
-    m_completionCallbacks.clear();
-    m_signatureHelpCallbacks.clear();
-    m_hoverCallbacks.clear();
-    m_diagnosticsCallbacks.clear();
-    m_documentVersions.clear();
+    CDMS_LOG_INFO("LSP: I/O thread exiting");
 }
-
-bool CLspClient::IsRunning() const { return m_initialized && m_process.IsRunning(); }
 
 // ---------------------------------------------------------------------------
 // Document operations
@@ -164,7 +281,11 @@ bool CLspClient::IsRunning() const { return m_initialized && m_process.IsRunning
 void CLspClient::OpenDocument(const std::string &uri, const std::string &languageId, const std::string &text)
 {
     CDMS_LOG_INFO("LSP: Opening document: {} (lang={}, {} bytes)", uri, languageId, text.size());
-    m_documentVersions[uri] = 1;
+
+    {
+        std::lock_guard lock(m_mtx);
+        m_documentVersions[uri] = 1;
+    }
 
     DidOpenTextDocumentParams params;
     params.textDocument.uri = uri;
@@ -177,8 +298,11 @@ void CLspClient::OpenDocument(const std::string &uri, const std::string &languag
 
 void CLspClient::ChangeDocument(const std::string &uri, const std::string &text)
 {
-    int &version = m_documentVersions[uri];
-    ++version;
+    int version;
+    {
+        std::lock_guard lock(m_mtx);
+        version = ++m_documentVersions[uri];
+    }
 
     DidChangeTextDocumentParams params;
     params.textDocument.uri = uri;
@@ -195,6 +319,8 @@ void CLspClient::CloseDocument(const std::string &uri)
     params.textDocument.uri = uri;
 
     SendNotification("textDocument/didClose", params);
+
+    std::lock_guard lock(m_mtx);
     m_documentVersions.erase(uri);
 }
 
@@ -204,8 +330,12 @@ void CLspClient::CloseDocument(const std::string &uri)
 
 void CLspClient::RequestCompletion(const std::string &uri, int line, int character, CompletionCallback callback)
 {
-    int id = m_nextRequestId++;
-    m_completionCallbacks[id] = std::move(callback);
+    int id;
+    {
+        std::lock_guard lock(m_mtx);
+        id = m_nextRequestId++;
+        m_completionCallbacks[id] = std::move(callback);
+    }
 
     CompletionParams params;
     params.textDocument.uri = uri;
@@ -219,8 +349,12 @@ void CLspClient::RequestCompletion(const std::string &uri, int line, int charact
 
 void CLspClient::RequestSignatureHelp(const std::string &uri, int line, int character, SignatureHelpCallback callback)
 {
-    int id = m_nextRequestId++;
-    m_signatureHelpCallbacks[id] = std::move(callback);
+    int id;
+    {
+        std::lock_guard lock(m_mtx);
+        id = m_nextRequestId++;
+        m_signatureHelpCallbacks[id] = std::move(callback);
+    }
 
     SignatureHelpParams params;
     params.textDocument.uri = uri;
@@ -234,8 +368,12 @@ void CLspClient::RequestSignatureHelp(const std::string &uri, int line, int char
 
 void CLspClient::RequestHover(const std::string &uri, int line, int character, HoverCallback callback)
 {
-    int id = m_nextRequestId++;
-    m_hoverCallbacks[id] = std::move(callback);
+    int id;
+    {
+        std::lock_guard lock(m_mtx);
+        id = m_nextRequestId++;
+        m_hoverCallbacks[id] = std::move(callback);
+    }
 
     HoverParams params;
     params.textDocument.uri = uri;
@@ -247,37 +385,38 @@ void CLspClient::RequestHover(const std::string &uri, int line, int character, H
 }
 
 // ---------------------------------------------------------------------------
-// Polling
+// Polling and callbacks
 // ---------------------------------------------------------------------------
 
 void CLspClient::RegisterDiagnosticsCallback(const std::string &uri, DiagnosticsCallback callback)
 {
+    std::lock_guard lock(m_mtx);
     m_diagnosticsCallbacks[uri] = std::move(callback);
 }
 
-void CLspClient::UnregisterDiagnosticsCallback(const std::string &uri) { m_diagnosticsCallbacks.erase(uri); }
+void CLspClient::UnregisterDiagnosticsCallback(const std::string &uri)
+{
+    std::lock_guard lock(m_mtx);
+    m_diagnosticsCallbacks.erase(uri);
+}
 
 void CLspClient::Poll()
 {
-    if (!m_initialized)
+    // Swap pending callbacks out under lock, then invoke on UI thread
+    std::vector<std::function<void()>> callbacks;
     {
-        return;
+        std::lock_guard lock(m_mtx);
+        callbacks.swap(m_pendingCallbacks);
     }
 
-    std::string data = m_process.Read();
-    if (!data.empty())
+    for (auto &cb : callbacks)
     {
-        m_framing.Feed(data);
-    }
-
-    while (auto msg = m_framing.TryParse())
-    {
-        HandleMessage(*msg);
+        cb();
     }
 }
 
 // ---------------------------------------------------------------------------
-// Message handling
+// Message handling (called on I/O thread)
 // ---------------------------------------------------------------------------
 
 void CLspClient::HandleMessage(const nlohmann::json &message)
@@ -288,11 +427,11 @@ void CLspClient::HandleMessage(const nlohmann::json &message)
     }
     else if (message.contains("id") && message.contains("error"))
     {
-        // Error response — log and discard pending callback
         int id = message["id"].get<int>();
         auto errObj = message["error"];
         CDMS_LOG_WARN("LSP: Error response id={}: {} (code={})", id, errObj.value("message", "unknown"),
                       errObj.value("code", -1));
+        std::lock_guard lock(m_mtx);
         m_completionCallbacks.erase(id);
         m_signatureHelpCallbacks.erase(id);
         m_hoverCallbacks.erase(id);
@@ -307,6 +446,8 @@ void CLspClient::HandleMessage(const nlohmann::json &message)
 
 void CLspClient::HandleResponse(int id, const nlohmann::json &result)
 {
+    std::lock_guard lock(m_mtx);
+
     // Check completion callbacks
     auto compIt = m_completionCallbacks.find(id);
     if (compIt != m_completionCallbacks.end())
@@ -314,7 +455,7 @@ void CLspClient::HandleResponse(int id, const nlohmann::json &result)
         CompletionList list = result.get<CompletionList>();
         auto cb = std::move(compIt->second);
         m_completionCallbacks.erase(compIt);
-        cb(std::move(list));
+        m_pendingCallbacks.push_back([cb = std::move(cb), list = std::move(list)]() mutable { cb(std::move(list)); });
         return;
     }
 
@@ -326,11 +467,13 @@ void CLspClient::HandleResponse(int id, const nlohmann::json &result)
         m_signatureHelpCallbacks.erase(sigIt);
         if (result.is_null())
         {
-            cb(std::nullopt);
+            m_pendingCallbacks.push_back([cb = std::move(cb)]() { cb(std::nullopt); });
         }
         else
         {
-            cb(result.get<SignatureHelp>());
+            auto help = result.get<SignatureHelp>();
+            m_pendingCallbacks.push_back([cb = std::move(cb), help = std::move(help)]() mutable
+                                         { cb(std::move(help)); });
         }
         return;
     }
@@ -343,11 +486,13 @@ void CLspClient::HandleResponse(int id, const nlohmann::json &result)
         m_hoverCallbacks.erase(hoverIt);
         if (result.is_null())
         {
-            cb(std::nullopt);
+            m_pendingCallbacks.push_back([cb = std::move(cb)]() { cb(std::nullopt); });
         }
         else
         {
-            cb(result.get<HoverResult>());
+            auto hover = result.get<HoverResult>();
+            m_pendingCallbacks.push_back([cb = std::move(cb), hover = std::move(hover)]() mutable
+                                         { cb(std::move(hover)); });
         }
         return;
     }
@@ -359,15 +504,21 @@ void CLspClient::HandleNotification(const std::string &method, const nlohmann::j
     {
         auto diag = params.get<PublishDiagnosticsParams>();
         CDMS_LOG_DEBUG("LSP: Received {} diagnostics for {}", diag.diagnostics.size(), diag.uri);
+
+        std::lock_guard lock(m_mtx);
         auto it = m_diagnosticsCallbacks.find(diag.uri);
         if (it != m_diagnosticsCallbacks.end())
         {
-            it->second(diag.uri, std::move(diag.diagnostics));
+            auto cb = it->second; // Copy — diagnostics callbacks are long-lived
+            auto uri = diag.uri;
+            auto diagnostics = std::move(diag.diagnostics);
+            m_pendingCallbacks.push_back(
+                [cb = std::move(cb), uri = std::move(uri), diagnostics = std::move(diagnostics)]() mutable
+                { cb(uri, std::move(diagnostics)); });
         }
     }
     else if (method == "window/logMessage")
     {
-        // Forward LuaLS log messages to our log
         int type = params.value("type", 4);
         std::string msg = params.value("message", "");
         if (type <= 1)
@@ -399,7 +550,12 @@ void CLspClient::HandleNotification(const std::string &method, const nlohmann::j
 
 void CLspClient::SendRequest(const std::string &method, const nlohmann::json &params)
 {
-    nlohmann::json request = {{"jsonrpc", "2.0"}, {"id", m_nextRequestId++}, {"method", method}, {"params", params}};
+    int id;
+    {
+        std::lock_guard lock(m_mtx);
+        id = m_nextRequestId++;
+    }
+    nlohmann::json request = {{"jsonrpc", "2.0"}, {"id", id}, {"method", method}, {"params", params}};
     Send(request);
 }
 
@@ -413,7 +569,8 @@ void CLspClient::SendNotification(const std::string &method, const nlohmann::jso
 void CLspClient::Send(const nlohmann::json &message)
 {
     std::string encoded = JsonRpc::Encode(message);
-    m_process.Write(encoded);
+    std::lock_guard lock(m_mtx);
+    m_outQueue.push_back(std::move(encoded));
 }
 
 } // namespace lsp
