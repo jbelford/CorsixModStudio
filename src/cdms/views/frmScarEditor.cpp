@@ -1229,6 +1229,82 @@ void frmScarEditor::ApplyDiagnostics(const std::string &uri, std::vector<lsp::Di
     }
 }
 
+/// Strip markdown formatting from LuaLS hover content for plain-text display.
+/// Removes code fences, horizontal rules, and collapses excess blank lines.
+static wxString StripMarkdown(const std::string &md)
+{
+    wxString result;
+    result.reserve(md.size());
+
+    bool lastWasBlank = false;
+    size_t i = 0;
+    while (i < md.size())
+    {
+        // Find end of current line
+        size_t eol = md.find('\n', i);
+        if (eol == std::string::npos)
+        {
+            eol = md.size();
+        }
+
+        std::string line = md.substr(i, eol - i);
+        // Trim trailing \r
+        if (!line.empty() && line.back() == '\r')
+        {
+            line.pop_back();
+        }
+
+        // Skip code fence lines (```lua, ```, etc.)
+        if (line.size() >= 3 && line.substr(0, 3) == "```")
+        {
+            i = eol + 1;
+            continue;
+        }
+
+        // Convert horizontal rules (--- or ***) to a blank line
+        bool isRule = !line.empty() && line.find_first_not_of("-* ") == std::string::npos &&
+                      std::count(line.begin(), line.end(), '-') >= 3;
+        if (isRule)
+        {
+            if (!lastWasBlank && !result.IsEmpty())
+            {
+                result += wxT("\n");
+                lastWasBlank = true;
+            }
+            i = eol + 1;
+            continue;
+        }
+
+        // Trim leading/trailing whitespace from the line
+        size_t first = line.find_first_not_of(" \t");
+        if (first == std::string::npos)
+        {
+            // Blank line — collapse consecutive blanks
+            if (!lastWasBlank && !result.IsEmpty())
+            {
+                result += wxT("\n");
+                lastWasBlank = true;
+            }
+            i = eol + 1;
+            continue;
+        }
+
+        size_t last = line.find_last_not_of(" \t");
+        line = line.substr(first, last - first + 1);
+
+        if (!result.IsEmpty())
+        {
+            result += wxT("\n");
+        }
+        result += wxString::FromUTF8(line);
+        lastWasBlank = false;
+
+        i = eol + 1;
+    }
+
+    return result;
+}
+
 void frmScarEditor::OnDwellStart(wxStyledTextEvent &event)
 {
     int pos = event.GetPosition();
@@ -1307,7 +1383,11 @@ void frmScarEditor::OnDwellStart(wxStyledTextEvent &event)
                                   {
                                       return;
                                   }
-                                  wxString tip = wxString::FromUTF8(hover->contents);
+                                  wxString tip = StripMarkdown(hover->contents);
+                                  if (tip.IsEmpty())
+                                  {
+                                      return;
+                                  }
                                   m_pSTC->CallTipSetBackground(wxColour(240, 240, 255));
                                   m_pSTC->CallTipSetForeground(wxColour(0, 0, 0));
                                   m_pSTC->CallTipShow(hoverPos, tip);
