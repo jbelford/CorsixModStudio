@@ -112,6 +112,7 @@ class ConstructFrame : public wxFrame, public IMainFrameView
     void LaunchRDNWiki(wxCommandEvent &event);
     void HideDonate(wxCommandEvent &event);
     void OnThemeChange(wxCommandEvent &event);
+    void OnLspToggle(wxCommandEvent &event);
 
     static void LaunchURL(wxString sURL);
 
@@ -212,6 +213,8 @@ enum
     IDM_ThemeSystem,
     IDM_ThemeLight,
     IDM_ThemeDark,
+    // View Menu — Language Server
+    IDM_LspEnabled,
 
     // Accelerators
     IDM_SaveActive,

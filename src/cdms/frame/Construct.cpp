@@ -352,6 +352,26 @@ void ConstructFrame::OnThemeChange(wxCommandEvent &event)
                                  wxT("Theme Changed"), wxOK | wxICON_INFORMATION, this);
 }
 
+void ConstructFrame::OnLspToggle(wxCommandEvent &event)
+{
+    bool bEnabled = event.IsChecked();
+    TheConfig->Write(AppStr(config_lsp_enabled), bEnabled);
+
+    if (!bEnabled)
+    {
+        m_bLspShutDown = true;
+        if (m_pLspClient)
+        {
+            m_pLspClient->Stop();
+            m_pLspClient.reset();
+        }
+    }
+    else
+    {
+        m_bLspShutDown = false;
+    }
+}
+
 wxAuiNotebook *ConstructFrame::GetTabs() { return m_tabManager.GetTabs(); }
 
 void ConstructFrame::LaunchW40k(wxCommandEvent &event)
@@ -585,6 +605,11 @@ ConstructFrame::ConstructFrame(const wxString &sTitle, const wxPoint &oPos, cons
     m_toolRegistry.Register(new CRefreshFilesTool);
     m_toolRegistry.Register(new CMakeLuaInheritTree);
     m_toolRegistry.Register(new CAESetupTool);
+
+    // Respect saved LSP preference
+    bool bLspEnabled = true;
+    TheConfig->Read(AppStr(config_lsp_enabled), &bLspEnabled, true);
+    m_bLspShutDown = !bLspEnabled;
 
     // Make Splitter+ Tabs
     m_tabManager.Init(this, IDC_Splitter);

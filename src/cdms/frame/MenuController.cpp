@@ -67,6 +67,14 @@ void MenuController::Build(wxFrame *pFrame, ToolRegistry &registry, RelicToolRes
     pConstruct->Bind(wxEVT_MENU, &ConstructFrame::OnThemeChange, pConstruct, IDM_ThemeLight);
     pConstruct->Bind(wxEVT_MENU, &ConstructFrame::OnThemeChange, pConstruct, IDM_ThemeDark);
 
+    // Language server toggle
+    pMenu_View->AppendSeparator();
+    pMenu_View->AppendCheckItem(IDM_LspEnabled, AppStr(view_lsp_enabled), AppStr(view_lsp_enabled_help));
+    bool bLspEnabled = true;
+    TheConfig->Read(AppStr(config_lsp_enabled), &bLspEnabled, true);
+    pMenu_View->Check(IDM_LspEnabled, bLspEnabled);
+    pConstruct->Bind(wxEVT_MENU, &ConstructFrame::OnLspToggle, pConstruct, IDM_LspEnabled);
+
     // Mod menu
     auto *pMenu_Mod = new wxMenu;
     pMenu_Mod->Append(wxID_PROPERTIES, AppStr(mod_properties_menu), AppStr(mod_properties_help));
