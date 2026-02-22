@@ -71,7 +71,10 @@ bool CLspClient::Start(const std::wstring &serverPath, const std::string &worksp
     nlohmann::json initRequest = {{"jsonrpc", "2.0"}, {"id", 0}, {"method", "initialize"}, {"params", initParams}};
     Send(initRequest);
 
-    // Wait for initialize response (blocking, with timeout)
+    // Wait for initialize response (blocking, with timeout).
+    // TODO(perf): This blocks the UI thread for up to 10 seconds. Move to a
+    // background thread using CTaskRunner and expose a state machine
+    // (Disconnected → Connecting → Ready → Error) so editors can poll IsReady().
     constexpr int kMaxWaitMs = 10000;
     constexpr int kPollIntervalMs = 50;
     int waited = 0;
@@ -134,6 +137,7 @@ void CLspClient::Stop()
     Send(shutdownRequest);
 
     // Brief wait for response
+    // TODO(perf): These Sleep calls block ~400ms on the UI thread during shutdown.
     Sleep(200);
 
     // Send exit notification

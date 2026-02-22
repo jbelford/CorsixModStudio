@@ -40,6 +40,7 @@
 #include "common/strings.h"
 #include "interfaces/ISaveable.h"
 #include "interfaces/ISearchable.h"
+#include "ScarReferenceLoader.h"
 #include <lsp/Protocol.h>
 
 class FindBar;
@@ -75,15 +76,6 @@ class frmScarEditor : public wxWindow, public ISaveable, public ISearchable
     void LspCloseDocument();
     void ApplyDiagnostics(const std::string &uri, std::vector<lsp::Diagnostic> diagnostics);
 
-    struct _ScarFunction
-    {
-        char *sReturn;
-        char *sName;
-        std::list<char *> sArguments;
-        char *sDesc;
-        int iType;
-    };
-
     struct _CCalltipPop
     {
         int iPos;
@@ -92,8 +84,7 @@ class frmScarEditor : public wxWindow, public ISaveable, public ISearchable
 
     _CCalltipPop m_oThisCalltip;
     std::stack<_CCalltipPop> m_stkCalltips;
-    std::list<_ScarFunction> m_lstScarFunctions;
-    static char *_ReadNiceString(FILE *f);
+    std::vector<ScarFunctionDef> m_vScarFunctions;
     void _RestorePreviousCalltip();
     void _PushThisCalltip();
     void ShowAutoComplete();
