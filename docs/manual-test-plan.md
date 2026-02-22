@@ -506,15 +506,7 @@ Notes:   _______________
 
 **Pass criteria:** Locale selector (frmLocaleSelector) opens showing available locales. After selection, UCS strings switch to the chosen locale.
 
-### T8.2 — Attribute Snapshot
-
-**Steps:**
-1. Load a module.
-2. Click Mod → Tools → Attribute Snapshot.
-
-**Pass criteria:** Tool runs without crash. Produces an output report or saves snapshot data.
-
-### T8.3 — DPS Calculator
+### T8.2 — DPS Calculator
 
 **Steps:**
 1. Load a module.
@@ -523,7 +515,7 @@ Notes:   _______________
 
 **Pass criteria:** Calculator opens. DPS values computed and displayed.
 
-### T8.4 — Refresh Files
+### T8.3 — Refresh Files
 
 **Steps:**
 1. Load a module.
@@ -532,7 +524,7 @@ Notes:   _______________
 
 **Pass criteria:** File tree updates to reflect the filesystem changes.
 
-### T8.5 — Make Lua Inherit Tree
+### T8.4 — Make Lua Inherit Tree
 
 **Steps:**
 1. Load a module.
@@ -540,7 +532,7 @@ Notes:   _______________
 
 **Pass criteria:** Lua inheritance tree viewer (frmLuaInheritTree) opens and displays a class/table hierarchy.
 
-### T8.6 — AE Setup Tool
+### T8.5 — AE Setup Tool
 
 **Steps:**
 1. Load a module.
@@ -548,7 +540,7 @@ Notes:   _______________
 
 **Pass criteria:** Tool opens and allows configuring Relic Attribute Editor paths.
 
-### T8.7 — Red Button Tool
+### T8.6 — Red Button Tool
 
 **Steps:**
 1. Load a module.
@@ -556,7 +548,7 @@ Notes:   _______________
 
 **Pass criteria:** Tool runs its batch operation. No crash.
 
-### T8.8 — RGD Macro Tool
+### T8.7 — RGD Macro Tool
 
 **Steps:**
 1. Open an `.rgd` file in the RGD editor.

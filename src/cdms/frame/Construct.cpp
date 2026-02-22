@@ -534,7 +534,6 @@ ConstructFrame::ConstructFrame(const wxString &sTitle, const wxPoint &oPos, cons
     // Initiate tools
     m_toolRegistry.Register(new CLocaleTool);
     m_toolRegistry.Register(new CUcsTool);
-    m_toolRegistry.Register(new CAttribSnapshotTool);
     m_toolRegistry.Register(new CSgaPackerTool);
     m_toolRegistry.Register(new CExtractAllTool);
     m_toolRegistry.Register(new CDpsCalculatorTool);

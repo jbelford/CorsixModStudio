@@ -15,8 +15,6 @@
 #define IDI_DOWN 114
 #define IDB_TOOL_LOC 115
 #define IDB_TOOL_UCS 116
-#define IDB_TOOL_XML 117
-#define IDB_SNAPSHOT 119
 #define IDB_FILESCAR 120
 #define IDB_SGAPACK 121
 #define IDB_TOOL_EXTALL 123

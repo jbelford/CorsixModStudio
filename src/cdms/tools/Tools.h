@@ -57,16 +57,6 @@ class CUcsTool : public ConstructFrame::ITool
                                        unsigned long *pResult = 0, bool bRegisterTabStrip = false);
 };
 
-class CAttribSnapshotTool : public ConstructFrame::ITool
-{
-  public:
-    virtual wxString GetName();
-    virtual wxString GetHelpString();
-    virtual wxString GetBitmapName();
-
-    virtual void DoAction();
-};
-
 class CSgaPackerTool : public ConstructFrame::ITool
 {
   public:

@@ -335,7 +335,7 @@ wxFrame
 └── frmMessage                       (message display)
 
 ITool                                (standalone tool plugin interface, was nested in ConstructFrame)
-├── CLocaleTool, CAESetupTool, CUcsTool, CAttribSnapshotTool
+├── CLocaleTool, CAESetupTool, CUcsTool
 ├── CSgaPackerTool, CExtractAllTool, CDpsCalculatorTool
 ├── CRedButtonTool, CMakeLuaInheritTree, CRefreshFilesTool
 
@@ -568,17 +568,16 @@ class ITool {
 // Backward compat: ConstructFrame::ITool = ::ITool (via using declaration)
 ```
 
-10 tools registered in `Construct.cpp` constructor:
+9 tools registered in `Construct.cpp` constructor:
 1. `CLocaleTool` — language selector
 2. `CAESetupTool` — area effect setup
 3. `CUcsTool` — UCS editor launcher
-4. `CAttribSnapshotTool` — attribute snapshot
-5. `CSgaPackerTool` — SGA compression
-6. `CExtractAllTool` — bulk extraction
-7. `CDpsCalculatorTool` — DPS calculator (outputs HTML)
-8. `CRedButtonTool` — (unused/placeholder)
-9. `CMakeLuaInheritTree` — inheritance visualization
-10. `CRefreshFilesTool` — file tree refresh
+4. `CSgaPackerTool` — SGA compression
+5. `CExtractAllTool` — bulk extraction
+6. `CDpsCalculatorTool` — DPS calculator (outputs HTML)
+7. `CRedButtonTool` — (unused/placeholder)
+8. `CMakeLuaInheritTree` — inheritance visualization
+9. `CRefreshFilesTool` — file tree refresh
 
 Tools are dispatched via `ToolRegistry` using array-driven dispatch: a single `OnToolMenuCommand(wxCommandEvent&)` handler extracts the tool index from `IDM_ModToolBase + index` event IDs. Up to 100 tool slots are reserved.
 

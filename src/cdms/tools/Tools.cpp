@@ -198,11 +198,6 @@ void CUcsTool::DoAction()
     HandleSelectorResponse(new frmUCSSelector(AppStr(ucsselect_title)), TheConstruct->GetTabs());
 }
 
-wxString CAttribSnapshotTool::GetName() { return AppStr(xml_export); }
-wxString CAttribSnapshotTool::GetHelpString() { return wxT(""); }
-wxString CAttribSnapshotTool::GetBitmapName() { return wxT("IDB_SNAPSHOT"); }
-void CAttribSnapshotTool::DoAction() {}
-
 wxString CSgaPackerTool::GetName() { return AppStr(sgapack_title); }
 wxString CSgaPackerTool::GetHelpString() { return wxT(""); }
 wxString CSgaPackerTool::GetBitmapName() { return wxT("IDB_SGAPACK"); }
