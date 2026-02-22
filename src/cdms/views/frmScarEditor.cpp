@@ -473,7 +473,8 @@ void frmScarEditor::ShowAutoComplete()
     // if they arrive while the popup is still visible.
     if (m_bLspOpen)
     {
-        auto *pClient = GetConstruct()->GetLspClient();
+        auto *pFrame = GetConstruct();
+        auto *pClient = pFrame ? pFrame->GetLspClient() : nullptr;
         if (pClient)
         {
             int line = m_pSTC->LineFromPosition(iPos);
@@ -621,7 +622,8 @@ void frmScarEditor::OnCharAdded(wxStyledTextEvent &event)
         // Fall back to LSP signature help when no SCAR match found
         if (m_bLspOpen)
         {
-            auto *pClient = GetConstruct()->GetLspClient();
+            auto *pFrame = GetConstruct();
+            auto *pClient = pFrame ? pFrame->GetLspClient() : nullptr;
             if (pClient)
             {
                 int line = m_pSTC->LineFromPosition(m_pSTC->GetCurrentPos());
@@ -1070,7 +1072,12 @@ frmScarEditor::~frmScarEditor()
 
 void frmScarEditor::LspOpenDocument()
 {
-    auto *pClient = GetConstruct()->GetLspClient();
+    auto *pFrame = GetConstruct();
+    if (!pFrame)
+    {
+        return;
+    }
+    auto *pClient = pFrame->GetLspClient();
     if (!pClient)
     {
         CDMS_LOG_DEBUG("LSP: No language server available for editor");
@@ -1105,7 +1112,12 @@ void frmScarEditor::LspSyncDocument()
         return;
     }
 
-    auto *pClient = GetConstruct()->GetLspClient();
+    auto *pFrame = GetConstruct();
+    if (!pFrame)
+    {
+        return;
+    }
+    auto *pClient = pFrame->GetLspClient();
     if (!pClient)
     {
         return;
@@ -1135,7 +1147,12 @@ void frmScarEditor::LspCloseDocument()
         return;
     }
 
-    auto *pClient = GetConstruct()->GetLspClient();
+    auto *pFrame = GetConstruct();
+    if (!pFrame)
+    {
+        return;
+    }
+    auto *pClient = pFrame->GetLspClient();
     if (pClient)
     {
         pClient->CloseDocument(m_sLspUri);
@@ -1145,7 +1162,12 @@ void frmScarEditor::LspCloseDocument()
 void frmScarEditor::OnLspTimer(wxTimerEvent &event)
 {
     UNUSED(event);
-    auto *pClient = GetConstruct()->GetLspClient();
+    auto *pFrame = GetConstruct();
+    if (!pFrame)
+    {
+        return;
+    }
+    auto *pClient = pFrame->GetLspClient();
     if (!pClient)
     {
         return;
