@@ -68,7 +68,10 @@ FindBar::FindBar(wxWindow *parent, wxStyledTextCtrl *pSTC) : wxPanel(parent, wxI
     m_pPrevBtn->Bind(wxEVT_BUTTON, &FindBar::OnPrev, this);
     m_pCloseBtn->Bind(wxEVT_BUTTON, &FindBar::OnClose, this);
 
-    // Debounce timer for expensive highlight pass
+    // Re-highlight when the viewport scrolls or is repainted
+    m_pSTC->Bind(wxEVT_STC_PAINTED, &FindBar::OnSTCPainted, this);
+
+    // Debounce timer for the expensive full-document scan
     m_debounceTimer.SetOwner(this, IDC_DebounceTimer);
     Bind(wxEVT_TIMER, &FindBar::OnDebounceTimer, this, IDC_DebounceTimer);
 
@@ -97,7 +100,10 @@ void FindBar::Deactivate()
     ClearHighlights();
     m_pMatchLabel->SetLabel(wxEmptyString);
     m_iCurrentMatch = -1;
+    m_iSearchLen = 0;
     m_vMatchPositions.clear();
+    m_iHighlightStart = 0;
+    m_iHighlightEnd = 0;
     Hide();
     GetParent()->Layout();
     m_pSTC->SetFocus();
@@ -112,7 +118,10 @@ void FindBar::OnSearchTextChanged(wxCommandEvent &)
         ClearHighlights();
         m_pMatchLabel->SetLabel(wxEmptyString);
         m_iCurrentMatch = -1;
+        m_iSearchLen = 0;
         m_vMatchPositions.clear();
+        m_iHighlightStart = 0;
+        m_iHighlightEnd = 0;
         return;
     }
 
@@ -148,15 +157,20 @@ void FindBar::OnDebounceTimer(wxTimerEvent &)
         return;
     }
 
-    // Single pass: build cache + apply highlights
+    // Single-pass: build cache of all match positions
     BuildMatchCache(sText);
-    ApplyHighlights(sText);
+    m_iSearchLen = static_cast<int>(sText.length());
+
+    // Reset viewport tracking so highlights are fully redrawn
+    m_iHighlightStart = 0;
+    m_iHighlightEnd = 0;
+    ApplyViewportHighlights();
 
     // Set current match index based on current selection
     if (!m_vMatchPositions.empty())
     {
         m_iCurrentMatch = FindNearestMatch(m_pSTC->GetSelectionStart());
-        NavigateToCurrentMatch(sText);
+        NavigateToCurrentMatch();
     }
     else
     {
@@ -179,7 +193,10 @@ void FindBar::OnNext(wxCommandEvent &)
     {
         m_debounceTimer.Stop();
         BuildMatchCache(sText);
-        ApplyHighlights(sText);
+        m_iSearchLen = static_cast<int>(sText.length());
+        m_iHighlightStart = 0;
+        m_iHighlightEnd = 0;
+        ApplyViewportHighlights();
         if (m_vMatchPositions.empty())
         {
             return;
@@ -187,7 +204,6 @@ void FindBar::OnNext(wxCommandEvent &)
     }
 
     int iSelEnd = m_pSTC->GetSelectionEnd();
-    // Find the first match position strictly after current selection end
     auto it = std::upper_bound(m_vMatchPositions.begin(), m_vMatchPositions.end(), iSelEnd - 1);
     if (it == m_vMatchPositions.end())
     {
@@ -195,7 +211,7 @@ void FindBar::OnNext(wxCommandEvent &)
     }
 
     m_iCurrentMatch = static_cast<int>(it - m_vMatchPositions.begin());
-    NavigateToCurrentMatch(sText);
+    NavigateToCurrentMatch();
     UpdateMatchLabel();
 }
 
@@ -211,7 +227,10 @@ void FindBar::OnPrev(wxCommandEvent &)
     {
         m_debounceTimer.Stop();
         BuildMatchCache(sText);
-        ApplyHighlights(sText);
+        m_iSearchLen = static_cast<int>(sText.length());
+        m_iHighlightStart = 0;
+        m_iHighlightEnd = 0;
+        ApplyViewportHighlights();
         if (m_vMatchPositions.empty())
         {
             return;
@@ -219,7 +238,6 @@ void FindBar::OnPrev(wxCommandEvent &)
     }
 
     int iSelStart = m_pSTC->GetSelectionStart();
-    // Find the last match position strictly before current selection start
     auto it = std::lower_bound(m_vMatchPositions.begin(), m_vMatchPositions.end(), iSelStart);
     if (it == m_vMatchPositions.begin())
     {
@@ -228,7 +246,7 @@ void FindBar::OnPrev(wxCommandEvent &)
     --it;
 
     m_iCurrentMatch = static_cast<int>(it - m_vMatchPositions.begin());
-    NavigateToCurrentMatch(sText);
+    NavigateToCurrentMatch();
     UpdateMatchLabel();
 }
 
@@ -260,6 +278,16 @@ void FindBar::OnKeyDown(wxKeyEvent &event)
     event.Skip();
 }
 
+void FindBar::OnSTCPainted(wxStyledTextEvent &)
+{
+    if (!IsShown() || m_vMatchPositions.empty() || m_iSearchLen == 0)
+    {
+        return;
+    }
+
+    ApplyViewportHighlights();
+}
+
 void FindBar::BuildMatchCache(const wxString &sText)
 {
     m_vMatchPositions.clear();
@@ -283,27 +311,58 @@ void FindBar::BuildMatchCache(const wxString &sText)
     }
 }
 
-void FindBar::ApplyHighlights(const wxString &sText)
+void FindBar::ApplyViewportHighlights()
 {
-    ClearHighlights();
-
-    if (m_vMatchPositions.empty())
+    if (m_vMatchPositions.empty() || m_iSearchLen == 0)
     {
         return;
     }
 
-    m_pSTC->SetIndicatorCurrent(INDICATOR_FIND_HIGHLIGHT);
-    int iLen = static_cast<int>(sText.length());
-    for (int pos : m_vMatchPositions)
+    // Calculate the byte range of the visible viewport plus a buffer
+    int iFirstVisible = m_pSTC->GetFirstVisibleLine();
+    int iFirstLine = m_pSTC->DocLineFromVisible(iFirstVisible);
+    int iLinesOnScreen = m_pSTC->LinesOnScreen();
+    int iLastLine = iFirstLine + iLinesOnScreen;
+
+    int iBufferedFirst = std::max(0, iFirstLine - VIEWPORT_BUFFER_LINES);
+    int iBufferedLast = std::min(m_pSTC->GetLineCount() - 1, iLastLine + VIEWPORT_BUFFER_LINES);
+
+    int iRangeStart = m_pSTC->PositionFromLine(iBufferedFirst);
+    int iRangeEnd = m_pSTC->GetLineEndPosition(iBufferedLast);
+
+    // Skip if the viewport hasn't moved outside the already-highlighted region
+    if (iRangeStart >= m_iHighlightStart && iRangeEnd <= m_iHighlightEnd)
     {
-        m_pSTC->IndicatorFillRange(pos, iLen);
+        return;
     }
+
+    // Freeze to batch all indicator changes into a single repaint
+    m_pSTC->Freeze();
+
+    m_pSTC->SetIndicatorCurrent(INDICATOR_FIND_HIGHLIGHT);
+    m_pSTC->IndicatorClearRange(0, m_pSTC->GetTextLength());
+
+    // Binary-search for matches in the viewport range
+    auto itBegin = std::lower_bound(m_vMatchPositions.begin(), m_vMatchPositions.end(), iRangeStart);
+    auto itEnd = std::upper_bound(itBegin, m_vMatchPositions.end(), iRangeEnd);
+
+    for (auto it = itBegin; it != itEnd; ++it)
+    {
+        m_pSTC->IndicatorFillRange(*it, m_iSearchLen);
+    }
+
+    m_pSTC->Thaw();
+
+    m_iHighlightStart = iRangeStart;
+    m_iHighlightEnd = iRangeEnd;
 }
 
 void FindBar::ClearHighlights()
 {
     m_pSTC->SetIndicatorCurrent(INDICATOR_FIND_HIGHLIGHT);
     m_pSTC->IndicatorClearRange(0, m_pSTC->GetTextLength());
+    m_iHighlightStart = 0;
+    m_iHighlightEnd = 0;
 }
 
 void FindBar::UpdateMatchLabel()
@@ -319,7 +378,7 @@ void FindBar::UpdateMatchLabel()
     }
 }
 
-void FindBar::NavigateToCurrentMatch(const wxString &sText)
+void FindBar::NavigateToCurrentMatch()
 {
     if (m_iCurrentMatch < 0 || m_iCurrentMatch >= static_cast<int>(m_vMatchPositions.size()))
     {
@@ -327,7 +386,7 @@ void FindBar::NavigateToCurrentMatch(const wxString &sText)
     }
 
     int iPos = m_vMatchPositions[m_iCurrentMatch];
-    m_pSTC->SetSelection(iPos, iPos + static_cast<int>(sText.length()));
+    m_pSTC->SetSelection(iPos, iPos + m_iSearchLen);
     m_pSTC->EnsureCaretVisible();
 }
 

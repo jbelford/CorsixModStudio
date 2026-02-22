@@ -32,13 +32,14 @@
 /// and a close button. Highlights all matches using a Scintilla indicator and
 /// navigates between them. Case-insensitive by default.
 ///
-/// Performance: match positions are cached in a vector so navigation is O(log N).
-/// The expensive highlight pass is debounced (150ms) so rapid typing doesn't
-/// trigger redundant full-document scans.
+/// Performance: match positions are cached in a sorted vector so navigation is
+/// O(log N). Only matches visible in the current viewport (plus a buffer) are
+/// painted as indicators — the full set is re-applied on scroll. The STC is
+/// frozen during bulk indicator updates to suppress intermediate repaints.
 class FindBar : public wxPanel
 {
   public:
-    /// Constructs the find bar. The bar starts hidden; call Show()/Hide() to toggle.
+    /// Constructs the find bar. The bar starts hidden; call Activate()/Deactivate().
     /// @param parent  The parent window (the editor panel).
     /// @param pSTC    The styled text control to search within. Not owned.
     FindBar(wxWindow *parent, wxStyledTextCtrl *pSTC);
@@ -61,7 +62,12 @@ class FindBar : public wxPanel
     wxTimer m_debounceTimer;
 
     int m_iCurrentMatch = -1;
+    int m_iSearchLen = 0;
     std::vector<int> m_vMatchPositions;
+
+    /// Byte range of the last viewport region we highlighted.
+    int m_iHighlightStart = 0;
+    int m_iHighlightEnd = 0;
 
     void OnSearchTextChanged(wxCommandEvent &event);
     void OnDebounceTimer(wxTimerEvent &event);
@@ -69,15 +75,18 @@ class FindBar : public wxPanel
     void OnPrev(wxCommandEvent &event);
     void OnClose(wxCommandEvent &event);
     void OnKeyDown(wxKeyEvent &event);
+    void OnSTCPainted(wxStyledTextEvent &event);
 
     void BuildMatchCache(const wxString &sText);
-    void ApplyHighlights(const wxString &sText);
+    void ApplyViewportHighlights();
     void ClearHighlights();
     void UpdateMatchLabel();
-    void NavigateToCurrentMatch(const wxString &sText);
+    void NavigateToCurrentMatch();
     int FindNearestMatch(int iPos) const;
 
     static constexpr int DEBOUNCE_MS = 150;
+    /// Extra lines beyond the viewport to highlight, reducing flicker during scroll.
+    static constexpr int VIEWPORT_BUFFER_LINES = 50;
 
     enum
     {
