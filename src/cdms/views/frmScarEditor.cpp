@@ -1487,9 +1487,8 @@ class CHoverPopup : public wxPopupTransientWindow
             }
             int codeWidth = std::min(maxLineWidth + 20, kMaxWidth);
 
-            // Set width so Scintilla can compute wrapped line counts
-            pCodeSTC->SetMinSize(wxSize(codeWidth, lineHeight));
-            pCodeSTC->Layout();
+            // Set actual size so Scintilla reflows wrapped text before measuring
+            pCodeSTC->SetSize(codeWidth, lineHeight * lineCount * 3);
 
             int totalDisplayLines = 0;
             for (int ln = 0; ln < lineCount; ++ln)
