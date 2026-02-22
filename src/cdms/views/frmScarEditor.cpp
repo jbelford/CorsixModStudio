@@ -54,6 +54,8 @@ EVT_STC_SAVEPOINTREACHED(IDC_Text, frmScarEditor::OnSavePointReach)
 EVT_CLOSE(frmScarEditor::OnCloseWindow)
 EVT_CHOICE(IDC_FunctionDrop, frmScarEditor::OnFuncListChoose)
 EVT_TIMER(wxID_ANY, frmScarEditor::OnLspTimer)
+EVT_STC_DWELLSTART(IDC_Text, frmScarEditor::OnDwellStart)
+EVT_STC_DWELLEND(IDC_Text, frmScarEditor::OnDwellEnd)
 END_EVENT_TABLE()
 
 #define mySTC_STYLE_BOLD 1
@@ -975,6 +977,9 @@ frmScarEditor::frmScarEditor(const wxTreeItemId &oFileParent, wxString sFilename
     m_pSTC->IndicatorSetStyle(INDICATOR_LSP_INFO, wxSTC_INDIC_DOTS);
     m_pSTC->IndicatorSetForeground(INDICATOR_LSP_INFO, wxColour(100, 100, 200));
 
+    // Enable mouse hover (dwell) events for diagnostic tooltips
+    m_pSTC->SetMouseDwellTime(500);
+
     // Bind Ctrl+Space to show autocomplete
     m_pSTC->Bind(wxEVT_KEY_DOWN, &frmScarEditor::OnKeyDown, this);
 
@@ -1142,6 +1147,9 @@ void frmScarEditor::ApplyDiagnostics(const std::string &uri, std::vector<lsp::Di
         return;
     }
 
+    // Store diagnostics for hover tooltip lookup
+    m_vDiagnostics = diagnostics;
+
     // Clear existing diagnostic indicators
     m_pSTC->SetIndicatorCurrent(INDICATOR_LSP_ERROR);
     m_pSTC->IndicatorClearRange(0, m_pSTC->GetLength());
@@ -1176,6 +1184,75 @@ void frmScarEditor::ApplyDiagnostics(const std::string &uri, std::vector<lsp::Di
 
         m_pSTC->SetIndicatorCurrent(indicator);
         m_pSTC->IndicatorFillRange(startPos, length);
+    }
+}
+
+void frmScarEditor::OnDwellStart(wxStyledTextEvent &event)
+{
+    int pos = event.GetPosition();
+    if (pos < 0)
+    {
+        return;
+    }
+
+    // Don't overwrite an active calltip from function signatures
+    if (m_pSTC->CallTipActive())
+    {
+        return;
+    }
+
+    // Check if the position falls within any diagnostic range
+    for (const auto &diag : m_vDiagnostics)
+    {
+        int startPos = m_pSTC->PositionFromLine(diag.range.start.line) + diag.range.start.character;
+        int endPos = m_pSTC->PositionFromLine(diag.range.end.line) + diag.range.end.character;
+        if (endPos <= startPos)
+        {
+            endPos = startPos + 1;
+        }
+
+        if (pos >= startPos && pos < endPos)
+        {
+            // Build tooltip text with severity prefix
+            wxString tip;
+            switch (diag.severity)
+            {
+            case lsp::DiagnosticSeverity::Error:
+                tip = wxT("Error: ");
+                break;
+            case lsp::DiagnosticSeverity::Warning:
+                tip = wxT("Warning: ");
+                break;
+            case lsp::DiagnosticSeverity::Information:
+                tip = wxT("Info: ");
+                break;
+            case lsp::DiagnosticSeverity::Hint:
+                tip = wxT("Hint: ");
+                break;
+            }
+            tip += wxString::FromUTF8(diag.message);
+
+            if (!diag.source.empty())
+            {
+                tip += wxT(" [") + wxString::FromUTF8(diag.source) + wxT("]");
+            }
+
+            m_pSTC->CallTipSetBackground(wxColour(255, 255, 225));
+            m_pSTC->CallTipSetForeground(wxColour(0, 0, 0));
+            m_pSTC->CallTipShow(startPos, tip);
+            return;
+        }
+    }
+}
+
+void frmScarEditor::OnDwellEnd(wxStyledTextEvent &event)
+{
+    UNUSED(event);
+    // Only cancel if the calltip is a diagnostic tooltip (not a function signature)
+    // We detect this by checking if there's a current signature calltip active
+    if (m_pSTC->CallTipActive() && m_oThisCalltip.sTip.IsEmpty())
+    {
+        m_pSTC->CallTipCancel();
     }
 }
 

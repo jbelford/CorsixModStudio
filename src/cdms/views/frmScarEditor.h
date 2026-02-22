@@ -55,11 +55,14 @@ class frmScarEditor : public wxWindow, public ISaveable
     bool m_bLspOpen = false;
     int m_iLspVersion = 0;
     bool m_bLspNeedsSync = false;
+    std::vector<lsp::Diagnostic> m_vDiagnostics;
     static constexpr int INDICATOR_LSP_ERROR = 8;
     static constexpr int INDICATOR_LSP_WARNING = 9;
     static constexpr int INDICATOR_LSP_INFO = 10;
 
     void OnLspTimer(wxTimerEvent &event);
+    void OnDwellStart(wxStyledTextEvent &event);
+    void OnDwellEnd(wxStyledTextEvent &event);
     void LspOpenDocument();
     void LspSyncDocument();
     void LspCloseDocument();
