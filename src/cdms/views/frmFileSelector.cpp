@@ -114,6 +114,7 @@ frmFileSelector::frmFileSelector(wxString sBaseFolder, wxString sExistingSelecti
     pFileTypes->Add(cdms::icons::SvgToBitmap(cdms::icons::kFileBfx, kIconSize));          // (11) BFX
     pFileTypes->Add(cdms::icons::SvgToBitmap(cdms::icons::kFileAbp, kIconSize));          // (12) ABP
     pFileTypes->Add(cdms::icons::SvgToBitmap(cdms::icons::kFileRgm, kIconSize));          // (13) RGM
+    pFileTypes->Add(cdms::icons::SvgToBitmap(cdms::icons::kFileNil, kIconSize));          // (14) Unknown
     m_pTree->AssignImageList(pFileTypes);
 
     if (sBaseFolder.Len() == 0)
@@ -294,7 +295,7 @@ void frmFileSelector::MakeChildren(const wxTreeItemId &parent)
             }
             if (!bSkip)
             {
-                int iExt = sName.Find('.', true), iImg = -2;
+                int iExt = sName.Find('.', true), iImg = 14;
                 if (iExt != -1)
                 {
                     wxString sExtension = sName.Mid(iExt);

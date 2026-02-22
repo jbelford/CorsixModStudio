@@ -734,6 +734,7 @@ frmFiles::frmFiles(wxWindow *parent, wxWindowID id, const wxPoint &pos, const wx
     pFileTypes->Add(cdms::icons::SvgToBitmap(cdms::icons::kFileBfx, kIconSize));          // (11) BFX
     pFileTypes->Add(cdms::icons::SvgToBitmap(cdms::icons::kFileAbp, kIconSize));          // (12) ABP
     pFileTypes->Add(cdms::icons::SvgToBitmap(cdms::icons::kFileRgm, kIconSize));          // (13) RGM
+    pFileTypes->Add(cdms::icons::SvgToBitmap(cdms::icons::kFileNil, kIconSize));          // (14) Unknown
 
     m_pTree->AssignImageList(pFileTypes);
 

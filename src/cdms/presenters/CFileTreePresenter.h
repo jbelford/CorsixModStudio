@@ -58,7 +58,7 @@ class CFileTreePresenter
         Icon_Bfx = 11,
         Icon_Abp = 12,
         Icon_Rgm = 13,
-        Icon_Unknown = -2
+        Icon_Unknown = 14
     };
 
     //! Determine the icon image index for a file based on its extension.
