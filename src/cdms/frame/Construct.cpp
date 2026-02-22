@@ -694,7 +694,7 @@ lsp::CLspClient *ConstructFrame::GetLspClient()
     settings["Lua"]["runtime"]["builtin"]["os"] = "disable";
     settings["Lua"]["runtime"]["builtin"]["package"] = "disable";
     settings["Lua"]["diagnostics"]["globals"] = {"GameData", "MetaData", "Reference", "InheritMeta", "import"};
-    settings["Lua"]["diagnostics"]["disable"] = {"lowercase-global"};
+    settings["Lua"]["diagnostics"]["disable"] = {"lowercase-global", "trailing-space"};
     settings["Lua"]["files"]["associations"]["*.scar"] = "lua";
     settings["Lua"]["workspace"]["library"] = libraryPaths;
 
