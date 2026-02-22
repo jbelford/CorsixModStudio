@@ -34,6 +34,7 @@ extern "C"
 #include <wx/toolbar.h>
 #include <wx/tbarbase.h>
 #include <wx/popupwin.h>
+#include <wx/display.h>
 #include <algorithm>
 #include "common/Common.h"
 #include <cstdint>
@@ -1351,7 +1352,7 @@ static HoverParts ParseHoverMarkdown(const std::string &md)
 class CHoverPopup : public wxPopupTransientWindow
 {
   public:
-    CHoverPopup(wxWindow *parent, const HoverParts &parts, const wxPoint &position)
+    CHoverPopup(wxWindow *parent, const HoverParts &parts, const wxPoint &position, int cursorLineHeight)
         : wxPopupTransientWindow(parent, wxBORDER_NONE)
     {
         bool dark = ThemeColours::IsDarkMode();
@@ -1374,7 +1375,15 @@ class CHoverPopup : public wxPopupTransientWindow
 
         auto *pSizer = new wxBoxSizer(wxVERTICAL);
 
-        constexpr int kMaxWidth = 550;
+        // Scale max width relative to screen size (~40%, clamped to [400, 900])
+        int displayIdx = wxDisplay::GetFromWindow(parent);
+        if (displayIdx == wxNOT_FOUND)
+        {
+            displayIdx = 0;
+        }
+        wxDisplay display(displayIdx);
+        wxRect screenRect = display.GetClientArea();
+        const int kMaxWidth = std::clamp(screenRect.GetWidth() * 2 / 5, 400, 900);
 
         // --- Code section (syntax highlighted) ---
         if (!parts.code.empty())
@@ -1387,6 +1396,7 @@ class CHoverPopup : public wxPopupTransientWindow
             pCodeSTC->SetMarginWidth(2, 0);
             pCodeSTC->SetUseHorizontalScrollBar(false);
             pCodeSTC->SetUseVerticalScrollBar(false);
+            pCodeSTC->SetWrapMode(wxSTC_WRAP_WORD);
             pCodeSTC->SetReadOnly(false);
             pCodeSTC->SetCaretWidth(0);
 
@@ -1461,24 +1471,22 @@ class CHoverPopup : public wxPopupTransientWindow
             pCodeSTC->SetReadOnly(true);
             pCodeSTC->Colourise(0, -1);
 
-            // Size the STC to fit content
+            // Size the STC to fit content (accounting for word-wrap)
             int lineCount = pCodeSTC->GetLineCount();
             int lineHeight = pCodeSTC->TextHeight(0);
-            int codeHeight = lineCount * lineHeight + 6;
 
-            // Measure max line width
-            int maxWidth = 0;
+            // Set width first so Scintilla can compute wrapped line counts
+            pCodeSTC->SetMinSize(wxSize(kMaxWidth, lineHeight));
+            pCodeSTC->Layout();
+
+            int totalDisplayLines = 0;
             for (int ln = 0; ln < lineCount; ++ln)
             {
-                int w = pCodeSTC->TextWidth(wxSTC_STYLE_DEFAULT, pCodeSTC->GetLine(ln));
-                if (w > maxWidth)
-                {
-                    maxWidth = w;
-                }
+                totalDisplayLines += pCodeSTC->WrapCount(ln);
             }
-            int codeWidth = std::min(maxWidth + 20, kMaxWidth);
+            int codeHeight = totalDisplayLines * lineHeight + 6;
 
-            pCodeSTC->SetMinSize(wxSize(codeWidth, codeHeight));
+            pCodeSTC->SetMinSize(wxSize(kMaxWidth, codeHeight));
             pSizer->Add(pCodeSTC, 0, wxEXPAND | wxALL, 6);
         }
 
@@ -1573,8 +1581,16 @@ class CHoverPopup : public wxPopupTransientWindow
         pOuterSizer->Add(pBorderPanel, 1, wxEXPAND);
         SetSizerAndFit(pOuterSizer);
 
-        // Position near the cursor, offset slightly downward
-        SetPosition(position);
+        // Clamp popup position to screen bounds
+        wxSize popupSize = GetSize();
+        int x = std::clamp(position.x, screenRect.x, screenRect.GetRight() - popupSize.GetWidth());
+        int y = position.y;
+        if (y + popupSize.GetHeight() > screenRect.GetBottom())
+        {
+            y = position.y - popupSize.GetHeight() - cursorLineHeight - 8;
+        }
+        y = std::max(y, screenRect.y);
+        SetPosition(wxPoint(x, y));
     }
 };
 
@@ -1665,7 +1681,7 @@ void frmScarEditor::OnDwellStart(wxStyledTextEvent &event)
                                   wxPoint ptScreen = m_pSTC->ClientToScreen(ptEditor);
                                   ptScreen.y += lineHeight + 4;
 
-                                  m_pHoverPopup = new CHoverPopup(this, parts, ptScreen);
+                                  m_pHoverPopup = new CHoverPopup(this, parts, ptScreen, lineHeight);
                                   m_pHoverPopup->Popup();
                               });
     }
@@ -1681,7 +1697,7 @@ void frmScarEditor::OnDwellStart(wxStyledTextEvent &event)
         wxPoint ptScreen = m_pSTC->ClientToScreen(ptEditor);
         ptScreen.y += lineHeight + 4;
 
-        m_pHoverPopup = new CHoverPopup(this, parts, ptScreen);
+        m_pHoverPopup = new CHoverPopup(this, parts, ptScreen, lineHeight);
         m_pHoverPopup->Popup();
     }
 }
