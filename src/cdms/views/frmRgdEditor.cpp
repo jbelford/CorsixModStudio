@@ -530,6 +530,20 @@ frmRGDEditor::frmRGDEditor(const wxTreeItemId &oFileParent, wxString sFilename, 
     oSaveBmp.SetMask(new wxMask(oSaveBmp, wxColour(128, 128, 128)));
     pToolbar->SetToolBitmapSize(wxSize(32, 32));
     pToolbar->AddTool(IDC_ToolSave, AppStr(rgd_save), oSaveBmp, AppStr(rgd_save));
+    pToolbar->AddSeparator();
+
+    // "View Code" tool — render emoji onto a 32×32 bitmap
+    wxBitmap oCodeBmp(32, 32);
+    {
+        wxMemoryDC dc(oCodeBmp);
+        dc.SetBackground(*wxWHITE_BRUSH);
+        dc.Clear();
+        dc.SetFont(wxFont(20, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
+        wxSize textSize = dc.GetTextExtent(wxT("\U0001F4DD"));
+        dc.DrawText(wxT("\U0001F4DD"), (32 - textSize.x) / 2, (32 - textSize.y) / 2);
+    }
+    oCodeBmp.SetMask(new wxMask(oCodeBmp, *wxWHITE));
+    pToolbar->AddTool(IDC_ToolViewCode, wxT("View Code"), oCodeBmp, wxT("Open in code editor"));
     pToolbar->Realize();
 
     wxBoxSizer *pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
