@@ -270,6 +270,97 @@ void frmScarEditor::OnAutoCompChoose(wxStyledTextEvent &event)
     _RestorePreviousCalltip();
 }
 
+void frmScarEditor::ShowAutoComplete()
+{
+    if (m_pSTC->AutoCompActive())
+    {
+        return;
+    }
+
+    int iPos = m_pSTC->GetCurrentPos();
+    int iWordPos = m_pSTC->WordStartPosition(iPos, true);
+    int iWordLen = iPos - iWordPos;
+    wxString sPrefix;
+    if (iWordLen > 0)
+    {
+        sPrefix = m_pSTC->GetTextRange(iWordPos, iPos).Lower();
+    }
+
+    // Collect all candidate names
+    std::vector<wxString> vCandidates;
+
+    // SCAR API functions and constants
+    for (const auto &fn : m_lstScarFunctions)
+    {
+        wxString sName = AsciiTowxString(fn.sName);
+        if (iWordLen == 0 || sName.Lower().StartsWith(sPrefix))
+        {
+            vCandidates.push_back(sName);
+        }
+    }
+
+    // Lua keywords
+    static const wxChar *const kLuaKeywords[] = {
+        wxT("and"),   wxT("break"), wxT("do"),       wxT("else"),   wxT("elseif"), wxT("end"),
+        wxT("false"), wxT("for"),   wxT("function"), wxT("if"),     wxT("in"),     wxT("local"),
+        wxT("nil"),   wxT("not"),   wxT("or"),       wxT("repeat"), wxT("return"), wxT("then"),
+        wxT("true"),  wxT("until"), wxT("while"),    nullptr};
+    for (const wxChar *const *pp = kLuaKeywords; *pp; ++pp)
+    {
+        wxString sKw(*pp);
+        if (iWordLen == 0 || sKw.Lower().StartsWith(sPrefix))
+        {
+            vCandidates.push_back(sKw);
+        }
+    }
+
+    // Local function definitions from current source
+    auto localFuncs = CScarEditorPresenter::ParseFunctionDefinitions(m_pSTC->GetText());
+    for (const auto &def : localFuncs)
+    {
+        if (iWordLen == 0 || def.sName.Lower().StartsWith(sPrefix))
+        {
+            vCandidates.push_back(def.sName);
+        }
+    }
+
+    if (vCandidates.empty())
+    {
+        return;
+    }
+
+    // Sort case-insensitively and deduplicate
+    std::sort(vCandidates.begin(), vCandidates.end(),
+              [](const wxString &a, const wxString &b) { return a.CmpNoCase(b) < 0; });
+    vCandidates.erase(std::unique(vCandidates.begin(), vCandidates.end(),
+                                  [](const wxString &a, const wxString &b) { return a.CmpNoCase(b) == 0; }),
+                      vCandidates.end());
+
+    // Build space-separated list
+    wxString sItems;
+    for (size_t i = 0; i < vCandidates.size(); ++i)
+    {
+        if (i > 0)
+        {
+            sItems.Append(' ');
+        }
+        sItems.Append(vCandidates[i]);
+    }
+
+    _PushThisCalltip();
+    m_pSTC->AutoCompShow(iWordLen, sItems);
+}
+
+void frmScarEditor::OnKeyDown(wxKeyEvent &event)
+{
+    if (event.GetKeyCode() == WXK_SPACE && event.ControlDown() && !event.AltDown() && !event.ShiftDown())
+    {
+        ShowAutoComplete();
+        return;
+    }
+    event.Skip();
+}
+
 void frmScarEditor::_PushThisCalltip()
 {
     if (m_pSTC->CallTipActive())
@@ -353,41 +444,7 @@ void frmScarEditor::OnCharAdded(wxStyledTextEvent &event)
     }
     else if ((char)event.GetKey() == '_')
     {
-        if (!m_pSTC->AutoCompActive())
-        {
-            int iPos = m_pSTC->GetCurrentPos() - 1;
-            int iWordPos = m_pSTC->WordStartPosition(iPos, false);
-            wxString sWord = m_pSTC->GetTextRange(iWordPos, iPos);
-            auto saWord = wxStringToAscii(sWord);
-            wxString sItems;
-            size_t iLen = 0, iWordLen = sWord.Len();
-            bool GotWords = false;
-            for (std::list<_ScarFunction>::iterator itr = m_lstScarFunctions.begin(); itr != m_lstScarFunctions.end();
-                 ++itr)
-            {
-                iLen += (strlen(itr->sName) + 1);
-            }
-            sItems.Alloc(iLen);
-            for (std::list<_ScarFunction>::iterator itr = m_lstScarFunctions.begin(); itr != m_lstScarFunctions.end();
-                 ++itr)
-            {
-                if (strncmp(saWord.get(), itr->sName, iWordLen) == 0)
-                {
-                    if (GotWords)
-                    {
-                        sItems.Append(' ');
-                    }
-                    sItems.Append(AsciiTowxString(itr->sName));
-                    GotWords = true;
-                }
-            }
-            m_pSTC->AutoCompSetAutoHide(true);
-            if (GotWords)
-            {
-                _PushThisCalltip();
-                m_pSTC->AutoCompShow(iPos - iWordPos + 1, sItems);
-            }
-        }
+        ShowAutoComplete();
     }
     else if ((char)event.GetKey() == ')')
     {
@@ -678,6 +735,14 @@ frmScarEditor::frmScarEditor(const wxTreeItemId &oFileParent, wxString sFilename
 
     // Apply theme-aware colours (editor bg/fg, syntax highlighting, line numbers)
     ThemeColours::ApplyEditorTheme(m_pSTC);
+
+    // Autocomplete settings
+    m_pSTC->AutoCompSetIgnoreCase(true);
+    m_pSTC->AutoCompSetAutoHide(true);
+    m_pSTC->AutoCompSetChooseSingle(false);
+
+    // Bind Ctrl+Space to show autocomplete
+    m_pSTC->Bind(wxEVT_KEY_DOWN, &frmScarEditor::OnKeyDown, this);
 
     wxString sScarFns, sScarConstants;
     size_t iLenFns = 0, iLenCons = 0;

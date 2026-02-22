@@ -68,6 +68,7 @@ class frmScarEditor : public wxWindow, public ISaveable
     static char *_ReadNiceString(FILE *f);
     void _RestorePreviousCalltip();
     void _PushThisCalltip();
+    void ShowAutoComplete();
     int FillFunctionDrop(const wxString &sNameTarget);
 
   public:
@@ -89,6 +90,7 @@ class frmScarEditor : public wxWindow, public ISaveable
     void OnSave(wxCommandEvent &event);
     void OnCheckLua(wxCommandEvent &event);
     void OnAutoCompChoose(wxStyledTextEvent &event);
+    void OnKeyDown(wxKeyEvent &event);
     void OnFuncListChoose(wxCommandEvent &event);
 
     void Load(IFileStore::IStream *pFile);
