@@ -109,4 +109,18 @@ int ShowMessageBox(const wxString &message, const wxString &caption, long style,
     }
 }
 
+void ApplyPropertyGridTheme(wxPropertyGrid *pPG)
+{
+    pPG->SetCaptionBackgroundColour(PropGridCaptionBg());
+    pPG->SetCaptionTextColour(PropGridCaptionFg());
+    pPG->SetCellBackgroundColour(PropGridBg());
+    pPG->SetCellTextColour(PropGridFg());
+    pPG->SetCellDisabledTextColour(PropGridCellDisabledFg());
+    pPG->SetMarginColour(PropGridMarginColour());
+    pPG->SetLineColour(PropGridLineFg());
+    pPG->SetSelectionBackgroundColour(PropGridSelectionBg());
+    pPG->SetSelectionTextColour(PropGridSelectionFg());
+    pPG->SetEmptySpaceColour(PropGridBg());
+}
+
 } // namespace ThemeColours

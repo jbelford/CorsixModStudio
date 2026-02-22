@@ -213,6 +213,7 @@ frmRgmMaterialEditor::frmRgmMaterialEditor(wxTreeItemId &oFileParent, wxString s
     m_pPropManager = new RgmMaterialwxPropertyGridManager(m_pSplitter, IDC_PropertyGrid, wxDefaultPosition,
                                                           wxDefaultSize, wxPG_DEFAULT_STYLE | wxPG_DESCRIPTION);
     m_pPropertyGrid = m_pPropManager->GetGrid();
+    ThemeColours::ApplyPropertyGridTheme(m_pPropertyGrid);
 
     m_pSplitter->SetSashGravity(0.5);
     m_pSplitter->SetMinimumPaneSize(48);

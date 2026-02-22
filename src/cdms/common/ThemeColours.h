@@ -21,6 +21,7 @@
 #include <wx/colour.h>
 #include <wx/settings.h>
 #include <wx/stc/stc.h>
+#include <wx/propgrid/propgrid.h>
 
 /// Centralized theme-aware colour provider for CDMS.
 /// All colours adapt automatically based on whether the system is in dark mode.
@@ -94,6 +95,53 @@ inline wxColour FileOtherMod() { return IsDarkMode() ? wxColour(140, 140, 255) :
 
 inline wxColour FileEngine() { return IsDarkMode() ? wxColour(180, 180, 180) : wxColour(128, 128, 128); }
 
+// ── PropertyGrid colours ────────────────────────────────────────────────
+
+inline wxColour PropGridBg()
+{
+    return IsDarkMode() ? wxColour(30, 30, 30) : wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW);
+}
+
+inline wxColour PropGridFg()
+{
+    return IsDarkMode() ? wxColour(212, 212, 212) : wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT);
+}
+
+inline wxColour PropGridCaptionBg()
+{
+    return IsDarkMode() ? wxColour(45, 45, 48) : wxSystemSettings::GetColour(wxSYS_COLOUR_ACTIVECAPTION);
+}
+
+inline wxColour PropGridCaptionFg()
+{
+    return IsDarkMode() ? wxColour(212, 212, 212) : wxSystemSettings::GetColour(wxSYS_COLOUR_CAPTIONTEXT);
+}
+
+inline wxColour PropGridMarginColour()
+{
+    return IsDarkMode() ? wxColour(45, 45, 45) : wxSystemSettings::GetColour(wxSYS_COLOUR_BTNFACE);
+}
+
+inline wxColour PropGridLineFg()
+{
+    return IsDarkMode() ? wxColour(60, 60, 60) : wxSystemSettings::GetColour(wxSYS_COLOUR_BTNSHADOW);
+}
+
+inline wxColour PropGridSelectionBg()
+{
+    return IsDarkMode() ? wxColour(38, 79, 120) : wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT);
+}
+
+inline wxColour PropGridSelectionFg()
+{
+    return IsDarkMode() ? wxColour(255, 255, 255) : wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT);
+}
+
+inline wxColour PropGridCellDisabledFg()
+{
+    return IsDarkMode() ? wxColour(128, 128, 128) : wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT);
+}
+
 // ── Dialog colours ──────────────────────────────────────────────────────
 
 inline wxColour DialogBg() { return wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW); }
@@ -113,6 +161,10 @@ inline wxColour CancelBtnHoverFg() { return *wxWHITE; }
 /// Apply the full colour theme to a wxStyledTextCtrl configured for Lua syntax.
 /// Call this after the STC lexer, fonts, and keywords are set up.
 void ApplyEditorTheme(wxStyledTextCtrl *pSTC);
+
+/// Apply theme-aware colours to a wxPropertyGrid.
+/// Call this after constructing the property grid.
+void ApplyPropertyGridTheme(wxPropertyGrid *pPG);
 
 /// Theme-aware replacement for wxMessageBox.
 /// Uses wxGenericMessageDialog so the dialog content area respects dark mode

@@ -84,7 +84,7 @@ void frmUCSEditor::OnApply(wxCommandEvent &event)
 
 frmUCSEditor::frmUCSEditor(wxWindow *parent, wxWindowID id, bool bReadOnly, const wxPoint &pos, const wxSize &size,
                            unsigned long *pResult)
-    : wxWindow(parent, id, pos, size)
+    : wxWindow(parent, id, pos, size), m_taskRunner(this)
 {
     m_pTabStripForLoad = nullptr;
     m_pUCS = nullptr;
@@ -118,6 +118,11 @@ frmUCSEditor::frmUCSEditor(wxWindow *parent, wxWindowID id, bool bReadOnly, cons
     pTopSizer->Add(m_pPropertyGrid = new wxPropertyGrid(this, IDC_PropertyGrid, wxDefaultPosition, wxDefaultSize,
                                                         wxPG_DEFAULT_STYLE | wxPG_HIDE_MARGIN),
                    1, wxEXPAND | wxALL, 0);
+    ThemeColours::ApplyPropertyGridTheme(m_pPropertyGrid);
+
+    m_pLoadingLabel = new wxStaticText(this, wxID_ANY, wxT("Loading UCS entries..."), wxDefaultPosition, wxDefaultSize,
+                                       wxALIGN_CENTRE_HORIZONTAL);
+    m_pLoadingLabel->Hide();
 
     auto *pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
     wxWindow *pBgTemp;
@@ -162,16 +167,52 @@ frmUCSEditor::~frmUCSEditor() {}
 
 void frmUCSEditor::FillFromCUcsFile(std::shared_ptr<CUcsFile> pUcs, unsigned long iSelect)
 {
-    wxPGProperty *oSelectMe = nullptr;
-    auto sortedMap = pUcs->GetRawMap().GetSortedMap();
-    m_pUCS = std::make_unique<CUcsTransaction>(std::move(pUcs));
-    for (auto &entry : sortedMap)
-    {
-        if (!entry.second)
-        {
-            continue;
-        }
+    m_pUCS = std::make_unique<CUcsTransaction>(pUcs);
 
+    // Show loading state
+    m_pPropertyGrid->Disable();
+    m_pLoadingLabel->Show();
+    Layout();
+
+    // Prepare the sorted snapshot on a background thread
+    m_taskRunner.RunAsync<UcsEntryVec>(
+        [pUcs = std::move(pUcs)](CProgressChannel &progress, CCancellationToken &cancel) -> UcsEntryVec
+        {
+            UNUSED(progress);
+            UNUSED(cancel);
+            auto &sortedMap = pUcs->GetRawMap().GetSortedMap();
+            UcsEntryVec entries;
+            entries.reserve(sortedMap.size());
+            for (auto &entry : sortedMap)
+            {
+                if (entry.second)
+                {
+                    entries.emplace_back(entry.first, entry.second);
+                }
+            }
+            return entries;
+        },
+        [](const std::string &) {},
+        [this, iSelect](Result<UcsEntryVec> result)
+        {
+            m_pLoadingLabel->Hide();
+            m_pPropertyGrid->Enable();
+            if (!result.ok())
+            {
+                ThemeColours::ShowMessageBox(result.error(), wxT("UCS Load Error"), wxICON_ERROR, this);
+                return;
+            }
+            PopulateGrid(std::move(result).value(), iSelect);
+        });
+}
+
+void frmUCSEditor::PopulateGrid(UcsEntryVec entries, unsigned long iSelect)
+{
+    wxPGProperty *oSelectMe = nullptr;
+
+    m_pPropertyGrid->Freeze();
+    for (auto &entry : entries)
+    {
         auto sNumberBuffer = L"$" + std::to_wstring(entry.first);
         auto stringProp = std::make_unique<wxStringProperty>(sNumberBuffer, sNumberBuffer, entry.second.get());
         if (m_bReadOnly)
@@ -185,6 +226,7 @@ void frmUCSEditor::FillFromCUcsFile(std::shared_ptr<CUcsFile> pUcs, unsigned lon
 
         m_pPropertyGrid->Append(stringProp.release());
     }
+    m_pPropertyGrid->Thaw();
 
     m_pPropertyGrid->SetSplitterLeft();
 

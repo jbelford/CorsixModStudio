@@ -34,13 +34,21 @@
 #include <rainman/localization/CUcsFile.h>
 #include <rainman/localization/CUcsMap.h>
 #include <wx/propgrid/propgrid.h>
+#include <wx/stattext.h>
+#include "async/CWxTaskRunner.h"
 #include <memory>
+#include <vector>
+
+/// Sorted snapshot of UCS entries for background preparation.
+using UcsEntryVec = std::vector<std::pair<unsigned long, std::shared_ptr<wchar_t[]>>>;
 
 class frmUCSEditor : public wxWindow
 {
   protected:
     wxPropertyGrid *m_pPropertyGrid;
+    wxStaticText *m_pLoadingLabel;
     std::unique_ptr<CUcsTransaction> m_pUCS;
+    CWxTaskRunner m_taskRunner;
     bool m_bReadOnly;
     bool m_bNeedsSave;
     unsigned long *m_pResultVal;
@@ -71,6 +79,9 @@ class frmUCSEditor : public wxWindow
     void OnSaveFile(wxCommandEvent &event);
 
     void OnCloseWindow(wxCloseEvent &event);
+
+  private:
+    void PopulateGrid(UcsEntryVec entries, unsigned long iSelect);
 
     enum
     {

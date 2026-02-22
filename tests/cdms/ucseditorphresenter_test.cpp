@@ -20,6 +20,11 @@
 #include "presenters/CUcsEditorPresenter.h"
 #include <rainman/localization/CUcsMap.h>
 #include <gtest/gtest.h>
+#include <vector>
+#include <memory>
+
+/// Same type alias as used in frmUCSEditor.h for the async loading snapshot.
+using UcsEntryVec = std::vector<std::pair<unsigned long, std::shared_ptr<wchar_t[]>>>;
 
 // --- Mock view ---
 
@@ -170,4 +175,87 @@ TEST(CUcsEditorPresenterTest, BuildLocaleBasePath_TrailingBackslash)
     auto path = CUcsEditorPresenter::BuildLocaleBasePath(wxT("C:\\Games\\DoW\\"), CModuleFile::MT_DawnOfWar, wxT(""),
                                                          wxT("MyMod"), wxT("french"));
     EXPECT_EQ(path, wxT("C:\\Games\\DoW\\MyMod\\Locale\\french\\"));
+}
+
+// --- UcsEntryVec snapshot tests (data preparation for async loading) ---
+
+TEST(UcsEntryVecSnapshot, EmptyMapProducesEmptyVec)
+{
+    CUcsMap entries;
+    auto &sorted = entries.GetSortedMap();
+    UcsEntryVec vec;
+    for (auto &entry : sorted)
+    {
+        if (entry.second)
+            vec.emplace_back(entry.first, entry.second);
+    }
+    EXPECT_TRUE(vec.empty());
+}
+
+TEST(UcsEntryVecSnapshot, EntriesAreSorted)
+{
+    CUcsMap entries;
+    auto buf1 = std::make_shared<wchar_t[]>(4);
+    wcscpy(buf1.get(), L"aaa");
+    auto buf2 = std::make_shared<wchar_t[]>(4);
+    wcscpy(buf2.get(), L"bbb");
+    auto buf3 = std::make_shared<wchar_t[]>(4);
+    wcscpy(buf3.get(), L"ccc");
+    entries.Add(15000005, buf1);
+    entries.Add(15000001, buf2);
+    entries.Add(15000003, buf3);
+
+    auto &sorted = entries.GetSortedMap();
+    UcsEntryVec vec;
+    for (auto &entry : sorted)
+    {
+        if (entry.second)
+            vec.emplace_back(entry.first, entry.second);
+    }
+
+    ASSERT_EQ(vec.size(), 3u);
+    EXPECT_EQ(vec[0].first, 15000001UL);
+    EXPECT_EQ(vec[1].first, 15000003UL);
+    EXPECT_EQ(vec[2].first, 15000005UL);
+}
+
+TEST(UcsEntryVecSnapshot, NullEntriesAreSkipped)
+{
+    CUcsMap entries;
+    auto buf = std::make_shared<wchar_t[]>(4);
+    wcscpy(buf.get(), L"val");
+    entries.Add(15000001, buf);
+    entries.Add(15000002, std::shared_ptr<wchar_t[]>(nullptr));
+
+    auto &sorted = entries.GetSortedMap();
+    UcsEntryVec vec;
+    for (auto &entry : sorted)
+    {
+        if (entry.second)
+            vec.emplace_back(entry.first, entry.second);
+    }
+
+    ASSERT_EQ(vec.size(), 1u);
+    EXPECT_EQ(vec[0].first, 15000001UL);
+    EXPECT_STREQ(vec[0].second.get(), L"val");
+}
+
+TEST(UcsEntryVecSnapshot, SharedPtrOwnershipPreserved)
+{
+    CUcsMap entries;
+    auto buf = std::make_shared<wchar_t[]>(6);
+    wcscpy(buf.get(), L"hello");
+    entries.Add(15000001, buf);
+
+    auto &sorted = entries.GetSortedMap();
+    UcsEntryVec vec;
+    for (auto &entry : sorted)
+    {
+        if (entry.second)
+            vec.emplace_back(entry.first, entry.second);
+    }
+
+    // The shared_ptr in vec should share ownership with the original
+    EXPECT_EQ(vec[0].second.get(), buf.get());
+    EXPECT_STREQ(vec[0].second.get(), L"hello");
 }
