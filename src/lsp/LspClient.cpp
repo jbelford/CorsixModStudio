@@ -147,6 +147,7 @@ void CLspClient::Stop()
     m_completionCallbacks.clear();
     m_signatureHelpCallbacks.clear();
     m_hoverCallbacks.clear();
+    m_diagnosticsCallbacks.clear();
     m_documentVersions.clear();
 }
 
@@ -245,7 +246,12 @@ void CLspClient::RequestHover(const std::string &uri, int line, int character, H
 // Polling
 // ---------------------------------------------------------------------------
 
-void CLspClient::SetDiagnosticsCallback(DiagnosticsCallback callback) { m_diagnosticsCallback = std::move(callback); }
+void CLspClient::RegisterDiagnosticsCallback(const std::string &uri, DiagnosticsCallback callback)
+{
+    m_diagnosticsCallbacks[uri] = std::move(callback);
+}
+
+void CLspClient::UnregisterDiagnosticsCallback(const std::string &uri) { m_diagnosticsCallbacks.erase(uri); }
 
 void CLspClient::Poll()
 {
@@ -345,11 +351,15 @@ void CLspClient::HandleResponse(int id, const nlohmann::json &result)
 
 void CLspClient::HandleNotification(const std::string &method, const nlohmann::json &params)
 {
-    if (method == "textDocument/publishDiagnostics" && m_diagnosticsCallback)
+    if (method == "textDocument/publishDiagnostics")
     {
         auto diag = params.get<PublishDiagnosticsParams>();
         CDMS_LOG_DEBUG("LSP: Received {} diagnostics for {}", diag.diagnostics.size(), diag.uri);
-        m_diagnosticsCallback(diag.uri, std::move(diag.diagnostics));
+        auto it = m_diagnosticsCallbacks.find(diag.uri);
+        if (it != m_diagnosticsCallbacks.end())
+        {
+            it->second(diag.uri, std::move(diag.diagnostics));
+        }
     }
     else if (method == "window/logMessage")
     {

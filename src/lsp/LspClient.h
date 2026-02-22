@@ -88,8 +88,12 @@ class LSP_API CLspClient
 
     // ----- Polling and callbacks -----
 
-    /// Set the callback for diagnostics notifications.
-    void SetDiagnosticsCallback(DiagnosticsCallback callback);
+    /// Register a per-document diagnostics callback.
+    /// Each editor registers its own callback keyed by document URI.
+    void RegisterDiagnosticsCallback(const std::string &uri, DiagnosticsCallback callback);
+
+    /// Unregister a previously registered diagnostics callback.
+    void UnregisterDiagnosticsCallback(const std::string &uri);
 
     /// Read and process any pending messages from the language server.
     /// Must be called periodically (e.g., on a wxTimer at ~100ms interval).
@@ -116,8 +120,8 @@ class LSP_API CLspClient
     std::map<int, SignatureHelpCallback> m_signatureHelpCallbacks;
     std::map<int, HoverCallback> m_hoverCallbacks;
 
-    /// Diagnostics callback (server-initiated notifications).
-    DiagnosticsCallback m_diagnosticsCallback;
+    /// Per-URI diagnostics callbacks (server-initiated notifications).
+    std::map<std::string, DiagnosticsCallback> m_diagnosticsCallbacks;
 
     /// Document version tracking for didChange.
     std::map<std::string, int> m_documentVersions;

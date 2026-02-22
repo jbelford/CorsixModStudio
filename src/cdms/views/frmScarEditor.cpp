@@ -1101,9 +1101,9 @@ void frmScarEditor::LspOpenDocument()
     pClient->OpenDocument(m_sLspUri, "lua", text);
     m_bLspOpen = true;
 
-    // Register diagnostics callback
-    pClient->SetDiagnosticsCallback([this](const std::string &uri, std::vector<lsp::Diagnostic> diags)
-                                    { ApplyDiagnostics(uri, std::move(diags)); });
+    // Register per-URI diagnostics callback
+    pClient->RegisterDiagnosticsCallback(m_sLspUri, [this](const std::string &uri, std::vector<lsp::Diagnostic> diags)
+                                         { ApplyDiagnostics(uri, std::move(diags)); });
 }
 
 void frmScarEditor::LspSyncDocument()
@@ -1156,6 +1156,7 @@ void frmScarEditor::LspCloseDocument()
     auto *pClient = pFrame->GetLspClient();
     if (pClient)
     {
+        pClient->UnregisterDiagnosticsCallback(m_sLspUri);
         pClient->CloseDocument(m_sLspUri);
     }
 }
