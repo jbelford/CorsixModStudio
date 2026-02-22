@@ -28,6 +28,7 @@
 #include "views/frmRgdEditor.h"
 #include "common/strconv.h"
 #include <memory>
+#include <fstream>
 #include <rainman/io/CFileSystemStore.h>
 #include <rainman/module/CFileMap.h>
 #include "tools/Tools.h"
@@ -670,40 +671,64 @@ lsp::CLspClient *ConstructFrame::GetLspClient()
     // Build workspace root and library paths.
     // LuaLS workspace.library expects directories, not individual files.
     std::string workspaceRoot;
-    std::vector<std::string> libraryPaths;
 
     wxString lspDir = exeDir.GetPath() + wxT("\\Mod_Studio_Files\\lsp");
-    libraryPaths.push_back(std::string(wxString(lspDir + wxT("\\common")).ToUTF8()));
 
     bool isDow =
         m_moduleManager.HasModule() && m_moduleManager.GetModuleService().GetModuleType() == CModuleFile::MT_DawnOfWar;
-    if (isDow)
+
+    // Load LuaLS settings from the appropriate config file
+    wxString configPath = lspDir + (isDow ? wxT("\\dow-config.json") : wxT("\\coh-config.json"));
+    nlohmann::json settings;
+
+    std::ifstream configFile(configPath.ToStdWstring());
+    if (configFile.is_open())
     {
-        libraryPaths.push_back(std::string(wxString(lspDir + wxT("\\dow")).ToUTF8()));
+        try
+        {
+            settings = nlohmann::json::parse(configFile);
+            settings.erase("$schema");
+        }
+        catch (const nlohmann::json::parse_error &e)
+        {
+            CDMS_LOG_WARN("LSP: Failed to parse config {}: {}", configPath.ToStdString(), e.what());
+        }
     }
     else
     {
-        libraryPaths.push_back(std::string(wxString(lspDir + wxT("\\coh")).ToUTF8()));
+        CDMS_LOG_WARN("LSP: Config file not found: {}", configPath.ToStdString());
+    }
+
+    // Override workspace.library with absolute directory paths
+    std::vector<std::string> libraryPaths;
+    libraryPaths.push_back(std::string(wxString(lspDir + wxT("\\common")).ToUTF8()));
+    libraryPaths.push_back(std::string(wxString(lspDir + (isDow ? wxT("\\dow") : wxT("\\coh"))).ToUTF8()));
+    settings["workspace.library"] = libraryPaths;
+
+    // Also add trailing-space to disabled diagnostics
+    if (settings.contains("diagnostics.disable") && settings["diagnostics.disable"].is_array())
+    {
+        auto &disabled = settings["diagnostics.disable"];
+        bool hasTrailingSpace = false;
+        for (const auto &item : disabled)
+        {
+            if (item == "trailing-space")
+            {
+                hasTrailingSpace = true;
+                break;
+            }
+        }
+        if (!hasTrailingSpace)
+        {
+            disabled.push_back("trailing-space");
+        }
     }
 
     for (const auto &path : libraryPaths)
     {
         CDMS_LOG_INFO("LSP: Library path: {}", path);
     }
-
-    // LuaLS settings
-    nlohmann::json settings;
-    settings["Lua"]["runtime"]["version"] = "Lua 5.1";
-    settings["Lua"]["runtime"]["builtin"]["io"] = "disable";
-    settings["Lua"]["runtime"]["builtin"]["debug"] = "disable";
-    settings["Lua"]["runtime"]["builtin"]["os"] = "disable";
-    settings["Lua"]["runtime"]["builtin"]["package"] = "disable";
-    settings["Lua"]["diagnostics"]["globals"] = {"GameData", "MetaData", "Reference", "InheritMeta", "import"};
-    settings["Lua"]["diagnostics"]["disable"] = {"lowercase-global", "trailing-space"};
-    settings["Lua"]["files"]["associations"]["*.scar"] = "lua";
-    settings["Lua"]["workspace"]["library"] = libraryPaths;
-
-    CDMS_LOG_DEBUG("LSP: Settings JSON: {}", settings.dump(2));
+    CDMS_LOG_INFO("LSP: Settings: {}", settings.dump());
 
     m_pLspClient = std::make_unique<lsp::CLspClient>();
     if (!m_pLspClient->Start(serverPath.ToStdWstring(), workspaceRoot, libraryPaths, settings))

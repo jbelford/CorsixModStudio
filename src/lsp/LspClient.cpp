@@ -51,18 +51,11 @@ bool CLspClient::Start(const std::wstring &serverPath, const std::string &worksp
           {"signatureHelp", {{"dynamicRegistration", false}}},
           {"publishDiagnostics", {{"relatedInformation", false}}}}}};
 
-    // LuaLS-specific settings
-    nlohmann::json settings = settingsJson;
-    if (!libraryPaths.empty() && !settings.contains("Lua"))
-    {
-        settings["Lua"]["workspace"]["library"] = libraryPaths;
-    }
-
     nlohmann::json initParams = {
         {"processId", static_cast<int>(GetCurrentProcessId())},
         {"capabilities", capabilities},
         {"rootUri", workspaceRoot.empty() ? nlohmann::json(nullptr) : nlohmann::json("file:///" + workspaceRoot)},
-        {"initializationOptions", settings}};
+        {"initializationOptions", settingsJson}};
 
     // Send initialize request (id=0, special)
     nlohmann::json initRequest = {{"jsonrpc", "2.0"}, {"id", 0}, {"method", "initialize"}, {"params", initParams}};
@@ -112,7 +105,7 @@ bool CLspClient::Start(const std::wstring &serverPath, const std::string &worksp
 
     // Send settings via workspace/didChangeConfiguration so LuaLS
     // picks up workspace.library and other configuration.
-    nlohmann::json configParams = {{"settings", settings}};
+    nlohmann::json configParams = {{"settings", settingsJson}};
     SendNotification("workspace/didChangeConfiguration", configParams);
 
     m_initialized = true;

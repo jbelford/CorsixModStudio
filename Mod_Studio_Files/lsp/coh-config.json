@@ -8,8 +8,8 @@
         "package": "disable"
     },
     "workspace.library": [
-        "scar-types.lua",
-        "scar-coh.lua"
+        "common",
+        "coh"
     ],
     "diagnostics.globals": [
         "GameData",
@@ -19,7 +19,8 @@
         "import"
     ],
     "diagnostics.disable": [
-        "lowercase-global"
+        "lowercase-global",
+        "trailing-space"
     ],
     "files.associations": {
         "*.scar": "lua"

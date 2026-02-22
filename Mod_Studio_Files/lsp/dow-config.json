@@ -8,9 +8,8 @@
         "package": "disable"
     },
     "workspace.library": [
-        "lua502-compat.lua",
-        "scar-types.lua",
-        "scar-dow.lua"
+        "common",
+        "dow"
     ],
     "diagnostics.globals": [
         "GameData",
@@ -20,7 +19,8 @@
         "import"
     ],
     "diagnostics.disable": [
-        "lowercase-global"
+        "lowercase-global",
+        "trailing-space"
     ],
     "files.associations": {
         "*.scar": "lua"
