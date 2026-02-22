@@ -204,6 +204,9 @@ enum
     IDM_ThemeLight,
     IDM_ThemeDark,
 
+    // Accelerators
+    IDM_SaveActive,
+
     // Stuff
     IDC_Splitter
 };

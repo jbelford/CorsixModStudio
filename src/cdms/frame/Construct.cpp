@@ -61,7 +61,7 @@ EVT_MENU(IDM_LoadSga, ConstructFrame::OnOpenSga)
 EVT_MENU(wxID_EXIT, ConstructFrame::OnQuit)
 EVT_MENU(wxID_CLOSE, ConstructFrame::OnCloseMod)
 EVT_MENU(wxID_PROPERTIES, ConstructFrame::OnModProperties)
-EVT_MENU(wxID_SAVE, ConstructFrame::OnSaveActive)
+EVT_MENU(IDM_SaveActive, ConstructFrame::OnSaveActive)
 
 EVT_MENU(IDM_PlayCOH, ConstructFrame::LaunchCOH)
 EVT_MENU(IDM_PlayW40k, ConstructFrame::LaunchW40k)
@@ -559,7 +559,7 @@ ConstructFrame::ConstructFrame(const wxString &sTitle, const wxPoint &oPos, cons
 
     // Ctrl+S accelerator for saving the active tab
     wxAcceleratorEntry accel[] = {
-        wxAcceleratorEntry(wxACCEL_CTRL, (int)'S', wxID_SAVE),
+        wxAcceleratorEntry(wxACCEL_CTRL, (int)'S', IDM_SaveActive),
     };
     SetAcceleratorTable(wxAcceleratorTable(1, accel));
 }
