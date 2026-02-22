@@ -28,6 +28,7 @@
 #include <rainman/io/CFileSystemStore.h>
 #include <rainman/archive/CSgaCreator.h>
 #include "common/Common.h"
+#include "common/ThemeColours.h"
 #include "rainman/core/RainmanLog.h"
 
 BEGIN_EVENT_TABLE(frmSgaMake, wxDialog)
@@ -67,9 +68,13 @@ frmSgaMake::frmSgaMake()
     {
         char *sSlash = strchr(sThisMod + 1, '\\');
         if (sSlash)
+        {
             sSlash[1] = 0;
+        }
         else
+        {
             strcat(sThisMod, "\\");
+        }
     }
 
     for (size_t i = 0; i < pMod->GetDataSourceCount(); ++i)
@@ -83,7 +88,9 @@ frmSgaMake::frmSgaMake()
                 char *sFullpath = new char[strlen(pMod->GetApplicationPath()) + strlen(pArch->GetFileName()) + 1];
                 sprintf(sFullpath, "%s%s", pMod->GetApplicationPath(), pArch->GetFileName());
                 if (strstr(sFullpath, sThisMod))
+                {
                     lstArchives.Add(AsciiTowxString(sFullpath));
+                }
                 delete[] sFullpath;
             }
         }
@@ -176,7 +183,7 @@ void frmSgaMake::OnGoClick(wxCommandEvent &event)
     CDMS_LOG_INFO("Starting SGA archive creation from UI");
     if (m_pInDir->GetValue().empty() || m_pOutFile->GetValue().empty() || m_pTocName->GetValue().empty())
     {
-        ::wxMessageBox(AppStr(sgapack_novalue), wxT("Error"), wxICON_ERROR, wxTheApp->GetTopWindow());
+        ThemeColours::ShowMessageBox(AppStr(sgapack_novalue), wxT("Error"), wxICON_ERROR, wxTheApp->GetTopWindow());
     }
     else
     {
@@ -189,33 +196,44 @@ void frmSgaMake::OnGoClick(wxCommandEvent &event)
             }
             else
             {
-                if (::wxMessageBox(
+                if (ThemeColours::ShowMessageBox(
                         wxT("The ToC name you have chosen is not a common one.\nDoW only usually needs \"Data\", and "
                             "CoH only usually needs \"Data\" and \"Attrib\".\nContinue anyway?"),
                         AppStr(sgapack_title), wxYES_NO | wxICON_QUESTION) == wxNO)
+                {
                     return;
+                }
             }
         }
         wxFileName oInputName(m_pInDir->GetValue());
         if (!oInputName.IsAbsolute())
         {
-            if (::wxMessageBox(wxT("The input folder specified is not an absolute path.\nContinue anyway?"),
-                               AppStr(sgapack_title), wxYES_NO | wxICON_QUESTION) == wxNO)
+            if (ThemeColours::ShowMessageBox(
+                    wxT("The input folder specified is not an absolute path.\nContinue anyway?"), AppStr(sgapack_title),
+                    wxYES_NO | wxICON_QUESTION) == wxNO)
+            {
                 return;
+            }
         }
 
         wxFileName oOutputName(m_pOutFile->GetValue());
         if (!oOutputName.IsAbsolute())
         {
-            if (::wxMessageBox(wxT("The output file specified is not an absolute path.\nContinue anyway?"),
-                               AppStr(sgapack_title), wxYES_NO | wxICON_QUESTION) == wxNO)
+            if (ThemeColours::ShowMessageBox(
+                    wxT("The output file specified is not an absolute path.\nContinue anyway?"), AppStr(sgapack_title),
+                    wxYES_NO | wxICON_QUESTION) == wxNO)
+            {
                 return;
+            }
         }
         if (!oOutputName.GetExt().IsSameAs(wxT("sga"), false))
         {
-            if (::wxMessageBox(wxT("The output file specified does not have the .SGA extension.\nContinue anyway?"),
-                               AppStr(sgapack_title), wxYES_NO | wxICON_QUESTION) == wxNO)
+            if (ThemeColours::ShowMessageBox(
+                    wxT("The output file specified does not have the .SGA extension.\nContinue anyway?"),
+                    AppStr(sgapack_title), wxYES_NO | wxICON_QUESTION) == wxNO)
+            {
                 return;
+            }
         }
 
         // Start async SGA creation
@@ -229,50 +247,74 @@ void frmSgaMake::OnGoClick(wxCommandEvent &event)
 void frmSgaMake::ShowProgress(const wxString &sMessage)
 {
     if (m_pGoBtn)
+    {
         m_pGoBtn->SetLabel(sMessage);
+    }
 }
 
 void frmSgaMake::HideProgress()
 {
     if (m_pGoBtn)
+    {
         m_pGoBtn->SetLabel(AppStr(newmod_create));
+    }
 }
 
 void frmSgaMake::ShowError(const wxString &sMessage)
 {
-    ::wxMessageBox(sMessage, AppStr(sgapack_title), wxICON_ERROR, this);
+    ThemeColours::ShowMessageBox(sMessage, AppStr(sgapack_title), wxICON_ERROR, this);
 }
 
 void frmSgaMake::OnSgaCreated()
 {
-    wxMessageBox(AppStr(sgapack_done), AppStr(sgapack_title), wxICON_INFORMATION, TheConstruct);
+    ThemeColours::ShowMessageBox(AppStr(sgapack_done), AppStr(sgapack_title), wxICON_INFORMATION, TheConstruct);
     EndModal(wxID_OK);
 }
 
 void frmSgaMake::DisableControls()
 {
     if (m_pGoBtn)
+    {
         m_pGoBtn->Enable(false);
+    }
     if (m_pCancelBtn)
+    {
         m_pCancelBtn->Enable(false);
+    }
     if (m_pInDir)
+    {
         m_pInDir->Enable(false);
+    }
     if (m_pOutFile)
+    {
         m_pOutFile->Enable(false);
+    }
     if (m_pTocName)
+    {
         m_pTocName->Enable(false);
+    }
 }
 
 void frmSgaMake::EnableControls()
 {
     if (m_pGoBtn)
+    {
         m_pGoBtn->Enable(true);
+    }
     if (m_pCancelBtn)
+    {
         m_pCancelBtn->Enable(true);
+    }
     if (m_pInDir)
+    {
         m_pInDir->Enable(true);
+    }
     if (m_pOutFile)
+    {
         m_pOutFile->Enable(true);
+    }
     if (m_pTocName)
+    {
         m_pTocName->Enable(true);
+    }
 }

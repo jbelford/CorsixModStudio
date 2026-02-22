@@ -19,6 +19,7 @@
 #include "tools/Tools.h"
 #include "frmRgdEditor.h"
 #include "common/Common.h"
+#include "common/ThemeColours.h"
 #include <rainman/core/RainmanLog.h>
 
 BEGIN_EVENT_TABLE(frmLuaInheritTree, wxWindow)
@@ -64,7 +65,9 @@ void frmLuaInheritTree::OnActivated()
 void frmLuaInheritTree::ShowLoading(const wxString &sMessage)
 {
     if (GetParent())
+    {
         GetParent()->SetLabel(sMessage);
+    }
 }
 
 void frmLuaInheritTree::HideLoading() {}
@@ -72,7 +75,7 @@ void frmLuaInheritTree::HideLoading() {}
 void frmLuaInheritTree::ShowError(const wxString &sMessage)
 {
     CDMS_LOG_ERROR("Lua inherit tree: {}", sMessage.mb_str().data());
-    wxMessageBox(sMessage, wxT("Error"), wxOK | wxICON_ERROR, this);
+    ThemeColours::ShowMessageBox(sMessage, wxT("Error"), wxOK | wxICON_ERROR, this);
 }
 
 void frmLuaInheritTree::OnTreeDataReady()
@@ -87,13 +90,17 @@ void frmLuaInheritTree::OnTreeDataReady()
 void frmLuaInheritTree::DisableControls()
 {
     if (m_pTree)
+    {
         m_pTree->Disable();
+    }
 }
 
 void frmLuaInheritTree::EnableControls()
 {
     if (m_pTree)
+    {
         m_pTree->Enable();
+    }
 }
 
 void frmLuaInheritTree::_AddChildren(const wxTreeItemId &oParent, CInheritTable::CNode *pParent)
@@ -111,7 +118,9 @@ void frmLuaInheritTree::_AddChildren(const wxTreeItemId &oParent, CInheritTable:
         m_pTree->SetItemHasChildren(oChild, pChild->getChildCount() > 0);
     }
     if (iL > 0)
+    {
         m_pTree->SortChildren(oParent);
+    }
 }
 
 frmLuaInheritTree::frmLuaInheritTree(wxWindow *parent, wxWindowID id, const wxPoint &pos, const wxSize &size)
@@ -170,7 +179,9 @@ frmLuaInheritTree::frmLuaInheritTree(wxWindow *parent, wxWindowID id, const wxPo
 frmLuaInheritTree::~frmLuaInheritTree()
 {
     if (m_pInheritTable)
+    {
         delete m_pInheritTable;
+    }
 }
 void frmLuaInheritTree::OnSize(wxSizeEvent &event)
 {

@@ -19,6 +19,7 @@
 #include "frame/Construct.h"
 #include "common/config.h"
 #include "common/ThemeColours.h"
+#include <wx/generic/msgdlgg.h>
 #include "CtrlStatusText.h"
 #include "common/strings.h"
 #include "common/Common.h"

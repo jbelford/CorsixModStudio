@@ -32,6 +32,8 @@
 #include <wx/toolbar.h>
 #include <wx/tbarbase.h>
 #include "common/Common.h"
+#include "common/ThemeColours.h"
+#include <wx/generic/msgdlgg.h>
 #include <cstdint>
 #include <memory>
 #include <rainman/io/IFileStore.h>
@@ -453,7 +455,7 @@ void frmRGDEditor::DoSave()
             return;
         }
         m_bDataNeedsSaving = false;
-        wxMessageBox(AppStr(rgd_savegood), AppStr(rgd_save), wxICON_INFORMATION, this);
+        ThemeColours::ShowMessageBox(AppStr(rgd_savegood), AppStr(rgd_save), wxICON_INFORMATION, this);
     }
     else if (m_iObjectType == 3)
     {
@@ -470,7 +472,7 @@ void frmRGDEditor::DoSave()
             return;
         }
         m_bDataNeedsSaving = false;
-        wxMessageBox(AppStr(rgd_savegood), AppStr(rgd_save), wxICON_INFORMATION, this);
+        ThemeColours::ShowMessageBox(AppStr(rgd_savegood), AppStr(rgd_save), wxICON_INFORMATION, this);
     }
     else
     {
@@ -1177,7 +1179,7 @@ void frmRGDEditor::OnPropertyChange(wxPropertyGridEvent &event)
         }
         else
         {
-            wxMessageBox(AppStr(rgd_hashname), AppStr(rgd_errortitle), wxICON_ERROR, this);
+            ThemeColours::ShowMessageBox(AppStr(rgd_hashname), AppStr(rgd_errortitle), wxICON_ERROR, this);
             event.GetProperty()->SetValueFromString(GetMetaNodeName(pData->pNode));
         }
     }
@@ -1409,7 +1411,7 @@ void frmRGDEditor::OnCopy(wxCommandEvent &event)
     CRGDTreeItemData *pChild = (CRGDTreeItemData *)m_pTables->GetItemData(m_pTables->GetSelection());
     if (!pChild->pNode)
     {
-        wxMessageBox(AppStr(rgd_cannotcopy), AppStr(rgd_errortitle), wxICON_ERROR, this);
+        ThemeColours::ShowMessageBox(AppStr(rgd_cannotcopy), AppStr(rgd_errortitle), wxICON_ERROR, this);
         return;
     }
 
@@ -1426,7 +1428,7 @@ void frmRGDEditor::OnCopy(wxCommandEvent &event)
     }
     else
     {
-        wxMessageBox(AppStr(rgd_cannotopenclip), AppStr(rgd_errortitle), wxICON_ERROR, this);
+        ThemeColours::ShowMessageBox(AppStr(rgd_cannotopenclip), AppStr(rgd_errortitle), wxICON_ERROR, this);
     }
 }
 
@@ -1603,7 +1605,7 @@ void frmRGDEditor::OnAddChild(wxCommandEvent &event)
         }
         else
         {
-            wxMessageBox(AppStr(rgd_cantaddchild), AppStr(rgd_errortitle), wxICON_ERROR, this);
+            ThemeColours::ShowMessageBox(AppStr(rgd_cantaddchild), AppStr(rgd_errortitle), wxICON_ERROR, this);
         }
     }
 }
@@ -1616,14 +1618,14 @@ void frmRGDEditor::OnDelete(wxCommandEvent &event)
     oParent = m_pTables->GetItemParent(oThis);
     if (!oParent.IsOk())
     {
-        wxMessageBox(AppStr(rgd_cantdelete), AppStr(rgd_errortitle), wxICON_ERROR, this);
+        ThemeColours::ShowMessageBox(AppStr(rgd_cantdelete), AppStr(rgd_errortitle), wxICON_ERROR, this);
         return;
     }
     CRGDTreeItemData *pParent = (CRGDTreeItemData *)m_pTables->GetItemData(oParent);
     CRGDTreeItemData *pChild = (CRGDTreeItemData *)m_pTables->GetItemData(oThis);
     if (!pParent || !pParent->pTable)
     {
-        wxMessageBox(AppStr(rgd_cantdelete), AppStr(rgd_errortitle), wxICON_ERROR, this);
+        ThemeColours::ShowMessageBox(AppStr(rgd_cantdelete), AppStr(rgd_errortitle), wxICON_ERROR, this);
         return;
     }
     for (unsigned long iID = 0; iID < pParent->pTable->VGetChildCount(); ++iID)
@@ -1648,15 +1650,15 @@ void frmRGDEditor::OnDelete(wxCommandEvent &event)
         }
         delete pNode;
     }
-    wxMessageBox(AppStr(rgd_cantdelete), AppStr(rgd_errortitle), wxICON_ERROR, this);
+    ThemeColours::ShowMessageBox(AppStr(rgd_cantdelete), AppStr(rgd_errortitle), wxICON_ERROR, this);
 }
 
 void frmRGDEditor::OnCloseWindow(wxCloseEvent &event)
 {
     if (m_bDataNeedsSaving)
     {
-        wxMessageDialog *dialog =
-            new wxMessageDialog(this, wxT("File has been modified. Save file?"), m_sFilename, wxYES_NO | wxCANCEL);
+        wxGenericMessageDialog *dialog = new wxGenericMessageDialog(this, wxT("File has been modified. Save file?"),
+                                                                    m_sFilename, wxYES_NO | wxCANCEL);
 
         int ans = dialog->ShowModal();
         dialog->Destroy();

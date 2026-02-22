@@ -19,6 +19,7 @@
 #pragma once
 
 #include "views/frmFiles.h"
+#include "common/ThemeColours.h"
 #include "frame/Construct.h"
 #include "common/Utility.h"
 #include "common/strconv.h"
@@ -39,7 +40,9 @@ class CMakeCopyAction : public frmFiles::IHandler
         sNewName = wxGetTextFromUser(wxT("New file will be called:"), VGetAction(), sNewName, TheConstruct,
                                      wxDefaultCoord, wxDefaultCoord, false);
         if (sNewName.IsEmpty())
+        {
             return;
+        }
         sNewName = sFile.BeforeLast('\\') + wxT("\\") + sNewName;
 
         auto saSrcFile = wxStringToAscii(sFile);
@@ -60,7 +63,7 @@ class CMakeCopyAction : public frmFiles::IHandler
             IDirectoryTraverser::IIterator *pDir = itrResult ? itrResult.value().release() : nullptr;
             TheConstruct->GetFilesList()->UpdateDirectoryChildren(oParent, pDir);
             delete pDir;
-            wxMessageBox(wxT("File copied"), VGetAction(), wxICON_INFORMATION, TheConstruct);
+            ThemeColours::ShowMessageBox(wxT("File copied"), VGetAction(), wxICON_INFORMATION, TheConstruct);
         }
     }
 
@@ -74,7 +77,9 @@ class CMakeCopyAction : public frmFiles::IHandler
         {
             auto inResult = TheConstruct->GetFileService().OpenStream(AsciiTowxString(saFile));
             if (!inResult)
+            {
                 throw CModStudioException(0, __FILE__, __LINE__, "Unable to open streams for \'%s\'", saFile);
+            }
             pIn = inResult.value().release();
             auto outResult = TheConstruct->GetFileService().OpenOutputStream(AsciiTowxString(saDestFile), true);
             if (!outResult)
@@ -104,7 +109,9 @@ class CMakeCopyAction : public frmFiles::IHandler
             throw CModStudioException(e, __FILE__, __LINE__, "Seek/Tell problem on streams for \'%s\'", saFile);
         }
         if (!pBuffer)
+        {
             pBuffer = new char[4194304]; // 4mb
+        }
         if (!pBuffer)
         {
             delete pIn;
@@ -124,14 +131,18 @@ class CMakeCopyAction : public frmFiles::IHandler
                 delete pIn;
                 delete pOut;
                 if (!p4mbBuffer)
+                {
                     delete[] pBuffer;
+                }
                 throw CModStudioException(e, __FILE__, __LINE__, "Read/Write problem on streams for \'%s\'", saFile);
             }
             iLen -= iLen2;
         }
 
         if (!p4mbBuffer)
+        {
             delete[] pBuffer;
+        }
         delete pIn;
         delete pOut;
     }

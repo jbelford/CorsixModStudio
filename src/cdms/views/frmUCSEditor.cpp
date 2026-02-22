@@ -30,6 +30,8 @@
 #include <memory>
 #include <algorithm>
 #include "common/Common.h"
+#include "common/ThemeColours.h"
+#include <wx/generic/msgdlgg.h>
 #include "rainman/localization/CUcsMap.h"
 
 BEGIN_EVENT_TABLE(frmUCSEditor, wxWindow)
@@ -56,7 +58,9 @@ void frmUCSEditor::OnClose(wxCommandEvent &event)
     oClose.SetCanVeto(true);
     OnCloseWindow(oClose);
     if (oClose.GetVeto())
+    {
         return;
+    }
 
     auto *pParent = (frmTabDialog *)GetParent()->GetParent();
     pParent->EndModal(wxID_OK);
@@ -66,7 +70,9 @@ void frmUCSEditor::OnApply(wxCommandEvent &event)
 {
     wxPGProperty *oSelected = m_pPropertyGrid->GetSelectedProperty();
     if (oSelected == nullptr)
+    {
         return;
+    }
 
     if (m_pResultVal)
     {
@@ -162,14 +168,20 @@ void frmUCSEditor::FillFromCUcsFile(std::shared_ptr<CUcsFile> pUcs, unsigned lon
     for (auto &entry : sortedMap)
     {
         if (!entry.second)
+        {
             continue;
+        }
 
         auto sNumberBuffer = L"$" + std::to_wstring(entry.first);
         auto stringProp = std::make_unique<wxStringProperty>(sNumberBuffer, sNumberBuffer, entry.second.get());
         if (m_bReadOnly)
+        {
             stringProp->Enable(false);
+        }
         if (iSelect == entry.first)
+        {
             oSelectMe = stringProp.get();
+        }
 
         m_pPropertyGrid->Append(stringProp.release());
     }
@@ -208,7 +220,7 @@ void frmUCSEditor::OnNewEntry(wxCommandEvent &event)
     UNUSED(event);
     if (m_bReadOnly)
     {
-        wxMessageBox(AppStr(ucsedit_readonlyerror), AppStr(ucsedit_newentry), wxICON_ERROR, this);
+        ThemeColours::ShowMessageBox(AppStr(ucsedit_readonlyerror), AppStr(ucsedit_newentry), wxICON_ERROR, this);
         return;
     }
 
@@ -224,7 +236,9 @@ void frmUCSEditor::OnNewEntry(wxCommandEvent &event)
             _ultow(iNext, sNumberBuffer + 1, 10);
         }
         else
+        {
             wcscpy(sNumberBuffer, AppStr(ucsedit_newentrydefault));
+        }
     }
     catch (const CRainmanException &e)
     {
@@ -236,11 +250,15 @@ void frmUCSEditor::OnNewEntry(wxCommandEvent &event)
     sNewID = wxGetTextFromUser(AppStr(ucsedit_newentrycaption), AppStr(ucsedit_newentry), sNumberBuffer, this,
                                wxDefaultCoord, wxDefaultCoord, false);
     if (sNewID.IsEmpty())
+    {
         return;
+    }
 
     unsigned long iNewID = 0;
     if (!CUcsEditorPresenter::ParseIdFromInput(sNewID, iNewID))
+    {
         return;
+    }
 
     if (!CUcsEditorPresenter::IsIdInRecommendedRange(iNewID))
     {
@@ -262,7 +280,8 @@ void frmUCSEditor::OnNewEntry(wxCommandEvent &event)
 
     if (CUcsEditorPresenter::ValidateNewId(iNewID, entries) == CUcsEditorPresenter::IdValidation::Duplicate)
     {
-        wxMessageBox(AppStr(ucsedit_newentrydupcaption), AppStr(ucsedit_newentryduptitle), wxICON_ERROR, this);
+        ThemeColours::ShowMessageBox(AppStr(ucsedit_newentrydupcaption), AppStr(ucsedit_newentryduptitle), wxICON_ERROR,
+                                     this);
         return;
     }
 
@@ -321,7 +340,7 @@ void frmUCSEditor::OnSaveFile(wxCommandEvent &event)
     UNUSED(event);
     if (m_bReadOnly)
     {
-        wxMessageBox(AppStr(ucsedit_readonlyerror), AppStr(ucsedit_save), wxICON_ERROR, this);
+        ThemeColours::ShowMessageBox(AppStr(ucsedit_readonlyerror), AppStr(ucsedit_save), wxICON_ERROR, this);
         return;
     }
 
@@ -414,15 +433,15 @@ found_ucs_file:
     }
 
     m_bNeedsSave = false;
-    wxMessageBox(AppStr(ucsedit_save_caption), AppStr(ucsedit_save_title), wxICON_INFORMATION, this);
+    ThemeColours::ShowMessageBox(AppStr(ucsedit_save_caption), AppStr(ucsedit_save_title), wxICON_INFORMATION, this);
 }
 
 void frmUCSEditor::OnCloseWindow(wxCloseEvent &event)
 {
     if (m_bNeedsSave)
     {
-        auto *dialog =
-            new wxMessageDialog(this, wxT("UCS has been modified. Save file?"), wxT("UCS Editor"), wxYES_NO | wxCANCEL);
+        auto *dialog = new wxGenericMessageDialog(this, wxT("UCS has been modified. Save file?"), wxT("UCS Editor"),
+                                                  wxYES_NO | wxCANCEL);
 
         int ans = dialog->ShowModal();
         dialog->Destroy();
@@ -436,7 +455,9 @@ void frmUCSEditor::OnCloseWindow(wxCloseEvent &event)
         case wxID_CANCEL:
         default:
             if (event.CanVeto())
+            {
                 event.Veto();
+            }
         case wxID_NO:
             break;
         }

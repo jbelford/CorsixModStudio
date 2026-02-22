@@ -19,6 +19,7 @@
 #pragma once
 
 #include "views/frmFiles.h"
+#include "common/ThemeColours.h"
 #include "frame/Construct.h"
 #include "common/Utility.h"
 #include "common/strconv.h"
@@ -62,7 +63,7 @@ class CRgdToLuaDumpAction : public frmFiles::IHandler
         IDirectoryTraverser::IIterator *pDir = itrResult ? itrResult.value().release() : nullptr;
         TheConstruct->GetFilesList()->UpdateDirectoryChildren(oParent, pDir);
         delete pDir;
-        wxMessageBox(AppStr(luadump_good), VGetAction(), wxICON_INFORMATION, TheConstruct);
+        ThemeColours::ShowMessageBox(AppStr(luadump_good), VGetAction(), wxICON_INFORMATION, TheConstruct);
     }
 
     static void DoConvert(char *saFile)

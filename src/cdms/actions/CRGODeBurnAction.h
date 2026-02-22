@@ -19,6 +19,7 @@
 #pragma once
 
 #include "views/frmFiles.h"
+#include "common/ThemeColours.h"
 #include "frame/Construct.h"
 #include "common/Utility.h"
 #include "common/strconv.h"
@@ -52,7 +53,7 @@ class CRGODeBurnAction : public frmFiles::IHandler
             IDirectoryTraverser::IIterator *pDir = itrResult ? itrResult.value().release() : nullptr;
             TheConstruct->GetFilesList()->UpdateDirectoryChildren(oParent, pDir);
             delete pDir;
-            wxMessageBox(AppStr(rgodeburn_good), VGetAction(), wxICON_INFORMATION, TheConstruct);
+            ThemeColours::ShowMessageBox(AppStr(rgodeburn_good), VGetAction(), wxICON_INFORMATION, TheConstruct);
         }
     }
 
@@ -63,7 +64,9 @@ class CRGODeBurnAction : public frmFiles::IHandler
         {
             auto inResult = TheConstruct->GetFileService().OpenStream(AsciiTowxString(saFile));
             if (!inResult)
+            {
                 throw CModStudioException(0, __FILE__, __LINE__, "Unable to open streams for \'%s\'", saFile);
+            }
             pIn = inResult.value().release();
         }
         catch (const CRainmanException &e)
@@ -115,7 +118,9 @@ class CRGODeBurnAction : public frmFiles::IHandler
         {
             auto outResult = TheConstruct->GetFileService().OpenOutputStream(AsciiTowxString(saFile), true);
             if (!outResult)
+            {
                 throw CModStudioException(0, __FILE__, __LINE__, "Unable to open output stream for \'%s\'", saFile);
+            }
             pOut = outResult.value().release();
         }
         catch (const CRainmanException &e)

@@ -19,6 +19,7 @@
 #pragma once
 
 #include "views/frmFiles.h"
+#include "common/ThemeColours.h"
 #include "frame/Construct.h"
 #include "common/Utility.h"
 #include "common/strconv.h"
@@ -147,7 +148,9 @@ class CBFXRGTDeBurnAction : public frmFiles::IHandler
         {
             iE = lua_pcall(L, 0, 0, 0);
             if (iE == 0)
+            {
                 lua_getglobal(L, "map");
+            }
         }
         if (iE)
         {
@@ -170,7 +173,7 @@ class CBFXRGTDeBurnAction : public frmFiles::IHandler
         m_pProgress = new wxProgressDialog(VGetAction(), wxT(""), (int)(iCount / iDiv) + 1, TheConstruct,
                                            wxPD_SMOOTH | wxPD_AUTO_HIDE | wxPD_ELAPSED_TIME | wxPD_REMAINING_TIME);
         Recurse(sFile, oParent, false, 0, iDiv);
-        wxMessageBox(AppStr(bfxrgt_convertgood), VGetAction(), wxICON_INFORMATION, TheConstruct);
+        ThemeColours::ShowMessageBox(AppStr(bfxrgt_convertgood), VGetAction(), wxICON_INFORMATION, TheConstruct);
         delete m_pProgress;
 
         lua_close(L);

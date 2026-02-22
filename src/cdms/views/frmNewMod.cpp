@@ -25,6 +25,7 @@
 #include <errno.h>
 #include <wx/textdlg.h>
 #include "common/Common.h"
+#include "common/ThemeColours.h"
 #include "rainman/core/RainmanLog.h"
 
 BEGIN_EVENT_TABLE(frmNewMod, wxDialog)
@@ -400,7 +401,9 @@ void frmNewMod::OnNewClick(wxCommandEvent &event)
         strcpy(saDir, saDoW.get());
         size_t iL = strlen(saDir) - 1;
         if ((saDir[iL] != '\\') && (saDir[iL] != '/'))
+        {
             strcat(saDir, "\\");
+        }
         strcat(saDir, saNice.get());
         if (iVal != 0)
         {
@@ -412,7 +415,7 @@ void frmNewMod::OnNewClick(wxCommandEvent &event)
     if (iRes == -1 && errno != EEXIST)
     {
         delete[] saDir;
-        wxMessageBox(AppStr(newmod_error), AppStr(new_mod), wxICON_ERROR, this);
+        ThemeColours::ShowMessageBox(AppStr(newmod_error), AppStr(new_mod), wxICON_ERROR, this);
         EndModal(wxID_CLOSE);
         return;
     }
@@ -512,12 +515,16 @@ void frmNewMod::OnNewClick(wxCommandEvent &event)
     do
     {
         if (f)
+        {
             fclose(f);
+        }
         char buffer[20];
         strcpy(saDir, saDoW.get());
         size_t iL = strlen(saDir) - 1;
         if ((saDir[iL] != '\\') && (saDir[iL] != '/'))
+        {
             strcat(saDir, "\\");
+        }
         strcat(saDir, saNice.get());
         if (iVal != 0)
         {

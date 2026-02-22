@@ -19,6 +19,7 @@
 #pragma once
 
 #include "views/frmFiles.h"
+#include "common/ThemeColours.h"
 #include "frame/Construct.h"
 #include "common/Utility.h"
 #include "common/strconv.h"
@@ -189,7 +190,7 @@ class CScanHashesAction : public frmFiles::IHandler
                 }
             }
             fclose(fIn);
-            wxMessageBox(wxT("Scan complete"), VGetAction(), wxICON_INFORMATION, TheConstruct);
+            ThemeColours::ShowMessageBox(wxT("Scan complete"), VGetAction(), wxICON_INFORMATION, TheConstruct);
             delete m_pProgress;
         }
     }

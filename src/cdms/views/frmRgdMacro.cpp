@@ -313,7 +313,7 @@ bool frmRgdMacro::RequestPermission(const wxString &sQuestion)
     sFullQuestion.Append(sQuestion);
     sFullQuestion.Append(wxT(".\nDo you want to grant it permission?"));
 
-    return ::wxMessageBox(sFullQuestion, wxT("Macro Permissions"), wxYES_NO) == wxYES;
+    return ThemeColours::ShowMessageBox(sFullQuestion, wxT("Macro Permissions"), wxYES_NO) == wxYES;
 }
 
 void frmRgdMacro::OnMacroComplete(const std::vector<wxString> &vFoldersToUpdate)

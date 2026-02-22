@@ -26,6 +26,7 @@
 #include <rainman/module/CFileMap.h>
 #include <rainman/io/CFileSystemStore.h>
 #include "common/Common.h"
+#include "common/ThemeColours.h"
 
 BEGIN_EVENT_TABLE(frmMassExtract, wxDialog)
 EVT_BUTTON(IDC_Go, frmMassExtract::OnGoClick)
@@ -401,7 +402,7 @@ void frmMassExtract::UpdateGauge(int iValue)
 
 void frmMassExtract::ShowError(const wxString &sMessage)
 {
-    wxMessageBox(sMessage, AppStr(massext_title), wxICON_ERROR, this);
+    ThemeColours::ShowMessageBox(sMessage, AppStr(massext_title), wxICON_ERROR, this);
 }
 
 void frmMassExtract::OnExtractionComplete()
@@ -412,7 +413,7 @@ void frmMassExtract::OnExtractionComplete()
         m_pFauxSource = nullptr;
     }
 
-    wxMessageBox(AppStr(massext_done), AppStr(massext_title), wxICON_INFORMATION, this);
+    ThemeColours::ShowMessageBox(AppStr(massext_done), AppStr(massext_title), wxICON_INFORMATION, this);
     EndModal(wxID_CLOSE);
 }
 

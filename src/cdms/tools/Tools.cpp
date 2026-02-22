@@ -36,6 +36,7 @@
 #include <rainman/io/CFileSystemStore.h>
 #include <rainman/io/IFileStore.h>
 #include "common/Common.h"
+#include "common/ThemeColours.h"
 #include "rainman/core/RainmanLog.h"
 
 wxString CLocaleTool::GetName() { return AppStr(locale); }
@@ -95,7 +96,8 @@ void CUcsTool::HandleSelectorResponse(frmUCSSelector *pSelector, wxAuiNotebook *
             CModuleFile::CUcsHandler *pUcs = TheConstruct->GetModuleService().GetUcs(i);
             if (AsciiTowxString(pUcs->GetFileName()) == pSelector->GetAnswer())
             {
-                wxMessageBox(AppStr(file_newucs_dup_caption), AppStr(file_newucs_title), wxICON_ERROR, TheConstruct);
+                ThemeColours::ShowMessageBox(AppStr(file_newucs_dup_caption), AppStr(file_newucs_title), wxICON_ERROR,
+                                             TheConstruct);
                 delete pSelector;
                 return;
             }
@@ -184,7 +186,9 @@ void CUcsTool::HandleSelectorResponse(frmUCSSelector *pSelector, wxAuiNotebook *
     };
 
     if (bRegisterTabStrip)
+    {
         pForm->SetTabStripForLoad(pTabsDestination);
+    }
 
     delete pSelector;
 }
@@ -227,7 +231,9 @@ void CDpsCalculatorTool::DoAction()
                                        AppStr(dpscalculator_filter), wxFD_SAVE | wxFD_OVERWRITE_PROMPT, TheConstruct);
 
     if (sOutFile.Len() == 0)
+    {
         return;
+    }
 
     auto itrResult = TheConstruct->GetFileService().Iterate(wxT("data\\attrib\\weapon"));
     if (!itrResult)
@@ -238,14 +244,16 @@ void CDpsCalculatorTool::DoAction()
     auto *pItr = itrResult.value().release();
 
     if (!m_pPresenter)
+    {
         m_pPresenter =
             std::make_unique<CDpsCalculatorPresenter>(static_cast<IDpsCalculatorView &>(*this), TheConstruct);
+    }
 
     if (!m_pPresenter->CalculateDps(sOutFile, pItr, TheConstruct->GetModuleService().GetModule()))
     {
         delete pItr;
-        wxMessageBox(wxT("DPS calculation is already running."), AppStr(dpscalculator_title), wxICON_WARNING,
-                     TheConstruct);
+        ThemeColours::ShowMessageBox(wxT("DPS calculation is already running."), AppStr(dpscalculator_title),
+                                     wxICON_WARNING, TheConstruct);
     }
 }
 
@@ -253,11 +261,12 @@ void CDpsCalculatorTool::ShowProgress(const wxString & /*sMessage*/) {}
 void CDpsCalculatorTool::HideProgress() {}
 void CDpsCalculatorTool::ShowError(const wxString &sMessage)
 {
-    wxMessageBox(sMessage, AppStr(dpscalculator_title), wxICON_ERROR, TheConstruct);
+    ThemeColours::ShowMessageBox(sMessage, AppStr(dpscalculator_title), wxICON_ERROR, TheConstruct);
 }
 void CDpsCalculatorTool::OnDpsComplete()
 {
-    wxMessageBox(AppStr(dpscalculator_done), AppStr(dpscalculator_title), wxICON_INFORMATION, TheConstruct);
+    ThemeColours::ShowMessageBox(AppStr(dpscalculator_done), AppStr(dpscalculator_title), wxICON_INFORMATION,
+                                 TheConstruct);
 }
 void CDpsCalculatorTool::DisableControls() {}
 void CDpsCalculatorTool::EnableControls() {}
@@ -383,7 +392,9 @@ void CMakeLuaInheritTree::Do(const char *sAttrib)
     {
         auto itrResult = TheConstruct->GetFileService().Iterate(AsciiTowxString(sAttrib));
         if (!itrResult)
+        {
             throw CModStudioException(__FILE__, __LINE__, "Cannot iterate attrib");
+        }
         pItr = itrResult.value().release();
     }
 
@@ -475,12 +486,14 @@ void CRefreshFilesTool::DoAction()
     CModuleFile *pMod = TheConstruct->GetModuleService().GetModule();
 
     if (!m_pPresenter)
+    {
         m_pPresenter = std::make_unique<CRefreshFilesPresenter>(static_cast<IRefreshFilesView &>(*this), TheConstruct);
+    }
 
     if (!m_pPresenter->Refresh(pMod))
     {
-        wxMessageBox(wxT("A refresh operation is already running."), AppStr(refreshfiles_name), wxICON_WARNING,
-                     TheConstruct);
+        ThemeColours::ShowMessageBox(wxT("A refresh operation is already running."), AppStr(refreshfiles_name),
+                                     wxICON_WARNING, TheConstruct);
     }
 }
 
@@ -506,7 +519,9 @@ void CRefreshFilesTool::HideLoading()
 void CRefreshFilesTool::UpdateProgress(const wxString &sMessage)
 {
     if (m_pLoadingForm)
+    {
         m_pLoadingForm->SetMessage(sMessage);
+    }
 }
 
 void CRefreshFilesTool::RefreshFileTree()
@@ -517,5 +532,5 @@ void CRefreshFilesTool::RefreshFileTree()
 
 void CRefreshFilesTool::ShowError(const wxString &sMessage)
 {
-    wxMessageBox(sMessage, AppStr(refreshfiles_name), wxICON_ERROR, TheConstruct);
+    ThemeColours::ShowMessageBox(sMessage, AppStr(refreshfiles_name), wxICON_ERROR, TheConstruct);
 }

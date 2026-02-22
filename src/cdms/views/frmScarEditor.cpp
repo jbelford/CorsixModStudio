@@ -22,6 +22,7 @@
 #include "common/strings.h"
 #include "common/Utility.h"
 #include "common/ThemeColours.h"
+#include <wx/generic/msgdlgg.h>
 #include "presenters/CScarEditorPresenter.h"
 extern "C"
 {
@@ -221,7 +222,7 @@ void frmScarEditor::DoSave()
     }
     m_bNeedsSaving = false;
     m_pSTC->SetSavePoint();
-    wxMessageBox(AppStr(scar_savegood), AppStr(scar_save), wxICON_INFORMATION, this);
+    ThemeColours::ShowMessageBox(AppStr(scar_savegood), AppStr(scar_save), wxICON_INFORMATION, this);
 }
 
 void frmScarEditor::OnSavePointLeave(wxStyledTextEvent &event)
@@ -240,8 +241,8 @@ void frmScarEditor::OnCloseWindow(wxCloseEvent &event)
 {
     if (m_bNeedsSaving)
     {
-        wxMessageDialog *dialog =
-            new wxMessageDialog(this, wxT("Text has been modified. Save file?"), m_sFilename, wxYES_NO | wxCANCEL);
+        wxGenericMessageDialog *dialog = new wxGenericMessageDialog(this, wxT("Text has been modified. Save file?"),
+                                                                    m_sFilename, wxYES_NO | wxCANCEL);
 
         int ans = dialog->ShowModal();
         dialog->Destroy();
@@ -489,16 +490,16 @@ void frmScarEditor::OnCheckLua(wxCommandEvent &event)
         {
             wxString sError;
             sError.Printf(AppStr(scar_bad), oError.iLine, oError.sMessage.c_str());
-            wxMessageBox(sError, AppStr(scar_checklua), wxICON_ERROR, this);
+            ThemeColours::ShowMessageBox(sError, AppStr(scar_checklua), wxICON_ERROR, this);
         }
         else
         {
-            wxMessageBox(wxString::FromUTF8(sRawErr), AppStr(scar_checklua), wxICON_ERROR, this);
+            ThemeColours::ShowMessageBox(wxString::FromUTF8(sRawErr), AppStr(scar_checklua), wxICON_ERROR, this);
         }
     }
     else
     {
-        wxMessageBox(AppStr(scar_luagood), AppStr(scar_checklua), wxICON_INFORMATION, this);
+        ThemeColours::ShowMessageBox(AppStr(scar_luagood), AppStr(scar_checklua), wxICON_INFORMATION, this);
     }
 
     pfn_lua_close(L);

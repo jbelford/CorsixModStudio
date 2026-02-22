@@ -27,6 +27,7 @@
 #include <utility>
 #include <memory>
 #include "common/Common.h"
+#include "common/ThemeColours.h"
 
 BEGIN_EVENT_TABLE(frmImageViewer, wxWindow)
 EVT_SIZE(frmImageViewer::OnSize)
@@ -190,7 +191,9 @@ void frmImageViewer::SetIsTga(bool bOnlyRGB)
     m_pSaveFileCompression->Enable(3, true);
     m_pSaveFileCompression->Enable(4, true);
     if (m_pSaveFileCompression->GetSelection() == 0)
+    {
         m_pSaveFileCompression->SetSelection(1);
+    }
     m_pSaveFileMips->Enable(true);
 }
 
@@ -205,9 +208,13 @@ void frmImageViewer::SetIsDds()
     m_pSaveFileCompression->Enable(3, true);
     m_pSaveFileCompression->Enable(4, true);
     if (m_pSaveFileCompression->GetSelection() == 0)
+    {
         m_pSaveFileCompression->SetSelection(2);
+    }
     if (m_pSaveFileCompression->GetSelection() == 1)
+    {
         m_pSaveFileCompression->SetSelection(3);
+    }
     m_pSaveFileMips->Enable(true);
 }
 
@@ -216,7 +223,9 @@ frmImageViewer::~frmImageViewer()
     delete m_pImageBitmap;
     m_pImageBitmap = nullptr;
     if (m_bOwnRgt && m_pRgtFile)
+    {
         delete m_pRgtFile;
+    }
 }
 
 void frmImageViewer::OnSize(wxSizeEvent &event)
@@ -236,7 +245,9 @@ void frmImageViewer::OnRadioButtonSaveExt(wxCommandEvent &event)
         m_pSaveFileCompression->Enable(3, true);
         m_pSaveFileCompression->Enable(4, true);
         if (m_pSaveFileCompression->GetSelection() == 0)
+        {
             m_pSaveFileCompression->SetSelection(1);
+        }
         m_pSaveFileMips->Enable(true);
         break;
     case 1: // DDS
@@ -246,9 +257,13 @@ void frmImageViewer::OnRadioButtonSaveExt(wxCommandEvent &event)
         m_pSaveFileCompression->Enable(3, true);
         m_pSaveFileCompression->Enable(4, true);
         if (m_pSaveFileCompression->GetSelection() == 0)
+        {
             m_pSaveFileCompression->SetSelection(2);
+        }
         if (m_pSaveFileCompression->GetSelection() == 1)
+        {
             m_pSaveFileCompression->SetSelection(3);
+        }
         m_pSaveFileMips->Enable(true);
         break;
     case 2: // TGA
@@ -258,7 +273,9 @@ void frmImageViewer::OnRadioButtonSaveExt(wxCommandEvent &event)
         m_pSaveFileCompression->Enable(3, false);
         m_pSaveFileCompression->Enable(4, false);
         if (m_pSaveFileCompression->GetSelection() > 1)
+        {
             m_pSaveFileCompression->SetSelection(1);
+        }
         m_pSaveFileMips->Enable(false);
         m_pSaveFileMips->SetValue(false);
         break;
@@ -276,7 +293,9 @@ void frmImageViewer::OnSave(wxCommandEvent &event)
     if (CImagePresenter::WouldOverwrite(m_pCurrentExt->GetSelection(), eTargetFormat))
     {
         if (!ConfirmOverwrite())
+        {
             return;
+        }
     }
 
     wxString sNewFile = CImagePresenter::ComputeOutputPath(m_sFilename, eTargetFormat);
@@ -302,8 +321,9 @@ void frmImageViewer::OnSave(wxCommandEvent &event)
 
 bool frmImageViewer::ConfirmOverwrite()
 {
-    return ::wxMessageBox(wxT("The options selected will result in the original file being overwritten. Continue?"),
-                          wxT("Save"), wxOK | wxCANCEL) != wxCANCEL;
+    return ThemeColours::ShowMessageBox(
+               wxT("The options selected will result in the original file being overwritten. Continue?"), wxT("Save"),
+               wxOK | wxCANCEL) != wxCANCEL;
 }
 
 void frmImageViewer::ShowError(const wxString &sMessage) { ErrorBoxS(sMessage); }

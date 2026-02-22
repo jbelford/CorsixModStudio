@@ -19,6 +19,7 @@
 #pragma once
 
 #include "views/frmFiles.h"
+#include "common/ThemeColours.h"
 #include "frame/Construct.h"
 #include "common/Utility.h"
 #include "common/strconv.h"
@@ -105,7 +106,7 @@ class CLuaDumpFolder : public frmFiles::IHandler
         m_pProgress = new wxProgressDialog(VGetAction(), wxT(""), (int)(iCount / iDiv) + 1, TheConstruct,
                                            wxPD_SMOOTH | wxPD_AUTO_HIDE | wxPD_ELAPSED_TIME | wxPD_REMAINING_TIME);
         Recurse(sFile, oParent, false, 0, iDiv);
-        wxMessageBox(wxT("Batch dump complete"), VGetAction(), wxICON_INFORMATION, TheConstruct);
+        ThemeColours::ShowMessageBox(wxT("Batch dump complete"), VGetAction(), wxICON_INFORMATION, TheConstruct);
         delete m_pProgress;
     }
 };

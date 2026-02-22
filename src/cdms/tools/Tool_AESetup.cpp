@@ -26,6 +26,7 @@
 #include <vector>
 #include <rainman/localization/CUcsFile.h>
 #include "common/Common.h"
+#include "common/ThemeColours.h"
 #include "rainman/core/RainmanLog.h"
 
 BEGIN_EVENT_TABLE(frmUCSToDAT, wxDialog)
@@ -102,7 +103,7 @@ void frmUCSToDAT::OnGoClick(wxCommandEvent &event)
     CDMS_LOG_INFO("Running AE Setup tool");
     if (m_pOutFile->GetValue().empty())
     {
-        ::wxMessageBox(AppStr(aesetup_novalue), wxT("Error"), wxICON_ERROR, wxTheApp->GetTopWindow());
+        ThemeColours::ShowMessageBox(AppStr(aesetup_novalue), wxT("Error"), wxICON_ERROR, wxTheApp->GetTopWindow());
         return;
     }
 
@@ -110,7 +111,7 @@ void frmUCSToDAT::OnGoClick(wxCommandEvent &event)
     if (!m_pRangeStart->GetValue().ToULong(&iRangeStart) || !m_pRangeEnd->GetValue().ToULong(&iRangeEnd) ||
         iRangeEnd < iRangeStart)
     {
-        ::wxMessageBox(AppStr(aesetup_norange), wxT("Error"), wxICON_ERROR, wxTheApp->GetTopWindow());
+        ThemeColours::ShowMessageBox(AppStr(aesetup_norange), wxT("Error"), wxICON_ERROR, wxTheApp->GetTopWindow());
         return;
     }
 
@@ -122,52 +123,76 @@ void frmUCSToDAT::OnGoClick(wxCommandEvent &event)
 void frmUCSToDAT::ShowProgress(const wxString &sMessage)
 {
     if (m_pGoBtn)
+    {
         m_pGoBtn->SetLabel(sMessage);
+    }
 }
 
 void frmUCSToDAT::HideProgress()
 {
     if (m_pGoBtn)
+    {
         m_pGoBtn->SetLabel(AppStr(newmod_create));
+    }
 }
 
 void frmUCSToDAT::ShowError(const wxString &sMessage)
 {
-    ::wxMessageBox(sMessage, AppStr(aesetup_name), wxICON_ERROR, this);
+    ThemeColours::ShowMessageBox(sMessage, AppStr(aesetup_name), wxICON_ERROR, this);
 }
 
 void frmUCSToDAT::OnConversionComplete()
 {
-    wxMessageBox(AppStr(aesetup_done), AppStr(aesetup_name), wxICON_INFORMATION, TheConstruct);
+    ThemeColours::ShowMessageBox(AppStr(aesetup_done), AppStr(aesetup_name), wxICON_INFORMATION, TheConstruct);
     EndModal(wxID_OK);
 }
 
 void frmUCSToDAT::DisableControls()
 {
     if (m_pGoBtn)
+    {
         m_pGoBtn->Enable(false);
+    }
     if (m_pCancelBtn)
+    {
         m_pCancelBtn->Enable(false);
+    }
     if (m_pOutFile)
+    {
         m_pOutFile->Enable(false);
+    }
     if (m_pRangeStart)
+    {
         m_pRangeStart->Enable(false);
+    }
     if (m_pRangeEnd)
+    {
         m_pRangeEnd->Enable(false);
+    }
 }
 
 void frmUCSToDAT::EnableControls()
 {
     if (m_pGoBtn)
+    {
         m_pGoBtn->Enable(true);
+    }
     if (m_pCancelBtn)
+    {
         m_pCancelBtn->Enable(true);
+    }
     if (m_pOutFile)
+    {
         m_pOutFile->Enable(true);
+    }
     if (m_pRangeStart)
+    {
         m_pRangeStart->Enable(true);
+    }
     if (m_pRangeEnd)
+    {
         m_pRangeEnd->Enable(true);
+    }
 }
 
 UCSToDATConvertor::UCSToDATConvertor()
@@ -186,7 +211,9 @@ void UCSToDATConvertor::setOutputFilename(const char *sFilename) { m_sOutputName
 void UCSToDATConvertor::setRange(unsigned long iStart, unsigned long iEnd)
 {
     if (iEnd < iStart)
+    {
         throw CModStudioException(nullptr, __FILE__, __LINE__, "Range %lu -> %lu is invalid", iStart, iEnd);
+    }
     m_iRangeStart = iStart;
     m_iRangeEnd = iEnd;
 }
@@ -198,9 +225,13 @@ void UCSToDATConvertor::_startRange(unsigned long iValue)
     iValue = ((iValue / 50) * 50);
     unsigned long iEnd = iValue + 49;
     if (iValue < m_iRangeStart)
+    {
         iValue = m_iRangeStart;
+    }
     if (iEnd > m_iRangeEnd)
+    {
         iEnd = m_iRangeEnd;
+    }
     fprintf(m_fDAT, "\nrangestart %lu %lu\n", iValue, iEnd);
 }
 
@@ -229,7 +260,9 @@ bool UCSToDATConvertor::_nextEntry(unsigned long *pCode, wchar_t **pValue)
         }
     }
     if (n == m_iUCSCount)
+    {
         return false;
+    }
     *pValue = m_aUCSFiles[n]->second.get();
     ++m_aUCSFiles[n];
     return true;
@@ -240,21 +273,29 @@ static void AddUcsFilesToVector(const CModuleFile *pModule, std::vector<const CU
     if (pModule)
     {
         for (size_t i = 0; i < pModule->GetUcsCount(); ++i)
+        {
             vFiles.push_back(pModule->GetUcs(i)->GetUcsHandle().get());
+        }
     }
 }
 
 void UCSToDATConvertor::doConvertion()
 {
     if (m_sOutputName.empty() || m_pModule == nullptr)
+    {
         QUICK_THROW("Convertion parameters not set");
+    }
 
     std::vector<const CUcsFile *> vFiles;
     AddUcsFilesToVector(m_pModule, vFiles);
     for (size_t i = 0; i < m_pModule->GetRequiredCount(); ++i)
+    {
         AddUcsFilesToVector(m_pModule->GetRequired(i)->GetModHandle(), vFiles);
+    }
     for (size_t i = 0; i < m_pModule->GetEngineCount(); ++i)
+    {
         AddUcsFilesToVector(m_pModule->GetEngine(i), vFiles);
+    }
 
     m_iUCSCount = vFiles.size();
     m_vSortedMaps.resize(m_iUCSCount);
@@ -297,9 +338,13 @@ void UCSToDATConvertor::doConvertion()
             if (!bInRange || iRange != iCurrentRange)
             {
                 if (bInRange)
+                {
                     _endRange();
+                }
                 else
+                {
                     bInRange = true;
+                }
                 _startRange(iEntryCode);
                 iCurrentRange = iRange;
             }
@@ -309,7 +354,9 @@ void UCSToDATConvertor::doConvertion()
         } while (_nextEntry(&iEntryCode, &pEntryText) && iEntryCode < m_iRangeEnd);
     }
     if (bInRange)
+    {
         _endRange();
+    }
 
     fclose(m_fDAT);
     delete[] m_aUCSFiles;

@@ -152,7 +152,8 @@ void BackupFile(const wxString &sFile)
     sBakFile.Append(wxT(".bak"));
     if(!wxCopyFile(sFile, sBakFile))
     {
-        ::wxMessageBox(AppStr(app_backuperror), AppStr(app_backuperror_title) , wxICON_ERROR, wxTheApp->GetTopWindow());
+        ThemeColours::ShowMessageBox(AppStr(app_backuperror), AppStr(app_backuperror_title) , wxICON_ERROR,
+    wxTheApp->GetTopWindow());
     }
     */
 }
@@ -208,7 +209,8 @@ void BackupFile(IFileStore *pStore, const wxString &sFile)
     sBakFile.Append(wxT(".bak"));
     if(!fsCopyFile(pStore, sFile, sBakFile))
     {
-        ::wxMessageBox(AppStr(app_backuperror), AppStr(app_backuperror_title) , wxICON_ERROR, wxTheApp->GetTopWindow());
+        ThemeColours::ShowMessageBox(AppStr(app_backuperror), AppStr(app_backuperror_title) , wxICON_ERROR,
+    wxTheApp->GetTopWindow());
     }
     */
 }
@@ -224,7 +226,7 @@ void RestoreBackupFile(const wxString &sFile)
     {
         wxString sMsg = AppStr(app_backupcannotrestore);
         sMsg.Append(sBakFile);
-        ::wxMessageBox(sMsg, AppStr(app_backuperror_title) , wxICON_ERROR, wxTheApp->GetTopWindow());
+        ThemeColours::ShowMessageBox(sMsg, AppStr(app_backuperror_title) , wxICON_ERROR, wxTheApp->GetTopWindow());
     }
     */
 }
@@ -241,7 +243,7 @@ void RestoreBackupFile(IFileStore *pStore, const wxString &sFile)
     {
         wxString sMsg = AppStr(app_backupcannotrestore);
         sMsg.Append(sBakFile);
-        ::wxMessageBox(sMsg, AppStr(app_backuperror_title) , wxICON_ERROR, wxTheApp->GetTopWindow());
+        ThemeColours::ShowMessageBox(sMsg, AppStr(app_backuperror_title) , wxICON_ERROR, wxTheApp->GetTopWindow());
     }
     */
 }

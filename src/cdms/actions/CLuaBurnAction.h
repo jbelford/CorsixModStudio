@@ -19,6 +19,7 @@
 #pragma once
 
 #include "views/frmFiles.h"
+#include "common/ThemeColours.h"
 #include "frame/Construct.h"
 #include "common/Utility.h"
 #include "common/strconv.h"
@@ -111,7 +112,8 @@ class CLuaBurnAction : public frmFiles::IHandler
                         try
                         {
                             pRgd->Save(outStream.get());
-                            wxMessageBox(AppStr(rgd_burngood), VGetAction(), wxICON_INFORMATION, TheConstruct);
+                            ThemeColours::ShowMessageBox(AppStr(rgd_burngood), VGetAction(), wxICON_INFORMATION,
+                                                         TheConstruct);
                         }
                         catch (const CRainmanException &e)
                         {

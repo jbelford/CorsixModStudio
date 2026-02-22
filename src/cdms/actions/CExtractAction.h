@@ -19,6 +19,7 @@
 #pragma once
 
 #include "views/frmFiles.h"
+#include "common/ThemeColours.h"
 #include "frame/Construct.h"
 #include "common/Utility.h"
 #include "common/strconv.h"
@@ -39,7 +40,7 @@ class CExtractAction : public frmFiles::IHandler
             const char *sTmp = strrchr(pData->sSource, '.');
             if (!sTmp || (stricmp(sTmp, ".sga") != 0))
             {
-                wxMessageBox(AppStr(extract_already), VGetAction(), wxICON_INFORMATION, TheConstruct);
+                ThemeColours::ShowMessageBox(AppStr(extract_already), VGetAction(), wxICON_INFORMATION, TheConstruct);
                 return;
             }
         }
@@ -60,7 +61,7 @@ class CExtractAction : public frmFiles::IHandler
             IDirectoryTraverser::IIterator *pDir = itrResult ? itrResult.value().release() : nullptr;
             TheConstruct->GetFilesList()->UpdateDirectoryChildren(oParent, pDir);
             delete pDir;
-            wxMessageBox(AppStr(extract_good), VGetAction(), wxICON_INFORMATION, TheConstruct);
+            ThemeColours::ShowMessageBox(AppStr(extract_good), VGetAction(), wxICON_INFORMATION, TheConstruct);
         }
     }
 
@@ -74,7 +75,9 @@ class CExtractAction : public frmFiles::IHandler
         {
             auto inResult = TheConstruct->GetFileService().OpenStream(AsciiTowxString(saFile));
             if (!inResult)
+            {
                 throw CModStudioException(0, __FILE__, __LINE__, "Unable to open streams for \'%s\'", saFile);
+            }
             pIn = inResult.value().release();
             auto outResult = TheConstruct->GetFileService().OpenOutputStream(AsciiTowxString(saFile), true);
             if (!outResult)
@@ -104,7 +107,9 @@ class CExtractAction : public frmFiles::IHandler
             throw CModStudioException(e, __FILE__, __LINE__, "Seek/Tell problem on streams for \'%s\'", saFile);
         }
         if (!pBuffer)
+        {
             pBuffer = new char[4194304]; // 4mb
+        }
         if (!pBuffer)
         {
             delete pIn;
@@ -124,14 +129,18 @@ class CExtractAction : public frmFiles::IHandler
                 delete pIn;
                 delete pOut;
                 if (!p4mbBuffer)
+                {
                     delete[] pBuffer;
+                }
                 throw CModStudioException(e, __FILE__, __LINE__, "Read/Write problem on streams for \'%s\'", saFile);
             }
             iLen -= iLen2;
         }
 
         if (!p4mbBuffer)
+        {
             delete[] pBuffer;
+        }
         delete pIn;
         delete pOut;
     }

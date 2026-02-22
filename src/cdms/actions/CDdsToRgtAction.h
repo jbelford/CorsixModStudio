@@ -19,6 +19,7 @@
 #pragma once
 
 #include "views/frmFiles.h"
+#include "common/ThemeColours.h"
 #include "frame/Construct.h"
 #include "common/Utility.h"
 #include "common/strconv.h"
@@ -50,16 +51,20 @@ class CDdsToRgtAction : public frmFiles::IHandler
         char *saDir = strdup(saFile.get()), *pSlash;
         pSlash = strrchr(saDir, '\\');
         if (pSlash)
+        {
             *pSlash = 0;
+        }
         else
+        {
             *saDir = 0;
+        }
         auto itrResult = TheConstruct->GetFileService().Iterate(AsciiTowxString(saDir));
         free(saDir);
         IDirectoryTraverser::IIterator *pDir = itrResult ? itrResult.value().release() : nullptr;
         TheConstruct->GetFilesList()->UpdateDirectoryChildren(oParent, pDir);
         delete pDir;
 
-        wxMessageBox(AppStr(rgt_makefromddsgood), VGetAction(), wxICON_INFORMATION, TheConstruct);
+        ThemeColours::ShowMessageBox(AppStr(rgt_makefromddsgood), VGetAction(), wxICON_INFORMATION, TheConstruct);
     }
 
     static void DoConvert(char *saFile)
@@ -71,7 +76,9 @@ class CDdsToRgtAction : public frmFiles::IHandler
         {
             auto inResult = TheConstruct->GetFileService().OpenStream(AsciiTowxString(saFile));
             if (!inResult)
+            {
                 throw CModStudioException(0, __FILE__, __LINE__, "Cannot open input stream for \'%s\'", saFile);
+            }
             pIn = inResult.value().release();
         }
         catch (const CRainmanException &e)
@@ -93,14 +100,18 @@ class CDdsToRgtAction : public frmFiles::IHandler
 
         char *saOutFile = strdup(saFile);
         if (!saOutFile)
+        {
             throw CModStudioException(__FILE__, __LINE__, "Memory allocation error");
+        }
         strcpy(strchr(saOutFile, '.'), ".rgt");
 
         try
         {
             auto outResult = TheConstruct->GetFileService().OpenOutputStream(AsciiTowxString(saOutFile), true);
             if (!outResult)
+            {
                 throw CModStudioException(0, __FILE__, __LINE__, "Cannot open output stream for \'%s\'", saFile);
+            }
             pOut = outResult.value().release();
         }
         catch (const CRainmanException &e)

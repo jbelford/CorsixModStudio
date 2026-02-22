@@ -19,6 +19,7 @@
 #pragma once
 
 #include "views/frmFiles.h"
+#include "common/ThemeColours.h"
 #include "frame/Construct.h"
 #include "common/Utility.h"
 #include "common/strconv.h"
@@ -216,8 +217,8 @@ class CLuaBurnFolderAction : public frmFiles::IHandler
     virtual void VHandle(wxString sFile, wxTreeItemId &oParent, wxTreeItemId &oFile)
     {
         UNUSED(oFile);
-        m_bCheckSkip = (wxMessageBox(wxT("Skip burning a LUA if it\'s RGD is newer?"), VGetAction(), wxYES_NO,
-                                     TheConstruct) == wxYES);
+        m_bCheckSkip = (ThemeColours::ShowMessageBox(wxT("Skip burning a LUA if it\'s RGD is newer?"), VGetAction(),
+                                                     wxYES_NO, TheConstruct) == wxYES);
 
         size_t iCount = Recurse(sFile, oParent, true, 0, 1);
         size_t iDiv = 1;
@@ -231,7 +232,7 @@ class CLuaBurnFolderAction : public frmFiles::IHandler
         m_pCache = pCache.get();
         Recurse(sFile, oParent, false, 0, iDiv);
         m_pCache = nullptr;
-        wxMessageBox(AppStr(rgd_massburngood), VGetAction(), wxICON_INFORMATION, TheConstruct);
+        ThemeColours::ShowMessageBox(AppStr(rgd_massburngood), VGetAction(), wxICON_INFORMATION, TheConstruct);
         delete m_pProgress;
     }
 };

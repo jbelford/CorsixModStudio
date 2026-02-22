@@ -25,6 +25,7 @@
 #include "common/strings.h"
 #include "common/Utility.h"
 #include "common/Common.h"
+#include "common/ThemeColours.h"
 
 BEGIN_EVENT_TABLE(frmRgmMaterialEditor, wxWindow)
 EVT_SIZE(frmRgmMaterialEditor::OnSize)
@@ -110,13 +111,15 @@ void frmRgmMaterialEditor::OnSave(wxCommandEvent &event)
         ErrorBoxE(e);
         return;
     }
-    wxMessageBox(AppStr(rgd_savegood), AppStr(rgd_save), wxICON_INFORMATION, this);
+    ThemeColours::ShowMessageBox(AppStr(rgd_savegood), AppStr(rgd_save), wxICON_INFORMATION, this);
 }
 
 void frmRgmMaterialEditor::SetObject(CRgmFile *pRgmFile, bool bTakeOwnership)
 {
     if (m_bOwnRgm)
+    {
         delete m_pRgmFile;
+    }
     m_pRgmFile = pRgmFile;
     m_bOwnRgm = bTakeOwnership;
 
@@ -228,7 +231,9 @@ frmRgmMaterialEditor::frmRgmMaterialEditor(wxTreeItemId &oFileParent, wxString s
 frmRgmMaterialEditor::~frmRgmMaterialEditor()
 {
     if (m_bOwnRgm)
+    {
         delete m_pRgmFile;
+    }
 }
 
 void frmRgmMaterialEditor::OnTreeSelect(wxTreeEvent &event)
@@ -303,7 +308,11 @@ void frmRgmMaterialEditor::OnTreeRightClick(wxTreeEvent &event)
     int flags;
     wxTreeItemId oItemID = m_pTables->HitTest(event.GetPoint(), flags);
     if (oItemID.IsOk())
+    {
         m_pTables->SelectItem(oItemID);
+    }
     else
+    {
         return;
+    }
 }
