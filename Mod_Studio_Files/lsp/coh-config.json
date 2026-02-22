@@ -1,0 +1,28 @@
+{
+    "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
+    "runtime.version": "Lua 5.1",
+    "runtime.builtin": {
+        "io": "disable",
+        "debug": "disable",
+        "os": "disable",
+        "package": "disable"
+    },
+    "workspace.library": [
+        "scar-types.lua",
+        "scar-coh.lua"
+    ],
+    "diagnostics.globals": [
+        "GameData",
+        "MetaData",
+        "Reference",
+        "InheritMeta",
+        "import"
+    ],
+    "diagnostics.disable": [
+        "lowercase-global"
+    ],
+    "files.associations": {
+        "*.scar": "lua"
+    },
+    "completion.showWord": "Disable"
+}
