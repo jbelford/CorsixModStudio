@@ -630,6 +630,11 @@ void ConstructFrame::DoTool(wxString sName) { m_toolRegistry.DoTool(sName); }
 
 ConstructFrame::~ConstructFrame()
 {
+    // Shut down LSP before children are destroyed, so that
+    // frmScarEditor::~frmScarEditor can safely skip the close notification.
+    m_bLspShutDown = true;
+    m_pLspClient.reset();
+
     frmRGDEditor::FreeNodeHelp();
     // ModuleManager destructor handles m_pModule, hash service, etc.
     // ToolRegistry destructor handles tool cleanup
@@ -639,6 +644,11 @@ CModuleFile *ConstructFrame::GetModule() const { return m_moduleManager.GetModul
 
 lsp::CLspClient *ConstructFrame::GetLspClient()
 {
+    if (m_bLspShutDown)
+    {
+        return nullptr;
+    }
+
     if (m_pLspClient && m_pLspClient->IsRunning())
     {
         return m_pLspClient.get();
@@ -1082,6 +1092,7 @@ void ConstructFrame::OnCloseWindow(wxCloseEvent &event)
     }
 
     // Shut down the language server before destroying the frame
+    m_bLspShutDown = true;
     if (m_pLspClient)
     {
         m_pLspClient->Stop();

@@ -1114,12 +1114,23 @@ void frmScarEditor::LspCloseDocument()
         return;
     }
 
+    m_bLspOpen = false;
+
+    // During app shutdown the ConstructFrame may already be partially
+    // destroyed when child windows are torn down by the base-class
+    // destructor.  Calling GetConstruct() at that point is UB.
+    // IsBeingDeleted() on the top-level window detects this case.
+    auto *pTopWin = wxTheApp ? wxTheApp->GetTopWindow() : nullptr;
+    if (!pTopWin || pTopWin->IsBeingDeleted())
+    {
+        return;
+    }
+
     auto *pClient = GetConstruct()->GetLspClient();
     if (pClient)
     {
         pClient->CloseDocument(m_sLspUri);
     }
-    m_bLspOpen = false;
 }
 
 void frmScarEditor::OnLspTimer(wxTimerEvent &event)

@@ -61,6 +61,7 @@ class ConstructFrame : public wxFrame, public IMainFrameView
     CModuleLoadPresenter m_moduleLoadPresenter;
     RelicToolResolver m_relicToolResolver;
     std::unique_ptr<lsp::CLspClient> m_pLspClient;
+    bool m_bLspShutDown = false;
 
   public:
     ConstructFrame(const wxString &sTitle, const wxPoint &oPos, const wxSize &oSize);
