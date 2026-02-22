@@ -1471,12 +1471,24 @@ class CHoverPopup : public wxPopupTransientWindow
             pCodeSTC->SetReadOnly(true);
             pCodeSTC->Colourise(0, -1);
 
-            // Size the STC to fit content (with character-level wrap for long lines)
+            // Size the STC to fit content, capped at kMaxWidth
             int lineCount = pCodeSTC->GetLineCount();
             int lineHeight = pCodeSTC->TextHeight(0);
 
-            // Set width first so Scintilla can compute wrapped line counts
-            pCodeSTC->SetMinSize(wxSize(kMaxWidth, lineHeight));
+            // Measure max line width for content-driven sizing
+            int maxLineWidth = 0;
+            for (int ln = 0; ln < lineCount; ++ln)
+            {
+                int w = pCodeSTC->TextWidth(wxSTC_STYLE_DEFAULT, pCodeSTC->GetLine(ln));
+                if (w > maxLineWidth)
+                {
+                    maxLineWidth = w;
+                }
+            }
+            int codeWidth = std::min(maxLineWidth + 20, kMaxWidth);
+
+            // Set width so Scintilla can compute wrapped line counts
+            pCodeSTC->SetMinSize(wxSize(codeWidth, lineHeight));
             pCodeSTC->Layout();
 
             int totalDisplayLines = 0;
@@ -1486,7 +1498,7 @@ class CHoverPopup : public wxPopupTransientWindow
             }
             int codeHeight = totalDisplayLines * lineHeight + 6;
 
-            pCodeSTC->SetMinSize(wxSize(kMaxWidth, codeHeight));
+            pCodeSTC->SetMinSize(wxSize(codeWidth, codeHeight));
             pSizer->Add(pCodeSTC, 0, wxEXPAND | wxALL, 6);
         }
 
