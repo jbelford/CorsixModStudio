@@ -393,6 +393,66 @@ void frmScarEditor::ShowAutoComplete()
     int iPos = m_pSTC->GetCurrentPos();
     int iWordPos = m_pSTC->WordStartPosition(iPos, true);
     int iWordLen = iPos - iWordPos;
+
+    if (m_bLspOpen)
+    {
+        // LSP is active — use language server completions exclusively
+        auto *pFrame = GetConstruct();
+        auto *pClient = pFrame ? pFrame->GetLspClient() : nullptr;
+        if (pClient)
+        {
+            int line = m_pSTC->LineFromPosition(iPos);
+            int col = iPos - m_pSTC->PositionFromLine(line);
+            pClient->RequestCompletion(m_sLspUri, line, col,
+                                       [this, iWordLen](lsp::CompletionList completions)
+                                       {
+                                           if (completions.items.empty())
+                                           {
+                                               return;
+                                           }
+
+                                           // Map LSP CompletionItemKind to our icon types
+                                           auto mapKind = [](lsp::CompletionItemKind kind) -> int
+                                           {
+                                               switch (kind)
+                                               {
+                                               case lsp::CompletionItemKind::Function:
+                                               case lsp::CompletionItemKind::Method:
+                                                   return ACT_Function;
+                                               case lsp::CompletionItemKind::Keyword:
+                                                   return ACT_Keyword;
+                                               case lsp::CompletionItemKind::Constant:
+                                               case lsp::CompletionItemKind::EnumMember:
+                                                   return ACT_Constant;
+                                               case lsp::CompletionItemKind::Variable:
+                                               case lsp::CompletionItemKind::Field:
+                                               case lsp::CompletionItemKind::Property:
+                                                   return ACT_LocalFunc;
+                                               default:
+                                                   return ACT_Keyword;
+                                               }
+                                           };
+
+                                           wxString sItems;
+                                           for (size_t i = 0; i < completions.items.size(); ++i)
+                                           {
+                                               if (i > 0)
+                                               {
+                                                   sItems.Append(' ');
+                                               }
+                                               sItems.Append(wxString::FromUTF8(completions.items[i].label));
+                                               sItems.Append(
+                                                   wxString::Format(wxT("?%d"), mapKind(completions.items[i].kind)));
+                                           }
+
+                                           _PushThisCalltip();
+                                           m_pSTC->AutoCompShow(iWordLen, sItems);
+                                       });
+        }
+        return;
+    }
+
+    // LSP is not active — use legacy SCAR/Lua autocomplete
     wxString sPrefix;
     if (iWordLen > 0)
     {
@@ -469,67 +529,6 @@ void frmScarEditor::ShowAutoComplete()
 
     _PushThisCalltip();
     m_pSTC->AutoCompShow(iWordLen, sItems);
-
-    // Also request LSP completions asynchronously — results will be merged
-    // if they arrive while the popup is still visible.
-    if (m_bLspOpen)
-    {
-        auto *pFrame = GetConstruct();
-        auto *pClient = pFrame ? pFrame->GetLspClient() : nullptr;
-        if (pClient)
-        {
-            int line = m_pSTC->LineFromPosition(iPos);
-            int col = iPos - m_pSTC->PositionFromLine(line);
-            pClient->RequestCompletion(m_sLspUri, line, col,
-                                       [this, iWordLen](lsp::CompletionList completions)
-                                       {
-                                           if (completions.items.empty())
-                                           {
-                                               return;
-                                           }
-
-                                           // Map LSP CompletionItemKind to our icon types
-                                           auto mapKind = [](lsp::CompletionItemKind kind) -> int
-                                           {
-                                               switch (kind)
-                                               {
-                                               case lsp::CompletionItemKind::Function:
-                                               case lsp::CompletionItemKind::Method:
-                                                   return ACT_Function;
-                                               case lsp::CompletionItemKind::Keyword:
-                                                   return ACT_Keyword;
-                                               case lsp::CompletionItemKind::Constant:
-                                               case lsp::CompletionItemKind::EnumMember:
-                                                   return ACT_Constant;
-                                               case lsp::CompletionItemKind::Variable:
-                                               case lsp::CompletionItemKind::Field:
-                                               case lsp::CompletionItemKind::Property:
-                                                   return ACT_LocalFunc;
-                                               default:
-                                                   return ACT_Keyword;
-                                               }
-                                           };
-
-                                           wxString sItems;
-                                           for (size_t i = 0; i < completions.items.size(); ++i)
-                                           {
-                                               if (i > 0)
-                                               {
-                                                   sItems.Append(' ');
-                                               }
-                                               sItems.Append(wxString::FromUTF8(completions.items[i].label));
-                                               sItems.Append(
-                                                   wxString::Format(wxT("?%d"), mapKind(completions.items[i].kind)));
-                                           }
-
-                                           // Only show if no autocomplete popup is currently active
-                                           if (!m_pSTC->AutoCompActive())
-                                           {
-                                               m_pSTC->AutoCompShow(iWordLen, sItems);
-                                           }
-                                       });
-        }
-    }
 }
 
 void frmScarEditor::OnKeyDown(wxKeyEvent &event)
