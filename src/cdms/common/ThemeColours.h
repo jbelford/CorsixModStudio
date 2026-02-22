@@ -104,7 +104,7 @@ inline wxColour PropGridBg()
 
 inline wxColour PropGridFg()
 {
-    return IsDarkMode() ? wxColour(212, 212, 212) : wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT);
+    return IsDarkMode() ? wxColour(230, 230, 230) : wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT);
 }
 
 inline wxColour PropGridCaptionBg()
@@ -114,7 +114,7 @@ inline wxColour PropGridCaptionBg()
 
 inline wxColour PropGridCaptionFg()
 {
-    return IsDarkMode() ? wxColour(212, 212, 212) : wxSystemSettings::GetColour(wxSYS_COLOUR_CAPTIONTEXT);
+    return IsDarkMode() ? wxColour(230, 230, 230) : wxSystemSettings::GetColour(wxSYS_COLOUR_CAPTIONTEXT);
 }
 
 inline wxColour PropGridMarginColour()
