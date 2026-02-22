@@ -32,11 +32,13 @@
 // ----------------------------
 #include <rainman/io/IFileStore.h>
 #include <wx/stc/stc.h>
+#include <wx/timer.h>
 #include <list>
 #include <stack>
 #include <wx/treectrl.h>
 #include "common/strings.h"
 #include "interfaces/ISaveable.h"
+#include <lsp/Protocol.h>
 
 class frmScarEditor : public wxWindow, public ISaveable
 {
@@ -46,6 +48,22 @@ class frmScarEditor : public wxWindow, public ISaveable
     wxChoice *m_pFunctionDropdown;
     wxTreeItemId m_oFileParent;
     bool m_bNeedsSaving;
+
+    // --- LSP integration ---
+    wxTimer m_lspTimer;
+    std::string m_sLspUri;
+    bool m_bLspOpen = false;
+    int m_iLspVersion = 0;
+    bool m_bLspNeedsSync = false;
+    static constexpr int INDICATOR_LSP_ERROR = 8;
+    static constexpr int INDICATOR_LSP_WARNING = 9;
+    static constexpr int INDICATOR_LSP_INFO = 10;
+
+    void OnLspTimer(wxTimerEvent &event);
+    void LspOpenDocument();
+    void LspSyncDocument();
+    void LspCloseDocument();
+    void ApplyDiagnostics(const std::string &uri, std::vector<lsp::Diagnostic> diagnostics);
 
     struct _ScarFunction
     {

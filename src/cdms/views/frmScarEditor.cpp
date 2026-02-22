@@ -37,6 +37,8 @@ extern "C"
 #include "common/Common.h"
 #include <cstdint>
 #include <rainman/core/RainmanLog.h>
+#include <lsp/LspClient.h>
+#include <lsp/Protocol.h>
 
 BEGIN_EVENT_TABLE(frmScarEditor, wxWindow)
 EVT_SIZE(frmScarEditor::OnSize)
@@ -51,6 +53,7 @@ EVT_STC_SAVEPOINTLEFT(IDC_Text, frmScarEditor::OnSavePointLeave)
 EVT_STC_SAVEPOINTREACHED(IDC_Text, frmScarEditor::OnSavePointReach)
 EVT_CLOSE(frmScarEditor::OnCloseWindow)
 EVT_CHOICE(IDC_FunctionDrop, frmScarEditor::OnFuncListChoose)
+EVT_TIMER(wxID_ANY, frmScarEditor::OnLspTimer)
 END_EVENT_TABLE()
 
 #define mySTC_STYLE_BOLD 1
@@ -463,6 +466,66 @@ void frmScarEditor::ShowAutoComplete()
 
     _PushThisCalltip();
     m_pSTC->AutoCompShow(iWordLen, sItems);
+
+    // Also request LSP completions asynchronously — results will be merged
+    // if they arrive while the popup is still visible.
+    if (m_bLspOpen)
+    {
+        auto *pClient = GetConstruct()->GetLspClient();
+        if (pClient)
+        {
+            int line = m_pSTC->LineFromPosition(iPos);
+            int col = iPos - m_pSTC->PositionFromLine(line);
+            pClient->RequestCompletion(m_sLspUri, line, col,
+                                       [this, iWordLen](lsp::CompletionList completions)
+                                       {
+                                           if (completions.items.empty())
+                                           {
+                                               return;
+                                           }
+
+                                           // Map LSP CompletionItemKind to our icon types
+                                           auto mapKind = [](lsp::CompletionItemKind kind) -> int
+                                           {
+                                               switch (kind)
+                                               {
+                                               case lsp::CompletionItemKind::Function:
+                                               case lsp::CompletionItemKind::Method:
+                                                   return ACT_Function;
+                                               case lsp::CompletionItemKind::Keyword:
+                                                   return ACT_Keyword;
+                                               case lsp::CompletionItemKind::Constant:
+                                               case lsp::CompletionItemKind::EnumMember:
+                                                   return ACT_Constant;
+                                               case lsp::CompletionItemKind::Variable:
+                                               case lsp::CompletionItemKind::Field:
+                                               case lsp::CompletionItemKind::Property:
+                                                   return ACT_LocalFunc;
+                                               default:
+                                                   return ACT_Keyword;
+                                               }
+                                           };
+
+                                           wxString sItems;
+                                           for (size_t i = 0; i < completions.items.size(); ++i)
+                                           {
+                                               if (i > 0)
+                                               {
+                                                   sItems.Append(' ');
+                                               }
+                                               sItems.Append(wxString::FromUTF8(completions.items[i].label));
+                                               sItems.Append(
+                                                   wxString::Format(wxT("?%d"), mapKind(completions.items[i].kind)));
+                                           }
+
+                                           // Only show if no autocomplete popup is currently active
+                                           if (!m_pSTC->AutoCompActive())
+                                           {
+                                               m_pSTC->AutoCompShow(iWordLen, sItems);
+                                           }
+                                       });
+        }
+    }
 }
 
 void frmScarEditor::OnKeyDown(wxKeyEvent &event)
@@ -492,6 +555,7 @@ void frmScarEditor::_PushThisCalltip()
 
 void frmScarEditor::OnCharAdded(wxStyledTextEvent &event)
 {
+    m_bLspNeedsSync = true;
     int iCurrentLine = m_pSTC->GetCurrentLine();
     if ((char)event.GetKey() == '\n')
     {
@@ -551,6 +615,50 @@ void frmScarEditor::OnCharAdded(wxStyledTextEvent &event)
         {
             m_pSTC->CallTipCancel();
         }
+
+        // Fall back to LSP signature help when no SCAR match found
+        if (m_bLspOpen)
+        {
+            auto *pClient = GetConstruct()->GetLspClient();
+            if (pClient)
+            {
+                int line = m_pSTC->LineFromPosition(m_pSTC->GetCurrentPos());
+                int col = m_pSTC->GetCurrentPos() - m_pSTC->PositionFromLine(line);
+                int wordPos = iWordPos;
+                pClient->RequestSignatureHelp(
+                    m_sLspUri, line, col,
+                    [this, wordPos](std::optional<lsp::SignatureHelp> help)
+                    {
+                        if (!help || help->signatures.empty())
+                        {
+                            return;
+                        }
+                        const auto &sig = help->signatures[static_cast<size_t>(help->activeSignature)];
+                        wxString tip = wxString::FromUTF8(sig.label);
+                        if (sig.documentation)
+                        {
+                            tip += wxT("\n") + wxString::FromUTF8(*sig.documentation);
+                        }
+                        m_pSTC->CallTipSetBackground(ThemeColours::CallTipBg());
+                        m_pSTC->CallTipSetForeground(ThemeColours::CallTipFg());
+                        m_pSTC->CallTipShow(wordPos, tip);
+
+                        // Highlight the active parameter
+                        if (!sig.parameters.empty() && help->activeParameter < static_cast<int>(sig.parameters.size()))
+                        {
+                            const auto &param = sig.parameters[static_cast<size_t>(help->activeParameter)];
+                            size_t hlStart = sig.label.find(param.label);
+                            if (hlStart != std::string::npos)
+                            {
+                                m_pSTC->CallTipSetHighlight(static_cast<int>(hlStart),
+                                                            static_cast<int>(hlStart + param.label.size()));
+                            }
+                        }
+                    });
+                return;
+            }
+        }
+
         m_pSTC->CallTipSetBackground(ThemeColours::CallTipBg());
         m_pSTC->CallTipSetForeground(ThemeColours::CallTipFg());
         m_oThisCalltip.sTip = wxT("No help available");
@@ -859,6 +967,14 @@ frmScarEditor::frmScarEditor(const wxTreeItemId &oFileParent, wxString sFilename
     m_pSTC->RegisterImage(ACT_Constant, g_xpmConstant);
     m_pSTC->RegisterImage(ACT_LocalFunc, g_xpmLocalFunc);
 
+    // LSP diagnostic indicator styles
+    m_pSTC->IndicatorSetStyle(INDICATOR_LSP_ERROR, wxSTC_INDIC_SQUIGGLE);
+    m_pSTC->IndicatorSetForeground(INDICATOR_LSP_ERROR, wxColour(255, 0, 0));
+    m_pSTC->IndicatorSetStyle(INDICATOR_LSP_WARNING, wxSTC_INDIC_SQUIGGLE);
+    m_pSTC->IndicatorSetForeground(INDICATOR_LSP_WARNING, wxColour(200, 150, 0));
+    m_pSTC->IndicatorSetStyle(INDICATOR_LSP_INFO, wxSTC_INDIC_DOTS);
+    m_pSTC->IndicatorSetForeground(INDICATOR_LSP_INFO, wxColour(100, 100, 200));
+
     // Bind Ctrl+Space to show autocomplete
     m_pSTC->Bind(wxEVT_KEY_DOWN, &frmScarEditor::OnKeyDown, this);
 
@@ -909,10 +1025,18 @@ frmScarEditor::frmScarEditor(const wxTreeItemId &oFileParent, wxString sFilename
 
     SetSizer(pTopSizer);
     pTopSizer->SetSizeHints(this);
+
+    // Start LSP integration (opens document + begins polling for diagnostics)
+    LspOpenDocument();
+    m_lspTimer.SetOwner(this);
+    m_lspTimer.Start(100); // Poll every 100ms
 }
 
 frmScarEditor::~frmScarEditor()
 {
+    m_lspTimer.Stop();
+    LspCloseDocument();
+
     // Unload Ref
     for (std::list<_ScarFunction>::iterator itr = m_lstScarFunctions.begin(); itr != m_lstScarFunctions.end(); ++itr)
     {
@@ -923,6 +1047,134 @@ frmScarEditor::~frmScarEditor()
         {
             delete[] *itr2;
         }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// LSP integration
+// ---------------------------------------------------------------------------
+
+void frmScarEditor::LspOpenDocument()
+{
+    auto *pClient = GetConstruct()->GetLspClient();
+    if (!pClient)
+    {
+        return;
+    }
+
+    // Build a file:// URI from the filename
+    m_sLspUri = "file:///" + std::string(m_sFilename.ToUTF8());
+    // Normalize backslashes to forward slashes for URI
+    for (char &c : m_sLspUri)
+    {
+        if (c == '\\')
+        {
+            c = '/';
+        }
+    }
+
+    m_iLspVersion = 1;
+    std::string text(m_pSTC->GetText().ToUTF8());
+    pClient->OpenDocument(m_sLspUri, "lua", text);
+    m_bLspOpen = true;
+
+    // Register diagnostics callback
+    pClient->SetDiagnosticsCallback([this](const std::string &uri, std::vector<lsp::Diagnostic> diags)
+                                    { ApplyDiagnostics(uri, std::move(diags)); });
+}
+
+void frmScarEditor::LspSyncDocument()
+{
+    if (!m_bLspOpen)
+    {
+        return;
+    }
+
+    auto *pClient = GetConstruct()->GetLspClient();
+    if (!pClient)
+    {
+        return;
+    }
+
+    ++m_iLspVersion;
+    std::string text(m_pSTC->GetText().ToUTF8());
+    pClient->ChangeDocument(m_sLspUri, text);
+}
+
+void frmScarEditor::LspCloseDocument()
+{
+    if (!m_bLspOpen)
+    {
+        return;
+    }
+
+    auto *pClient = GetConstruct()->GetLspClient();
+    if (pClient)
+    {
+        pClient->CloseDocument(m_sLspUri);
+    }
+    m_bLspOpen = false;
+}
+
+void frmScarEditor::OnLspTimer(wxTimerEvent &event)
+{
+    UNUSED(event);
+    auto *pClient = GetConstruct()->GetLspClient();
+    if (!pClient)
+    {
+        return;
+    }
+
+    if (m_bLspNeedsSync && m_bLspOpen)
+    {
+        m_bLspNeedsSync = false;
+        LspSyncDocument();
+    }
+
+    pClient->Poll();
+}
+
+void frmScarEditor::ApplyDiagnostics(const std::string &uri, std::vector<lsp::Diagnostic> diagnostics)
+{
+    if (uri != m_sLspUri)
+    {
+        return;
+    }
+
+    // Clear existing diagnostic indicators
+    m_pSTC->SetIndicatorCurrent(INDICATOR_LSP_ERROR);
+    m_pSTC->IndicatorClearRange(0, m_pSTC->GetLength());
+    m_pSTC->SetIndicatorCurrent(INDICATOR_LSP_WARNING);
+    m_pSTC->IndicatorClearRange(0, m_pSTC->GetLength());
+    m_pSTC->SetIndicatorCurrent(INDICATOR_LSP_INFO);
+    m_pSTC->IndicatorClearRange(0, m_pSTC->GetLength());
+
+    for (const auto &diag : diagnostics)
+    {
+        int startPos = m_pSTC->PositionFromLine(diag.range.start.line) + diag.range.start.character;
+        int endPos = m_pSTC->PositionFromLine(diag.range.end.line) + diag.range.end.character;
+        int length = endPos - startPos;
+        if (length <= 0)
+        {
+            length = 1;
+        }
+
+        int indicator = INDICATOR_LSP_INFO;
+        switch (diag.severity)
+        {
+        case lsp::DiagnosticSeverity::Error:
+            indicator = INDICATOR_LSP_ERROR;
+            break;
+        case lsp::DiagnosticSeverity::Warning:
+            indicator = INDICATOR_LSP_WARNING;
+            break;
+        default:
+            indicator = INDICATOR_LSP_INFO;
+            break;
+        }
+
+        m_pSTC->SetIndicatorCurrent(indicator);
+        m_pSTC->IndicatorFillRange(startPos, length);
     }
 }
 

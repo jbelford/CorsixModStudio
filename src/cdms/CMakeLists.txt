@@ -13,6 +13,7 @@ target_include_directories(CorsixModStudio PRIVATE
 
 target_link_libraries(CorsixModStudio PRIVATE
     rainman
+    lsp
     ${wxWidgets_LIBRARIES}
 )
 

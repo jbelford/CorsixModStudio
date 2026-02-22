@@ -14,7 +14,7 @@ target_include_directories(lsp
     PUBLIC ${CMAKE_SOURCE_DIR}/src
 )
 
-target_compile_definitions(lsp PRIVATE LSP_NO_EXPORTS)
+target_compile_definitions(lsp PUBLIC LSP_NO_EXPORTS)
 
 target_link_libraries(lsp
     PUBLIC nlohmann_json::nlohmann_json

@@ -41,6 +41,8 @@
 #include "views/interfaces/IMainFrameView.h"
 #include "presenters/CModuleLoadPresenter.h"
 #include "RelicToolResolver.h"
+#include <lsp/LspClient.h>
+#include <memory>
 
 class ConstructFrame : public wxFrame, public IMainFrameView
 {
@@ -58,6 +60,7 @@ class ConstructFrame : public wxFrame, public IMainFrameView
     MenuController m_menuController;
     CModuleLoadPresenter m_moduleLoadPresenter;
     RelicToolResolver m_relicToolResolver;
+    std::unique_ptr<lsp::CLspClient> m_pLspClient;
 
   public:
     ConstructFrame(const wxString &sTitle, const wxPoint &oPos, const wxSize &oSize);
@@ -130,6 +133,9 @@ class ConstructFrame : public wxFrame, public IMainFrameView
     ModuleService &GetModuleService() { return m_moduleManager.GetModuleService(); }
     FileService &GetFileService() { return m_moduleManager.GetFileService(); }
     HashService &GetHashService() { return m_moduleManager.GetHashService(); }
+
+    /// Get or create the shared LSP client. Returns nullptr if LuaLS is not available.
+    lsp::CLspClient *GetLspClient();
 
     size_t GetToolCount();
     ITool *GetTool(size_t i);

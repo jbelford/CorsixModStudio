@@ -50,6 +50,9 @@ extern "C"
 #include <crtdbg.h>
 #endif
 #include "common/Common.h"
+#include <rainman/core/RainmanLog.h>
+#include <wx/filename.h>
+#include <wx/stdpaths.h>
 
 BEGIN_EVENT_TABLE(ConstructFrame, wxFrame)
 EVT_MENU(IDM_LoadModDoWWA, ConstructFrame::OnOpenModDoW)
@@ -634,6 +637,65 @@ ConstructFrame::~ConstructFrame()
 
 CModuleFile *ConstructFrame::GetModule() const { return m_moduleManager.GetModule(); }
 
+lsp::CLspClient *ConstructFrame::GetLspClient()
+{
+    if (m_pLspClient && m_pLspClient->IsRunning())
+    {
+        return m_pLspClient.get();
+    }
+
+    // Locate LuaLS binary next to the executable
+    wxFileName exeDir(wxStandardPaths::Get().GetExecutablePath());
+    wxString lspBinDir = exeDir.GetPath() + wxT("\\Mod_Studio_Files\\lsp\\bin");
+    wxString serverPath = lspBinDir + wxT("\\lua-language-server.exe");
+
+    if (!wxFileExists(serverPath))
+    {
+        return nullptr;
+    }
+
+    // Build workspace root and library paths
+    std::string workspaceRoot;
+    std::vector<std::string> libraryPaths;
+
+    wxString lspDir = exeDir.GetPath() + wxT("\\Mod_Studio_Files\\lsp");
+    libraryPaths.push_back(wxStringToAscii(lspDir + wxT("\\scar-types.lua")).get());
+
+    bool isDow =
+        m_moduleManager.HasModule() && m_moduleManager.GetModuleService().GetModuleType() == CModuleFile::MT_DawnOfWar;
+    if (isDow)
+    {
+        libraryPaths.push_back(wxStringToAscii(lspDir + wxT("\\lua502-compat.lua")).get());
+        libraryPaths.push_back(wxStringToAscii(lspDir + wxT("\\scar-dow.lua")).get());
+    }
+    else
+    {
+        libraryPaths.push_back(wxStringToAscii(lspDir + wxT("\\scar-coh.lua")).get());
+    }
+
+    // LuaLS settings
+    nlohmann::json settings;
+    settings["Lua"]["runtime"]["version"] = "Lua 5.1";
+    settings["Lua"]["runtime"]["builtin"]["io"] = "disable";
+    settings["Lua"]["runtime"]["builtin"]["debug"] = "disable";
+    settings["Lua"]["runtime"]["builtin"]["os"] = "disable";
+    settings["Lua"]["runtime"]["builtin"]["package"] = "disable";
+    settings["Lua"]["diagnostics"]["globals"] = {"GameData", "MetaData", "Reference", "InheritMeta", "import"};
+    settings["Lua"]["diagnostics"]["disable"] = {"lowercase-global"};
+    settings["Lua"]["files"]["associations"]["*.scar"] = "lua";
+    settings["Lua"]["workspace"]["library"] = libraryPaths;
+
+    m_pLspClient = std::make_unique<lsp::CLspClient>();
+    if (!m_pLspClient->Start(serverPath.ToStdWstring(), workspaceRoot, libraryPaths, settings))
+    {
+        CDMS_LOG_WARN("Failed to start Lua Language Server");
+        m_pLspClient.reset();
+        return nullptr;
+    }
+
+    return m_pLspClient.get();
+}
+
 const wxString &ConstructFrame::GetModuleFile() const { return m_moduleManager.GetModuleFile(); }
 
 void ConstructFrame::OnCloseMod(wxCommandEvent &event) { SetModule(nullptr); }
@@ -1015,5 +1077,13 @@ void ConstructFrame::OnCloseWindow(wxCloseEvent &event)
         event.Veto();
         return;
     }
+
+    // Shut down the language server before destroying the frame
+    if (m_pLspClient)
+    {
+        m_pLspClient->Stop();
+        m_pLspClient.reset();
+    }
+
     this->Destroy();
 }
