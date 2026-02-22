@@ -30,7 +30,9 @@ Result<CModuleFile *> ModuleService::LoadModuleFile(const wxString &sPath, pfnSt
 {
     auto sFile = wxStringToAscii(sPath);
     if (!sFile)
+    {
         return Result<CModuleFile *>::Err(wxT("Memory allocation error"));
+    }
 
     auto *pMod = new CModuleFile;
     if (!pMod)
@@ -56,7 +58,9 @@ Result<CModuleFile *> ModuleService::LoadSgaAsMod(const wxString &sPath, pfnStat
 {
     auto sFile = wxStringToAscii(sPath);
     if (!sFile)
+    {
         return Result<CModuleFile *>::Err(wxT("Memory allocation error"));
+    }
 
     auto *pMod = new CModuleFile;
     if (!pMod)
@@ -83,7 +87,9 @@ Result<void> ModuleService::SetLocale(const wxString &sLocale)
 {
     auto sVal = wxStringToAscii(sLocale);
     if (!sVal)
+    {
         return Result<void>::Err(wxT("Memory allocation error"));
+    }
 
     try
     {
@@ -121,9 +127,23 @@ Result<void> ModuleService::SetMapPackRootFolder(const wxString &sFolder)
 
 // --- Module type ---
 
-CModuleFile::eModuleType ModuleService::GetModuleType() const { return m_pModule->GetModuleType(); }
+CModuleFile::eModuleType ModuleService::GetModuleType() const
+{
+    if (!m_pModule)
+    {
+        return CModuleFile::MT_DawnOfWar;
+    }
+    return m_pModule->GetModuleType();
+}
 
-bool ModuleService::IsFauxModule() const { return m_pModule->IsFauxModule(); }
+bool ModuleService::IsFauxModule() const
+{
+    if (!m_pModule)
+    {
+        return false;
+    }
+    return m_pModule->IsFauxModule();
+}
 
 // --- String directive getters ---
 
@@ -204,7 +224,9 @@ Result<void> ModuleService::NewUCS(const wxString &sName)
 {
     auto s = wxStringToAscii(sName);
     if (!s)
+    {
         return Result<void>::Err(wxT("Memory allocation error"));
+    }
 
     try
     {
@@ -222,7 +244,9 @@ Result<void> ModuleService::NewUCS(const wxString &sName, std::shared_ptr<CUcsFi
 {
     auto s = wxStringToAscii(sName);
     if (!s)
+    {
         return Result<void>::Err(wxT("Memory allocation error"));
+    }
 
     try
     {
@@ -240,7 +264,9 @@ Result<bool> ModuleService::DirectoryExists(const wxString &sPath)
 {
     auto s = wxStringToAscii(sPath);
     if (!s)
+    {
         return Result<bool>::Err(wxT("Memory allocation error"));
+    }
 
     bool bExists = m_pModule->VDirectoryExists(s.get());
     return Result<bool>::Ok(bExists);

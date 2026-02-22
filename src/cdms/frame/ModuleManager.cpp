@@ -24,11 +24,19 @@ ModuleManager::ModuleManager() : m_pModule(nullptr), m_pRgdHashTable(nullptr), m
 
 ModuleManager::~ModuleManager()
 {
+    // Clear service references before deleting the module so that child
+    // windows destroyed later by ~wxWindow() don't see a dangling pointer.
+    m_moduleService.SetModule(nullptr);
+    m_fileService.SetStore(nullptr);
+    m_fileService.SetTraverser(nullptr);
+
     delete m_pModule;
     m_hashService.Shutdown();
     m_pRgdHashTable = nullptr;
     if (m_sRgdHashCustomOut)
+    {
         free(m_sRgdHashCustomOut);
+    }
 }
 
 void ModuleManager::SetModule(CModuleFile *pMod, const wxString &sModuleFile)
@@ -48,7 +56,9 @@ void ModuleManager::SetModule(CModuleFile *pMod, const wxString &sModuleFile)
     }
 
     if (m_pModule)
+    {
         delete m_pModule;
+    }
     m_pModule = pMod;
     m_sModuleFile = sModuleFile;
 }
@@ -58,7 +68,9 @@ void ModuleManager::ClearModule() { SetModule(nullptr, wxT("")); }
 CRgdHashTable *ModuleManager::GetRgdHashTable(const wxString &dictionariesPath)
 {
     if (m_pRgdHashTable)
+    {
         return m_pRgdHashTable;
+    }
 
     auto result = m_hashService.Initialize(dictionariesPath);
     if (!result.ok())
@@ -68,7 +80,9 @@ CRgdHashTable *ModuleManager::GetRgdHashTable(const wxString &dictionariesPath)
 
     m_pRgdHashTable = m_hashService.GetHashTable();
     if (m_hashService.GetCustomOutPath())
+    {
         m_sRgdHashCustomOut = strdup(m_hashService.GetCustomOutPath());
+    }
 
     return m_pRgdHashTable;
 }
