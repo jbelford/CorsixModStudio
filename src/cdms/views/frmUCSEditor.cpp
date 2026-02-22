@@ -24,6 +24,8 @@
 #include "common/config.h"
 #include "common/Utility.h"
 #include "presenters/CUcsEditorPresenter.h"
+#include "res/Icons.h"
+#include <wx/artprov.h>
 #include <wx/msgdlg.h>
 #include <wx/toolbar.h>
 #include <wx/tbarbase.h>
@@ -96,21 +98,17 @@ frmUCSEditor::frmUCSEditor(wxWindow *parent, wxWindowID id, bool bReadOnly, cons
     pTopSizer->Add(pToolbar = new wxToolBar(this, -1, wxDefaultPosition, wxDefaultSize,
                                             wxTB_NODIVIDER | wxTB_HORIZONTAL | wxNO_BORDER),
                    0, wxEXPAND | wxALL, 3);
-    wxBitmap oSaveBmp(wxT("IDB_32SAVE"), wxBITMAP_TYPE_BMP_RESOURCE),
-        oAddBmp(wxT("IDB_32ADD"), wxBITMAP_TYPE_BMP_RESOURCE);
-    wxBitmap oApplyBmp(wxT("IDB_32APPLY"), wxBITMAP_TYPE_BMP_RESOURCE),
-        oCancelBmp(wxT("IDB_32CANCEL"), wxBITMAP_TYPE_BMP_RESOURCE);
-    oSaveBmp.SetMask(new wxMask(oSaveBmp, wxColour(128, 128, 128)));
-    oAddBmp.SetMask(new wxMask(oAddBmp, wxColour(128, 128, 128)));
-    oApplyBmp.SetMask(new wxMask(oApplyBmp, wxColour(128, 128, 128)));
-    oCancelBmp.SetMask(new wxMask(oCancelBmp, wxColour(128, 128, 128)));
+    auto oSaveBundle = wxArtProvider::GetBitmapBundle(wxART_FILE_SAVE, wxART_TOOLBAR, wxSize(32, 32));
+    auto oAddBundle = wxBitmapBundle::FromSVG(cdms::icons::kPlus, wxSize(32, 32));
+    auto oApplyBundle = wxBitmapBundle::FromSVG(cdms::icons::kArrowRightToLine, wxSize(32, 32));
+    auto oCancelBundle = wxBitmapBundle::FromSVG(cdms::icons::kArrowLeftToLine, wxSize(32, 32));
     pToolbar->SetToolBitmapSize(wxSize(32, 32));
-    pToolbar->AddTool(IDC_ToolSave, AppStr(ucsedit_save), oSaveBmp, AppStr(ucsedit_save));
-    pToolbar->AddTool(IDC_ToolAdd, AppStr(ucsedit_newentry), oAddBmp, AppStr(ucsedit_newentry));
+    pToolbar->AddTool(IDC_ToolSave, AppStr(ucsedit_save), oSaveBundle, AppStr(ucsedit_save));
+    pToolbar->AddTool(IDC_ToolAdd, AppStr(ucsedit_newentry), oAddBundle, AppStr(ucsedit_newentry));
     if (m_pResultVal)
     {
-        pToolbar->AddTool(IDC_ToolClose, AppStr(ucsedit_rgdcancel), oCancelBmp, AppStr(ucsedit_rgdcancel));
-        pToolbar->AddTool(IDC_ToolApply, AppStr(ucsedit_rgdapply), oApplyBmp, AppStr(ucsedit_rgdapply));
+        pToolbar->AddTool(IDC_ToolClose, AppStr(ucsedit_rgdcancel), oCancelBundle, AppStr(ucsedit_rgdcancel));
+        pToolbar->AddTool(IDC_ToolApply, AppStr(ucsedit_rgdapply), oApplyBundle, AppStr(ucsedit_rgdapply));
     }
     pToolbar->Realize();
 

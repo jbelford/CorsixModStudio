@@ -28,31 +28,31 @@
 class CLocaleTool : public ConstructFrame::ITool
 {
   public:
-    virtual wxString GetName();
-    virtual wxString GetHelpString();
-    virtual wxString GetBitmapName();
+    wxString GetName() override;
+    wxString GetHelpString() override;
+    wxBitmapBundle GetBitmapBundle(const wxSize &size) override;
 
-    virtual void DoAction();
+    void DoAction() override;
 };
 
 class CAESetupTool : public ConstructFrame::ITool
 {
   public:
-    virtual wxString GetName();
-    virtual wxString GetHelpString();
-    virtual wxString GetBitmapName();
+    wxString GetName() override;
+    wxString GetHelpString() override;
+    wxBitmapBundle GetBitmapBundle(const wxSize &size) override;
 
-    virtual void DoAction();
+    void DoAction() override;
 };
 
 class CUcsTool : public ConstructFrame::ITool
 {
   public:
-    virtual wxString GetName();
-    virtual wxString GetHelpString();
-    virtual wxString GetBitmapName();
+    wxString GetName() override;
+    wxString GetHelpString() override;
+    wxBitmapBundle GetBitmapBundle(const wxSize &size) override;
 
-    virtual void DoAction();
+    void DoAction() override;
     static void HandleSelectorResponse(frmUCSSelector *pSelector, wxAuiNotebook *pTabsDestination,
                                        unsigned long *pResult = 0, bool bRegisterTabStrip = false);
 };
@@ -60,31 +60,31 @@ class CUcsTool : public ConstructFrame::ITool
 class CSgaPackerTool : public ConstructFrame::ITool
 {
   public:
-    virtual wxString GetName();
-    virtual wxString GetHelpString();
-    virtual wxString GetBitmapName();
+    wxString GetName() override;
+    wxString GetHelpString() override;
+    wxBitmapBundle GetBitmapBundle(const wxSize &size) override;
 
-    virtual void DoAction();
+    void DoAction() override;
 };
 
 class CExtractAllTool : public ConstructFrame::ITool
 {
   public:
-    virtual wxString GetName();
-    virtual wxString GetHelpString();
-    virtual wxString GetBitmapName();
+    wxString GetName() override;
+    wxString GetHelpString() override;
+    wxBitmapBundle GetBitmapBundle(const wxSize &size) override;
 
-    virtual void DoAction();
+    void DoAction() override;
 };
 
 class CDpsCalculatorTool : public ConstructFrame::ITool, private IDpsCalculatorView
 {
   public:
-    virtual wxString GetName();
-    virtual wxString GetHelpString();
-    virtual wxString GetBitmapName();
+    wxString GetName() override;
+    wxString GetHelpString() override;
+    wxBitmapBundle GetBitmapBundle(const wxSize &size) override;
 
-    virtual void DoAction();
+    void DoAction() override;
 
   private:
     // IDpsCalculatorView implementation
@@ -106,13 +106,13 @@ class CMakeLuaInheritTree : public ConstructFrame::ITool
 
   public:
     CMakeLuaInheritTree();
-    virtual wxString GetName();
-    virtual wxString GetHelpString();
-    virtual wxString GetBitmapName();
+    wxString GetName() override;
+    wxString GetHelpString() override;
+    wxBitmapBundle GetBitmapBundle(const wxSize &size) override;
 
     static bool _DoesExist(const char *sFol);
     void Do(const char *sAttrib);
-    virtual void DoAction();
+    void DoAction() override;
     CInheritTable *pTable;
     size_t iAttribL;
 };
@@ -122,11 +122,11 @@ class CRefreshFilesTool : public ConstructFrame::ITool, private IRefreshFilesVie
   public:
     ~CRefreshFilesTool() override;
 
-    virtual wxString GetName();
-    virtual wxString GetHelpString();
-    virtual wxString GetBitmapName();
+    wxString GetName() override;
+    wxString GetHelpString() override;
+    wxBitmapBundle GetBitmapBundle(const wxSize &size) override;
 
-    virtual void DoAction();
+    void DoAction() override;
 
   private:
     // IRefreshFilesView implementation

@@ -31,6 +31,8 @@
 #include "common/Utility.h"
 #include "common/ThemeColours.h"
 #include "presenters/CFileTreePresenter.h"
+#include "res/Icons.h"
+#include <wx/artprov.h>
 #include <zlib.h>
 extern "C"
 {
@@ -685,8 +687,7 @@ frmFiles::frmFiles(wxWindow *parent, wxWindowID id, const wxPoint &pos, const wx
     size_t iToolCount = TheConstruct->GetToolCount();
     for (size_t i = 0; i < iToolCount; ++i)
     {
-        pToolImages->Add(wxBitmap(TheConstruct->GetTool(i)->GetBitmapName(), wxBITMAP_TYPE_BMP_RESOURCE),
-                         wxColour(255, 0, 255));
+        pToolImages->Add(TheConstruct->GetTool(i)->GetBitmapBundle(wxSize(48, 48)).GetBitmap(wxSize(48, 48)));
     }
     /*
     pToolImages->Add(wxBitmap(wxT("IDB_TOOL_LOC"), wxBITMAP_TYPE_BMP_RESOURCE), wxColour(255, 0, 255)); // ( 0)
@@ -718,20 +719,21 @@ frmFiles::frmFiles(wxWindow *parent, wxWindowID id, const wxPoint &pos, const wx
     */
 
     wxImageList *pFileTypes = new wxImageList(16, 16);
-    pFileTypes->Add(wxBitmap(wxT("IDB_FILEAI"), wxBITMAP_TYPE_BMP_RESOURCE));      // ( 0) AI
-    pFileTypes->Add(wxBitmap(wxT("IDB_FILELUA"), wxBITMAP_TYPE_BMP_RESOURCE));     // ( 1) LUA
-    pFileTypes->Add(wxBitmap(wxT("IDB_FILENIL"), wxBITMAP_TYPE_BMP_RESOURCE));     // ( 2) NIL
-    pFileTypes->Add(wxBitmap(wxT("IDB_FILERGD"), wxBITMAP_TYPE_BMP_RESOURCE));     // ( 3) RGD
-    pFileTypes->Add(wxBitmap(wxT("IDB_FOLDERCLOSE"), wxBITMAP_TYPE_BMP_RESOURCE)); // ( 4) Closed
-    pFileTypes->Add(wxBitmap(wxT("IDB_FOLDEROPEN"), wxBITMAP_TYPE_BMP_RESOURCE));  // ( 5) Open
-    pFileTypes->Add(wxBitmap(wxT("IDB_FILESCAR"), wxBITMAP_TYPE_BMP_RESOURCE));    // ( 6) SCAR
-    pFileTypes->Add(wxBitmap(wxT("IDB_TOC"), wxBITMAP_TYPE_BMP_RESOURCE));         // ( 7) ToC
-    pFileTypes->Add(wxBitmap(wxT("IDB_FILETGA"), wxBITMAP_TYPE_BMP_RESOURCE));     // ( 8) TGA
-    pFileTypes->Add(wxBitmap(wxT("IDB_FILERGT"), wxBITMAP_TYPE_BMP_RESOURCE));     // ( 9) RGT
-    pFileTypes->Add(wxBitmap(wxT("IDB_FILEDDS"), wxBITMAP_TYPE_BMP_RESOURCE));     // (10) DDS
-    pFileTypes->Add(wxBitmap(wxT("IDB_FILEBFX"), wxBITMAP_TYPE_BMP_RESOURCE));     // (11) BFX
-    pFileTypes->Add(wxBitmap(wxT("IDB_FILEABP"), wxBITMAP_TYPE_BMP_RESOURCE));     // (12) ABP
-    pFileTypes->Add(wxBitmap(wxT("IDB_FILERGM"), wxBITMAP_TYPE_BMP_RESOURCE));     // (13) RGM
+    const wxSize kIconSize(16, 16);
+    pFileTypes->Add(cdms::icons::SvgToBitmap(cdms::icons::kFileAi, kIconSize));           // ( 0) AI
+    pFileTypes->Add(cdms::icons::SvgToBitmap(cdms::icons::kFileLua, kIconSize));          // ( 1) LUA
+    pFileTypes->Add(cdms::icons::SvgToBitmap(cdms::icons::kFileNil, kIconSize));          // ( 2) NIL
+    pFileTypes->Add(cdms::icons::SvgToBitmap(cdms::icons::kFileRgd, kIconSize));          // ( 3) RGD
+    pFileTypes->Add(wxArtProvider::GetBitmap(wxART_FOLDER, wxART_OTHER, kIconSize));      // ( 4) Closed
+    pFileTypes->Add(wxArtProvider::GetBitmap(wxART_FOLDER_OPEN, wxART_OTHER, kIconSize)); // ( 5) Open
+    pFileTypes->Add(cdms::icons::SvgToBitmap(cdms::icons::kFileScar, kIconSize));         // ( 6) SCAR
+    pFileTypes->Add(cdms::icons::SvgToBitmap(cdms::icons::kListTree, kIconSize));         // ( 7) ToC
+    pFileTypes->Add(cdms::icons::SvgToBitmap(cdms::icons::kFileTga, kIconSize));          // ( 8) TGA
+    pFileTypes->Add(cdms::icons::SvgToBitmap(cdms::icons::kFileRgt, kIconSize));          // ( 9) RGT
+    pFileTypes->Add(cdms::icons::SvgToBitmap(cdms::icons::kFileDds, kIconSize));          // (10) DDS
+    pFileTypes->Add(cdms::icons::SvgToBitmap(cdms::icons::kFileBfx, kIconSize));          // (11) BFX
+    pFileTypes->Add(cdms::icons::SvgToBitmap(cdms::icons::kFileAbp, kIconSize));          // (12) ABP
+    pFileTypes->Add(cdms::icons::SvgToBitmap(cdms::icons::kFileRgm, kIconSize));          // (13) RGM
 
     m_pTree->AssignImageList(pFileTypes);
 

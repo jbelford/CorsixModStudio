@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <wx/bmpbndl.h>
 #include <wx/string.h>
 
 class ITool
@@ -27,7 +28,7 @@ class ITool
 
     virtual wxString GetName() = 0;
     virtual wxString GetHelpString() = 0;
-    virtual wxString GetBitmapName() = 0;
+    virtual wxBitmapBundle GetBitmapBundle(const wxSize &size) = 0;
 
     virtual void DoAction() = 0;
 };

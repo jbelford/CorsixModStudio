@@ -26,43 +26,12 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
 /////////////////////////////////////////////////////////////////////////////
 // Bitmaps
 
-IDB_FILEAI              BITMAP                  "res\\file_ai.bmp"
-IDB_FILELUA             BITMAP                  "res\\file_lua.bmp"
-IDB_FILENIL             BITMAP                  "res\\file_nil.bmp"
-IDB_FILERGD             BITMAP                  "res\\file_rgd.bmp"
-IDB_FOLDERCLOSE         BITMAP                  "res\\folder_close.bmp"
-IDB_FOLDEROPEN          BITMAP                  "res\\folder_open.bmp"
-IDB_TOOL_LOC            BITMAP                  "res\\tool_locilization.bmp"
-IDB_TOOL_UCS            BITMAP                  "res\\tool_ucsedit.bmp"
-IDB_FILESCAR            BITMAP                  "res\\file_scar.bmp"
-IDB_SGAPACK             BITMAP                  "res\\tool_sgapack.bmp"
-IDB_TOOL_EXTALL         BITMAP                  "res\\tool_extractall.bmp"
 IDB_DONATE              BITMAP                  "res\\donate.bmp"
-IDB_REDBUTTON           BITMAP                  "res\\red_button.bmp"
-IDB_TOC                 BITMAP                  "res\\folder_toc.bmp"
-IDB_FILETGA             BITMAP                  "res\\file_tga.bmp"
-IDB_FILERGT             BITMAP                  "res\\file_rgt.bmp"
-IDB_FILEDDS             BITMAP                  "res\\file_dds.bmp"
-IDB_FILEBFX             BITMAP                  "res\\file_bfx.bmp"
-IDB_TOOL_CALCULATOR     BITMAP                  "res\\tool_calculator.bmp"
-IDB_REFRESH             BITMAP                  "res\\tool_refresh.bmp"
-IDB_FILEABP             BITMAP                  "res\\file_abp.bmp"
-IDB_FILERGM             BITMAP                  "res\\file_rgm.bmp"
-IDB_32SAVE              BITMAP                  "res\\toolbar_save.bmp"
-IDB_32ADD               BITMAP                  "res\\toolbar_add.bmp"
-IDB_32CHECK             BITMAP                  "res\\tool_spellcheck.bmp"
-IDB_32APPLY             BITMAP                  "res\\toolbar_apply.bmp"
-IDB_32CANCEL            BITMAP                  "res\\toolbar_cancel.bmp"
-IDB_TOOL_AESETUP        BITMAP                  "res\\tool_ae_setup.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 // Icons
 
-IDI_PLUS                ICON                    "res\\icon1.ico"
 APPICON                 ICON                    "res\\icon.ico"
-IDI_MINUS               ICON                    "res\\icon2.ico"
-IDI_UP                  ICON                    "res\\ico00001.ico"
-IDI_DOWN                ICON                    "res\\ico00002.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 // Version

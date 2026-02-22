@@ -23,12 +23,14 @@
 #include "common/Utility.h"
 #include "common/ThemeColours.h"
 #include "presenters/CScarEditorPresenter.h"
+#include "res/Icons.h"
 extern "C"
 {
 #include <lua.h>
 #include <lauxlib.h>
 #include <rainman/lua/Lua51.h>
 }
+#include <wx/artprov.h>
 #include <wx/toolbar.h>
 #include <wx/tbarbase.h>
 #include <algorithm>
@@ -790,13 +792,11 @@ frmScarEditor::frmScarEditor(const wxTreeItemId &oFileParent, wxString sFilename
                        new wxChoice(this, IDC_FunctionDrop, wxDefaultPosition, wxDefaultSize, lstFuncDrop),
                    0, wxEXPAND | wxALL, 3);
 
-    wxBitmap oSaveBmp(wxT("IDB_32SAVE"), wxBITMAP_TYPE_BMP_RESOURCE),
-        oCheckBmp(wxT("IDB_32CHECK"), wxBITMAP_TYPE_BMP_RESOURCE);
-    oSaveBmp.SetMask(new wxMask(oSaveBmp, wxColour(128, 128, 128)));
-    oCheckBmp.SetMask(new wxMask(oCheckBmp, wxColour(128, 128, 128)));
+    auto oSaveBundle = wxArtProvider::GetBitmapBundle(wxART_FILE_SAVE, wxART_TOOLBAR, wxSize(32, 32));
+    auto oCheckBundle = wxBitmapBundle::FromSVG(cdms::icons::kCheck, wxSize(32, 32));
     pToolbar->SetToolBitmapSize(wxSize(32, 32));
-    pToolbar->AddTool(IDC_ToolSave, AppStr(scar_save), oSaveBmp, AppStr(scar_save));
-    pToolbar->AddTool(IDC_ToolCheck, AppStr(scar_checklua), oCheckBmp, AppStr(scar_checklua));
+    pToolbar->AddTool(IDC_ToolSave, AppStr(scar_save), oSaveBundle, AppStr(scar_save));
+    pToolbar->AddTool(IDC_ToolCheck, AppStr(scar_checklua), oCheckBundle, AppStr(scar_checklua));
     pToolbar->Realize();
 
     pTopSizer->Add(m_pSTC = new wxStyledTextCtrl(this, IDC_Text), 1, wxEXPAND | wxALL, 0);

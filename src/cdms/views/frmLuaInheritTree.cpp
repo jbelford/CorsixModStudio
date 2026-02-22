@@ -20,6 +20,7 @@
 #include "frmRgdEditor.h"
 #include "common/Common.h"
 #include "common/ThemeColours.h"
+#include "res/Icons.h"
 #include <rainman/core/RainmanLog.h>
 
 BEGIN_EVENT_TABLE(frmLuaInheritTree, wxWindow)
@@ -139,9 +140,10 @@ frmLuaInheritTree::frmLuaInheritTree(wxWindow *parent, wxWindowID id, const wxPo
         m_pTree = new wxTreeCtrl(this, IDC_LuaTree, wxDefaultPosition, wxDefaultSize, wxTR_HAS_BUTTONS);
 
         wxImageList *pFileTypes = new wxImageList(16, 16);
-        pFileTypes->Add(wxBitmap(wxT("IDB_FILELUA"), wxBITMAP_TYPE_BMP_RESOURCE)); // ( 0) LUA
-        pFileTypes->Add(wxBitmap(wxT("IDB_FILENIL"), wxBITMAP_TYPE_BMP_RESOURCE)); // ( 1) NIL
-        pFileTypes->Add(wxBitmap(wxT("IDB_TOC"), wxBITMAP_TYPE_BMP_RESOURCE));     // ( 2) ToC
+        const wxSize kIconSize(16, 16);
+        pFileTypes->Add(cdms::icons::SvgToBitmap(cdms::icons::kFileLua, kIconSize));  // ( 0) LUA
+        pFileTypes->Add(cdms::icons::SvgToBitmap(cdms::icons::kFileNil, kIconSize));  // ( 1) NIL
+        pFileTypes->Add(cdms::icons::SvgToBitmap(cdms::icons::kListTree, kIconSize)); // ( 2) ToC
         m_pTree->AssignImageList(pFileTypes);
 
         wxTreeItemId oRoot = m_pTree->AddRoot(wxT("Generic"), 2, 2);

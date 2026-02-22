@@ -30,6 +30,7 @@
 #include "common/Utility.h"
 #include "presenters/CRgdEditorPresenter.h"
 #include <wx/clipbrd.h>
+#include <wx/artprov.h>
 #include <wx/propgrid/manager.h>
 #include <wx/toolbar.h>
 #include <wx/tbarbase.h>
@@ -526,10 +527,9 @@ frmRGDEditor::frmRGDEditor(const wxTreeItemId &oFileParent, wxString sFilename, 
                    0, wxEXPAND | wxALL, 3);
     pTopSizer->Add(m_pSplitter = new wxSplitterWindow(this, -1), 1, wxEXPAND | wxALL, 0);
 
-    wxBitmap oSaveBmp(wxT("IDB_32SAVE"), wxBITMAP_TYPE_BMP_RESOURCE);
-    oSaveBmp.SetMask(new wxMask(oSaveBmp, wxColour(128, 128, 128)));
+    auto oSaveBundle = wxArtProvider::GetBitmapBundle(wxART_FILE_SAVE, wxART_TOOLBAR, wxSize(32, 32));
     pToolbar->SetToolBitmapSize(wxSize(32, 32));
-    pToolbar->AddTool(IDC_ToolSave, AppStr(rgd_save), oSaveBmp, AppStr(rgd_save));
+    pToolbar->AddTool(IDC_ToolSave, AppStr(rgd_save), oSaveBundle, AppStr(rgd_save));
     pToolbar->AddSeparator();
 
     // "View Code" tool — SVG icon that scales cleanly at any DPI

@@ -18,6 +18,7 @@
 
 #include "Tools.h"
 #include "common/strings.h"
+#include "res/Icons.h"
 
 #include "views/frmUCSEditor.h"
 #include "views/frmFileSelector.h"
@@ -40,7 +41,10 @@
 
 wxString CLocaleTool::GetName() { return AppStr(locale); }
 wxString CLocaleTool::GetHelpString() { return wxT(""); }
-wxString CLocaleTool::GetBitmapName() { return wxT("IDB_TOOL_LOC"); }
+wxBitmapBundle CLocaleTool::GetBitmapBundle(const wxSize &size)
+{
+    return wxBitmapBundle::FromSVG(cdms::icons::kGlobe, size);
+}
 void CLocaleTool::DoAction()
 {
     ConstructFrame::eLoadModGames eGame;
@@ -69,7 +73,10 @@ void CLocaleTool::DoAction()
 
 wxString CAESetupTool::GetName() { return AppStr(aesetup_name); }
 wxString CAESetupTool::GetHelpString() { return AppStr(aesetup_help); }
-wxString CAESetupTool::GetBitmapName() { return wxT("IDB_TOOL_AESETUP"); }
+wxBitmapBundle CAESetupTool::GetBitmapBundle(const wxSize &size)
+{
+    return wxBitmapBundle::FromSVG(cdms::icons::kSettings, size);
+}
 void CAESetupTool::DoAction()
 {
     frmUCSToDAT oMake;
@@ -78,7 +85,10 @@ void CAESetupTool::DoAction()
 
 wxString CUcsTool::GetName() { return AppStr(ucs_editor); }
 wxString CUcsTool::GetHelpString() { return wxT(""); }
-wxString CUcsTool::GetBitmapName() { return wxT("IDB_TOOL_UCS"); }
+wxBitmapBundle CUcsTool::GetBitmapBundle(const wxSize &size)
+{
+    return wxBitmapBundle::FromSVG(cdms::icons::kFileText, size);
+}
 
 void CUcsTool::HandleSelectorResponse(frmUCSSelector *pSelector, wxAuiNotebook *pTabsDestination,
                                       unsigned long *pResult, bool bRegisterTabStrip)
@@ -199,7 +209,10 @@ void CUcsTool::DoAction()
 
 wxString CSgaPackerTool::GetName() { return AppStr(sgapack_title); }
 wxString CSgaPackerTool::GetHelpString() { return wxT(""); }
-wxString CSgaPackerTool::GetBitmapName() { return wxT("IDB_SGAPACK"); }
+wxBitmapBundle CSgaPackerTool::GetBitmapBundle(const wxSize &size)
+{
+    return wxBitmapBundle::FromSVG(cdms::icons::kPackage, size);
+}
 void CSgaPackerTool::DoAction()
 {
     frmSgaMake oMake;
@@ -208,7 +221,10 @@ void CSgaPackerTool::DoAction()
 
 wxString CExtractAllTool::GetName() { return AppStr(massext_toolname); }
 wxString CExtractAllTool::GetHelpString() { return wxT(""); }
-wxString CExtractAllTool::GetBitmapName() { return wxT("IDB_TOOL_EXTALL"); }
+wxBitmapBundle CExtractAllTool::GetBitmapBundle(const wxSize &size)
+{
+    return wxBitmapBundle::FromSVG(cdms::icons::kFolderOutput, size);
+}
 void CExtractAllTool::DoAction()
 {
     frmMassExtract oMassExtract(wxT(""), TheConstruct->GetFilesList()->GetTree()->GetRootItem(), true);
@@ -217,7 +233,10 @@ void CExtractAllTool::DoAction()
 
 wxString CDpsCalculatorTool::GetName() { return AppStr(dpscalculator_title); }
 wxString CDpsCalculatorTool::GetHelpString() { return wxT(""); }
-wxString CDpsCalculatorTool::GetBitmapName() { return wxT("IDB_TOOL_CALCULATOR"); }
+wxBitmapBundle CDpsCalculatorTool::GetBitmapBundle(const wxSize &size)
+{
+    return wxBitmapBundle::FromSVG(cdms::icons::kCalculator, size);
+}
 void CDpsCalculatorTool::DoAction()
 {
     CDMS_LOG_INFO("Running Auto DPS tool");
@@ -267,7 +286,10 @@ void CDpsCalculatorTool::EnableControls() {}
 
 wxString CMakeLuaInheritTree::GetName() { return wxT("Make Lua Inheritance Tree"); }
 wxString CMakeLuaInheritTree::GetHelpString() { return wxT(""); }
-wxString CMakeLuaInheritTree::GetBitmapName() { return wxT("IDB_REDBUTTON"); }
+wxBitmapBundle CMakeLuaInheritTree::GetBitmapBundle(const wxSize &size)
+{
+    return wxBitmapBundle::FromSVG(cdms::icons::kGitBranch, size);
+}
 bool CMakeLuaInheritTree::_DoesExist(const char *sFol)
 {
     auto result = TheConstruct->GetFileService().DirectoryExists(AsciiTowxString(sFol));
@@ -429,7 +451,10 @@ CRefreshFilesTool::~CRefreshFilesTool() { HideLoading(); }
 
 wxString CRefreshFilesTool::GetName() { return AppStr(refreshfiles_name); }
 wxString CRefreshFilesTool::GetHelpString() { return wxT(""); }
-wxString CRefreshFilesTool::GetBitmapName() { return wxT("IDB_REFRESH"); }
+wxBitmapBundle CRefreshFilesTool::GetBitmapBundle(const wxSize &size)
+{
+    return wxBitmapBundle::FromSVG(cdms::icons::kRefreshCw, size);
+}
 void CRefreshFilesTool::DoAction()
 {
     CModuleFile *pMod = TheConstruct->GetModuleService().GetModule();

@@ -21,6 +21,8 @@
 #include "common/strconv.h"
 #include "CtrlStatusText.h"
 #include "common/strings.h"
+#include "res/Icons.h"
+#include <wx/artprov.h>
 #include <wx/notebook.h>
 #include "services/FileService.h"
 #include "presenters/CModuleSettingsPresenter.h"
@@ -145,25 +147,33 @@ frmModule::pgMain::pgMain(wxWindow *parent, wxWindowID id, const wxPoint &pos, c
 void frmModule::pgMain::OnDescriptionUpdate(wxCommandEvent &event)
 {
     if (m_bDoneInit)
+    {
         TheConstruct->GetModuleService().SetDescription(event.GetString());
+    }
 }
 
 void frmModule::pgMain::OnUINameUpdate(wxCommandEvent &event)
 {
     if (m_bDoneInit)
+    {
         TheConstruct->GetModuleService().SetUiName(event.GetString());
+    }
 }
 
 void frmModule::pgMain::OnTextureFEUpdate(wxCommandEvent &event)
 {
     if (m_bDoneInit)
+    {
         TheConstruct->GetModuleService().SetTextureFe(event.GetString());
+    }
 }
 
 void frmModule::pgMain::OnTextureIconUpdate(wxCommandEvent &event)
 {
     if (m_bDoneInit)
+    {
         TheConstruct->GetModuleService().SetTextureIcon(event.GetString());
+    }
 }
 
 void frmModule::pgMain::InitModFolderList(wxControlWithItems *pList)
@@ -171,7 +181,9 @@ void frmModule::pgMain::InitModFolderList(wxControlWithItems *pList)
     wxString sDoWFolder = TheConstruct->GetModuleFile().BeforeLast('\\');
     auto iterResult = FileService::IterateFileSystem(sDoWFolder);
     if (!iterResult)
+    {
         return;
+    }
     IDirectoryTraverser::IIterator *pItr = iterResult.value().release();
     IDirectoryTraverser::IIterator::eTypes eType;
     eType = pItr->VGetType();
@@ -180,9 +192,13 @@ void frmModule::pgMain::InitModFolderList(wxControlWithItems *pList)
     while (eType == IDirectoryTraverser::IIterator::T_Directory || eType == IDirectoryTraverser::IIterator::T_File)
     {
         if (eType == IDirectoryTraverser::IIterator::T_Directory)
+        {
             aAllDirs.Add(AsciiTowxString(pItr->VGetName()));
+        }
         if (pItr->VNextItem() != IDirectoryTraverser::IIterator::E_OK)
+        {
             break;
+        }
         eType = pItr->VGetType();
     }
     delete pItr;
@@ -197,7 +213,9 @@ void frmModule::pgMain::InitDllList(wxControlWithItems *pList)
     wxString sDoWFolder = TheConstruct->GetModuleFile().BeforeLast('\\');
     auto iterResult = FileService::IterateFileSystem(sDoWFolder);
     if (!iterResult)
+    {
         return;
+    }
     IDirectoryTraverser::IIterator *pItr = iterResult.value().release();
     IDirectoryTraverser::IIterator::eTypes eType;
     eType = pItr->VGetType();
@@ -209,10 +227,14 @@ void frmModule::pgMain::InitDllList(wxControlWithItems *pList)
         {
             wxString sThisFile = AsciiTowxString(pItr->VGetName());
             if (sThisFile.AfterLast('.') == wxT("dll"))
+            {
                 aAllDlls.Add(sThisFile.BeforeLast('.'));
+            }
         }
         if (pItr->VNextItem() != IDirectoryTraverser::IIterator::E_OK)
+        {
             break;
+        }
         eType = pItr->VGetType();
     }
     delete pItr;
@@ -243,22 +265,25 @@ frmModule::pgDataFolders::pgDataFolders(wxWindow *parent, wxWindowID id, const w
     pTopSizer->Add(new wxListBox(this, -1, wxDefaultPosition, wxDefaultSize, aActiveValues), 1, wxALL | wxEXPAND, 3);
 
     auto *pButtons = new wxBoxSizer(wxHORIZONTAL);
-    pButtons->Add(SBT(new wxBitmapButton(this, -1, wxIcon(wxT("#111"), wxBITMAP_TYPE_ICO_RESOURCE, 16, 16)),
+    const wxSize kBtnIconSize(16, 16);
+    pButtons->Add(SBT(new wxBitmapButton(this, -1, wxArtProvider::GetBitmap(wxART_PLUS, wxART_BUTTON, kBtnIconSize)),
                       AppStrS(mod_add_a_new, sItemName)),
                   0, wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL | wxALL, 3);
-    pButtons->Add(SBT(new wxBitmapButton(this, -1, wxIcon(wxT("#112"), wxBITMAP_TYPE_ICO_RESOURCE, 16, 16)),
+    pButtons->Add(SBT(new wxBitmapButton(this, -1, wxArtProvider::GetBitmap(wxART_MINUS, wxART_BUTTON, kBtnIconSize)),
                       AppStrS(mod_remove_an_existing, sItemName)),
                   0, wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL | wxALL, 3);
-    pButtons->Add(SBT(new wxBitmapButton(this, -1, wxIcon(wxT("#113"), wxBITMAP_TYPE_ICO_RESOURCE, 16, 16)),
+    pButtons->Add(SBT(new wxBitmapButton(this, -1, cdms::icons::SvgToBitmap(cdms::icons::kChevronUp, kBtnIconSize)),
                       AppStrS(mod_move_up, sItemName)),
                   0, wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL | wxALL, 3);
-    pButtons->Add(SBT(new wxBitmapButton(this, -1, wxIcon(wxT("#114"), wxBITMAP_TYPE_ICO_RESOURCE, 16, 16)),
+    pButtons->Add(SBT(new wxBitmapButton(this, -1, cdms::icons::SvgToBitmap(cdms::icons::kChevronDown, kBtnIconSize)),
                       AppStrS(mod_move_down, sItemName)),
                   0, wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL | wxALL, 3);
     if (bUpdateMessage)
+    {
         pButtons->Add(new wxStaticText(this, -1, AppStrS(mod_changes_to, sItemName), wxDefaultPosition, wxDefaultSize,
                                        wxALIGN_CENTRE),
                       0, wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL | wxALL, 3);
+    }
 
     pTopSizer->Add(pButtons, 0, wxALL | wxALIGN_LEFT, 0);
 
