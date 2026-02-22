@@ -160,6 +160,111 @@ static HightlightSet g_LuaWords[] = {
     {wxSTC_LUA_WORD8, 0},
     {-1, 0}};
 
+// Autocomplete type IDs for icon registration
+enum AutoCompType
+{
+    ACT_Keyword = 0,
+    ACT_Function = 1,
+    ACT_Constant = 2,
+    ACT_LocalFunc = 3
+};
+
+// clang-format off
+
+// 16x16 XPM icon: blue "K" for Lua keywords
+static const char *const g_xpmKeyword[] = {
+    "16 16 3 1",
+    "  c None",
+    ". c #3465A4",
+    "x c #FFFFFF",
+    "                ",
+    "  ....          ",
+    "  .xx.          ",
+    "  .xx.   ...    ",
+    "  .xx.  .xx.    ",
+    "  .xx. .xx.     ",
+    "  .xx..xx.      ",
+    "  .xxxxx.       ",
+    "  .xxxxx.       ",
+    "  .xx..xx.      ",
+    "  .xx. .xx.     ",
+    "  .xx.  .xx.    ",
+    "  .xx.   ...    ",
+    "  ....          ",
+    "                ",
+    "                "};
+
+// 16x16 XPM icon: purple "F" for API functions
+static const char *const g_xpmFunction[] = {
+    "16 16 3 1",
+    "  c None",
+    ". c #75507B",
+    "x c #FFFFFF",
+    "                ",
+    "  .........     ",
+    "  .xxxxxxx.     ",
+    "  .xx.....      ",
+    "  .xx.          ",
+    "  .xx.          ",
+    "  .xxxxxxx.     ",
+    "  .xxxxxxx.     ",
+    "  .xx.          ",
+    "  .xx.          ",
+    "  .xx.          ",
+    "  .xx.          ",
+    "  .xx.          ",
+    "  ....          ",
+    "                ",
+    "                "};
+
+// 16x16 XPM icon: firebrick "C" for constants
+static const char *const g_xpmConstant[] = {
+    "16 16 3 1",
+    "  c None",
+    ". c #B22222",
+    "x c #FFFFFF",
+    "                ",
+    "    ......      ",
+    "   .xxxxxx.     ",
+    "  .xx....xx.    ",
+    "  .xx.  ....    ",
+    "  .xx.          ",
+    "  .xx.          ",
+    "  .xx.          ",
+    "  .xx.          ",
+    "  .xx.          ",
+    "  .xx.  ....    ",
+    "  .xx....xx.    ",
+    "   .xxxxxx.     ",
+    "    ......      ",
+    "                ",
+    "                "};
+
+// 16x16 XPM icon: green "L" for local function definitions
+static const char *const g_xpmLocalFunc[] = {
+    "16 16 3 1",
+    "  c None",
+    ". c #4E9A06",
+    "x c #FFFFFF",
+    "                ",
+    "  ....          ",
+    "  .xx.          ",
+    "  .xx.          ",
+    "  .xx.          ",
+    "  .xx.          ",
+    "  .xx.          ",
+    "  .xx.          ",
+    "  .xx.          ",
+    "  .xx.          ",
+    "  .xx.          ",
+    "  .xx.          ",
+    "  .xxxxxxxx.    ",
+    "  .xxxxxxxx.    ",
+    "  ..........    ",
+    "                "};
+
+// clang-format on
+
 void frmScarEditor::_RestorePreviousCalltip()
 {
     if (m_stkCalltips.size())
@@ -286,8 +391,13 @@ void frmScarEditor::ShowAutoComplete()
         sPrefix = m_pSTC->GetTextRange(iWordPos, iPos).Lower();
     }
 
-    // Collect all candidate names
-    std::vector<wxString> vCandidates;
+    // Collect candidates as (name, type) pairs
+    struct AutoCompItem
+    {
+        wxString sName;
+        int iType;
+    };
+    std::vector<AutoCompItem> vCandidates;
 
     // SCAR API functions and constants
     for (const auto &fn : m_lstScarFunctions)
@@ -295,7 +405,7 @@ void frmScarEditor::ShowAutoComplete()
         wxString sName = AsciiTowxString(fn.sName);
         if (iWordLen == 0 || sName.Lower().StartsWith(sPrefix))
         {
-            vCandidates.push_back(sName);
+            vCandidates.push_back({sName, fn.iType == 0 ? ACT_Function : ACT_Constant});
         }
     }
 
@@ -310,7 +420,7 @@ void frmScarEditor::ShowAutoComplete()
         wxString sKw(*pp);
         if (iWordLen == 0 || sKw.Lower().StartsWith(sPrefix))
         {
-            vCandidates.push_back(sKw);
+            vCandidates.push_back({sKw, ACT_Keyword});
         }
     }
 
@@ -320,7 +430,7 @@ void frmScarEditor::ShowAutoComplete()
     {
         if (iWordLen == 0 || def.sName.Lower().StartsWith(sPrefix))
         {
-            vCandidates.push_back(def.sName);
+            vCandidates.push_back({def.sName, ACT_LocalFunc});
         }
     }
 
@@ -329,14 +439,15 @@ void frmScarEditor::ShowAutoComplete()
         return;
     }
 
-    // Sort case-insensitively and deduplicate
+    // Sort by name case-insensitively and deduplicate
     std::sort(vCandidates.begin(), vCandidates.end(),
-              [](const wxString &a, const wxString &b) { return a.CmpNoCase(b) < 0; });
+              [](const AutoCompItem &a, const AutoCompItem &b) { return a.sName.CmpNoCase(b.sName) < 0; });
     vCandidates.erase(std::unique(vCandidates.begin(), vCandidates.end(),
-                                  [](const wxString &a, const wxString &b) { return a.CmpNoCase(b) == 0; }),
+                                  [](const AutoCompItem &a, const AutoCompItem &b)
+                                  { return a.sName.CmpNoCase(b.sName) == 0; }),
                       vCandidates.end());
 
-    // Build space-separated list
+    // Build space-separated list with type suffixes (e.g. "SGroup_Count?1")
     wxString sItems;
     for (size_t i = 0; i < vCandidates.size(); ++i)
     {
@@ -344,7 +455,8 @@ void frmScarEditor::ShowAutoComplete()
         {
             sItems.Append(' ');
         }
-        sItems.Append(vCandidates[i]);
+        sItems.Append(vCandidates[i].sName);
+        sItems.Append(wxString::Format(wxT("?%d"), vCandidates[i].iType));
     }
 
     _PushThisCalltip();
@@ -740,6 +852,12 @@ frmScarEditor::frmScarEditor(const wxTreeItemId &oFileParent, wxString sFilename
     m_pSTC->AutoCompSetIgnoreCase(true);
     m_pSTC->AutoCompSetAutoHide(true);
     m_pSTC->AutoCompSetChooseSingle(false);
+
+    // Register autocomplete type icons
+    m_pSTC->RegisterImage(ACT_Keyword, g_xpmKeyword);
+    m_pSTC->RegisterImage(ACT_Function, g_xpmFunction);
+    m_pSTC->RegisterImage(ACT_Constant, g_xpmConstant);
+    m_pSTC->RegisterImage(ACT_LocalFunc, g_xpmLocalFunc);
 
     // Bind Ctrl+Space to show autocomplete
     m_pSTC->Bind(wxEVT_KEY_DOWN, &frmScarEditor::OnKeyDown, this);
