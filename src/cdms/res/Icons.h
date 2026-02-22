@@ -149,7 +149,7 @@ inline constexpr char kSettings[] =
 // Navigation / tree icons (Lucide, accent #d5873e)
 // ---------------------------------------------------------------------------
 
-// list-tree — "Table of Contents" tree node
+// list-tree — "Table of Contents" tree node (frmLuaInheritTree root)
 inline constexpr char kListTree[] =
     R"(<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#d5873e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">)"
     R"(<path d="M8 5h13"/>)"
@@ -157,6 +157,15 @@ inline constexpr char kListTree[] =
     R"(<path d="M13 19h8"/>)"
     R"(<path d="M3 10a2 2 0 0 0 2 2h3"/>)"
     R"(<path d="M3 5v12a2 2 0 0 0 2 2h3"/>)"
+    R"(</svg>)";
+
+// hard-drive — data entry point / root node in file tree
+inline constexpr char kHardDrive[] =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#d5873e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">)"
+    R"(<path d="M10 16h.01"/>)"
+    R"(<path d="M2.212 11.577a2 2 0 0 0-.212.896V18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5.527a2 2 0 0 0-.212-.896L18.55 5.11A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>)"
+    R"(<path d="M21.946 12.013H2.054"/>)"
+    R"(<path d="M6 16h.01"/>)"
     R"(</svg>)";
 
 // chevron-up — "Move up" button (frmModule)

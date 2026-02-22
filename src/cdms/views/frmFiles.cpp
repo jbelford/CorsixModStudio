@@ -727,7 +727,7 @@ frmFiles::frmFiles(wxWindow *parent, wxWindowID id, const wxPoint &pos, const wx
     pFileTypes->Add(wxArtProvider::GetBitmap(wxART_FOLDER, wxART_OTHER, kIconSize));      // ( 4) Closed
     pFileTypes->Add(wxArtProvider::GetBitmap(wxART_FOLDER_OPEN, wxART_OTHER, kIconSize)); // ( 5) Open
     pFileTypes->Add(cdms::icons::SvgToBitmap(cdms::icons::kFileScar, kIconSize));         // ( 6) SCAR
-    pFileTypes->Add(cdms::icons::SvgToBitmap(cdms::icons::kListTree, kIconSize));         // ( 7) ToC
+    pFileTypes->Add(cdms::icons::SvgToBitmap(cdms::icons::kHardDrive, kIconSize));        // ( 7) ToC
     pFileTypes->Add(cdms::icons::SvgToBitmap(cdms::icons::kFileTga, kIconSize));          // ( 8) TGA
     pFileTypes->Add(cdms::icons::SvgToBitmap(cdms::icons::kFileRgt, kIconSize));          // ( 9) RGT
     pFileTypes->Add(cdms::icons::SvgToBitmap(cdms::icons::kFileDds, kIconSize));          // (10) DDS
