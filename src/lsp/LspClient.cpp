@@ -30,11 +30,21 @@ CLspClient::~CLspClient() { Stop(); }
 // Lifecycle
 // ---------------------------------------------------------------------------
 
-bool CLspClient::Start(const std::wstring &serverPath, const std::string &workspaceRoot,
-                       const std::vector<std::string> &libraryPaths, const nlohmann::json &settingsJson)
+bool CLspClient::Start(const std::wstring &serverPath, const std::string &workspaceRoot, const std::wstring &configPath)
 {
     CDMS_LOG_INFO("LSP: Starting language server...");
-    if (!m_process.Start(serverPath, L"--stdio", L""))
+
+    // Build command-line args: always use --stdio, optionally add --configpath
+    std::wstring args = L"--stdio";
+    if (!configPath.empty())
+    {
+        args += L" --configpath=\"" + configPath + L"\"";
+        // Convert wstring for logging
+        std::string configPathUtf8(configPath.begin(), configPath.end());
+        CDMS_LOG_INFO("LSP: Using config file: {}", configPathUtf8);
+    }
+
+    if (!m_process.Start(serverPath, args, L""))
     {
         CDMS_LOG_ERROR("LSP: Failed to spawn language server process");
         return false;
@@ -54,8 +64,7 @@ bool CLspClient::Start(const std::wstring &serverPath, const std::string &worksp
     nlohmann::json initParams = {
         {"processId", static_cast<int>(GetCurrentProcessId())},
         {"capabilities", capabilities},
-        {"rootUri", workspaceRoot.empty() ? nlohmann::json(nullptr) : nlohmann::json("file:///" + workspaceRoot)},
-        {"initializationOptions", settingsJson}};
+        {"rootUri", workspaceRoot.empty() ? nlohmann::json(nullptr) : nlohmann::json("file:///" + workspaceRoot)}};
 
     // Send initialize request (id=0, special)
     nlohmann::json initRequest = {{"jsonrpc", "2.0"}, {"id", 0}, {"method", "initialize"}, {"params", initParams}};
@@ -102,11 +111,6 @@ bool CLspClient::Start(const std::wstring &serverPath, const std::string &worksp
 
     // Send initialized notification
     SendNotification("initialized", nlohmann::json::object());
-
-    // Send settings via workspace/didChangeConfiguration so LuaLS
-    // picks up workspace.library and other configuration.
-    nlohmann::json configParams = {{"settings", settingsJson}};
-    SendNotification("workspace/didChangeConfiguration", configParams);
 
     m_initialized = true;
 

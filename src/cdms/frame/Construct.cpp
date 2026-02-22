@@ -699,39 +699,40 @@ lsp::CLspClient *ConstructFrame::GetLspClient()
         CDMS_LOG_WARN("LSP: Config file not found: {}", configPath.ToStdString());
     }
 
-    // Override workspace.library with absolute directory paths
+    // Override workspace.library with absolute directory paths so LuaLS can
+    // find the SCAR definition stubs regardless of working directory.
     std::vector<std::string> libraryPaths;
     libraryPaths.push_back(std::string(wxString(lspDir + wxT("\\common")).ToUTF8()));
     libraryPaths.push_back(std::string(wxString(lspDir + (isDow ? wxT("\\dow") : wxT("\\coh"))).ToUTF8()));
     settings["workspace.library"] = libraryPaths;
 
-    // Also add trailing-space to disabled diagnostics
-    if (settings.contains("diagnostics.disable") && settings["diagnostics.disable"].is_array())
-    {
-        auto &disabled = settings["diagnostics.disable"];
-        bool hasTrailingSpace = false;
-        for (const auto &item : disabled)
-        {
-            if (item == "trailing-space")
-            {
-                hasTrailingSpace = true;
-                break;
-            }
-        }
-        if (!hasTrailingSpace)
-        {
-            disabled.push_back("trailing-space");
-        }
-    }
-
     for (const auto &path : libraryPaths)
     {
         CDMS_LOG_INFO("LSP: Library path: {}", path);
     }
+
+    // Write the resolved config to a runtime file that LuaLS will load
+    // via --configpath. This is the correct way to pass flat-key settings
+    // (workspace.library, runtime.version, etc.) to LuaLS — the
+    // initializationOptions/didChangeConfiguration LSP protocol uses a
+    // different nested format under a "Lua" key.
+    wxString runtimeConfigPath = lspDir + wxT("\\runtime-config.json");
+    {
+        std::ofstream runtimeConfigFile(runtimeConfigPath.ToStdWstring());
+        if (runtimeConfigFile.is_open())
+        {
+            runtimeConfigFile << settings.dump(4);
+            CDMS_LOG_INFO("LSP: Wrote runtime config to: {}", runtimeConfigPath.ToStdString());
+        }
+        else
+        {
+            CDMS_LOG_WARN("LSP: Failed to write runtime config: {}", runtimeConfigPath.ToStdString());
+        }
+    }
     CDMS_LOG_INFO("LSP: Settings: {}", settings.dump());
 
     m_pLspClient = std::make_unique<lsp::CLspClient>();
-    if (!m_pLspClient->Start(serverPath.ToStdWstring(), workspaceRoot, libraryPaths, settings))
+    if (!m_pLspClient->Start(serverPath.ToStdWstring(), workspaceRoot, runtimeConfigPath.ToStdWstring()))
     {
         CDMS_LOG_WARN("Failed to start Lua Language Server");
         m_pLspClient.reset();

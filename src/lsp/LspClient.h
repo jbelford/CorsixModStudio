@@ -53,12 +53,9 @@ class LSP_API CLspClient
     /// Start the language server process and perform the LSP handshake.
     /// @param serverPath  Path to the LuaLS executable.
     /// @param workspaceRoot  Root directory of the workspace (mod folder).
-    /// @param libraryPaths  Paths to definition files (lua502-compat.lua, scar-dow.lua, etc.)
-    /// @param settingsJson  Additional LuaLS settings as a JSON object.
+    /// @param configPath  Path to a LuaLS config file (passed via --configpath).
     /// @returns true if the server started and initialized successfully.
-    bool Start(const std::wstring &serverPath, const std::string &workspaceRoot,
-               const std::vector<std::string> &libraryPaths = {},
-               const nlohmann::json &settingsJson = nlohmann::json::object());
+    bool Start(const std::wstring &serverPath, const std::string &workspaceRoot, const std::wstring &configPath = L"");
 
     /// Shut down the language server gracefully.
     void Stop();
