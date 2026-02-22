@@ -20,13 +20,21 @@
 
 #include "async/CWxTaskRunner.h"
 #include "views/interfaces/IMassExtractView.h"
+#include <rainman/module/CModuleFile.h>
 #include <string>
 #include <vector>
 #include <wx/string.h>
 
+//! Source filter for mass extraction — identifies which archive/folder to extract from.
+struct SourceFilter
+{
+    std::string sMod; //!< Module name (empty = match any)
+    std::string sSrc; //!< Source archive/folder name
+};
+
 //! Presenter for asynchronous mass file extraction.
 /*!
-    Pre-collected file paths are extracted on a background thread with
+    File discovery and extraction both run on a background thread with
     gauge progress updates posted to the main thread via CallAfter.
 */
 class CMassExtractPresenter
@@ -34,13 +42,16 @@ class CMassExtractPresenter
   public:
     CMassExtractPresenter(IMassExtractView &view, wxEvtHandler *pHandler);
 
-    //! Start extraction asynchronously.
+    //! Start extraction by discovering files from the module on a background thread.
     /*!
-        \param vFiles       File paths to extract (pre-collected from tree).
-        \param iCountDiv    Divisor for gauge scaling.
+        Walks the module's virtual filesystem via IDirectoryTraverser to discover
+        files matching the source filters, then extracts them — all off the main thread.
+        \param pModule      The loaded module to iterate.
+        \param vSources     Source filters (mod+archive pairs) for file selection.
+        \param sBasePath    Starting path (empty = iterate all entry points).
         \return true if started, false if already running.
     */
-    bool Extract(std::vector<std::string> vFiles, size_t iCountDiv);
+    bool ExtractFromModule(CModuleFile *pModule, std::vector<SourceFilter> vSources, const std::string &sBasePath);
 
     void Cancel();
     bool IsRunning() const;
@@ -48,4 +59,8 @@ class CMassExtractPresenter
   private:
     IMassExtractView &m_view;
     CWxTaskRunner m_taskRunner;
+
+    //! Recursively collect file paths from a directory iterator, filtering by source.
+    static void CollectFilesFromIterator(IDirectoryTraverser::IIterator *pItr, const std::string &sPrefix,
+                                         const std::vector<SourceFilter> &vSources, std::vector<std::string> &vFiles);
 };

@@ -117,6 +117,9 @@ void frmMassExtract::_FillCheckList(CModuleFile *pMod, bool bIsRoot, wxArrayStri
 size_t frmMassExtract::_DoExtract(wxTreeCtrl *pTree, wxTreeItemId &oFolder, const wxString &sPath, CModuleFile *pModule,
                                   bool bCountOnly, size_t iCountBase, size_t iCountDiv)
 {
+    // Ensure lazily-loaded tree nodes are populated before iterating
+    TheConstruct->GetFilesList()->PopulateChildren(oFolder);
+
     int iGVal = (int)(iCountBase / iCountDiv);
     size_t iCount = 0;
     wxTreeItemIdValue oCookie;
@@ -147,7 +150,9 @@ size_t frmMassExtract::_DoExtract(wxTreeCtrl *pTree, wxTreeItemId &oFolder, cons
                 {
                     wxString sFile = sPath;
                     if (sPath.Len())
+                    {
                         sFile.Append('\\');
+                    }
                     sFile.Append(pTree->GetItemText(oChild));
                     auto saFile = wxStringToAscii(sFile);
                     try
@@ -172,7 +177,9 @@ size_t frmMassExtract::_DoExtract(wxTreeCtrl *pTree, wxTreeItemId &oFolder, cons
         {
             wxString sNewPath = sPath;
             if (sPath.Len())
+            {
                 sNewPath.Append('\\');
+            }
             sNewPath.Append(pTree->GetItemText(oChild));
             // Folder
             iCount += _DoExtract(pTree, oChild, sNewPath, pModule, bCountOnly, iCountBase + iCount, iCountDiv);
@@ -186,7 +193,9 @@ size_t frmMassExtract::_DoExtract(wxTreeCtrl *pTree, wxTreeItemId &oFolder, cons
         auto saPath = wxStringToAscii(sPath);
         IDirectoryTraverser::IIterator *pDir = pModule->VIterate(saPath.get());
         if (m_bForceUpdate || pTree->IsExpanded(oFolder))
+        {
             TheConstruct->GetFilesList()->UpdateDirectoryChildren(oFolder, pDir);
+        }
         delete pDir;
     }
     return iCount;
@@ -245,7 +254,9 @@ void frmMassExtract::OnGoClick(wxCommandEvent &event)
     {
         wxString sSaveDirectory = wxDirSelector(wxT("Choose where to extract folder"));
         if (sSaveDirectory.IsEmpty())
+        {
             return;
+        }
 
         auto &modSvc = TheConstruct->GetModuleService();
         m_pFauxSource = modSvc.GetFileMap()->RegisterSource(0, false, 0, "", "", modSvc.GetFileSystem(),
@@ -258,29 +269,24 @@ void frmMassExtract::OnGoClick(wxCommandEvent &event)
         modSvc.GetFileMap()->MapIteratorDeep(m_pFauxSource, saPathVirtual.get(), &*pItr);
     }
 
+    // Build source filters from the checklist selection
+    std::vector<SourceFilter> vSources;
     for (size_t i = 0; i < m_vSrcs.size(); ++i)
     {
-        if (m_pCheckList->IsChecked((unsigned int)i))
+        if (m_pCheckList->IsChecked(static_cast<unsigned int>(i)))
         {
-            m_vActiveSrcs.push_back(m_vSrcs[i]);
+            SourceFilter sf;
+            sf.sMod = m_vSrcs[i].sMod ? m_vSrcs[i].sMod : "";
+            sf.sSrc = m_vSrcs[i].sSrc ? m_vSrcs[i].sSrc : "";
+            vSources.push_back(std::move(sf));
         }
     }
 
-    size_t iFileCount =
-        _DoExtract(TheConstruct->GetFilesList()->GetTree(), m_oFolder, m_sPath, TheConstruct->GetModule(), true, 0, 1);
-    size_t iDiv = 1;
-    while ((iFileCount / iDiv) > (size_t)0xFF)
-    {
-        ++iDiv;
-    }
-    m_pGauge->SetRange((int)(iFileCount / iDiv));
+    auto saBasePath = wxStringToAscii(m_sPath);
+    std::string sBasePath = saBasePath ? saBasePath.get() : "";
 
-    // Collect file paths from tree on main thread (fast)
-    std::vector<std::string> vFiles;
-    _CollectFiles(TheConstruct->GetFilesList()->GetTree(), m_oFolder, m_sPath, vFiles);
-
-    // Start async extraction on background thread
-    m_pPresenter->Extract(std::move(vFiles), iDiv);
+    // File discovery and extraction both run on the background thread
+    m_pPresenter->ExtractFromModule(TheConstruct->GetModule(), std::move(vSources), sBasePath);
 }
 
 void frmMassExtract::OnCancelClick(wxCommandEvent &event)
@@ -306,7 +312,9 @@ void frmMassExtract::OnAdvancedClick(wxCommandEvent &event)
         for (size_t i = 0; i < m_vSrcs.size(); ++i)
         {
             if (!m_pCheckList->IsChecked((unsigned int)i))
+            {
                 goto not_all_checked;
+            }
         }
         m_pCaption->SetLabel(AppStr(massext_caption));
     not_all_checked:
@@ -330,6 +338,9 @@ void frmMassExtract::OnSelectClick(wxCommandEvent &event)
 void frmMassExtract::_CollectFiles(wxTreeCtrl *pTree, wxTreeItemId &oFolder, const wxString &sPath,
                                    std::vector<std::string> &vFiles)
 {
+    // Ensure lazily-loaded tree nodes are populated before iterating
+    TheConstruct->GetFilesList()->PopulateChildren(oFolder);
+
     wxTreeItemIdValue oCookie;
     wxTreeItemId oChild = pTree->GetFirstChild(oFolder, oCookie);
     while (oChild.IsOk())
@@ -352,18 +363,24 @@ void frmMassExtract::_CollectFiles(wxTreeCtrl *pTree, wxTreeItemId &oFolder, con
             {
                 wxString sFile = sPath;
                 if (sPath.Len())
+                {
                     sFile.Append('\\');
+                }
                 sFile.Append(pTree->GetItemText(oChild));
                 auto saFile = wxStringToAscii(sFile);
                 if (saFile)
+                {
                     vFiles.emplace_back(saFile.get());
+                }
             }
         }
         else
         {
             wxString sNewPath = sPath;
             if (sPath.Len())
+            {
                 sNewPath.Append('\\');
+            }
             sNewPath.Append(pTree->GetItemText(oChild));
             _CollectFiles(pTree, oChild, sNewPath, vFiles);
         }
@@ -402,11 +419,15 @@ void frmMassExtract::OnExtractionComplete()
 void frmMassExtract::DisableControls()
 {
     if (m_pGoBtn)
+    {
         m_pGoBtn->Disable();
+    }
 }
 
 void frmMassExtract::EnableControls()
 {
     if (m_pGoBtn)
+    {
         m_pGoBtn->Enable();
+    }
 }
