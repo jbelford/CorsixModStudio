@@ -1470,24 +1470,12 @@ class CHoverPopup : public wxPopupTransientWindow
             pCodeSTC->SetReadOnly(true);
             pCodeSTC->Colourise(0, -1);
 
-            // Size the STC to fit content exactly (no word-wrap for code)
+            // Size the STC to fit content (no word-wrap; long lines clip at edge)
             int lineCount = pCodeSTC->GetLineCount();
             int lineHeight = pCodeSTC->TextHeight(0);
             int codeHeight = lineCount * lineHeight + 6;
 
-            // Measure max line width
-            int maxLineWidth = 0;
-            for (int ln = 0; ln < lineCount; ++ln)
-            {
-                int w = pCodeSTC->TextWidth(wxSTC_STYLE_DEFAULT, pCodeSTC->GetLine(ln));
-                if (w > maxLineWidth)
-                {
-                    maxLineWidth = w;
-                }
-            }
-            int codeWidth = std::min(maxLineWidth + 20, kMaxWidth);
-
-            pCodeSTC->SetMinSize(wxSize(codeWidth, codeHeight));
+            pCodeSTC->SetMinSize(wxSize(kMaxWidth, codeHeight));
             pSizer->Add(pCodeSTC, 0, wxEXPAND | wxALL, 6);
         }
 
