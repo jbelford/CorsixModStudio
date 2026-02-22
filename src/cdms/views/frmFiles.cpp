@@ -28,8 +28,8 @@
 #include "frame/Construct.h"
 #include "common/strconv.h"
 #include "common/strings.h"
-#include "common/config.h"
 #include "common/Utility.h"
+#include "common/ThemeColours.h"
 #include "presenters/CFileTreePresenter.h"
 #include <zlib.h>
 extern "C"
@@ -789,9 +789,9 @@ void frmFiles::OnSize(wxSizeEvent &event)
 
 bool frmFiles::FillFromIDirectoryTraverser(IDirectoryTraverser *pTraverser)
 {
-    m_cThisMod = ConfGetColour(AppStr(file_colourthismod), 128, 64, 64);
-    m_cOtherMod = ConfGetColour(AppStr(file_colourothermod), 64, 64, 128);
-    m_cEngine = ConfGetColour(AppStr(file_colourengine), 128, 128, 128);
+    m_cThisMod = ThemeColours::FileThisMod();
+    m_cOtherMod = ThemeColours::FileOtherMod();
+    m_cEngine = ThemeColours::FileEngine();
 
     m_pTree->Freeze();
     m_pTree->DeleteAllItems();

@@ -18,6 +18,7 @@
 #include "frmMessage.h"
 #include "resource.h"
 #include "common/Common.h"
+#include "common/ThemeColours.h"
 
 BEGIN_EVENT_TABLE(frmMessage, wxFrame)
 EVT_CLOSE(frmMessage::OnQuit)
@@ -38,8 +39,8 @@ frmMessage::frmMessage(const wxString &sImage, const wxString &sTitle)
                                wxST_NO_AUTORESIZE | wxALIGN_CENTER);
     m_pText->Wrap(FromDIP(200));
     m_pText->SetBackgroundStyle(wxBG_STYLE_COLOUR);
-    m_pText->SetBackgroundColour(wxColour(255, 255, 255));
-    this->SetBackgroundColour(wxColour(255, 255, 255));
+    m_pText->SetBackgroundColour(ThemeColours::DialogBg());
+    this->SetBackgroundColour(ThemeColours::DialogBg());
 }
 
 frmMessage::~frmMessage()

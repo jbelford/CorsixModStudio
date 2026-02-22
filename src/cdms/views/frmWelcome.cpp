@@ -18,6 +18,7 @@
 #include "frmWelcome.h"
 #include "frame/Construct.h"
 #include "common/config.h"
+#include "common/ThemeColours.h"
 #include "CtrlStatusText.h"
 #include "common/strings.h"
 #include "common/Common.h"
@@ -160,7 +161,7 @@ void frmWelcome::OnMouseEvent(wxMouseEvent &event)
         TheConfig->Read(AppStr(config_firstrun), &sVal, (const wxString &)wxT("1"));
         if (sVal == wxT("1"))
         {
-            wxMessageDialog oMsg(this, AppStr(welcome_firstrun), AppStr(app_name), wxYES_NO);
+            wxGenericMessageDialog oMsg(this, AppStr(welcome_firstrun), AppStr(app_name), wxYES_NO);
             if (oMsg.ShowModal() == wxID_YES)
             {
                 ConstructFrame::StaticLaunchHelp();

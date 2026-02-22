@@ -19,6 +19,7 @@
 #include "MenuController.h"
 #include "Construct.h"
 #include "common/strings.h"
+#include "common/config.h"
 #include "ToolRegistry.h"
 #include "RelicToolResolver.h"
 
@@ -39,6 +40,32 @@ void MenuController::Build(wxFrame *pFrame, ToolRegistry &registry, RelicToolRes
     pMenu_File->AppendSeparator();
     pMenu_File->Append(wxID_EXIT, AppStr(exit_menu), AppStr(exit_help));
     pMenu_File->Enable(wxID_CLOSE, false);
+
+    // View menu — Theme
+    auto *pMenu_View = new wxMenu;
+    pMenu_View->AppendRadioItem(IDM_ThemeSystem, AppStr(view_theme_system), AppStr(view_theme_system_help));
+    pMenu_View->AppendRadioItem(IDM_ThemeLight, AppStr(view_theme_light), AppStr(view_theme_light_help));
+    pMenu_View->AppendRadioItem(IDM_ThemeDark, AppStr(view_theme_dark), AppStr(view_theme_dark_help));
+
+    // Read saved preference and check the right radio item (0=system, 1=light, 2=dark)
+    int iAppearance = 0;
+    TheConfig->Read(AppStr(config_appearance), &iAppearance, 0);
+    if (iAppearance == 1)
+    {
+        pMenu_View->Check(IDM_ThemeLight, true);
+    }
+    else if (iAppearance == 2)
+    {
+        pMenu_View->Check(IDM_ThemeDark, true);
+    }
+    else
+    {
+        pMenu_View->Check(IDM_ThemeSystem, true);
+    }
+
+    pConstruct->Bind(wxEVT_MENU, &ConstructFrame::OnThemeChange, pConstruct, IDM_ThemeSystem);
+    pConstruct->Bind(wxEVT_MENU, &ConstructFrame::OnThemeChange, pConstruct, IDM_ThemeLight);
+    pConstruct->Bind(wxEVT_MENU, &ConstructFrame::OnThemeChange, pConstruct, IDM_ThemeDark);
 
     // Mod menu
     auto *pMenu_Mod = new wxMenu;
@@ -97,12 +124,13 @@ void MenuController::Build(wxFrame *pFrame, ToolRegistry &registry, RelicToolRes
     // Assemble menu bar
     auto *pMenuBar = new wxMenuBar;
     pMenuBar->Append(pMenu_File, AppStr(file_menu));
+    pMenuBar->Append(pMenu_View, AppStr(view_menu));
     pMenuBar->Append(pMenu_Mod, AppStr(mod_menu));
     pMenuBar->Append(pMenu_RelicTools, AppStr(relic_tools_menu));
     pMenuBar->Append(pMenu_Play, AppStr(play_menu));
     pMenuBar->Append(pMenu_Help, AppStr(help_menu));
     pFrame->SetMenuBar(pMenuBar);
-    pMenuBar->EnableTop(1, false);
+    pMenuBar->EnableTop(2, false);
 }
 
 void MenuController::UpdateRelicToolsState(wxFrame *pFrame, const RelicToolResolver &resolver)

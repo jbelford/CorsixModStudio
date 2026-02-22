@@ -21,6 +21,7 @@
 #include "common/strings.h"
 #include "common/strconv.h"
 #include "common/Utility.h"
+#include "common/ThemeColours.h"
 #include <wx/file.h>
 #include <rainman/util/Util.h>
 #include "common/Common.h"
@@ -204,9 +205,6 @@ frmRgdMacro::frmRgdMacro(wxString sFile, wxTreeItemId &oFolder)
     m_pSTC->SetWrapMode(wxSTC_WRAP_NONE);
     wxFont font(10, wxMODERN, wxNORMAL, wxNORMAL);
     m_pSTC->StyleSetFont(wxSTC_STYLE_DEFAULT, font);
-    m_pSTC->StyleSetBackground(wxSTC_STYLE_DEFAULT, *wxWHITE);
-    m_pSTC->StyleSetForeground(wxSTC_STYLE_LINENUMBER, wxColour(_T("DARK GREY")));
-    m_pSTC->StyleSetBackground(wxSTC_STYLE_LINENUMBER, wxColour(_T("WHEAT")));
     m_pSTC->SetUseTabs(true);
     m_pSTC->SetTabIndents(true);
     m_pSTC->SetBackSpaceUnIndents(true);
@@ -219,24 +217,12 @@ frmRgdMacro::frmRgdMacro(wxString sFile, wxTreeItemId &oFolder)
         m_pSTC->StyleSetFont(i, font);
     }
 
-    // set common styles
-    m_pSTC->StyleSetForeground(wxSTC_STYLE_DEFAULT, wxColour(_T("DARK GREY")));
-    m_pSTC->StyleSetForeground(wxSTC_STYLE_INDENTGUIDE, wxColour(_T("DARK GREY")));
-
     int iWordSet = 0;
     for (int i = 0; g_LuaWords[i].type != -1; ++i)
     {
         const StyleInfo &curType = g_StylePrefs[g_LuaWords[i].type];
         wxFont font(curType.fontsize, wxMODERN, wxNORMAL, wxNORMAL, false, curType.fontname);
         m_pSTC->StyleSetFont(g_LuaWords[i].type, font);
-        if (curType.foreground)
-        {
-            m_pSTC->StyleSetForeground(g_LuaWords[i].type, wxColour(curType.foreground));
-        }
-        if (curType.background)
-        {
-            m_pSTC->StyleSetBackground(g_LuaWords[i].type, wxColour(curType.background));
-        }
         m_pSTC->StyleSetBold(g_LuaWords[i].type, (curType.fontstyle & mySTC_STYLE_BOLD) > 0);
         m_pSTC->StyleSetItalic(g_LuaWords[i].type, (curType.fontstyle & mySTC_STYLE_ITALIC) > 0);
         m_pSTC->StyleSetUnderline(g_LuaWords[i].type, (curType.fontstyle & mySTC_STYLE_UNDERL) > 0);
@@ -247,6 +233,9 @@ frmRgdMacro::frmRgdMacro(wxString sFile, wxTreeItemId &oFolder)
             m_pSTC->SetKeyWords(iWordSet++, g_LuaWords[i].words);
         }
     }
+
+    // Apply theme-aware colours (editor bg/fg, syntax highlighting, line numbers)
+    ThemeColours::ApplyEditorTheme(m_pSTC);
 
     m_pSTC->SetMarginWidth(0, m_pSTC->TextWidth(wxSTC_STYLE_LINENUMBER, _T("_9999")));
 

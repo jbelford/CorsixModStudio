@@ -106,6 +106,7 @@ class ConstructFrame : public wxFrame, public IMainFrameView
     void LaunchNewRDNWiki(wxCommandEvent &event);
     void LaunchRDNWiki(wxCommandEvent &event);
     void HideDonate(wxCommandEvent &event);
+    void OnThemeChange(wxCommandEvent &event);
 
     static void LaunchURL(wxString sURL);
 
@@ -195,6 +196,11 @@ enum
     IDM_About,
     IDM_Credits,
     IDM_HideDonate,
+
+    // View Menu — Theme
+    IDM_ThemeSystem,
+    IDM_ThemeLight,
+    IDM_ThemeDark,
 
     // Stuff
     IDC_Splitter

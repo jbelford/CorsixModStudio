@@ -38,6 +38,7 @@ add_executable(cdms_tests
     ${CDMS_SRC_DIR}/common/strings.cpp
     ${CDMS_SRC_DIR}/common/Utility.cpp
     ${CDMS_SRC_DIR}/common/config.cpp
+    ${CDMS_SRC_DIR}/common/ThemeColours.cpp
     ${CDMS_SRC_DIR}/services/ModuleService.cpp
     ${CDMS_SRC_DIR}/services/FileService.cpp
     ${CDMS_SRC_DIR}/services/FormatService.cpp

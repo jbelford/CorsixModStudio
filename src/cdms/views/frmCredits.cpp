@@ -19,6 +19,7 @@
 #include "frmCredits.h"
 #include "resource.h"
 #include "common/Common.h"
+#include "common/ThemeColours.h"
 
 BEGIN_EVENT_TABLE(frmCredits, wxDialog)
 EVT_PAINT(frmCredits::OnPaint)
@@ -48,7 +49,7 @@ frmCredits::frmCredits()
                                wxST_NO_AUTORESIZE | wxALIGN_LEFT);
     // m_pText->Wrap(384);
     m_pText->SetBackgroundStyle(wxBG_STYLE_COLOUR);
-    m_pText->SetBackgroundColour(wxColour(255, 255, 255));
+    m_pText->SetBackgroundColour(ThemeColours::DialogBg());
     wxFont f = m_pText->GetFont();
     f.SetWeight(wxFONTWEIGHT_BOLD);
     m_pText->SetFont(f);

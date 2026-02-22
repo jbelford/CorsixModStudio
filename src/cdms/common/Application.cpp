@@ -46,6 +46,22 @@ bool CDMSApplication::OnInit()
     wxConfigBase::Get()->SetExpandEnvVars(false);
     wxConfigBase::Get()->SetPath(AppStr(config_initialpath));
 
+    // Apply saved appearance preference (0=system, 1=light, 2=dark)
+    int iAppearance = 0;
+    wxConfigBase::Get()->Read(AppStr(config_appearance), &iAppearance, 0);
+    if (iAppearance == 1)
+    {
+        SetAppearance(Appearance::Light);
+    }
+    else if (iAppearance == 2)
+    {
+        SetAppearance(Appearance::Dark);
+    }
+    else
+    {
+        SetAppearance(Appearance::System);
+    }
+
     wxImage::AddHandler(new wxTGAHandler);
 
     //_CrtSetBreakAlloc(5143);

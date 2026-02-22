@@ -19,6 +19,7 @@
 #include "Utility.h"
 // #include "strings.h"
 #include "Common.h"
+#include "ThemeColours.h"
 
 #define SKIP_BACKUP return;
 
@@ -93,8 +94,8 @@ bool _ErrorBox(const wxString &sError, const char *sFile, long iLine, bool bUnha
     }
     else
     {
-        iAnswer = ::wxMessageBox(sErr, wxT("Error"), wxICON_ERROR | wxOK | (bAllowCancel ? wxCANCEL : 0),
-                                 wxTheApp->GetTopWindow());
+        iAnswer = ThemeColours::ShowMessageBox(sErr, wxT("Error"), wxICON_ERROR | wxOK | (bAllowCancel ? wxCANCEL : 0),
+                                               wxTheApp->GetTopWindow());
     }
     delete[] pFile;
     return iAnswer == wxOK;
@@ -136,8 +137,8 @@ bool _ErrorBox(const CRainmanException &e, const char *sFile, long iLine, bool b
     }
     else
     {
-        iAnswer = ::wxMessageBox(sError, wxT("Error"), wxICON_ERROR | wxOK | (bAllowCancel ? wxCANCEL : 0),
-                                 wxTheApp->GetTopWindow());
+        iAnswer = ThemeColours::ShowMessageBox(
+            sError, wxT("Error"), wxICON_ERROR | wxOK | (bAllowCancel ? wxCANCEL : 0), wxTheApp->GetTopWindow());
     }
     return iAnswer == wxOK;
 }

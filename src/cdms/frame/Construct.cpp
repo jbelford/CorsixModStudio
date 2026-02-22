@@ -39,6 +39,7 @@ extern "C"
 #include "common/strings.h"
 #include "common/config.h"
 #include "common/strconv.h"
+#include "common/ThemeColours.h"
 // For ShellExecute :(
 #include <windows.h>
 #include <shellapi.h>
@@ -114,7 +115,7 @@ void ConstructFrame::OnRelicToolCommand(wxCommandEvent &event)
     const auto &tool = m_relicToolResolver.GetTool(index);
     if (!tool.bFound)
     {
-        wxMessageBox(wxT("Tool not found: ") + tool.sExeName, wxT("Error"), wxOK | wxICON_ERROR);
+        ThemeColours::ShowMessageBox(wxT("Tool not found: ") + tool.sExeName, wxT("Error"), wxOK | wxICON_ERROR);
         return;
     }
 
@@ -123,7 +124,7 @@ void ConstructFrame::OnRelicToolCommand(wxCommandEvent &event)
         ShellExecute((HWND)GetHandle(), wxT("open"), tool.sResolvedPath, wxT(""), sFolder, SW_SHOWNORMAL));
     if (result <= 32)
     {
-        wxMessageBox(wxT("Failed to launch ") + tool.sExeName, wxT("Error"), wxOK | wxICON_ERROR);
+        ThemeColours::ShowMessageBox(wxT("Failed to launch ") + tool.sExeName, wxT("Error"), wxOK | wxICON_ERROR);
     }
 }
 
@@ -213,6 +214,24 @@ void ConstructFrame::LaunchRDNWiki(wxCommandEvent &event)
     LaunchURL(wxT("http://www.relic.com/rdn/wiki/RDNWikiHome"));
 }
 
+void ConstructFrame::OnThemeChange(wxCommandEvent &event)
+{
+    int iAppearance = 0; // system
+
+    if (event.GetId() == IDM_ThemeLight)
+    {
+        iAppearance = 1;
+    }
+    else if (event.GetId() == IDM_ThemeDark)
+    {
+        iAppearance = 2;
+    }
+
+    TheConfig->Write(AppStr(config_appearance), iAppearance);
+    ThemeColours::ShowMessageBox(wxT("The theme change will take effect when you restart the application."),
+                                 wxT("Theme Changed"), wxOK | wxICON_INFORMATION, this);
+}
+
 wxAuiNotebook *ConstructFrame::GetTabs() { return m_tabManager.GetTabs(); }
 
 void ConstructFrame::LaunchW40k(wxCommandEvent &event)
@@ -239,11 +258,11 @@ void ConstructFrame::LaunchW40k(wxCommandEvent &event)
         sCmdLine.Prepend(wxT("-modname "));
     }
 
-    if (GetMenuBar()->GetMenu(3)->FindItem(IDM_PlayDev)->IsChecked())
+    if (GetMenuBar()->GetMenu(4)->FindItem(IDM_PlayDev)->IsChecked())
     {
         sCmdLine.Append(wxT(" -dev"));
     }
-    if (GetMenuBar()->GetMenu(3)->FindItem(IDM_PlayNoMovies)->IsChecked())
+    if (GetMenuBar()->GetMenu(4)->FindItem(IDM_PlayNoMovies)->IsChecked())
     {
         sCmdLine.Append(wxT(" -nomovies"));
     }
@@ -275,11 +294,11 @@ void ConstructFrame::LaunchDC(wxCommandEvent &event)
         sCmdLine.Prepend(wxT("-modname "));
     }
 
-    if (GetMenuBar()->GetMenu(3)->FindItem(IDM_PlayDev)->IsChecked())
+    if (GetMenuBar()->GetMenu(4)->FindItem(IDM_PlayDev)->IsChecked())
     {
         sCmdLine.Append(wxT(" -dev"));
     }
-    if (GetMenuBar()->GetMenu(3)->FindItem(IDM_PlayNoMovies)->IsChecked())
+    if (GetMenuBar()->GetMenu(4)->FindItem(IDM_PlayNoMovies)->IsChecked())
     {
         sCmdLine.Append(wxT(" -nomovies"));
     }
@@ -311,11 +330,11 @@ void ConstructFrame::LaunchSS(wxCommandEvent &event)
         sCmdLine.Prepend(wxT("-modname "));
     }
 
-    if (GetMenuBar()->GetMenu(3)->FindItem(IDM_PlayDev)->IsChecked())
+    if (GetMenuBar()->GetMenu(4)->FindItem(IDM_PlayDev)->IsChecked())
     {
         sCmdLine.Append(wxT(" -dev"));
     }
-    if (GetMenuBar()->GetMenu(3)->FindItem(IDM_PlayNoMovies)->IsChecked())
+    if (GetMenuBar()->GetMenu(4)->FindItem(IDM_PlayNoMovies)->IsChecked())
     {
         sCmdLine.Append(wxT(" -nomovies"));
     }
@@ -349,11 +368,11 @@ void ConstructFrame::LaunchCOH(wxCommandEvent &event)
         sCmdLine.Prepend(wxT("-modname "));
     }
 
-    if (GetMenuBar()->GetMenu(3)->FindItem(IDM_PlayDev)->IsChecked())
+    if (GetMenuBar()->GetMenu(4)->FindItem(IDM_PlayDev)->IsChecked())
     {
         sCmdLine.Append(wxT(" -dev"));
     }
-    if (GetMenuBar()->GetMenu(3)->FindItem(IDM_PlayNoMovies)->IsChecked())
+    if (GetMenuBar()->GetMenu(4)->FindItem(IDM_PlayNoMovies)->IsChecked())
     {
         sCmdLine.Append(wxT(" -nomovies"));
     }
@@ -385,11 +404,11 @@ void ConstructFrame::LaunchW40kWA(wxCommandEvent &event)
         sCmdLine.Prepend(wxT("-modname "));
     }
 
-    if (GetMenuBar()->GetMenu(3)->FindItem(IDM_PlayDev)->IsChecked())
+    if (GetMenuBar()->GetMenu(4)->FindItem(IDM_PlayDev)->IsChecked())
     {
         sCmdLine.Append(wxT(" -dev"));
     }
-    if (GetMenuBar()->GetMenu(3)->FindItem(IDM_PlayNoMovies)->IsChecked())
+    if (GetMenuBar()->GetMenu(4)->FindItem(IDM_PlayNoMovies)->IsChecked())
     {
         sCmdLine.Append(wxT(" -nomovies"));
     }
@@ -512,7 +531,7 @@ void ConstructFrame::SetModule(CModuleFile *pMod, const wxString &sModuleFile)
             GetMenuBar()->GetMenu(0)->Enable(IDM_LoadModCoH, false);
             GetMenuBar()->GetMenu(0)->Enable(IDM_LoadSga, false);
             GetMenuBar()->GetMenu(0)->Enable(wxID_NEW, false);
-            GetMenuBar()->EnableTop(1, true);
+            GetMenuBar()->EnableTop(2, true);
             frmFiles *pFiles = new frmFiles(m_tabManager.GetSplitter(), -1);
             m_tabManager.SplitWithFileTree(pFiles, TheConfig->Read(AppStr(config_sashposition), 189));
             pFiles->FillFromIDirectoryTraverser(pMod);
@@ -527,24 +546,24 @@ void ConstructFrame::SetModule(CModuleFile *pMod, const wxString &sModuleFile)
                 m_tabManager.GetTabs()->DeletePage(0);
             }
 
-            GetMenuBar()->GetMenu(3)->Enable(IDM_PlayCOH, false);
-            GetMenuBar()->GetMenu(3)->Enable(IDM_PlayW40k, false);
-            GetMenuBar()->GetMenu(3)->Enable(IDM_PlayWXP, false);
-            GetMenuBar()->GetMenu(3)->Enable(IDM_PlayDC, false);
-            GetMenuBar()->GetMenu(3)->Enable(IDM_PlaySS, false);
+            GetMenuBar()->GetMenu(4)->Enable(IDM_PlayCOH, false);
+            GetMenuBar()->GetMenu(4)->Enable(IDM_PlayW40k, false);
+            GetMenuBar()->GetMenu(4)->Enable(IDM_PlayWXP, false);
+            GetMenuBar()->GetMenu(4)->Enable(IDM_PlayDC, false);
+            GetMenuBar()->GetMenu(4)->Enable(IDM_PlaySS, false);
 
             switch (pMod->GetModuleType())
             {
             case CModuleFile::MT_DawnOfWar:
-                GetMenuBar()->GetMenu(3)->Enable(IDM_PlayW40k, true);
-                GetMenuBar()->GetMenu(3)->Enable(IDM_PlayWXP, true);
-                GetMenuBar()->GetMenu(3)->Enable(IDM_PlayDC, true);
-                GetMenuBar()->GetMenu(3)->Enable(IDM_PlaySS, true);
+                GetMenuBar()->GetMenu(4)->Enable(IDM_PlayW40k, true);
+                GetMenuBar()->GetMenu(4)->Enable(IDM_PlayWXP, true);
+                GetMenuBar()->GetMenu(4)->Enable(IDM_PlayDC, true);
+                GetMenuBar()->GetMenu(4)->Enable(IDM_PlaySS, true);
                 break;
 
             case CModuleFile::MT_CompanyOfHeroes:
             case CModuleFile::MT_CompanyOfHeroesEarly:
-                GetMenuBar()->GetMenu(3)->Enable(IDM_PlayCOH, true);
+                GetMenuBar()->GetMenu(4)->Enable(IDM_PlayCOH, true);
                 break;
             }
         }
@@ -553,11 +572,11 @@ void ConstructFrame::SetModule(CModuleFile *pMod, const wxString &sModuleFile)
     }
     else
     {
-        GetMenuBar()->GetMenu(3)->Enable(IDM_PlayCOH, false);
-        GetMenuBar()->GetMenu(3)->Enable(IDM_PlayW40k, false);
-        GetMenuBar()->GetMenu(3)->Enable(IDM_PlayWXP, false);
-        GetMenuBar()->GetMenu(3)->Enable(IDM_PlayDC, false);
-        GetMenuBar()->GetMenu(3)->Enable(IDM_PlaySS, false);
+        GetMenuBar()->GetMenu(4)->Enable(IDM_PlayCOH, false);
+        GetMenuBar()->GetMenu(4)->Enable(IDM_PlayW40k, false);
+        GetMenuBar()->GetMenu(4)->Enable(IDM_PlayWXP, false);
+        GetMenuBar()->GetMenu(4)->Enable(IDM_PlayDC, false);
+        GetMenuBar()->GetMenu(4)->Enable(IDM_PlaySS, false);
 
         if (m_tabManager.IsSplit())
         {
@@ -569,7 +588,7 @@ void ConstructFrame::SetModule(CModuleFile *pMod, const wxString &sModuleFile)
             GetMenuBar()->GetMenu(0)->Enable(IDM_LoadModCoH, true);
             GetMenuBar()->GetMenu(0)->Enable(IDM_LoadSga, true);
             GetMenuBar()->GetMenu(0)->Enable(wxID_NEW, true);
-            GetMenuBar()->EnableTop(1, false);
+            GetMenuBar()->EnableTop(2, false);
 
             // Destroy the tree before the module — tree items hold borrowed
             // pointers (sMod, sSource) into CFileMap data owned by the module.
@@ -628,7 +647,7 @@ void ConstructFrame::OnModuleLoaded(CModuleFile *pMod, const wxString &sPath, bo
 
     if (bIsSga)
     {
-        GetMenuBar()->EnableTop(3, false);
+        GetMenuBar()->EnableTop(4, false);
     }
 
     Refresh();
@@ -693,7 +712,8 @@ void ConstructFrame::OnOpenModCoH(wxCommandEvent &event)
 void ConstructFrame::HideDonate(wxCommandEvent &event)
 {
     UNUSED(event);
-    ::wxMessageBox(AppStr(hidedonate_text), AppStr(hidedonate_menu), wxICON_INFORMATION, wxTheApp->GetTopWindow());
+    ThemeColours::ShowMessageBox(AppStr(hidedonate_text), AppStr(hidedonate_menu), wxICON_INFORMATION,
+                                 wxTheApp->GetTopWindow());
     TheConfig->Write(AppStr(config_donate), (int)0);
 }
 

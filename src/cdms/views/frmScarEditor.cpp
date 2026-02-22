@@ -21,6 +21,7 @@
 #include "common/strconv.h"
 #include "common/strings.h"
 #include "common/Utility.h"
+#include "common/ThemeColours.h"
 #include "presenters/CScarEditorPresenter.h"
 extern "C"
 {
@@ -164,7 +165,9 @@ void frmScarEditor::_RestorePreviousCalltip()
     if (m_stkCalltips.size())
     {
         if (m_pSTC->CallTipActive())
+        {
             m_pSTC->CallTipCancel();
+        }
         m_oThisCalltip = m_stkCalltips.top();
         m_pSTC->CallTipShow(m_oThisCalltip.iPos, m_oThisCalltip.sTip);
         m_stkCalltips.pop();
@@ -252,7 +255,9 @@ void frmScarEditor::OnCloseWindow(wxCloseEvent &event)
         case wxID_CANCEL:
         default:
             if (event.CanVeto())
+            {
                 event.Veto();
+            }
         case wxID_NO:
             break;
         }
@@ -268,11 +273,15 @@ void frmScarEditor::OnAutoCompChoose(wxStyledTextEvent &event)
 void frmScarEditor::_PushThisCalltip()
 {
     if (m_pSTC->CallTipActive())
+    {
         m_stkCalltips.push(m_oThisCalltip);
+    }
     else
     {
         while (m_stkCalltips.size())
+        {
             m_stkCalltips.pop();
+        }
     }
 }
 
@@ -287,7 +296,9 @@ void frmScarEditor::OnCharAdded(wxStyledTextEvent &event)
             iLineIndentation = m_pSTC->GetLineIndentation(iCurrentLine - 1);
         }
         if (iLineIndentation == 0)
+        {
             return;
+        }
         m_pSTC->SetLineIndentation(iCurrentLine, iLineIndentation);
         m_pSTC->LineEnd();
     }
@@ -313,24 +324,30 @@ void frmScarEditor::OnCharAdded(wxStyledTextEvent &event)
                 for (std::list<char *>::iterator itr2 = itr->sArguments.begin(); itr2 != itr->sArguments.end(); ++itr2)
                 {
                     if (bNeedComma)
+                    {
                         m_oThisCalltip.sTip.Append(wxT(",\n    "));
+                    }
                     m_oThisCalltip.sTip.Append(AsciiTowxString(*itr2));
                     bNeedComma = true;
                 }
                 m_oThisCalltip.sTip.Append(wxT(")\n"));
                 m_oThisCalltip.sTip.Append(AsciiTowxString(itr->sDesc));
                 if (m_pSTC->CallTipActive())
+                {
                     m_pSTC->CallTipCancel();
-                m_pSTC->CallTipSetBackground(wxColour(_T("LIGHT BLUE")));
-                m_pSTC->CallTipSetForeground(wxColour(_T("BLACK")));
+                }
+                m_pSTC->CallTipSetBackground(ThemeColours::CallTipBg());
+                m_pSTC->CallTipSetForeground(ThemeColours::CallTipFg());
                 m_pSTC->CallTipShow(iWordPos, m_oThisCalltip.sTip);
                 return;
             }
         }
         if (m_pSTC->CallTipActive())
+        {
             m_pSTC->CallTipCancel();
-        m_pSTC->CallTipSetBackground(wxColour(_T("LIGHT BLUE")));
-        m_pSTC->CallTipSetForeground(wxColour(_T("BLACK")));
+        }
+        m_pSTC->CallTipSetBackground(ThemeColours::CallTipBg());
+        m_pSTC->CallTipSetForeground(ThemeColours::CallTipFg());
         m_oThisCalltip.sTip = wxT("No help available");
         m_pSTC->CallTipShow(iWordPos, m_oThisCalltip.sTip);
     }
@@ -347,7 +364,9 @@ void frmScarEditor::OnCharAdded(wxStyledTextEvent &event)
             bool GotWords = false;
             for (std::list<_ScarFunction>::iterator itr = m_lstScarFunctions.begin(); itr != m_lstScarFunctions.end();
                  ++itr)
+            {
                 iLen += (strlen(itr->sName) + 1);
+            }
             sItems.Alloc(iLen);
             for (std::list<_ScarFunction>::iterator itr = m_lstScarFunctions.begin(); itr != m_lstScarFunctions.end();
                  ++itr)
@@ -355,7 +374,9 @@ void frmScarEditor::OnCharAdded(wxStyledTextEvent &event)
                 if (strncmp(saWord.get(), itr->sName, iWordLen) == 0)
                 {
                     if (GotWords)
+                    {
                         sItems.Append(' ');
+                    }
                     sItems.Append(AsciiTowxString(itr->sName));
                     GotWords = true;
                 }
@@ -403,7 +424,9 @@ void frmScarEditor::Load(IFileStore::IStream *pFile)
     }
     wchar_t *pBuffer = new wchar_t[iLength + 1];
     for (long i = 0; i < iLength; ++i)
+    {
         pBuffer[i] = sBuffer[i];
+    }
     pBuffer[iLength] = 0;
     m_pSTC->AddText(pBuffer);
     delete[] pBuffer;
@@ -425,7 +448,9 @@ void frmScarEditor::OnStyleNeeded(wxStyledTextEvent &event)
 const char *lua_tolstring(lua_State *L, int index, size_t *len)
 {
     if (len)
+    {
         *len = lua_strlen(L, index);
+    }
     return lua_tostring(L, index);
 }
 
@@ -519,7 +544,9 @@ int frmScarEditor::FillFunctionDrop(const wxString &sNameTarget)
     for (const auto &def : aFunctions)
     {
         if (iRet == -1 && sNameTarget.IsSameAs(def.sName, false))
+        {
             iRet = def.iPosition;
+        }
         m_pFunctionDropdown->Append(def.sName, reinterpret_cast<void *>(static_cast<intptr_t>(def.iPosition)));
     }
     return iRet;
@@ -534,9 +561,13 @@ frmScarEditor::frmScarEditor(const wxTreeItemId &oFileParent, wxString sFilename
     {
         FILE *f;
         if (GetConstruct()->GetModuleService().GetModuleType() == CModuleFile::MT_DawnOfWar)
+        {
             f = _wfopen(AppStr(app_scarreffile), L"rb");
+        }
         else
+        {
             f = _wfopen(AppStr(app_cohscarreffile), L"rb");
+        }
 
         if (!f)
         {
@@ -616,9 +647,6 @@ frmScarEditor::frmScarEditor(const wxTreeItemId &oFileParent, wxString sFilename
     m_pSTC->SetWrapMode(wxSTC_WRAP_NONE);
     wxFont font(10, wxMODERN, wxNORMAL, wxNORMAL);
     m_pSTC->StyleSetFont(wxSTC_STYLE_DEFAULT, font);
-    m_pSTC->StyleSetBackground(wxSTC_STYLE_DEFAULT, *wxWHITE);
-    m_pSTC->StyleSetForeground(wxSTC_STYLE_LINENUMBER, wxColour(_T("DARK GREY")));
-    m_pSTC->StyleSetBackground(wxSTC_STYLE_LINENUMBER, wxColour(_T("WHEAT")));
     m_pSTC->SetUseTabs(true);
     m_pSTC->SetTabIndents(true);
     m_pSTC->SetBackSpaceUnIndents(true);
@@ -631,37 +659,38 @@ frmScarEditor::frmScarEditor(const wxTreeItemId &oFileParent, wxString sFilename
         m_pSTC->StyleSetFont(i, font);
     }
 
-    // set common styles
-    m_pSTC->StyleSetForeground(wxSTC_STYLE_DEFAULT, wxColour(_T("DARK GREY")));
-    m_pSTC->StyleSetForeground(wxSTC_STYLE_INDENTGUIDE, wxColour(_T("DARK GREY")));
-
     int iWordSet = 0;
     for (int i = 0; g_LuaWords[i].type != -1; ++i)
     {
         const StyleInfo &curType = g_StylePrefs[g_LuaWords[i].type];
         wxFont font(curType.fontsize, wxMODERN, wxNORMAL, wxNORMAL, false, curType.fontname);
         m_pSTC->StyleSetFont(g_LuaWords[i].type, font);
-        if (curType.foreground)
-            m_pSTC->StyleSetForeground(g_LuaWords[i].type, wxColour(curType.foreground));
-        if (curType.background)
-            m_pSTC->StyleSetBackground(g_LuaWords[i].type, wxColour(curType.background));
         m_pSTC->StyleSetBold(g_LuaWords[i].type, (curType.fontstyle & mySTC_STYLE_BOLD) > 0);
         m_pSTC->StyleSetItalic(g_LuaWords[i].type, (curType.fontstyle & mySTC_STYLE_ITALIC) > 0);
         m_pSTC->StyleSetUnderline(g_LuaWords[i].type, (curType.fontstyle & mySTC_STYLE_UNDERL) > 0);
         m_pSTC->StyleSetVisible(g_LuaWords[i].type, (curType.fontstyle & mySTC_STYLE_HIDDEN) == 0);
         m_pSTC->StyleSetCase(g_LuaWords[i].type, curType.lettercase);
         if (g_LuaWords[i].words)
+        {
             m_pSTC->SetKeyWords(iWordSet++, g_LuaWords[i].words);
+        }
     }
+
+    // Apply theme-aware colours (editor bg/fg, syntax highlighting, line numbers)
+    ThemeColours::ApplyEditorTheme(m_pSTC);
 
     wxString sScarFns, sScarConstants;
     size_t iLenFns = 0, iLenCons = 0;
     for (std::list<_ScarFunction>::iterator itr = m_lstScarFunctions.begin(); itr != m_lstScarFunctions.end(); ++itr)
     {
         if (itr->iType == 0)
+        {
             iLenFns += (strlen(itr->sName) + 1);
+        }
         else
+        {
             iLenCons += (strlen(itr->sName) + 1);
+        }
     }
     sScarFns.Alloc(iLenFns);
     sScarConstants.Alloc(iLenCons);

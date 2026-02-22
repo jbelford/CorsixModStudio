@@ -19,6 +19,7 @@
 #include "frmLoading.h"
 #include "resource.h"
 #include "common/Common.h"
+#include "common/ThemeColours.h"
 
 BEGIN_EVENT_TABLE(frmLoading, wxFrame)
 EVT_CLOSE(frmLoading::OnQuit)
@@ -43,15 +44,15 @@ frmLoading::frmLoading(const wxString &sTitle)
                                wxST_NO_AUTORESIZE | wxALIGN_CENTER);
     m_pText->Wrap(FromDIP(380));
     m_pText->SetBackgroundStyle(wxBG_STYLE_COLOUR);
-    m_pText->SetBackgroundColour(wxColour(255, 255, 255));
+    m_pText->SetBackgroundColour(ThemeColours::DialogBg());
     wxFont f = m_pText->GetFont();
     f.SetWeight(wxFONTWEIGHT_BOLD);
     m_pText->SetFont(f);
 
     m_pCancelButton = new wxButton(this, wxID_CANCEL, wxT("\u2715"), FromDIP(wxPoint(356, 4)), FromDIP(wxSize(24, 24)),
                                    wxBU_EXACTFIT | wxBORDER_NONE);
-    m_pCancelButton->SetBackgroundColour(wxColour(255, 255, 255));
-    m_pCancelButton->SetForegroundColour(wxColour(100, 100, 100));
+    m_pCancelButton->SetBackgroundColour(ThemeColours::CancelBtnBg());
+    m_pCancelButton->SetForegroundColour(ThemeColours::CancelBtnFg());
     m_pCancelButton->SetCursor(wxCursor(wxCURSOR_HAND));
     m_pCancelButton->SetToolTip(wxT("Cancel"));
     m_pCancelButton->Bind(wxEVT_ENTER_WINDOW, &frmLoading::OnCancelMouseEnter, this);
@@ -85,7 +86,9 @@ void frmLoading::SetCancelCallback(std::function<void()> fnOnCancel)
 {
     m_fnOnCancel = std::move(fnOnCancel);
     if (m_pCancelButton)
+    {
         m_pCancelButton->Show(m_fnOnCancel != nullptr);
+    }
 }
 
 void frmLoading::OnCancel(wxCommandEvent &event)
@@ -100,16 +103,16 @@ void frmLoading::OnCancel(wxCommandEvent &event)
 
 void frmLoading::OnCancelMouseEnter(wxMouseEvent &event)
 {
-    m_pCancelButton->SetBackgroundColour(wxColour(232, 17, 35));
-    m_pCancelButton->SetForegroundColour(wxColour(255, 255, 255));
+    m_pCancelButton->SetBackgroundColour(ThemeColours::CancelBtnHoverBg());
+    m_pCancelButton->SetForegroundColour(ThemeColours::CancelBtnHoverFg());
     m_pCancelButton->Refresh();
     event.Skip();
 }
 
 void frmLoading::OnCancelMouseLeave(wxMouseEvent &event)
 {
-    m_pCancelButton->SetBackgroundColour(wxColour(255, 255, 255));
-    m_pCancelButton->SetForegroundColour(wxColour(100, 100, 100));
+    m_pCancelButton->SetBackgroundColour(ThemeColours::CancelBtnBg());
+    m_pCancelButton->SetForegroundColour(ThemeColours::CancelBtnFg());
     m_pCancelButton->Refresh();
     event.Skip();
 }
