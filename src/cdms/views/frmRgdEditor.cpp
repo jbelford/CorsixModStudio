@@ -532,19 +532,15 @@ frmRGDEditor::frmRGDEditor(const wxTreeItemId &oFileParent, wxString sFilename, 
     pToolbar->AddTool(IDC_ToolSave, AppStr(rgd_save), oSaveBmp, AppStr(rgd_save));
     pToolbar->AddSeparator();
 
-    // "View Code" tool — render "</>" text onto a 32×32 bitmap
-    wxBitmap oCodeBmp(32, 32);
-    {
-        wxMemoryDC dc(oCodeBmp);
-        dc.SetBackground(*wxWHITE_BRUSH);
-        dc.Clear();
-        dc.SetFont(wxFont(14, wxFONTFAMILY_MODERN, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
-        wxString label(wxT("</>"));
-        wxSize textSize = dc.GetTextExtent(label);
-        dc.DrawText(label, (32 - textSize.x) / 2, (32 - textSize.y) / 2);
-    }
-    oCodeBmp.SetMask(new wxMask(oCodeBmp, *wxWHITE));
-    pToolbar->AddTool(IDC_ToolViewCode, wxT("View Code"), oCodeBmp, wxT("Open in code editor"));
+    // "View Code" tool — SVG icon that scales cleanly at any DPI
+    static const char sSvgCode[] =
+        R"(<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">)"
+        R"(<polyline points="11,6 4,16 11,26" fill="none" stroke="#444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>)"
+        R"(<polyline points="21,6 28,16 21,26" fill="none" stroke="#444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>)"
+        R"(<line x1="18" y1="4" x2="14" y2="28" stroke="#444" stroke-width="2" stroke-linecap="round"/>)"
+        R"(</svg>)";
+    auto oCodeBundle = wxBitmapBundle::FromSVG(sSvgCode, wxSize(32, 32));
+    pToolbar->AddTool(IDC_ToolViewCode, wxT("View Code"), oCodeBundle, wxT("Open in code editor"));
     pToolbar->Realize();
 
     wxBoxSizer *pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
