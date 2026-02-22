@@ -680,6 +680,23 @@ frmFiles::frmFiles(wxWindow *parent, wxWindowID id, const wxPoint &pos, const wx
     m_pTabs->AddPage(m_pTree = new wxTreeCtrl(m_pTabs, IDC_FilesTree, wxDefaultPosition, wxDefaultSize,
                                               wxTR_HIDE_ROOT | wxTR_HAS_BUTTONS | wxTR_LINES_AT_ROOT),
                      AppStr(file_filestabname));
+
+    // Toggle expand/collapse when clicking an already-selected folder.
+    // SEL_CHANGED doesn't fire for re-clicks on the same item, so we
+    // catch LEFT_DOWN and handle that case here.
+    m_pTree->Bind(wxEVT_LEFT_DOWN,
+                  [this](wxMouseEvent &evt)
+                  {
+                      int flags = 0;
+                      wxTreeItemId oHit = m_pTree->HitTest(evt.GetPosition(), flags);
+                      if (oHit.IsOk() && (flags & wxTREE_HITTEST_ONITEMLABEL) && oHit == m_pTree->GetSelection() &&
+                          m_pTree->ItemHasChildren(oHit))
+                      {
+                          m_pTree->Toggle(oHit);
+                          return;
+                      }
+                      evt.Skip();
+                  });
     m_pTabs->AddPage(m_pTools = new wxListCtrl(m_pTabs, IDC_ToolsList, wxDefaultPosition, wxDefaultSize,
                                                wxLC_ICON | wxLC_SINGLE_SEL),
                      AppStr(file_toolstabname));
