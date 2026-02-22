@@ -98,16 +98,6 @@ class CDpsCalculatorTool : public ConstructFrame::ITool, private IDpsCalculatorV
     std::unique_ptr<CDpsCalculatorPresenter> m_pPresenter;
 };
 
-class CRedButtonTool : public ConstructFrame::ITool
-{
-  public:
-    virtual wxString GetName();
-    virtual wxString GetHelpString();
-    virtual wxString GetBitmapName();
-
-    virtual void DoAction();
-};
-
 class CMakeLuaInheritTree : public ConstructFrame::ITool
 {
   protected:

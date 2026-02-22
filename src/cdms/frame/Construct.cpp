@@ -540,9 +540,8 @@ ConstructFrame::ConstructFrame(const wxString &sTitle, const wxPoint &oPos, cons
     m_toolRegistry.Register(new CRefreshFilesTool);
     m_toolRegistry.Register(new CMakeLuaInheritTree);
     m_toolRegistry.Register(new CAESetupTool);
-    m_toolRegistry.Register(new CRedButtonTool);
 
-    // Make Splitter + Tabs
+    // Make Splitter+ Tabs
     m_tabManager.Init(this, IDC_Splitter);
     m_tabManager.AddPage(new frmWelcome(m_tabManager.GetTabs(), -1), AppStr(welcome_tabname), false);
 

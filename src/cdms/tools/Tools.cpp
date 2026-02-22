@@ -33,7 +33,6 @@
 #include <memory>
 // Rainman_RGDDump.h removed; RgdDump usage is commented-out dead code
 #include <rainman/util/Util.h>
-#include <rainman/io/CFileSystemStore.h>
 #include <rainman/io/IFileStore.h>
 #include "common/Common.h"
 #include "common/ThemeColours.h"
@@ -424,51 +423,6 @@ void CMakeLuaInheritTree::DoAction()
     }
 
     delete pTable;
-}
-
-wxString CRedButtonTool::GetName() { return AppStr(redbutton_toolname); }
-wxString CRedButtonTool::GetHelpString() { return wxT(""); }
-wxString CRedButtonTool::GetBitmapName() { return wxT("IDB_REDBUTTON"); }
-void CRedButtonTool::DoAction()
-{
-    CFileSystemStore oFSO;
-    oFSO.VInit();
-    try
-    {
-        std::unique_ptr<IFileStore::IOutputStream> guard(
-            oFSO.VOpenOutputStream("I:\\j\\k\\l\\m\\n\\o\\p\\q.test", true));
-    }
-    catch (const CRainmanException &e)
-    {
-        ErrorBoxE(e);
-    }
-    /*
-    CIniConfigFile oConfig;
-    oConfig.loadFile("E:\\Company of Heroes\\RelicCOH.module");
-    oConfig.saveFile("E:\\Company of Heroes\\RelicCOH_.module");
-    */
-
-    /*
-    wxString sOutFile = wxFileSelector(wxT("Select strings list"), wxT(""), wxT(""), wxT("txt"), wxT("Text File
-    (*.txt)|*.txt") , wxFD_OPEN, TheConstruct);
-
-    if(sOutFile.Len() == 0) return;
-
-    char* sOut = wxStringToAscii(sOutFile);
-
-    TheConstruct->GetRgdHashTable()->XRefWithStringList(sOut);
-
-    delete[] sOut;
-    */
-    /*
-    char* sOut = wxStringToAscii(oF.GetBaseFolder() + oF.GetFile());
-    IFileStore::IStream* pS = TheConstruct->GetModule()->VOpenStream(sOut);
-    delete[] sOut;
-    RgdDump::CRgd oRgd;
-
-    oRgd.loadFromStream(pS);
-    delete pS;
-    */
 }
 
 CRefreshFilesTool::~CRefreshFilesTool() { HideLoading(); }

@@ -540,15 +540,7 @@ Notes:   _______________
 
 **Pass criteria:** Tool opens and allows configuring Relic Attribute Editor paths.
 
-### T8.6 — Red Button Tool
-
-**Steps:**
-1. Load a module.
-2. Click Mod → Tools → Red Button.
-
-**Pass criteria:** Tool runs its batch operation. No crash.
-
-### T8.7 — RGD Macro Tool
+### T8.6 — RGD Macro Tool
 
 **Steps:**
 1. Open an `.rgd` file in the RGD editor.

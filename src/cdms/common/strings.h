@@ -446,9 +446,6 @@ S(massext_toolname, "Extract all")
 S(luadump_failed, "Failed to dump RGD to lua")
 S(luadump_good, "RDG dumped to lua")
 
-/* Red button */
-S(redbutton_toolname, "Developer\'s Red Button")
-
 // End
 #undef S
 #endif // STRINGS_H_

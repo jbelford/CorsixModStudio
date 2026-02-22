@@ -322,7 +322,7 @@ TEST_F(CSgaCreatorTest, CreateAndReadBack) {
 |------|--------|--------|
 | `CLuaScript_Interface.h/cpp` | All code in `#if 0` block | Skip testing; consider removal |
 | `CCohUcsFile.h/cpp` | All code in `#if 0` block | Skip testing; consider removal |
-| `CRedButtonTool` (CDMS) | Appears unused | Investigate before removing |
+| `CRedButtonTool` (CDMS) | Removed | Was a developer debug scratchpad with hardcoded paths |
 
 ---
 
