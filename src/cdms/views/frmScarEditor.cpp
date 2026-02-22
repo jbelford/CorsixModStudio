@@ -1231,10 +1231,17 @@ void frmScarEditor::ApplyDiagnostics(const std::string &uri, std::vector<lsp::Di
 }
 
 /// Parse LuaLS hover markdown into code signature and description parts.
+struct DiagnosticEntry
+{
+    lsp::DiagnosticSeverity severity;
+    std::string text; // Pre-formatted: "Error: message [source]"
+};
+
 struct HoverParts
 {
-    std::string code;        // Function signature (from code fences)
-    std::string description; // Description text (after ---)
+    std::string code;                         // Function signature (from code fences)
+    std::string description;                  // Description text (after ---)
+    std::vector<DiagnosticEntry> diagnostics; // Diagnostics at this position
 };
 
 static HoverParts ParseHoverMarkdown(const std::string &md)
@@ -1505,6 +1512,55 @@ class CHoverPopup : public wxPopupTransientWindow
             pSizer->Add(pDesc, 0, wxEXPAND | wxALL, 8);
         }
 
+        // --- Diagnostics section ---
+        if (!parts.diagnostics.empty())
+        {
+            bool hasPriorContent = !parts.code.empty() || !parts.description.empty();
+            if (hasPriorContent)
+            {
+                wxColour sepColour = dark ? wxColour(69, 69, 69) : wxColour(210, 210, 210);
+                auto *pSep = new wxPanel(pInnerPanel, wxID_ANY, wxDefaultPosition, wxSize(-1, 1));
+                pSep->SetBackgroundColour(sepColour);
+                pSizer->Add(pSep, 0, wxEXPAND | wxLEFT | wxRIGHT, 8);
+            }
+
+            wxFont diagFont(9, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, wxT("Segoe UI"));
+            if (!diagFont.IsOk())
+            {
+                diagFont = wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT);
+                diagFont.SetPointSize(9);
+            }
+
+            for (const auto &diag : parts.diagnostics)
+            {
+                wxColour diagFg;
+                switch (diag.severity)
+                {
+                case lsp::DiagnosticSeverity::Error:
+                    diagFg = dark ? wxColour(244, 71, 71) : wxColour(205, 49, 49);
+                    break;
+                case lsp::DiagnosticSeverity::Warning:
+                    diagFg = dark ? wxColour(206, 145, 40) : wxColour(191, 134, 0);
+                    break;
+                case lsp::DiagnosticSeverity::Information:
+                case lsp::DiagnosticSeverity::Hint:
+                    diagFg = dark ? wxColour(75, 154, 254) : wxColour(0, 122, 204);
+                    break;
+                }
+
+                wxString diagText = wxString::FromUTF8(diag.text);
+                auto *pDiag = new wxStaticText(pInnerPanel, wxID_ANY, diagText, wxDefaultPosition, wxDefaultSize,
+                                               wxST_NO_AUTORESIZE);
+                pDiag->SetFont(diagFont);
+                pDiag->SetForegroundColour(diagFg);
+                pDiag->SetBackgroundColour(bgColour);
+                pDiag->Wrap(kMaxWidth - 20);
+                pSizer->Add(pDiag, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, 8);
+            }
+            // Bottom margin after last diagnostic
+            pSizer->AddSpacer(8);
+        }
+
         pInnerPanel->SetSizer(pSizer);
 
         // Layout and size
@@ -1536,7 +1592,8 @@ void frmScarEditor::OnDwellStart(wxStyledTextEvent &event)
         return;
     }
 
-    // Check if the position falls within any diagnostic range
+    // Collect all diagnostics that cover the hovered position
+    std::vector<DiagnosticEntry> matchedDiags;
     for (const auto &diag : m_vDiagnostics)
     {
         int startPos = m_pSTC->PositionFromLine(diag.range.start.line) + diag.range.start.character;
@@ -1548,50 +1605,51 @@ void frmScarEditor::OnDwellStart(wxStyledTextEvent &event)
 
         if (pos >= startPos && pos < endPos)
         {
-            // Build tooltip text with severity prefix
-            wxString tip;
+            std::string prefix;
             switch (diag.severity)
             {
             case lsp::DiagnosticSeverity::Error:
-                tip = wxT("Error: ");
+                prefix = "Error: ";
                 break;
             case lsp::DiagnosticSeverity::Warning:
-                tip = wxT("Warning: ");
+                prefix = "Warning: ";
                 break;
             case lsp::DiagnosticSeverity::Information:
-                tip = wxT("Info: ");
+                prefix = "Info: ";
                 break;
             case lsp::DiagnosticSeverity::Hint:
-                tip = wxT("Hint: ");
+                prefix = "Hint: ";
                 break;
             }
-            tip += wxString::FromUTF8(diag.message);
-
+            std::string text = prefix + diag.message;
             if (!diag.source.empty())
             {
-                tip += wxT(" [") + wxString::FromUTF8(diag.source) + wxT("]");
+                text += " [" + diag.source + "]";
             }
-
-            m_pSTC->CallTipSetBackground(wxColour(255, 255, 225));
-            m_pSTC->CallTipSetForeground(wxColour(0, 0, 0));
-            m_pSTC->CallTipShow(startPos, tip);
-            return;
+            matchedDiags.push_back({diag.severity, std::move(text)});
         }
     }
 
-    // No diagnostic at this position — request hover info from LSP
+    // Request hover info from LSP (diagnostics will be merged into the popup)
     auto *pFrame = GetConstruct();
     auto *pClient = pFrame ? pFrame->GetLspClient() : nullptr;
     if (pClient && m_bLspOpen)
     {
         int line = m_pSTC->LineFromPosition(pos);
         int col = pos - m_pSTC->PositionFromLine(line);
-        int hoverPos = pos; // capture for callback
+        int hoverPos = pos;
 
         pClient->RequestHover(m_sLspUri, line, col,
-                              [this, hoverPos](std::optional<lsp::HoverResult> hover)
+                              [this, hoverPos, diags = std::move(matchedDiags)](std::optional<lsp::HoverResult> hover)
                               {
-                                  if (!hover || hover->contents.empty())
+                                  HoverParts parts;
+                                  if (hover && !hover->contents.empty())
+                                  {
+                                      parts = ParseHoverMarkdown(hover->contents);
+                                  }
+                                  parts.diagnostics = std::move(diags);
+
+                                  if (parts.code.empty() && parts.description.empty() && parts.diagnostics.empty())
                                   {
                                       return;
                                   }
@@ -1600,16 +1658,8 @@ void frmScarEditor::OnDwellStart(wxStyledTextEvent &event)
                                   {
                                       return;
                                   }
-                                  // Dismiss any existing hover popup
                                   DismissHoverPopup();
 
-                                  HoverParts parts = ParseHoverMarkdown(hover->contents);
-                                  if (parts.code.empty() && parts.description.empty())
-                                  {
-                                      return;
-                                  }
-
-                                  // Position the popup below the hovered text
                                   wxPoint ptEditor = m_pSTC->PointFromPosition(hoverPos);
                                   int lineHeight = m_pSTC->TextHeight(m_pSTC->LineFromPosition(hoverPos));
                                   wxPoint ptScreen = m_pSTC->ClientToScreen(ptEditor);
@@ -1619,12 +1669,27 @@ void frmScarEditor::OnDwellStart(wxStyledTextEvent &event)
                                   m_pHoverPopup->Popup();
                               });
     }
+    else if (!matchedDiags.empty())
+    {
+        // LSP unavailable — show diagnostics-only popup
+        DismissHoverPopup();
+        HoverParts parts;
+        parts.diagnostics = std::move(matchedDiags);
+
+        wxPoint ptEditor = m_pSTC->PointFromPosition(pos);
+        int lineHeight = m_pSTC->TextHeight(m_pSTC->LineFromPosition(pos));
+        wxPoint ptScreen = m_pSTC->ClientToScreen(ptEditor);
+        ptScreen.y += lineHeight + 4;
+
+        m_pHoverPopup = new CHoverPopup(this, parts, ptScreen);
+        m_pHoverPopup->Popup();
+    }
 }
 
 void frmScarEditor::OnDwellEnd(wxStyledTextEvent &event)
 {
     UNUSED(event);
-    // Only cancel if the calltip is a diagnostic tooltip (not a function signature)
+    // Only cancel CallTip if it's not a function signature calltip
     if (m_pSTC->CallTipActive() && m_oThisCalltip.sTip.IsEmpty())
     {
         m_pSTC->CallTipCancel();
