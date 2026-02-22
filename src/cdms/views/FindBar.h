@@ -22,13 +22,19 @@
 #include <wx/textctrl.h>
 #include <wx/stattext.h>
 #include <wx/button.h>
+#include <wx/timer.h>
 #include <wx/stc/stc.h>
+#include <vector>
 
 /// A compact find bar for wxStyledTextCtrl editors, similar to VS Code's Ctrl+F bar.
 ///
 /// Shows a search text input, next/prev navigation buttons, a match count label,
 /// and a close button. Highlights all matches using a Scintilla indicator and
 /// navigates between them. Case-insensitive by default.
+///
+/// Performance: match positions are cached in a vector so navigation is O(log N).
+/// The expensive highlight pass is debounced (150ms) so rapid typing doesn't
+/// trigger redundant full-document scans.
 class FindBar : public wxPanel
 {
   public:
@@ -52,28 +58,33 @@ class FindBar : public wxPanel
     wxButton *m_pNextBtn;
     wxButton *m_pPrevBtn;
     wxButton *m_pCloseBtn;
+    wxTimer m_debounceTimer;
 
     int m_iCurrentMatch = -1;
-    int m_iTotalMatches = 0;
+    std::vector<int> m_vMatchPositions;
 
     void OnSearchTextChanged(wxCommandEvent &event);
+    void OnDebounceTimer(wxTimerEvent &event);
     void OnNext(wxCommandEvent &event);
     void OnPrev(wxCommandEvent &event);
     void OnClose(wxCommandEvent &event);
     void OnKeyDown(wxKeyEvent &event);
 
-    void DoSearch(bool bForward);
-    void HighlightAllMatches(const wxString &sText);
+    void BuildMatchCache(const wxString &sText);
+    void ApplyHighlights(const wxString &sText);
     void ClearHighlights();
     void UpdateMatchLabel();
-    void NavigateToMatch(int iMatchPos, int iLen);
-    int CountMatches(const wxString &sText);
+    void NavigateToCurrentMatch(const wxString &sText);
+    int FindNearestMatch(int iPos) const;
+
+    static constexpr int DEBOUNCE_MS = 150;
 
     enum
     {
         IDC_SearchInput = wxID_HIGHEST + 500,
         IDC_NextBtn,
         IDC_PrevBtn,
-        IDC_CloseBtn
+        IDC_CloseBtn,
+        IDC_DebounceTimer
     };
 };

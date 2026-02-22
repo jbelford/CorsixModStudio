@@ -18,6 +18,7 @@
 
 #include "FindBar.h"
 #include <wx/sizer.h>
+#include <algorithm>
 
 FindBar::FindBar(wxWindow *parent, wxStyledTextCtrl *pSTC) : wxPanel(parent, wxID_ANY), m_pSTC(pSTC)
 {
@@ -56,11 +57,20 @@ FindBar::FindBar(wxWindow *parent, wxStyledTextCtrl *pSTC) : wxPanel(parent, wxI
 
     // Bind events
     m_pSearchInput->Bind(wxEVT_TEXT, &FindBar::OnSearchTextChanged, this);
-    m_pSearchInput->Bind(wxEVT_TEXT_ENTER, [this](wxCommandEvent &) { DoSearch(true); });
+    m_pSearchInput->Bind(wxEVT_TEXT_ENTER,
+                         [this](wxCommandEvent &)
+                         {
+                             wxCommandEvent dummy;
+                             OnNext(dummy);
+                         });
     m_pSearchInput->Bind(wxEVT_KEY_DOWN, &FindBar::OnKeyDown, this);
     m_pNextBtn->Bind(wxEVT_BUTTON, &FindBar::OnNext, this);
     m_pPrevBtn->Bind(wxEVT_BUTTON, &FindBar::OnPrev, this);
     m_pCloseBtn->Bind(wxEVT_BUTTON, &FindBar::OnClose, this);
+
+    // Debounce timer for expensive highlight pass
+    m_debounceTimer.SetOwner(this, IDC_DebounceTimer);
+    Bind(wxEVT_TIMER, &FindBar::OnDebounceTimer, this, IDC_DebounceTimer);
 
     Hide();
 }
@@ -83,10 +93,11 @@ void FindBar::Activate()
 
 void FindBar::Deactivate()
 {
+    m_debounceTimer.Stop();
     ClearHighlights();
     m_pMatchLabel->SetLabel(wxEmptyString);
     m_iCurrentMatch = -1;
-    m_iTotalMatches = 0;
+    m_vMatchPositions.clear();
     Hide();
     GetParent()->Layout();
     m_pSTC->SetFocus();
@@ -97,32 +108,129 @@ void FindBar::OnSearchTextChanged(wxCommandEvent &)
     wxString sText = m_pSearchInput->GetValue();
     if (sText.empty())
     {
+        m_debounceTimer.Stop();
         ClearHighlights();
         m_pMatchLabel->SetLabel(wxEmptyString);
         m_iCurrentMatch = -1;
-        m_iTotalMatches = 0;
+        m_vMatchPositions.clear();
         return;
     }
 
-    HighlightAllMatches(sText);
-    m_iTotalMatches = CountMatches(sText);
-
-    if (m_iTotalMatches > 0)
+    // Immediately navigate to the nearest match for responsiveness
+    // (single FindText call is cheap)
+    int iCaretPos = m_pSTC->GetCurrentPos();
+    int iPos = m_pSTC->FindText(iCaretPos, m_pSTC->GetTextLength(), sText, 0);
+    if (iPos == wxNOT_FOUND)
     {
-        // Navigate to the first match from the current caret position
-        m_iCurrentMatch = 0;
-        DoSearch(true);
+        iPos = m_pSTC->FindText(0, iCaretPos, sText, 0);
+    }
+
+    if (iPos != wxNOT_FOUND)
+    {
+        m_pSTC->SetSelection(iPos, iPos + static_cast<int>(sText.length()));
+        m_pSTC->EnsureCaretVisible();
+        m_pMatchLabel->SetLabel(wxS("\u2026")); // ellipsis while debouncing
+    }
+    else
+    {
+        m_pMatchLabel->SetLabel("No results");
+    }
+
+    // Debounce the expensive full-document scan + highlight pass
+    m_debounceTimer.StartOnce(DEBOUNCE_MS);
+}
+
+void FindBar::OnDebounceTimer(wxTimerEvent &)
+{
+    wxString sText = m_pSearchInput->GetValue();
+    if (sText.empty())
+    {
+        return;
+    }
+
+    // Single pass: build cache + apply highlights
+    BuildMatchCache(sText);
+    ApplyHighlights(sText);
+
+    // Set current match index based on current selection
+    if (!m_vMatchPositions.empty())
+    {
+        m_iCurrentMatch = FindNearestMatch(m_pSTC->GetSelectionStart());
+        NavigateToCurrentMatch(sText);
     }
     else
     {
         m_iCurrentMatch = -1;
-        UpdateMatchLabel();
     }
+
+    UpdateMatchLabel();
 }
 
-void FindBar::OnNext(wxCommandEvent &) { DoSearch(true); }
+void FindBar::OnNext(wxCommandEvent &)
+{
+    wxString sText = m_pSearchInput->GetValue();
+    if (sText.empty() || m_vMatchPositions.empty())
+    {
+        return;
+    }
 
-void FindBar::OnPrev(wxCommandEvent &) { DoSearch(false); }
+    // If cache is stale (timer pending), flush it now
+    if (m_debounceTimer.IsRunning())
+    {
+        m_debounceTimer.Stop();
+        BuildMatchCache(sText);
+        ApplyHighlights(sText);
+        if (m_vMatchPositions.empty())
+        {
+            return;
+        }
+    }
+
+    int iSelEnd = m_pSTC->GetSelectionEnd();
+    // Find the first match position strictly after current selection end
+    auto it = std::upper_bound(m_vMatchPositions.begin(), m_vMatchPositions.end(), iSelEnd - 1);
+    if (it == m_vMatchPositions.end())
+    {
+        it = m_vMatchPositions.begin(); // wrap around
+    }
+
+    m_iCurrentMatch = static_cast<int>(it - m_vMatchPositions.begin());
+    NavigateToCurrentMatch(sText);
+    UpdateMatchLabel();
+}
+
+void FindBar::OnPrev(wxCommandEvent &)
+{
+    wxString sText = m_pSearchInput->GetValue();
+    if (sText.empty() || m_vMatchPositions.empty())
+    {
+        return;
+    }
+
+    if (m_debounceTimer.IsRunning())
+    {
+        m_debounceTimer.Stop();
+        BuildMatchCache(sText);
+        ApplyHighlights(sText);
+        if (m_vMatchPositions.empty())
+        {
+            return;
+        }
+    }
+
+    int iSelStart = m_pSTC->GetSelectionStart();
+    // Find the last match position strictly before current selection start
+    auto it = std::lower_bound(m_vMatchPositions.begin(), m_vMatchPositions.end(), iSelStart);
+    if (it == m_vMatchPositions.begin())
+    {
+        it = m_vMatchPositions.end(); // wrap around
+    }
+    --it;
+
+    m_iCurrentMatch = static_cast<int>(it - m_vMatchPositions.begin());
+    NavigateToCurrentMatch(sText);
+    UpdateMatchLabel();
+}
 
 void FindBar::OnClose(wxCommandEvent &) { Deactivate(); }
 
@@ -136,100 +244,59 @@ void FindBar::OnKeyDown(wxKeyEvent &event)
 
     if (event.GetKeyCode() == WXK_RETURN || event.GetKeyCode() == WXK_NUMPAD_ENTER)
     {
-        DoSearch(!event.ShiftDown());
+        if (event.ShiftDown())
+        {
+            wxCommandEvent dummy;
+            OnPrev(dummy);
+        }
+        else
+        {
+            wxCommandEvent dummy;
+            OnNext(dummy);
+        }
         return;
     }
 
     event.Skip();
 }
 
-void FindBar::DoSearch(bool bForward)
+void FindBar::BuildMatchCache(const wxString &sText)
 {
-    wxString sText = m_pSearchInput->GetValue();
-    if (sText.empty() || m_iTotalMatches == 0)
-    {
-        return;
-    }
-
-    int iStart;
-    if (bForward)
-    {
-        // Search from end of current selection to avoid finding the same match
-        iStart = m_pSTC->GetSelectionEnd();
-        int iPos = m_pSTC->FindText(iStart, m_pSTC->GetTextLength(), sText, 0);
-        if (iPos == wxNOT_FOUND)
-        {
-            // Wrap around to beginning
-            iPos = m_pSTC->FindText(0, iStart, sText, 0);
-        }
-        if (iPos != wxNOT_FOUND)
-        {
-            NavigateToMatch(iPos, static_cast<int>(sText.length()));
-        }
-    }
-    else
-    {
-        // Search backward from start of current selection
-        iStart = m_pSTC->GetSelectionStart();
-        int iPos = m_pSTC->FindText(iStart, 0, sText, 0);
-        if (iPos == wxNOT_FOUND)
-        {
-            // Wrap around to end
-            iPos = m_pSTC->FindText(m_pSTC->GetTextLength(), iStart, sText, 0);
-        }
-        if (iPos != wxNOT_FOUND)
-        {
-            NavigateToMatch(iPos, static_cast<int>(sText.length()));
-        }
-    }
-
-    // Recount to update current match index
-    if (m_iTotalMatches > 0)
-    {
-        int iSelStart = m_pSTC->GetSelectionStart();
-        int iCurrent = 0;
-        int iPos = 0;
-        while (true)
-        {
-            int iFound = m_pSTC->FindText(iPos, m_pSTC->GetTextLength(), sText, 0);
-            if (iFound == wxNOT_FOUND || iFound > iSelStart)
-            {
-                break;
-            }
-            if (iFound == iSelStart)
-            {
-                m_iCurrentMatch = iCurrent;
-                break;
-            }
-            iCurrent++;
-            iPos = iFound + 1;
-        }
-        UpdateMatchLabel();
-    }
-}
-
-void FindBar::HighlightAllMatches(const wxString &sText)
-{
-    ClearHighlights();
+    m_vMatchPositions.clear();
 
     if (sText.empty())
     {
         return;
     }
 
-    m_pSTC->SetIndicatorCurrent(INDICATOR_FIND_HIGHLIGHT);
-
+    int iTextLen = m_pSTC->GetTextLength();
     int iPos = 0;
     while (true)
     {
-        int iFound = m_pSTC->FindText(iPos, m_pSTC->GetTextLength(), sText, 0);
+        int iFound = m_pSTC->FindText(iPos, iTextLen, sText, 0);
         if (iFound == wxNOT_FOUND)
         {
             break;
         }
-
-        m_pSTC->IndicatorFillRange(iFound, static_cast<int>(sText.length()));
+        m_vMatchPositions.push_back(iFound);
         iPos = iFound + 1;
+    }
+}
+
+void FindBar::ApplyHighlights(const wxString &sText)
+{
+    ClearHighlights();
+
+    if (m_vMatchPositions.empty())
+    {
+        return;
+    }
+
+    m_pSTC->SetIndicatorCurrent(INDICATOR_FIND_HIGHLIGHT);
+    int iLen = static_cast<int>(sText.length());
+    for (int pos : m_vMatchPositions)
+    {
+        m_pSTC->IndicatorFillRange(pos, iLen);
     }
 }
 
@@ -241,41 +308,40 @@ void FindBar::ClearHighlights()
 
 void FindBar::UpdateMatchLabel()
 {
-    if (m_iTotalMatches == 0)
+    if (m_vMatchPositions.empty())
     {
         m_pMatchLabel->SetLabel("No results");
     }
     else
     {
-        m_pMatchLabel->SetLabel(wxString::Format("%d of %d", m_iCurrentMatch + 1, m_iTotalMatches));
+        m_pMatchLabel->SetLabel(
+            wxString::Format("%d of %d", m_iCurrentMatch + 1, static_cast<int>(m_vMatchPositions.size())));
     }
 }
 
-void FindBar::NavigateToMatch(int iMatchPos, int iLen)
+void FindBar::NavigateToCurrentMatch(const wxString &sText)
 {
-    m_pSTC->SetSelection(iMatchPos, iMatchPos + iLen);
+    if (m_iCurrentMatch < 0 || m_iCurrentMatch >= static_cast<int>(m_vMatchPositions.size()))
+    {
+        return;
+    }
+
+    int iPos = m_vMatchPositions[m_iCurrentMatch];
+    m_pSTC->SetSelection(iPos, iPos + static_cast<int>(sText.length()));
     m_pSTC->EnsureCaretVisible();
-    m_pSTC->ScrollToColumn(0);
 }
 
-int FindBar::CountMatches(const wxString &sText)
+int FindBar::FindNearestMatch(int iPos) const
 {
-    if (sText.empty())
+    if (m_vMatchPositions.empty())
     {
-        return 0;
+        return -1;
     }
 
-    int iCount = 0;
-    int iPos = 0;
-    while (true)
+    auto it = std::lower_bound(m_vMatchPositions.begin(), m_vMatchPositions.end(), iPos);
+    if (it == m_vMatchPositions.end())
     {
-        int iFound = m_pSTC->FindText(iPos, m_pSTC->GetTextLength(), sText, 0);
-        if (iFound == wxNOT_FOUND)
-        {
-            break;
-        }
-        iCount++;
-        iPos = iFound + 1;
+        return 0; // wrap to first
     }
-    return iCount;
+    return static_cast<int>(it - m_vMatchPositions.begin());
 }
