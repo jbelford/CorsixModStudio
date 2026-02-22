@@ -59,6 +59,7 @@ bool CLspClient::Start(const std::wstring &serverPath, const std::string &worksp
            {{"completionItem", {{"snippetSupport", false}, {"documentationFormat", {"plaintext"}}}},
             {"dynamicRegistration", false}}},
           {"signatureHelp", {{"dynamicRegistration", false}}},
+          {"hover", {{"dynamicRegistration", false}, {"contentFormat", {"plaintext"}}}},
           {"publishDiagnostics", {{"relatedInformation", false}}}}}};
 
     nlohmann::json initParams = {
@@ -145,6 +146,7 @@ void CLspClient::Stop()
     m_framing.Reset();
     m_completionCallbacks.clear();
     m_signatureHelpCallbacks.clear();
+    m_hoverCallbacks.clear();
     m_documentVersions.clear();
 }
 
@@ -225,6 +227,20 @@ void CLspClient::RequestSignatureHelp(const std::string &uri, int line, int char
     Send(request);
 }
 
+void CLspClient::RequestHover(const std::string &uri, int line, int character, HoverCallback callback)
+{
+    int id = m_nextRequestId++;
+    m_hoverCallbacks[id] = std::move(callback);
+
+    HoverParams params;
+    params.textDocument.uri = uri;
+    params.position.line = line;
+    params.position.character = character;
+
+    nlohmann::json request = {{"jsonrpc", "2.0"}, {"id", id}, {"method", "textDocument/hover"}, {"params", params}};
+    Send(request);
+}
+
 // ---------------------------------------------------------------------------
 // Polling
 // ---------------------------------------------------------------------------
@@ -269,6 +285,7 @@ void CLspClient::HandleMessage(const nlohmann::json &message)
                       errObj.value("code", -1));
         m_completionCallbacks.erase(id);
         m_signatureHelpCallbacks.erase(id);
+        m_hoverCallbacks.erase(id);
     }
     else if (message.contains("method"))
     {
@@ -304,6 +321,23 @@ void CLspClient::HandleResponse(int id, const nlohmann::json &result)
         else
         {
             cb(result.get<SignatureHelp>());
+        }
+        return;
+    }
+
+    // Check hover callbacks
+    auto hoverIt = m_hoverCallbacks.find(id);
+    if (hoverIt != m_hoverCallbacks.end())
+    {
+        auto cb = std::move(hoverIt->second);
+        m_hoverCallbacks.erase(hoverIt);
+        if (result.is_null())
+        {
+            cb(std::nullopt);
+        }
+        else
+        {
+            cb(result.get<HoverResult>());
         }
         return;
     }

@@ -35,6 +35,7 @@ namespace lsp
 using DiagnosticsCallback = std::function<void(const std::string &uri, std::vector<Diagnostic> diagnostics)>;
 using CompletionCallback = std::function<void(CompletionList completions)>;
 using SignatureHelpCallback = std::function<void(std::optional<SignatureHelp> help)>;
+using HoverCallback = std::function<void(std::optional<HoverResult> hover)>;
 
 /// High-level LSP client that manages the language server lifecycle
 /// and provides a simple API for document operations.
@@ -82,6 +83,9 @@ class LSP_API CLspClient
     /// Request signature help at the given position.
     void RequestSignatureHelp(const std::string &uri, int line, int character, SignatureHelpCallback callback);
 
+    /// Request hover information at the given position.
+    void RequestHover(const std::string &uri, int line, int character, HoverCallback callback);
+
     // ----- Polling and callbacks -----
 
     /// Set the callback for diagnostics notifications.
@@ -110,6 +114,7 @@ class LSP_API CLspClient
     /// Pending request callbacks, keyed by request ID.
     std::map<int, CompletionCallback> m_completionCallbacks;
     std::map<int, SignatureHelpCallback> m_signatureHelpCallbacks;
+    std::map<int, HoverCallback> m_hoverCallbacks;
 
     /// Diagnostics callback (server-initiated notifications).
     DiagnosticsCallback m_diagnosticsCallback;

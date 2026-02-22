@@ -1285,6 +1285,34 @@ void frmScarEditor::OnDwellStart(wxStyledTextEvent &event)
             return;
         }
     }
+
+    // No diagnostic at this position — request hover info from LSP
+    auto *pFrame = GetConstruct();
+    auto *pClient = pFrame ? pFrame->GetLspClient() : nullptr;
+    if (pClient && m_bLspOpen)
+    {
+        int line = m_pSTC->LineFromPosition(pos);
+        int col = pos - m_pSTC->PositionFromLine(line);
+        int hoverPos = pos; // capture for callback
+
+        pClient->RequestHover(m_sLspUri, line, col,
+                              [this, hoverPos](std::optional<lsp::HoverResult> hover)
+                              {
+                                  if (!hover || hover->contents.empty())
+                                  {
+                                      return;
+                                  }
+                                  // Don't show if a calltip is already active
+                                  if (m_pSTC->CallTipActive())
+                                  {
+                                      return;
+                                  }
+                                  wxString tip = wxString::FromUTF8(hover->contents);
+                                  m_pSTC->CallTipSetBackground(wxColour(240, 240, 255));
+                                  m_pSTC->CallTipSetForeground(wxColour(0, 0, 0));
+                                  m_pSTC->CallTipShow(hoverPos, tip);
+                              });
+    }
 }
 
 void frmScarEditor::OnDwellEnd(wxStyledTextEvent &event)

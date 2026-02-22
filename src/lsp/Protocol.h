@@ -417,4 +417,92 @@ struct SignatureHelpParams
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(SignatureHelpParams, textDocument, position)
 
+// ---------------------------------------------------------------------------
+// textDocument/hover
+// ---------------------------------------------------------------------------
+
+/// Markup content returned by the server (e.g. documentation).
+struct MarkupContent
+{
+    std::string kind; // "plaintext" or "markdown"
+    std::string value;
+};
+
+inline void from_json(const nlohmann::json &j, MarkupContent &m)
+{
+    if (j.contains("kind"))
+    {
+        j["kind"].get_to(m.kind);
+    }
+    if (j.contains("value"))
+    {
+        j["value"].get_to(m.value);
+    }
+}
+
+inline void to_json(nlohmann::json &j, const MarkupContent &m) { j = {{"kind", m.kind}, {"value", m.value}}; }
+
+struct HoverResult
+{
+    std::string contents; // Flattened plain-text contents
+    std::optional<Range> range;
+};
+
+inline void from_json(const nlohmann::json &j, HoverResult &h)
+{
+    // contents can be: string, MarkupContent, or array of (string | MarkupContent)
+    if (j.contains("contents"))
+    {
+        const auto &c = j["contents"];
+        if (c.is_string())
+        {
+            h.contents = c.get<std::string>();
+        }
+        else if (c.is_object())
+        {
+            // MarkupContent { kind, value }
+            if (c.contains("value"))
+            {
+                h.contents = c["value"].get<std::string>();
+            }
+        }
+        else if (c.is_array())
+        {
+            // Array of string | { language, value }
+            std::string combined;
+            for (const auto &item : c)
+            {
+                if (!combined.empty())
+                {
+                    combined += "\n";
+                }
+                if (item.is_string())
+                {
+                    combined += item.get<std::string>();
+                }
+                else if (item.is_object() && item.contains("value"))
+                {
+                    combined += item["value"].get<std::string>();
+                }
+            }
+            h.contents = combined;
+        }
+    }
+    if (j.contains("range"))
+    {
+        h.range = j["range"].get<Range>();
+    }
+}
+
+inline void to_json(nlohmann::json &j, const HoverResult &h)
+{
+    j = {{"contents", h.contents}};
+    if (h.range)
+    {
+        j["range"] = *h.range;
+    }
+}
+
+using HoverParams = TextDocumentPositionParams;
+
 } // namespace lsp
