@@ -17,6 +17,8 @@
 */
 
 #include "frmRgdEditor.h"
+#include "frmScarEditor.h"
+#include "actions/ActionUtil.h"
 #include "common/TabDialog.h"
 #include "tools/Tools.h"
 #include "frmUCSEditor.h"
@@ -75,6 +77,8 @@ EVT_MENU(IDC_Paste, frmRGDEditor::OnPaste)
 EVT_MENU(IDC_PasteInto, frmRGDEditor::OnPasteInto)
 EVT_BUTTON(wxID_SAVE, frmRGDEditor::OnSave)
 EVT_TOOL(IDC_ToolSave, frmRGDEditor::OnSave)
+EVT_TOOL(IDC_ToolViewCode, frmRGDEditor::OnViewCode)
+EVT_BUTTON(IDC_ToolViewCode, frmRGDEditor::OnViewCode)
 EVT_CLOSE(frmRGDEditor::OnCloseWindow)
 END_EVENT_TABLE()
 
@@ -486,6 +490,23 @@ void frmRGDEditor::OnSave(wxCommandEvent &event)
     DoSave();
 }
 
+void frmRGDEditor::OnViewCode(wxCommandEvent &event)
+{
+    UNUSED(event);
+
+    auto streamResult = TheConstruct->GetFileService().OpenStream(m_sFilename);
+    if (!streamResult)
+    {
+        ErrorBox("Cannot open file");
+        return;
+    }
+
+    auto *pForm = new frmScarEditor(m_oFileParent, m_sFilename, TheConstruct->GetTabs(), -1);
+    TheConstruct->GetTabManager().AddPage(
+        pForm, wxString().Append(wxT("Code [")).Append(OnlyFilename(m_sFilename)).Append(wxT("]")), true);
+    pForm->Load(streamResult.value().get());
+}
+
 frmRGDEditor::frmRGDEditor(const wxTreeItemId &oFileParent, wxString sFilename, wxWindow *parent, wxWindowID id,
                            const wxPoint &pos, const wxSize &size)
     : m_oFileParent(oFileParent), m_sFilename(sFilename), wxWindow(parent, id, pos, size)
@@ -513,6 +534,7 @@ frmRGDEditor::frmRGDEditor(const wxTreeItemId &oFileParent, wxString sFilename, 
 
     wxBoxSizer *pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
     wxWindow *pBgTemp;
+    pButtonSizer->Add(new wxButton(this, IDC_ToolViewCode, wxT("\U0001F4DD View Code")), 0, wxEXPAND | wxALL, 3);
     pButtonSizer->Add(pBgTemp = new wxButton(this, wxID_SAVE, AppStr(rgd_save)), 0, wxEXPAND | wxALL, 3);
     pTopSizer->Add(pButtonSizer, 0, wxALIGN_RIGHT);
 

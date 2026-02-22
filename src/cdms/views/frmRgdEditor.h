@@ -144,6 +144,7 @@ class frmRGDEditor : public wxWindow, public ISaveable
     bool IsModified() const override { return m_bDataNeedsSaving; }
     void DoSave() override;
     void OnSave(wxCommandEvent &event);
+    void OnViewCode(wxCommandEvent &event);
 
     void OnCopy(wxCommandEvent &event);
     void OnPaste(wxCommandEvent &event);
@@ -160,7 +161,8 @@ class frmRGDEditor : public wxWindow, public ISaveable
         IDC_Copy,
         IDC_Paste,
         IDC_PasteInto,
-        IDC_ToolSave
+        IDC_ToolSave,
+        IDC_ToolViewCode
     };
 
     DECLARE_EVENT_TABLE()
