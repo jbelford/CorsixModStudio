@@ -32,6 +32,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include <chrono>
 #include <memory>
 #include <string>
+#include <direct.h>
 
 // -- Parallel archive preloading infrastructure (Phase J) --
 
@@ -578,12 +579,29 @@ void CResourceLoader::LoadFoldersParallel(std::vector<FolderTask> &tasks, CModul
     for (size_t i = 0; i < tasks.size(); ++i)
     {
         ScanResult result = futures[i].get();
+        const auto &task = tasks[i];
+
         if (!result.hasIterator)
         {
-            continue;
+            // Folder doesn't exist on disk. For the default-write folder (usually "Data"),
+            // we still register the source so _MakeFolderWritable can find it when saving
+            // files that currently live only in SGA archives. We also create the folder on
+            // disk so that VCreateFolderIn can create subdirectories within it.
+            if (task.bIsDefaultWrite)
+            {
+                RAINMAN_LOG_WARN("Default write folder '{}' does not exist on disk — creating and registering for "
+                                 "save support",
+                                 task.folderPath);
+                _mkdir(task.folderPath.c_str());
+                result.snapshot.directoryPath = task.folderPath;
+                result.snapshot.isFile = false;
+                result.snapshot.lastWriteTime = 0;
+            }
+            else
+            {
+                continue;
+            }
         }
-
-        const auto &task = tasks[i];
 
         const char *sSlashChar = task.uiName.empty() ? nullptr : task.uiName.c_str();
         if (!sSlashChar)
@@ -1330,7 +1348,29 @@ void CResourceLoader::DoLoadFolder(CModuleFile &module, const char *sFullPath, b
             module.m_pNewFileMap->MapIterator(pSrc, sTOC, pDirItr);
         }
     }
-    IGNORE_EXCEPTIONS
+    catch (const CRainmanException &)
+    {
+        // Folder doesn't exist on disk. For the default-write folder, create the folder
+        // and register an empty source so _MakeFolderWritable can route saves to it.
+        if (bIsDefaultWrite && bIsThisMod)
+        {
+            RAINMAN_LOG_WARN("Default write folder '{}' does not exist — creating and registering for save support",
+                             sFullPath);
+            _mkdir(sFullPath);
+            CFileMap::DirEntry emptySnapshot;
+            emptySnapshot.directoryPath = sFullPath;
+            emptySnapshot.isFile = false;
+            emptySnapshot.lastWriteTime = 0;
+            void *pSrc = module.m_pNewFileMap->RegisterSource(
+                module.m_iFileMapModNumber, false, iNum, module.GetFileMapName(), sSlashChar, module.m_pFSS,
+                module.m_pFSS, module.m_pParentModule ? false : true, bIsDefaultWrite);
+            if (bIsWritable != nullptr)
+            {
+                *bIsWritable = module.m_pParentModule ? false : true;
+            }
+            module.m_pNewFileMap->MapSnapshot(pSrc, sTOC, emptySnapshot);
+        }
+    }
     if (pDirItr)
     {
         delete pDirItr;

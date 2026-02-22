@@ -20,6 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 #include "rainman/module/CFileMap.h"
 #include "rainman/archive/CSgaFile.h"
 #include "rainman/core/Exception.h"
+#include "rainman/core/RainmanLog.h"
 #include <memory>
 #include <algorithm>
 #include <string>
@@ -115,6 +116,8 @@ tLastWriteTime CFileMap::VGetLastWriteTime(const char *sFile)
 
 CFileMap::_DataSource *CFileMap::_MakeFolderWritable(CFileMap::_Folder *pFolder, CFileMap::_File *pFile)
 {
+    RAINMAN_LOG_DEBUG("_MakeFolderWritable: folder='{}', file='{}'", pFolder->sFullName, pFile->sName);
+
     // Work out the source sort number
     unsigned long iSortNumExisting = 0x0000ffff; // DS sort num. must be less than or equal to this
     if (!pFile->mapSources.empty())
@@ -244,17 +247,18 @@ IFileStore::IOutputStream *CFileMap::VOpenOutputStream(const char *sFile, bool b
             }
             IGNORE_EXCEPTIONS
         }
+        RAINMAN_LOG_WARN("_MakeFolderWritable failed for '{}': {}", sFile, e.getMessage());
         if (strnicmp(sFile, "data", 4) == 0)
         {
             throw CRainmanException(
-                nullptr, __FILE__, __LINE__,
+                e, __FILE__, __LINE__,
                 "Could not find suitable output location for \'%s\' (could be because the Data folder is missing)",
                 sFile);
         }
         else
         {
             throw CRainmanException(
-                nullptr, __FILE__, __LINE__,
+                e, __FILE__, __LINE__,
                 "Could not find suitable output location for \'%s\' (could be because you\'re trying to mod RelicCOH)",
                 sFile);
         }

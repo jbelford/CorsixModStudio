@@ -30,6 +30,7 @@ add_executable(rainman_tests
     exceptiondeleter_test.cpp
     rgdfilemacro_test.cpp
     filemap_parallel_test.cpp
+    filemap_output_test.cpp
     luafilecache_parallel_test.cpp
     parallel_loading_test.cpp
     threadpool_test.cpp
