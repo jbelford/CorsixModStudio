@@ -63,6 +63,7 @@ EVT_MENU(wxID_CLOSE, ConstructFrame::OnCloseMod)
 EVT_MENU(wxID_PROPERTIES, ConstructFrame::OnModProperties)
 EVT_MENU(IDM_SaveActive, ConstructFrame::OnSaveActive)
 EVT_MENU(IDM_CloseActiveTab, ConstructFrame::OnCloseActiveTab)
+EVT_MENU(IDM_NextTab, ConstructFrame::OnNextTab)
 
 EVT_MENU(IDM_PlayCOH, ConstructFrame::LaunchCOH)
 EVT_MENU(IDM_PlayW40k, ConstructFrame::LaunchW40k)
@@ -169,6 +170,20 @@ void ConstructFrame::OnCloseActiveTab(wxCommandEvent &event)
     }
 
     pTabs->DeletePage(sel);
+}
+
+void ConstructFrame::OnNextTab(wxCommandEvent &event)
+{
+    UNUSED(event);
+    wxAuiNotebook *pTabs = m_tabManager.GetTabs();
+    int count = static_cast<int>(pTabs->GetPageCount());
+    if (count < 2)
+    {
+        return;
+    }
+
+    int sel = pTabs->GetSelection();
+    pTabs->SetSelection((sel + 1) % count);
 }
 
 void ConstructFrame::OnOpenSga(wxCommandEvent &event)
@@ -585,8 +600,9 @@ ConstructFrame::ConstructFrame(const wxString &sTitle, const wxPoint &oPos, cons
     wxAcceleratorEntry accel[] = {
         wxAcceleratorEntry(wxACCEL_CTRL, (int)'S', IDM_SaveActive),
         wxAcceleratorEntry(wxACCEL_CTRL, (int)'W', IDM_CloseActiveTab),
+        wxAcceleratorEntry(wxACCEL_CTRL, WXK_TAB, IDM_NextTab),
     };
-    SetAcceleratorTable(wxAcceleratorTable(2, accel));
+    SetAcceleratorTable(wxAcceleratorTable(3, accel));
 }
 
 void ConstructFrame::DoNewMod()
