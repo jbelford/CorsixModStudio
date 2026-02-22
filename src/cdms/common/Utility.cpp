@@ -247,3 +247,26 @@ void RestoreBackupFile(IFileStore *pStore, const wxString &sFile)
     }
     */
 }
+
+wxFont MakeCodeFont(int iPointSize, bool bBold, bool bItalic)
+{
+    wxFontWeight eWeight = bBold ? wxFONTWEIGHT_BOLD : wxFONTWEIGHT_NORMAL;
+    wxFontStyle eStyle = bItalic ? wxFONTSTYLE_ITALIC : wxFONTSTYLE_NORMAL;
+
+    // Try Cascadia Mono first (ships with Windows 10 2004+ / Windows Terminal)
+    wxFont font(iPointSize, wxFONTFAMILY_MODERN, eStyle, eWeight, false, wxT("Cascadia Mono"));
+    if (font.IsOk() && font.GetFaceName().CmpNoCase(wxT("Cascadia Mono")) == 0)
+    {
+        return font;
+    }
+
+    // Fall back to Consolas (ships since Windows Vista)
+    font = wxFont(iPointSize, wxFONTFAMILY_MODERN, eStyle, eWeight, false, wxT("Consolas"));
+    if (font.IsOk() && font.GetFaceName().CmpNoCase(wxT("Consolas")) == 0)
+    {
+        return font;
+    }
+
+    // Last resort: system default monospace
+    return wxFont(iPointSize, wxFONTFAMILY_MODERN, eStyle, eWeight);
+}

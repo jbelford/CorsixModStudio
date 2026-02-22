@@ -59,3 +59,7 @@ void BackupFile(const wxString &sFile);
 void BackupFile(IFileStore *pStore, const wxString &sFile);
 void RestoreBackupFile(const wxString &sFile);
 void RestoreBackupFile(IFileStore *pStore, const wxString &sFile);
+
+//! Create a monospace font suitable for code editors.
+//! Prefers Cascadia Mono, falls back to Consolas, then system default monospace.
+wxFont MakeCodeFont(int iPointSize, bool bBold = false, bool bItalic = false);

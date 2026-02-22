@@ -814,7 +814,7 @@ frmScarEditor::frmScarEditor(const wxTreeItemId &oFileParent, wxString sFilename
     m_pSTC->SetOvertype(false);
     m_pSTC->SetReadOnly(false);
     m_pSTC->SetWrapMode(wxSTC_WRAP_NONE);
-    wxFont font(10, wxMODERN, wxNORMAL, wxNORMAL);
+    wxFont font = MakeCodeFont(10);
     m_pSTC->StyleSetFont(wxSTC_STYLE_DEFAULT, font);
     m_pSTC->SetUseTabs(true);
     m_pSTC->SetTabIndents(true);
@@ -824,7 +824,6 @@ frmScarEditor::frmScarEditor(const wxTreeItemId &oFileParent, wxString sFilename
     // default fonts for all styles!
     for (int i = 0; i < wxSTC_STYLE_LASTPREDEFINED; ++i)
     {
-        wxFont font(10, wxMODERN, wxNORMAL, wxNORMAL);
         m_pSTC->StyleSetFont(i, font);
     }
 
@@ -832,10 +831,9 @@ frmScarEditor::frmScarEditor(const wxTreeItemId &oFileParent, wxString sFilename
     for (int i = 0; g_LuaWords[i].type != -1; ++i)
     {
         const StyleInfo &curType = g_StylePrefs[g_LuaWords[i].type];
-        wxFont font(curType.fontsize, wxMODERN, wxNORMAL, wxNORMAL, false, curType.fontname);
-        m_pSTC->StyleSetFont(g_LuaWords[i].type, font);
-        m_pSTC->StyleSetBold(g_LuaWords[i].type, (curType.fontstyle & mySTC_STYLE_BOLD) > 0);
-        m_pSTC->StyleSetItalic(g_LuaWords[i].type, (curType.fontstyle & mySTC_STYLE_ITALIC) > 0);
+        wxFont styleFont = MakeCodeFont(curType.fontsize, (curType.fontstyle & mySTC_STYLE_BOLD) != 0,
+                                        (curType.fontstyle & mySTC_STYLE_ITALIC) != 0);
+        m_pSTC->StyleSetFont(g_LuaWords[i].type, styleFont);
         m_pSTC->StyleSetUnderline(g_LuaWords[i].type, (curType.fontstyle & mySTC_STYLE_UNDERL) > 0);
         m_pSTC->StyleSetVisible(g_LuaWords[i].type, (curType.fontstyle & mySTC_STYLE_HIDDEN) == 0);
         m_pSTC->StyleSetCase(g_LuaWords[i].type, curType.lettercase);
