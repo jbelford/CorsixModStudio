@@ -50,6 +50,39 @@ void TabManager::AddPage(wxWindow *page, const wxString &caption, bool select)
     m_pTabs->AddPage(page, caption, select);
 }
 
+void TabManager::UpdateDirtyState(wxWindow *page, bool isDirty)
+{
+    int idx = m_pTabs->GetPageIndex(page);
+    if (idx == wxNOT_FOUND)
+    {
+        return;
+    }
+
+    wxString text = m_pTabs->GetPageText(idx);
+
+    // Strip preview brackets to work on the bare caption
+    bool isPreview = text.StartsWith(wxT("\u231C")) && text.EndsWith(wxT("\u231D"));
+    wxString bare = isPreview ? text.Mid(1, text.Length() - 2) : text;
+
+    bool alreadyDirty = bare.EndsWith(wxT(" *"));
+
+    if (isDirty && !alreadyDirty)
+    {
+        bare += wxT(" *");
+    }
+    else if (!isDirty && alreadyDirty)
+    {
+        bare = bare.Left(bare.Length() - 2);
+    }
+    else
+    {
+        return; // no change needed
+    }
+
+    wxString result = isPreview ? wxString::Format(wxT("\u231C%s\u231D"), bare) : bare;
+    m_pTabs->SetPageText(idx, result);
+}
+
 void TabManager::SetPreviewPage(wxWindow *page, const wxString &filePath)
 {
     m_pPreviewPage = page;

@@ -455,6 +455,7 @@ void frmRGDEditor::DoSave()
             return;
         }
         m_bDataNeedsSaving = false;
+        TheConstruct->GetTabManager().UpdateDirtyState(this, false);
         ThemeColours::ShowMessageBox(AppStr(rgd_savegood), AppStr(rgd_save), wxICON_INFORMATION, this);
     }
     else if (m_iObjectType == 3)
@@ -472,6 +473,7 @@ void frmRGDEditor::DoSave()
             return;
         }
         m_bDataNeedsSaving = false;
+        TheConstruct->GetTabManager().UpdateDirtyState(this, false);
         ThemeColours::ShowMessageBox(AppStr(rgd_savegood), AppStr(rgd_save), wxICON_INFORMATION, this);
     }
     else
@@ -1152,7 +1154,11 @@ void frmRGDEditor::OnSize(wxSizeEvent &event)
 
 void frmRGDEditor::OnPropertyChange(wxPropertyGridEvent &event)
 {
-    m_bDataNeedsSaving = true;
+    if (!m_bDataNeedsSaving)
+    {
+        m_bDataNeedsSaving = true;
+        TheConstruct->GetTabManager().UpdateDirtyState(this, true);
+    }
     if (event.GetPropertyName().IsSameAs(wxT("Name")))
     {
         // Current selection name
@@ -1444,6 +1450,7 @@ void frmRGDEditor::OnPaste(wxCommandEvent &event)
         if (wxTheClipboard->IsSupported(wxDataFormat(wxT("application/x-rainman-rgd"))))
         {
             m_bDataNeedsSaving = true;
+            TheConstruct->GetTabManager().UpdateDirtyState(this, true);
 
             MywxDataObjectSimple oData(wxDataFormat(wxT("application/x-rainman-rgd")));
             wxTheClipboard->GetData(oData);

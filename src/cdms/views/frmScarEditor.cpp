@@ -222,6 +222,7 @@ void frmScarEditor::DoSave()
     }
     m_bNeedsSaving = false;
     m_pSTC->SetSavePoint();
+    TheConstruct->GetTabManager().UpdateDirtyState(this, false);
     ThemeColours::ShowMessageBox(AppStr(scar_savegood), AppStr(scar_save), wxICON_INFORMATION, this);
 }
 
@@ -229,12 +230,14 @@ void frmScarEditor::OnSavePointLeave(wxStyledTextEvent &event)
 {
     UNUSED(event);
     m_bNeedsSaving = true;
+    TheConstruct->GetTabManager().UpdateDirtyState(this, true);
 }
 
 void frmScarEditor::OnSavePointReach(wxStyledTextEvent &event)
 {
     UNUSED(event);
     m_bNeedsSaving = false;
+    TheConstruct->GetTabManager().UpdateDirtyState(this, false);
 }
 
 void frmScarEditor::OnCloseWindow(wxCloseEvent &event)

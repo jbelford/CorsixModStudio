@@ -36,8 +36,9 @@
 #include <stack>
 #include <wx/treectrl.h>
 #include "common/strings.h"
+#include "interfaces/ISaveable.h"
 
-class frmScarEditor : public wxWindow
+class frmScarEditor : public wxWindow, public ISaveable
 {
   protected:
     wxStyledTextCtrl *m_pSTC;
@@ -82,7 +83,9 @@ class frmScarEditor : public wxWindow
     void OnSavePointLeave(wxStyledTextEvent &event);
     void OnSavePointReach(wxStyledTextEvent &event);
 
-    void DoSave();
+    // ISaveable
+    bool IsModified() const override { return m_bNeedsSaving; }
+    void DoSave() override;
     void OnSave(wxCommandEvent &event);
     void OnCheckLua(wxCommandEvent &event);
     void OnAutoCompChoose(wxStyledTextEvent &event);

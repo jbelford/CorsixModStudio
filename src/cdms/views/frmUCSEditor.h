@@ -36,13 +36,14 @@
 #include <wx/propgrid/propgrid.h>
 #include <wx/stattext.h>
 #include "async/CWxTaskRunner.h"
+#include "interfaces/ISaveable.h"
 #include <memory>
 #include <vector>
 
 /// Sorted snapshot of UCS entries for background preparation.
 using UcsEntryVec = std::vector<std::pair<unsigned long, std::shared_ptr<wchar_t[]>>>;
 
-class frmUCSEditor : public wxWindow
+class frmUCSEditor : public wxWindow, public ISaveable
 {
   protected:
     wxPropertyGrid *m_pPropertyGrid;
@@ -75,7 +76,9 @@ class frmUCSEditor : public wxWindow
     void OnClose(wxCommandEvent &event);
     void OnApply(wxCommandEvent &event);
 
-    void DoSave();
+    // ISaveable
+    bool IsModified() const override { return m_bNeedsSave; }
+    void DoSave() override;
     void OnSaveFile(wxCommandEvent &event);
 
     void OnCloseWindow(wxCloseEvent &event);

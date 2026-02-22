@@ -115,6 +115,7 @@ class ConstructFrame : public wxFrame, public IMainFrameView
 
     void OnSashMove(wxSplitterEvent &event);
     void OnTabClosing(wxAuiNotebookEvent &event);
+    void OnSaveActive(wxCommandEvent &event);
 
     CModuleFile *GetModule() const;
     const wxString &GetModuleFile() const;

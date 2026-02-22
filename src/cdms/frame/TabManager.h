@@ -45,6 +45,9 @@ class TabManager
     void AddPage(wxWindow *page, const wxString &caption, bool select = true);
     void ShowWelcomePage();
 
+    // Dirty-state indicator: appends/strips " *" on the tab title
+    void UpdateDirtyState(wxWindow *page, bool isDirty);
+
     // Preview tab support (VS Code-style single-click preview)
     void SetPreviewPage(wxWindow *page, const wxString &filePath);
     void PinPreviewTab();

@@ -37,6 +37,7 @@
 #include <wx/splitter.h>
 #include <wx/treectrl.h>
 #include <list>
+#include "interfaces/ISaveable.h"
 
 class RGDwxPropertyGridManager;
 
@@ -69,7 +70,7 @@ class myUcsRefPropertyClass : public wxStringProperty
     virtual const wxPGEditor *DoGetEditorClass() const override { return wxPGEditor_TextCtrlAndButton; }
 };
 
-class frmRGDEditor : public wxWindow
+class frmRGDEditor : public wxWindow, public ISaveable
 {
   protected:
     wxPropertyGrid *m_pPropertyGrid;
@@ -139,7 +140,9 @@ class frmRGDEditor : public wxWindow
     void OnAddChild(wxCommandEvent &event);
     void OnDelete(wxCommandEvent &event);
 
-    void DoSave();
+    // ISaveable
+    bool IsModified() const override { return m_bDataNeedsSaving; }
+    void DoSave() override;
     void OnSave(wxCommandEvent &event);
 
     void OnCopy(wxCommandEvent &event);

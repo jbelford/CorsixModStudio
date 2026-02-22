@@ -255,6 +255,7 @@ void frmUCSEditor::OnPropertyChange(wxPropertyGridEvent &event)
         ErrorBoxE(e);
     }
     m_bNeedsSave = true;
+    TheConstruct->GetTabManager().UpdateDirtyState(this, true);
 }
 
 void frmUCSEditor::OnNewEntry(wxCommandEvent &event)
@@ -340,6 +341,7 @@ void frmUCSEditor::OnNewEntry(wxCommandEvent &event)
             {
                 m_pUCS->SetString(iNewID, L"");
                 m_bNeedsSave = true;
+                TheConstruct->GetTabManager().UpdateDirtyState(this, true);
             }
             catch (const CRainmanException &e)
             {
@@ -361,6 +363,7 @@ void frmUCSEditor::OnNewEntry(wxCommandEvent &event)
     {
         m_pUCS->SetString(iNewID, L"");
         m_bNeedsSave = true;
+        TheConstruct->GetTabManager().UpdateDirtyState(this, true);
     }
     catch (const CRainmanException &e)
     {
@@ -475,6 +478,7 @@ found_ucs_file:
     }
 
     m_bNeedsSave = false;
+    TheConstruct->GetTabManager().UpdateDirtyState(this, false);
     ThemeColours::ShowMessageBox(AppStr(ucsedit_save_caption), AppStr(ucsedit_save_title), wxICON_INFORMATION, this);
 }
 
