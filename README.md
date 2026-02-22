@@ -191,7 +191,7 @@ Rainman was originally a DLL (`__declspec(dllexport/import)`). We build it as a 
 ### Conventions
 
 - **Naming**: `C` prefix for concrete classes, `I` for interfaces, `V` for virtual methods, `m_` with Hungarian prefixes for members. CDMS window classes use `frm` prefix (`frmRgdEditor`), event IDs use `ID_` prefix.
-- **Error handling**: Heap-allocated exceptions (`throw new CRainmanException(...)`), cleaned up with `destroy()`, never `delete`. In the service layer, convert to `Result<T>` via `ResultFromException()`.
+- **Error handling**: Stack-based exceptions (`throw CRainmanException(...)`, catch by `const CRainmanException &`). In the service layer, convert to `Result<T>` via `ResultFromException()`.
 - **Include order**: CDMS `.cpp` files include `Common.h` first, then Rainman headers (with fully-qualified `rainman/` prefix).
 - **Concurrency**: Use `CThreadPool::Instance().Submit()` (`rainman/core/CThreadPool.h`) instead of `std::async`.
 - **Stream ownership**: `VOpenStream()` / `VOpenOutputStream()` return caller-owned heap-allocated streams — the caller must `delete` them.

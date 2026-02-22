@@ -53,7 +53,18 @@ All includes use fully-qualified paths with the `rainman/` prefix (e.g., `#inclu
 - `services/` — `ModuleService`, `FileService`, `FormatService`, `HashService` wrap Rainman calls with `Result<T>` error handling (see `Result.h`). Use `ResultFromException()` to convert `CRainmanException` references into `Result<void>::Err`.
 - `async/` — `CCancellationToken` (header-only), `CProgressChannel` (with RainmanCallback bridge), `CTaskRunner` (pure C++ `std::thread`), `CWxTaskRunner` (posts to main thread via `CallAfter`).
 
-**CDMS GUI** (`src/cdms/`) — wxWidgets 3.2 application. Frame classes (`frm*.cpp`), action handlers (`actions/*.h`), tab/menu management. Service classes accessed via `GetModuleService()`, `GetFileService()`, etc. on the `ConstructFrame`.
+**CDMS GUI** (`src/cdms/`) — wxWidgets 3.2 application using a **Model-View-Presenter** (MVP) architecture. Organized into subdirectories:
+- `presenters/` — `C*Presenter` classes own business logic and a `CWxTaskRunner` for async work. They depend on view interfaces, not concrete frames, making them unit-testable with mocks.
+- `views/interfaces/` — `I*View` pure-virtual interfaces (e.g., `IMainFrameView`, `ISgaMakeView`) decouple presenters from wxWidgets.
+- `views/` — `frm*` concrete wxWidgets frames implement `I*View` and delegate user actions to their presenter.
+- `frame/` — `ConstructFrame` (main window), splitter/AUI notebook management.
+- `common/` — `Common.h` (must be included first in CDMS `.cpp` files), `strconv`, `config`, `strings`, `Utility`.
+- `actions/` — File-type action handlers.
+- `tools/` — `ITool` interface and tool implementations.
+- `services/` — `ModuleService`, `FileService`, `FormatService`, `HashService` wrap Rainman calls with `Result<T>`.
+- `async/` — `CTaskRunner`, `CWxTaskRunner`, `CCancellationToken`, `CProgressChannel`.
+
+Service classes are accessed via `GetModuleService()`, `GetFileService()`, etc. on the `ConstructFrame`.
 
 **Vendored Lua 5.0.2** (`src/rainman/vendor/lua502/`) — Corsix's patched Lua 5.0.2, built as static library `lua502`. Do not modify or upgrade — game data compatibility requires this exact version.
 
@@ -69,6 +80,7 @@ throw CRainmanException(__FILE__, __LINE__, "message");
 throw CRainmanException(e, __FILE__, __LINE__, "context");
 ```
 Use the macros: `QUICK_THROW("msg")`, `CATCH_THROW("msg")`, `IGNORE_EXCEPTIONS`, `CHECK_MEM(new Foo)`.
+`PAUSE_THROW` / `UNPAUSE_THROW` can defer re-throwing when cleanup is needed between catch and throw.
 Catch by const reference:
 ```cpp
 catch (const CRainmanException &e) { /* use e.getMessage(), e.getPrecursor() */ }
@@ -116,6 +128,12 @@ char* pRange = store.MemoryRange((void*)data, dataLen);
 IFileStore::IStream* pStream = store.VOpenStream(pRange);
 // ... read from pStream, then delete pStream
 ```
+
+### Testing CDMS presenters
+Presenters depend on `I*View` interfaces, not concrete frames. In tests, create a mock implementing the view interface and pass it to the presenter. `CWxTaskRunner` requires a `wxApp`; use `CTaskRunner` directly in tests instead to avoid that dependency.
+
+### Git practices
+Never use `git commit --amend`. Always create new commits — amending rewrites history.
 
 ### Multi-inclusion headers
 `strings.h` uses a `S_CPP_` macro pattern to switch between `extern` declarations and definitions on re-inclusion. Do **not** add `#pragma once` to this file. `strings.cpp` pre-defines the include guard, includes `Common.h`, then undefines it and re-includes with `S_CPP_` defined.

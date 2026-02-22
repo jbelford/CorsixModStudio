@@ -44,7 +44,7 @@ Consult [references/test-patterns.md](references/test-patterns.md) for conventio
 
 ### Critical rules
 
-- Exception objects are heap-allocated: `throw new CRainmanException(...)`. Clean up with `destroy()`, never `delete`.
+- Exceptions are stack-based: `throw CRainmanException(...)`, catch by `const CRainmanException &`. No heap allocation or manual cleanup.
 - Use `CMemoryStore` for in-memory I/O testing — avoid writing to the real filesystem when possible.
 - When filesystem access is needed, use `std::filesystem::temp_directory_path()` with cleanup in `TearDown()`.
 - Use `ASSERT_NE(ptr, nullptr)` before dereferencing any pointer.

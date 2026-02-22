@@ -36,6 +36,7 @@
 #include <list>
 #include <stack>
 #include <wx/treectrl.h>
+#include <wx/popupwin.h>
 #include "common/strings.h"
 #include "interfaces/ISaveable.h"
 #include <lsp/Protocol.h>
@@ -56,6 +57,7 @@ class frmScarEditor : public wxWindow, public ISaveable
     int m_iLspVersion = 0;
     bool m_bLspNeedsSync = false;
     std::vector<lsp::Diagnostic> m_vDiagnostics;
+    wxPopupTransientWindow *m_pHoverPopup = nullptr;
     static constexpr int INDICATOR_LSP_ERROR = 8;
     static constexpr int INDICATOR_LSP_WARNING = 9;
     static constexpr int INDICATOR_LSP_INFO = 10;
@@ -63,6 +65,7 @@ class frmScarEditor : public wxWindow, public ISaveable
     void OnLspTimer(wxTimerEvent &event);
     void OnDwellStart(wxStyledTextEvent &event);
     void OnDwellEnd(wxStyledTextEvent &event);
+    void DismissHoverPopup();
     void LspOpenDocument();
     void LspSyncDocument();
     void LspCloseDocument();
