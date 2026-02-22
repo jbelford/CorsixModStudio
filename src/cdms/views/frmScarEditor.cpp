@@ -718,6 +718,16 @@ void frmScarEditor::Load(IFileStore::IStream *pFile)
 
     m_pFunctionDropdown->Clear();
     FillFunctionDrop(wxString());
+
+    // Now that the text is loaded, open the document with the LSP
+    if (!m_bLspOpen)
+    {
+        LspOpenDocument();
+    }
+    else
+    {
+        LspSyncDocument();
+    }
 }
 
 void frmScarEditor::OnStyleNeeded(wxStyledTextEvent &event)
@@ -1031,8 +1041,7 @@ frmScarEditor::frmScarEditor(const wxTreeItemId &oFileParent, wxString sFilename
     SetSizer(pTopSizer);
     pTopSizer->SetSizeHints(this);
 
-    // Start LSP integration (opens document + begins polling for diagnostics)
-    LspOpenDocument();
+    // Start LSP polling timer (document will be opened after Load() populates text)
     m_lspTimer.SetOwner(this);
     m_lspTimer.Start(100); // Poll every 100ms
 }
