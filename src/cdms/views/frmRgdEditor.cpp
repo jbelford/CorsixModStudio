@@ -33,7 +33,6 @@
 #include <wx/tbarbase.h>
 #include "common/Common.h"
 #include "common/ThemeColours.h"
-#include <wx/generic/msgdlgg.h>
 #include <cstdint>
 #include <memory>
 #include <rainman/io/IFileStore.h>
@@ -1665,25 +1664,22 @@ void frmRGDEditor::OnCloseWindow(wxCloseEvent &event)
 {
     if (m_bDataNeedsSaving)
     {
-        wxGenericMessageDialog *dialog = new wxGenericMessageDialog(this, wxT("File has been modified. Save file?"),
-                                                                    m_sFilename, wxYES_NO | wxCANCEL);
-
-        int ans = dialog->ShowModal();
-        dialog->Destroy();
+        int ans = ThemeColours::ShowMessageBox(wxT("File has been modified. Save file?"), m_sFilename,
+                                               wxYES_NO | wxCANCEL | wxICON_WARNING, this);
 
         switch (ans)
         {
-        case wxID_YES:
+        case wxYES:
             DoSave();
             break;
 
-        case wxID_CANCEL:
+        case wxCANCEL:
         default:
             if (event.CanVeto())
             {
                 event.Veto();
             }
-        case wxID_NO:
+        case wxNO:
             break;
         }
     }

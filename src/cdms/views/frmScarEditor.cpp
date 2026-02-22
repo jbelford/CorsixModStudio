@@ -22,7 +22,6 @@
 #include "common/strings.h"
 #include "common/Utility.h"
 #include "common/ThemeColours.h"
-#include <wx/generic/msgdlgg.h>
 #include "presenters/CScarEditorPresenter.h"
 extern "C"
 {
@@ -244,25 +243,22 @@ void frmScarEditor::OnCloseWindow(wxCloseEvent &event)
 {
     if (m_bNeedsSaving)
     {
-        wxGenericMessageDialog *dialog = new wxGenericMessageDialog(this, wxT("Text has been modified. Save file?"),
-                                                                    m_sFilename, wxYES_NO | wxCANCEL);
-
-        int ans = dialog->ShowModal();
-        dialog->Destroy();
+        int ans = ThemeColours::ShowMessageBox(wxT("Text has been modified. Save file?"), m_sFilename,
+                                               wxYES_NO | wxCANCEL | wxICON_WARNING, this);
 
         switch (ans)
         {
-        case wxID_YES:
+        case wxYES:
             DoSave();
             break;
 
-        case wxID_CANCEL:
+        case wxCANCEL:
         default:
             if (event.CanVeto())
             {
                 event.Veto();
             }
-        case wxID_NO:
+        case wxNO:
             break;
         }
     }

@@ -31,7 +31,6 @@
 #include <algorithm>
 #include "common/Common.h"
 #include "common/ThemeColours.h"
-#include <wx/generic/msgdlgg.h>
 #include "rainman/localization/CUcsMap.h"
 
 BEGIN_EVENT_TABLE(frmUCSEditor, wxWindow)
@@ -486,25 +485,22 @@ void frmUCSEditor::OnCloseWindow(wxCloseEvent &event)
 {
     if (m_bNeedsSave)
     {
-        auto *dialog = new wxGenericMessageDialog(this, wxT("UCS has been modified. Save file?"), wxT("UCS Editor"),
-                                                  wxYES_NO | wxCANCEL);
-
-        int ans = dialog->ShowModal();
-        dialog->Destroy();
+        int ans = ThemeColours::ShowMessageBox(wxT("UCS has been modified. Save file?"), wxT("UCS Editor"),
+                                               wxYES_NO | wxCANCEL | wxICON_WARNING, this);
 
         switch (ans)
         {
-        case wxID_YES:
+        case wxYES:
             DoSave();
             break;
 
-        case wxID_CANCEL:
+        case wxCANCEL:
         default:
             if (event.CanVeto())
             {
                 event.Veto();
             }
-        case wxID_NO:
+        case wxNO:
             break;
         }
     }
