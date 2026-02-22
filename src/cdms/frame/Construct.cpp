@@ -646,13 +646,16 @@ lsp::CLspClient *ConstructFrame::GetLspClient()
 
     // Locate LuaLS binary next to the executable
     wxFileName exeDir(wxStandardPaths::Get().GetExecutablePath());
-    wxString lspBinDir = exeDir.GetPath() + wxT("\\Mod_Studio_Files\\lsp\\bin");
+    wxString lspBinDir = exeDir.GetPath() + wxT("\\Mod_Studio_Files\\lsp\\luals\\bin");
     wxString serverPath = lspBinDir + wxT("\\lua-language-server.exe");
 
     if (!wxFileExists(serverPath))
     {
+        CDMS_LOG_WARN("LSP: LuaLS binary not found at: {}", serverPath.ToStdString());
         return nullptr;
     }
+
+    CDMS_LOG_INFO("LSP: Found LuaLS at: {}", serverPath.ToStdString());
 
     // Build workspace root and library paths
     std::string workspaceRoot;

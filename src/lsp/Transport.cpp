@@ -18,6 +18,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 #include "lsp/Transport.h"
+#include <rainman/core/RainmanLog.h>
 
 namespace lsp
 {
@@ -86,6 +87,8 @@ bool CProcess::Start(const std::wstring &exePath, const std::wstring &args, cons
 
     if (!ok)
     {
+        DWORD err = GetLastError();
+        CDMS_LOG_ERROR("LSP: CreateProcess failed (error={})", err);
         CloseHandle(m_hStdinWrite);
         CloseHandle(m_hStdoutRead);
         m_hStdinWrite = INVALID_HANDLE_VALUE;
@@ -93,6 +96,7 @@ bool CProcess::Start(const std::wstring &exePath, const std::wstring &args, cons
         return false;
     }
 
+    CDMS_LOG_INFO("LSP: Process created (PID={})", pi.dwProcessId);
     m_hProcess = pi.hProcess;
     CloseHandle(pi.hThread);
 

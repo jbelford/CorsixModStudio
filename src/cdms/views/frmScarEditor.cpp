@@ -1059,6 +1059,7 @@ void frmScarEditor::LspOpenDocument()
     auto *pClient = GetConstruct()->GetLspClient();
     if (!pClient)
     {
+        CDMS_LOG_DEBUG("LSP: No language server available for editor");
         return;
     }
 

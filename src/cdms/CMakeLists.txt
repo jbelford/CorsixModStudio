@@ -60,3 +60,13 @@ add_custom_command(TARGET CorsixModStudio POST_BUILD
         "$<TARGET_FILE_DIR:CorsixModStudio>/Mod_Studio_Files"
     COMMENT "Copying Mod_Studio_Files to output directory"
 )
+
+# Copy LuaLS binary (downloaded at configure time) into the output directory
+if(LUALS_DIR AND EXISTS "${LUALS_DIR}/bin/lua-language-server.exe")
+    add_custom_command(TARGET CorsixModStudio POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${LUALS_DIR}"
+            "$<TARGET_FILE_DIR:CorsixModStudio>/Mod_Studio_Files/lsp/luals"
+        COMMENT "Copying LuaLS to output directory"
+    )
+endif()

@@ -18,6 +18,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 #include "lsp/LspClient.h"
+#include <rainman/core/RainmanLog.h>
 #include <sstream>
 
 namespace lsp
@@ -32,10 +33,13 @@ CLspClient::~CLspClient() { Stop(); }
 bool CLspClient::Start(const std::wstring &serverPath, const std::string &workspaceRoot,
                        const std::vector<std::string> &libraryPaths, const nlohmann::json &settingsJson)
 {
+    CDMS_LOG_INFO("LSP: Starting language server...");
     if (!m_process.Start(serverPath, L"--stdio", L""))
     {
+        CDMS_LOG_ERROR("LSP: Failed to spawn language server process");
         return false;
     }
+    CDMS_LOG_INFO("LSP: Process spawned, sending initialize request");
 
     // Build initialize params
     nlohmann::json capabilities = {
@@ -98,6 +102,7 @@ bool CLspClient::Start(const std::wstring &serverPath, const std::string &worksp
 
     if (!gotResponse)
     {
+        CDMS_LOG_ERROR("LSP: Initialize handshake timed out after {}ms", kMaxWaitMs);
         m_process.Kill();
         return false;
     }
@@ -106,6 +111,7 @@ bool CLspClient::Start(const std::wstring &serverPath, const std::string &worksp
     SendNotification("initialized", nlohmann::json::object());
     m_initialized = true;
 
+    CDMS_LOG_INFO("LSP: Language server initialized successfully");
     return true;
 }
 
@@ -116,6 +122,7 @@ void CLspClient::Stop()
         return;
     }
 
+    CDMS_LOG_INFO("LSP: Shutting down language server");
     m_initialized = false;
 
     // Send shutdown request
@@ -146,6 +153,7 @@ bool CLspClient::IsRunning() const { return m_initialized && m_process.IsRunning
 
 void CLspClient::OpenDocument(const std::string &uri, const std::string &languageId, const std::string &text)
 {
+    CDMS_LOG_INFO("LSP: Opening document: {} (lang={}, {} bytes)", uri, languageId, text.size());
     m_documentVersions[uri] = 1;
 
     DidOpenTextDocumentParams params;
@@ -172,6 +180,7 @@ void CLspClient::ChangeDocument(const std::string &uri, const std::string &text)
 
 void CLspClient::CloseDocument(const std::string &uri)
 {
+    CDMS_LOG_DEBUG("LSP: Closing document: {}", uri);
     DidCloseTextDocumentParams params;
     params.textDocument.uri = uri;
 
@@ -250,8 +259,11 @@ void CLspClient::HandleMessage(const nlohmann::json &message)
     }
     else if (message.contains("id") && message.contains("error"))
     {
-        // Error response — discard pending callback
+        // Error response — log and discard pending callback
         int id = message["id"].get<int>();
+        auto errObj = message["error"];
+        CDMS_LOG_WARN("LSP: Error response id={}: {} (code={})", id, errObj.value("message", "unknown"),
+                      errObj.value("code", -1));
         m_completionCallbacks.erase(id);
         m_signatureHelpCallbacks.erase(id);
     }
@@ -299,9 +311,35 @@ void CLspClient::HandleNotification(const std::string &method, const nlohmann::j
     if (method == "textDocument/publishDiagnostics" && m_diagnosticsCallback)
     {
         auto diag = params.get<PublishDiagnosticsParams>();
+        CDMS_LOG_DEBUG("LSP: Received {} diagnostics for {}", diag.diagnostics.size(), diag.uri);
         m_diagnosticsCallback(diag.uri, std::move(diag.diagnostics));
     }
-    // Other notifications (window/logMessage, etc.) are silently ignored
+    else if (method == "window/logMessage")
+    {
+        // Forward LuaLS log messages to our log
+        int type = params.value("type", 4);
+        std::string msg = params.value("message", "");
+        if (type <= 1)
+        {
+            CDMS_LOG_ERROR("LuaLS: {}", msg);
+        }
+        else if (type == 2)
+        {
+            CDMS_LOG_WARN("LuaLS: {}", msg);
+        }
+        else if (type == 3)
+        {
+            CDMS_LOG_INFO("LuaLS: {}", msg);
+        }
+        else
+        {
+            CDMS_LOG_DEBUG("LuaLS: {}", msg);
+        }
+    }
+    else
+    {
+        CDMS_LOG_TRACE("LSP: Ignoring notification: {}", method);
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -316,6 +354,7 @@ void CLspClient::SendRequest(const std::string &method, const nlohmann::json &pa
 
 void CLspClient::SendNotification(const std::string &method, const nlohmann::json &params)
 {
+    CDMS_LOG_TRACE("LSP: Sending notification: {}", method);
     nlohmann::json notification = {{"jsonrpc", "2.0"}, {"method", method}, {"params", params}};
     Send(notification);
 }
