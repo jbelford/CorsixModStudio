@@ -58,8 +58,9 @@ class CProcess
     std::string Read(size_t bufferSize = 65536);
 
     /// Blocking read from the child's stdout with a timeout.
-    /// Waits up to @p timeoutMs milliseconds for data to become available,
-    /// then reads whatever is available (up to bufferSize bytes).
+    /// Polls for data availability (via PeekNamedPipe) up to @p timeoutMs
+    /// milliseconds, then reads whatever is available (up to bufferSize bytes).
+    /// Intended for use on a background I/O thread.
     /// @returns the data read, or empty string on timeout or error.
     std::string ReadWithTimeout(DWORD timeoutMs, size_t bufferSize = 65536);
 

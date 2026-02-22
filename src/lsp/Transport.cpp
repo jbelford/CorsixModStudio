@@ -160,15 +160,23 @@ std::string CProcess::ReadWithTimeout(DWORD timeoutMs, size_t bufferSize)
         return {};
     }
 
-    // Wait for the pipe handle to become signalled (data available)
-    DWORD waitResult = WaitForSingleObject(m_hStdoutRead, timeoutMs);
-    if (waitResult != WAIT_OBJECT_0)
+    // Anonymous pipes are not waitable objects, so we poll with PeekNamedPipe.
+    // This runs on a background I/O thread, so the polling doesn't block the UI.
+    constexpr DWORD kPollIntervalMs = 10;
+    DWORD elapsed = 0;
+
+    while (elapsed < timeoutMs)
     {
-        return {};
+        DWORD available = 0;
+        if (PeekNamedPipe(m_hStdoutRead, nullptr, 0, nullptr, &available, nullptr) && available > 0)
+        {
+            return Read(bufferSize);
+        }
+        Sleep(kPollIntervalMs);
+        elapsed += kPollIntervalMs;
     }
 
-    // Data should be available — do a non-blocking read
-    return Read(bufferSize);
+    return {};
 }
 
 bool CProcess::IsRunning() const
