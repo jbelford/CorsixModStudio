@@ -535,9 +535,9 @@ frmRGDEditor::frmRGDEditor(const wxTreeItemId &oFileParent, wxString sFilename, 
     // "View Code" tool — SVG icon that scales cleanly at any DPI
     static const char sSvgCode[] =
         R"(<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">)"
-        R"(<polyline points="11,6 4,16 11,26" fill="none" stroke="#444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>)"
-        R"(<polyline points="21,6 28,16 21,26" fill="none" stroke="#444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>)"
-        R"(<line x1="18" y1="4" x2="14" y2="28" stroke="#444" stroke-width="2" stroke-linecap="round"/>)"
+        R"(<polyline points="11,6 4,16 11,26" fill="none" stroke="#d5873e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>)"
+        R"(<polyline points="21,6 28,16 21,26" fill="none" stroke="#d5873e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>)"
+        R"(<line x1="18" y1="4" x2="14" y2="28" stroke="#d5873e" stroke-width="2" stroke-linecap="round"/>)"
         R"(</svg>)";
     auto oCodeBundle = wxBitmapBundle::FromSVG(sSvgCode, wxSize(32, 32));
     pToolbar->AddTool(IDC_ToolViewCode, wxT("View Code"), oCodeBundle, wxT("Open in code editor"));
