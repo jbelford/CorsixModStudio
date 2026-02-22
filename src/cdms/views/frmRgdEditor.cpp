@@ -532,15 +532,16 @@ frmRGDEditor::frmRGDEditor(const wxTreeItemId &oFileParent, wxString sFilename, 
     pToolbar->AddTool(IDC_ToolSave, AppStr(rgd_save), oSaveBmp, AppStr(rgd_save));
     pToolbar->AddSeparator();
 
-    // "View Code" tool — render emoji onto a 32×32 bitmap
+    // "View Code" tool — render "</>" text onto a 32×32 bitmap
     wxBitmap oCodeBmp(32, 32);
     {
         wxMemoryDC dc(oCodeBmp);
         dc.SetBackground(*wxWHITE_BRUSH);
         dc.Clear();
-        dc.SetFont(wxFont(20, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
-        wxSize textSize = dc.GetTextExtent(wxT("\U0001F4DD"));
-        dc.DrawText(wxT("\U0001F4DD"), (32 - textSize.x) / 2, (32 - textSize.y) / 2);
+        dc.SetFont(wxFont(14, wxFONTFAMILY_MODERN, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD));
+        wxString label(wxT("</>"));
+        wxSize textSize = dc.GetTextExtent(label);
+        dc.DrawText(label, (32 - textSize.x) / 2, (32 - textSize.y) / 2);
     }
     oCodeBmp.SetMask(new wxMask(oCodeBmp, *wxWHITE));
     pToolbar->AddTool(IDC_ToolViewCode, wxT("View Code"), oCodeBmp, wxT("Open in code editor"));
@@ -548,7 +549,7 @@ frmRGDEditor::frmRGDEditor(const wxTreeItemId &oFileParent, wxString sFilename, 
 
     wxBoxSizer *pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
     wxWindow *pBgTemp;
-    pButtonSizer->Add(new wxButton(this, IDC_ToolViewCode, wxT("\U0001F4DD View Code")), 0, wxEXPAND | wxALL, 3);
+    pButtonSizer->Add(new wxButton(this, IDC_ToolViewCode, wxT("</> View Code")), 0, wxEXPAND | wxALL, 3);
     pButtonSizer->Add(pBgTemp = new wxButton(this, wxID_SAVE, AppStr(rgd_save)), 0, wxEXPAND | wxALL, 3);
     pTopSizer->Add(pButtonSizer, 0, wxALIGN_RIGHT);
 
