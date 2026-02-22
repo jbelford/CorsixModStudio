@@ -59,7 +59,7 @@ bool CLspClient::Start(const std::wstring &serverPath, const std::string &worksp
            {{"completionItem", {{"snippetSupport", false}, {"documentationFormat", {"plaintext"}}}},
             {"dynamicRegistration", false}}},
           {"signatureHelp", {{"dynamicRegistration", false}}},
-          {"hover", {{"dynamicRegistration", false}, {"contentFormat", {"plaintext"}}}},
+          {"hover", {{"dynamicRegistration", false}, {"contentFormat", {"markdown"}}}},
           {"publishDiagnostics", {{"relatedInformation", false}}}}}};
 
     nlohmann::json initParams = {

@@ -1396,6 +1396,7 @@ class CHoverPopup : public wxPopupTransientWindow
             pCodeSTC->SetMarginWidth(2, 0);
             pCodeSTC->SetUseHorizontalScrollBar(false);
             pCodeSTC->SetUseVerticalScrollBar(false);
+            pCodeSTC->SetWrapMode(wxSTC_WRAP_CHAR);
             pCodeSTC->SetReadOnly(false);
             pCodeSTC->SetCaretWidth(0);
 
@@ -1470,10 +1471,20 @@ class CHoverPopup : public wxPopupTransientWindow
             pCodeSTC->SetReadOnly(true);
             pCodeSTC->Colourise(0, -1);
 
-            // Size the STC to fit content (no word-wrap; long lines clip at edge)
+            // Size the STC to fit content (with character-level wrap for long lines)
             int lineCount = pCodeSTC->GetLineCount();
             int lineHeight = pCodeSTC->TextHeight(0);
-            int codeHeight = lineCount * lineHeight + 6;
+
+            // Set width first so Scintilla can compute wrapped line counts
+            pCodeSTC->SetMinSize(wxSize(kMaxWidth, lineHeight));
+            pCodeSTC->Layout();
+
+            int totalDisplayLines = 0;
+            for (int ln = 0; ln < lineCount; ++ln)
+            {
+                totalDisplayLines += pCodeSTC->WrapCount(ln);
+            }
+            int codeHeight = totalDisplayLines * lineHeight + 6;
 
             pCodeSTC->SetMinSize(wxSize(kMaxWidth, codeHeight));
             pSizer->Add(pCodeSTC, 0, wxEXPAND | wxALL, 6);
