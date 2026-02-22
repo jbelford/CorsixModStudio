@@ -116,6 +116,7 @@ class ConstructFrame : public wxFrame, public IMainFrameView
     void OnSashMove(wxSplitterEvent &event);
     void OnTabClosing(wxAuiNotebookEvent &event);
     void OnSaveActive(wxCommandEvent &event);
+    void OnCloseActiveTab(wxCommandEvent &event);
 
     CModuleFile *GetModule() const;
     const wxString &GetModuleFile() const;
@@ -206,6 +207,7 @@ enum
 
     // Accelerators
     IDM_SaveActive,
+    IDM_CloseActiveTab,
 
     // Stuff
     IDC_Splitter

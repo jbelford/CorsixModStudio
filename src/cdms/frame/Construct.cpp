@@ -62,6 +62,7 @@ EVT_MENU(wxID_EXIT, ConstructFrame::OnQuit)
 EVT_MENU(wxID_CLOSE, ConstructFrame::OnCloseMod)
 EVT_MENU(wxID_PROPERTIES, ConstructFrame::OnModProperties)
 EVT_MENU(IDM_SaveActive, ConstructFrame::OnSaveActive)
+EVT_MENU(IDM_CloseActiveTab, ConstructFrame::OnCloseActiveTab)
 
 EVT_MENU(IDM_PlayCOH, ConstructFrame::LaunchCOH)
 EVT_MENU(IDM_PlayW40k, ConstructFrame::LaunchW40k)
@@ -143,6 +144,31 @@ void ConstructFrame::OnSaveActive(wxCommandEvent &event)
     {
         pSaveable->DoSave();
     }
+}
+
+void ConstructFrame::OnCloseActiveTab(wxCommandEvent &event)
+{
+    UNUSED(event);
+    wxAuiNotebook *pTabs = m_tabManager.GetTabs();
+    int sel = pTabs->GetSelection();
+    if (sel == wxNOT_FOUND)
+    {
+        return;
+    }
+
+    // Fire the same notebook page-close event so OnTabClosing handles
+    // unsaved-changes prompts and cleanup.
+    wxAuiNotebookEvent closeEvent(wxEVT_AUINOTEBOOK_PAGE_CLOSE, pTabs->GetId());
+    closeEvent.SetSelection(sel);
+    closeEvent.SetEventObject(pTabs);
+    pTabs->GetEventHandler()->ProcessEvent(closeEvent);
+
+    if (!closeEvent.IsAllowed())
+    {
+        return;
+    }
+
+    pTabs->DeletePage(sel);
 }
 
 void ConstructFrame::OnOpenSga(wxCommandEvent &event)
@@ -555,11 +581,12 @@ ConstructFrame::ConstructFrame(const wxString &sTitle, const wxPoint &oPos, cons
     CreateStatusBar();
     SetStatusText(AppStr(statusbar_message_default));
 
-    // Ctrl+S accelerator for saving the active tab
+    // Keyboard accelerators
     wxAcceleratorEntry accel[] = {
         wxAcceleratorEntry(wxACCEL_CTRL, (int)'S', IDM_SaveActive),
+        wxAcceleratorEntry(wxACCEL_CTRL, (int)'W', IDM_CloseActiveTab),
     };
-    SetAcceleratorTable(wxAcceleratorTable(1, accel));
+    SetAcceleratorTable(wxAcceleratorTable(2, accel));
 }
 
 void ConstructFrame::DoNewMod()
