@@ -59,6 +59,7 @@ EVT_MENU(IDM_LoadModCoH, ConstructFrame::OnOpenModCoH)
 EVT_MENU(IDM_LoadSga, ConstructFrame::OnOpenSga)
 EVT_MENU(wxID_EXIT, ConstructFrame::OnQuit)
 EVT_MENU(wxID_CLOSE, ConstructFrame::OnCloseMod)
+EVT_MENU(wxID_PROPERTIES, ConstructFrame::OnModProperties)
 
 EVT_MENU(IDM_PlayCOH, ConstructFrame::LaunchCOH)
 EVT_MENU(IDM_PlayW40k, ConstructFrame::LaunchW40k)
@@ -102,6 +103,34 @@ void ConstructFrame::OnOpenSga(wxCommandEvent &event)
 {
     UNUSED(event);
     DoLoadSga();
+}
+
+void ConstructFrame::OnModProperties(wxCommandEvent &event)
+{
+    UNUSED(event);
+    if (!m_moduleManager.HasModule())
+    {
+        return;
+    }
+
+    // If the frmModule tab is already open, select it
+    wxAuiNotebook *pTabs = m_tabManager.GetTabs();
+    for (size_t i = 0; i < pTabs->GetPageCount(); ++i)
+    {
+        if (dynamic_cast<frmModule *>(pTabs->GetPage(i)))
+        {
+            pTabs->SetSelection(i);
+            return;
+        }
+    }
+
+    // Otherwise create a new frmModule tab
+    m_tabManager.AddPage(new frmModule(pTabs, -1),
+                         AppStr(mod_tabname)
+                             .Append(wxString(wxT(" [")))
+                             .Append(m_moduleManager.GetModuleFile().AfterLast('\\'))
+                             .Append(wxT("]")),
+                         true);
 }
 
 void ConstructFrame::OnRelicToolCommand(wxCommandEvent &event)

@@ -86,6 +86,7 @@ class ConstructFrame : public wxFrame, public IMainFrameView
 
     void DoLoadSga();
     void DoLoadMod(wxString sPath = wxT(""), eLoadModGames eGame = LM_Any);
+    void OnModProperties(wxCommandEvent &event);
     void OnToolMenuCommand(wxCommandEvent &event);
     void OnRelicToolCommand(wxCommandEvent &event);
     void UpdateRelicToolsState();
