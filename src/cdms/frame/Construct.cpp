@@ -93,11 +93,37 @@ void ConstructFrame::OnSashMove(wxSplitterEvent &event) { m_tabManager.OnSashMov
 void ConstructFrame::OnTabClosing(wxAuiNotebookEvent &event)
 {
     int idx = event.GetSelection();
-    if (idx != wxNOT_FOUND)
+    if (idx == wxNOT_FOUND)
     {
-        wxWindow *page = m_tabManager.GetTabs()->GetPage(idx);
-        m_tabManager.OnPageClosed(page);
+        event.Skip();
+        return;
     }
+
+    wxWindow *page = m_tabManager.GetTabs()->GetPage(idx);
+
+    // If the page has unsaved changes, prompt the user
+    auto *pSaveable = dynamic_cast<ISaveable *>(page);
+    if (pSaveable && pSaveable->IsModified())
+    {
+        int ans = ThemeColours::ShowMessageBox(wxT("This file has unsaved changes. Save before closing?"),
+                                               m_tabManager.GetTabs()->GetPageText(idx),
+                                               wxYES_NO | wxCANCEL | wxICON_WARNING, this);
+
+        switch (ans)
+        {
+        case wxYES:
+            pSaveable->DoSave();
+            break;
+        case wxCANCEL:
+            event.Veto();
+            return;
+        case wxNO:
+        default:
+            break;
+        }
+    }
+
+    m_tabManager.OnPageClosed(page);
     event.Skip();
 }
 

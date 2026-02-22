@@ -52,6 +52,12 @@ void TabManager::AddPage(wxWindow *page, const wxString &caption, bool select)
 
 void TabManager::UpdateDirtyState(wxWindow *page, bool isDirty)
 {
+    // Auto-pin preview tabs when they become dirty
+    if (isDirty && IsPreviewTab(page))
+    {
+        PinPreviewTab();
+    }
+
     int idx = m_pTabs->GetPageIndex(page);
     if (idx == wxNOT_FOUND)
     {
@@ -60,7 +66,7 @@ void TabManager::UpdateDirtyState(wxWindow *page, bool isDirty)
 
     wxString text = m_pTabs->GetPageText(idx);
 
-    // Strip preview brackets to work on the bare caption
+    // Check for preview brackets (should not occur after auto-pin, but be safe)
     bool isPreview = text.StartsWith(wxT("\u231C")) && text.EndsWith(wxT("\u231D"));
     wxString bare = isPreview ? text.Mid(1, text.Length() - 2) : text;
 
