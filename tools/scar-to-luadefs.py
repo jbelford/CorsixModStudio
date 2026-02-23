@@ -71,6 +71,14 @@ TYPE_MAP = {
     "SGroup":         "string",
     "EGroup":         "string",
     "SigmaPlayer":    "PlayerID",
+    # C++ internal type names from ScarDoc HTML.
+    "LuaConfig::RefTable": "table",
+    "LuaBinding::StackVarFunction": "function",
+    "ScarButtonManager::ScarButtonID": "ButtonID",
+    "MathPrim::Colour": "Colour",
+    "Zone::ID":       "integer",
+    "const char":     "string",
+    "const int":      "integer",
 }
 
 # Typos found in game files — map to corrected types.
@@ -238,13 +246,15 @@ def parse_scardoc_html(filepath: str) -> list[dict]:
 
         # Parse return type from: <span class="arg">RetType </span> FuncName(...)
         ret_match = re.match(
-            r'<span class="arg">(\w+)\s*</span>\s*(.*)', sig_html, re.DOTALL
+            r'<span class="arg">([\w:\s*]+?)\s*</span>\s*(.*)', sig_html, re.DOTALL
         )
         if not ret_match:
             continue
 
         ret_type_raw = ret_match.group(1).strip()
-        rest = re.sub(r'\s+', ' ', ret_match.group(2).strip())
+        rest = ret_match.group(2).strip()
+        # Normalize all whitespace (including \xa0) to regular spaces.
+        rest = re.sub(r'[\s\xa0]+', ' ', rest)
 
         name_match = re.match(r'(\*?\w+)\s*\(\s*(.*?)\s*\)', rest)
         if not name_match:
@@ -256,12 +266,14 @@ def parse_scardoc_html(filepath: str) -> list[dict]:
         # Parse parameters from: <span class="arg">Type</span> name, ...
         params: list[tuple] = []
         if args_html.strip():
-            for part in re.split(r',\s*(?=(?:\[?\s*)?<span|$)', args_html):
+            # Normalize \xa0 to spaces before splitting.
+            args_norm = args_html.replace('\xa0', ' ')
+            for part in re.split(r',\s*(?=(?:\[?\s*)?<span|$)', args_norm):
                 part = part.strip()
                 if not part:
                     continue
                 arg_match = re.match(
-                    r'(?:\[?\s*)?<span class="arg">(\w+)</span>\s+(\w+)\s*\]?\s*$',
+                    r'(?:\[?\s*)?<span class="arg">([\w:\s*]+?)</span>\s+(\w+)\s*\]?\s*$',
                     part,
                 )
                 if arg_match:

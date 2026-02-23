@@ -2,7 +2,7 @@
 
 -- Auto-generated SCAR stubs for Dawn of War by scar-to-luadefs.py
 -- Sources: function_list.htm + scardoc.dat
--- 918 functions, 139 constants
+-- 922 functions, 139 constants
 -- Do not edit manually — regenerate with: python tools/scar-to-luadefs.py
 --
 -- Import tiers:
@@ -2697,9 +2697,11 @@ function UI_ShowCountdown(formatID, secsRemaining) end
 ---      g_buttonID1 = Util_SGroupAbilityButton_Create(table1, table2, false)
 ---
 --- *Source: WXPButton.scar*
+---@param textureTable table
+---@param tooltipTable table
 ---@param enabled boolean
 ---@return ButtonID
-function Util_AbilityButton_Create(enabled) end
+function Util_AbilityButton_Create(textureTable, tooltipTable, enabled) end
 
 --- Create and Modal Ability Button
 ---
@@ -2713,9 +2715,10 @@ function Util_AbilityButton_Create(enabled) end
 ---      g_buttonID1 = Util_SGroupAbilityButton_Create(table1, table2, false)
 ---
 --- *Source: WXPButton.scar*
+---@param tooltipTable table
 ---@param enabled boolean
 ---@return ButtonID
-function Util_AbilityButton_CreateModal(enabled) end
+function Util_AbilityButton_CreateModal(tooltipTable, enabled) end
 
 --- Forces an update of all buttons in both the SGroup and EGroup button visibility managers
 ---
@@ -2794,10 +2797,11 @@ function Util_SGroupAbilityButton_Remove(button) end
 ---
 --- *Source: WXPButton.scar*
 ---@param widgetName string
+---@param tooltipTable table
 ---@param visible boolean
 ---@param enabled boolean
 ---@return ButtonID
-function Util_ScarButton_Create(widgetName, visible, enabled) end
+function Util_ScarButton_Create(widgetName, tooltipTable, visible, enabled) end
 
 -- from wxpcommand.scar
 
@@ -3103,9 +3107,11 @@ function Player_SetAllResources(player, req, power, pop) end
 ---
 --- *Source: WXPScarUtil.scar*
 ---@param channel SoundChannel
+---@param tracksTable table
 ---@param sequential boolean
 ---@param looping boolean
-function Playlist_Manager(channel, sequential, looping) end
+---@param silenceTable table
+function Playlist_Manager(channel, tracksTable, sequential, looping, silenceTable) end
 
 --- Checks to see if a Rule exists. If it does not exist, the rule will be added to be executed at every 'interval' seconds
 ---
@@ -4730,7 +4736,8 @@ function PlayerProfile_SetVar(varName, val) end
 ---
 --- *Source: LuaGameMisc.cpp*
 ---@param pPlayer PlayerID
-function Player_DoNotPrecache(pPlayer) end
+---@param ebps table
+function Player_DoNotPrecache(pPlayer, ebps) end
 
 --- Returns the local player index to be used with World_GetPlayerAt.
 ---
@@ -4794,9 +4801,10 @@ function EGroup_Compare(group1, group2) end
 ---
 --- *Source: LuaGroup.cpp*
 ---@param egroup EGroupID
+---@param blueprintTable table
 ---@param all boolean
 ---@return boolean
-function EGroup_ContainsBlueprints(egroup, all) end
+function EGroup_ContainsBlueprints(egroup, blueprintTable, all) end
 
 --- Returns true if an sgroup contains a given squad
 ---
@@ -4873,8 +4881,9 @@ function EGroup_Exists(name) end
 ---
 --- *Source: LuaGroup.cpp*
 ---@param egroup EGroupID
+---@param f function
 ---@return boolean
-function EGroup_ForEach(egroup) end
+function EGroup_ForEach(egroup, f) end
 
 --- Call a lua function for each item in a group. Function will recieve (groupid, itemindex, itemid) and should return a bool.
 ---
@@ -4884,37 +4893,41 @@ function EGroup_ForEach(egroup) end
 --- *Source: LuaGroup.cpp*
 ---@param egroup EGroupID
 ---@param all boolean
+---@param f function
 ---@return boolean
-function EGroup_ForEachAllOrAny(egroup, all) end
+function EGroup_ForEachAllOrAny(egroup, all, f) end
 
 --- Same as EGroup_ForEachAllOrAny except you have a choice to iterate over spawned entities, despawned entities, or both.
 ---
 --- *Source: LuaGroup.cpp*
 ---@param egroup EGroupID
 ---@param all boolean
+---@param f function
 ---@param spawned boolean
 ---@param despawned boolean
 ---@return boolean
-function EGroup_ForEachAllOrAnyEx(egroup, all, spawned, despawned) end
+function EGroup_ForEachAllOrAnyEx(egroup, all, f, spawned, despawned) end
 
 --- Same as EGroup_ForEach except you have a choice to iterate over spawned entities, despawned entities, or both.
 ---
 --- *Source: LuaGroup.cpp*
 ---@param egroup EGroupID
+---@param f function
 ---@param spawned boolean
 ---@param despawned boolean
 ---@return boolean
-function EGroup_ForEachEx(egroup, spawned, despawned) end
+function EGroup_ForEachEx(egroup, f, spawned, despawned) end
 
 --- Same as EGroup_ForEach except you have a choice to iterate over spawned entities, despawned entities, or both and passes the position to the scar function.
 ---
 --- *Source: LuaGroup.cpp*
 ---@param egroup EGroupID
+---@param f function
 ---@param position Position
 ---@param spawned boolean
 ---@param despawned boolean
 ---@return boolean
-function EGroup_ForEachExPosition(egroup, position, spawned, despawned) end
+function EGroup_ForEachExPosition(egroup, f, position, spawned, despawned) end
 
 --- Find an entity group with a given name.
 ---
@@ -5033,9 +5046,10 @@ function SGroup_Compare(group1, group2) end
 ---
 --- *Source: LuaGroup.cpp*
 ---@param sgroup SGroupID
+---@param blueprintTable table
 ---@param all boolean
 ---@return boolean
-function SGroup_ContainsBlueprints(sgroup, all) end
+function SGroup_ContainsBlueprints(sgroup, blueprintTable, all) end
 
 --- Returns true if an sgroup contains a given squad
 ---
@@ -5103,8 +5117,9 @@ function SGroup_Exists(name) end
 ---
 --- *Source: LuaGroup.cpp*
 ---@param sgroup SGroupID
+---@param f function
 ---@return boolean
-function SGroup_ForEach(sgroup) end
+function SGroup_ForEach(sgroup, f) end
 
 --- Call a lua function for each item in a group. Function will recieve (groupid, itemindex, itemid) and should return a bool.
 ---
@@ -5114,37 +5129,41 @@ function SGroup_ForEach(sgroup) end
 --- *Source: LuaGroup.cpp*
 ---@param sgroup SGroupID
 ---@param all boolean
+---@param f function
 ---@return boolean
-function SGroup_ForEachAllOrAny(sgroup, all) end
+function SGroup_ForEachAllOrAny(sgroup, all, f) end
 
 --- Same as SGroup_ForEachAllOrAny except you have a choice to iterate over spawned squads, despawned squads, or both.
 ---
 --- *Source: LuaGroup.cpp*
 ---@param sgroup SGroupID
 ---@param all boolean
+---@param f function
 ---@param spawned boolean
 ---@param despawned boolean
 ---@return boolean
-function SGroup_ForEachAllOrAnyEx(sgroup, all, spawned, despawned) end
+function SGroup_ForEachAllOrAnyEx(sgroup, all, f, spawned, despawned) end
 
 --- Same as SGroup_ForEach except you have a choice to iterate over spawned squads, despawned squads, or both.
 ---
 --- *Source: LuaGroup.cpp*
 ---@param sgroup SGroupID
+---@param f function
 ---@param spawned boolean
 ---@param despawned boolean
 ---@return boolean
-function SGroup_ForEachEx(sgroup, spawned, despawned) end
+function SGroup_ForEachEx(sgroup, f, spawned, despawned) end
 
 --- Same as SGroup_ForEach except you have a choice to iterate over spawned squads, despawned squads, or both and passes the position to the scar function.
 ---
 --- *Source: LuaGroup.cpp*
 ---@param sgroup SGroupID
+---@param f function
 ---@param position Position
 ---@param spawned boolean
 ---@param despawned boolean
 ---@return boolean
-function SGroup_ForEachExPosition(sgroup, position, spawned, despawned) end
+function SGroup_ForEachExPosition(sgroup, f, position, spawned, despawned) end
 
 --- Find an squadron group with a given name.
 ---
@@ -5429,24 +5448,27 @@ function MetaMap_GetPlayerNColorScheme() end
 --- This function will throw an exception if called outside of a Meta Map game.
 ---
 --- *Source: LuaMetaMap.cpp*
+---@param playerNum integer
 ---@return string
-function MetaMap_GetPlayerNFactionName() end
+function MetaMap_GetPlayerNFactionName(playerNum) end
 
 --- Returns the index of the meta map playerN's race.
 ---
 --- This function will throw an exception if called outside of a Meta Map game.
 ---
 --- *Source: LuaMetaMap.cpp*
+---@param playerNum integer
 ---@return integer
-function MetaMap_GetPlayerNRaceIndex() end
+function MetaMap_GetPlayerNRaceIndex(playerNum) end
 
 --- Returns the name of the meta map playerN's race.
 ---
 --- This function will throw an exception if called outside of a Meta Map game.
 ---
 --- *Source: LuaMetaMap.cpp*
+---@param playerNum integer
 ---@return string
-function MetaMap_GetPlayerNRaceName() end
+function MetaMap_GetPlayerNRaceName(playerNum) end
 
 --- Returns the index of the meta map player's race.
 ---
@@ -6371,7 +6393,8 @@ function Rule_RemoveAll() end
 --- Removes all rules other than the listed exceptions.
 ---
 --- *Source: LuaRuleSystem.cpp*
-function Rule_RemoveAllExcept() end
+---@param exceptions table
+function Rule_RemoveAllExcept(exceptions) end
 
 -- from LuaSimDynamics.cpp
 
@@ -7201,6 +7224,16 @@ function Stats_PlayerWon(playerID) end
 
 -- from LuaUI.cpp
 
+--- Creates a SCAR button represented by the widget with the passed in name and enabled/disabled based on the flag
+---
+--- Will fail if a scar button with the passed in widget has already been created
+---
+--- *Source: LuaUI.cpp*
+---@param widgetName string
+---@param enabled boolean
+---@return ButtonID
+function Button_Add(widgetName, enabled) end
+
 --- Creates a SCAR button
 ---
 --- The button will be represented by the widget with the passed in name and visible/hidden and enabled/diabled based on the passed in flags. This function will fail if a scar button associated with the passed in widget already exists.
@@ -7212,6 +7245,16 @@ function Stats_PlayerWon(playerID) end
 ---@param modal boolean
 ---@return ButtonID
 function Button_Add(widgetName, visible, enabled, modal) end
+
+--- Creates a SCAR ability button showing the specified ability and enabled/disabled based on the flag
+---
+--- Will fail if specified ability does not exists or scar button the ability has already been created
+---
+--- *Source: LuaUI.cpp*
+---@param abilityName string
+---@param enabled boolean
+---@return ButtonID
+function Button_AddAbility(abilityName, enabled) end
 
 --- Creates a SCAR ability button
 ---
@@ -7229,24 +7272,27 @@ function Button_AddAbility(visible, enabled, modal) end
 --- Will fail if the identified button does not exist
 ---
 --- *Source: LuaUI.cpp*
+---@param buttonID ButtonID
 ---@return boolean
-function Button_Exists() end
+function Button_Exists(buttonID) end
 
 --- Checks whether the identified SCAR button is currently enabled
 ---
 --- Will fail if the identified button does not exist
 ---
 --- *Source: LuaUI.cpp*
+---@param buttonID ButtonID
 ---@return boolean
-function Button_GetEnabled() end
+function Button_GetEnabled(buttonID) end
 
 --- Checks whether the identified SCAR button has been pressed
 ---
 --- Will fail if the identified button does not exist
 ---
 --- *Source: LuaUI.cpp*
+---@param buttonID ButtonID
 ---@return boolean
-function Button_GetPressed() end
+function Button_GetPressed(buttonID) end
 
 --- Adds the entity that was clicked to the passed in EGroup
 ---
@@ -7291,15 +7337,17 @@ function Button_GetVisible(buttonID) end
 --- Will fail if the identified button does not exist
 ---
 --- *Source: LuaUI.cpp*
-function Button_Remove() end
+---@param buttonID ButtonID
+function Button_Remove(buttonID) end
 
 --- Enables or disables the identified SCAR button
 ---
 --- Will fail if the identified button does not exist
 ---
 --- *Source: LuaUI.cpp*
+---@param buttonID ButtonID
 ---@param enable boolean
-function Button_SetEnabled(enable) end
+function Button_SetEnabled(buttonID, enable) end
 
 --- Allows the button owner to express a user interface location preference.
 ---
@@ -7492,7 +7540,9 @@ function Objective_SetDefaultSecondary(obj_id) end
 ---
 --- *Source: LuaUI.cpp*
 ---@param player PlayerID
-function Objective_SetPlayerColor(player) end
+---@param normal Colour
+---@param failed Colour
+function Objective_SetPlayerColor(player, normal, failed) end
 
 --- Set an objective to OS_Complete or OS_Failed
 ---
@@ -7780,10 +7830,31 @@ function W40k_IsLetterboxed() end
 ---@param timeSecs number
 function W40k_Letterbox(on, timeSecs) end
 
+--- Marks the rectangular area between the two markers as a no build zone.
+---
+--- 'markerFrom' is the lower left corner of the rectangular zone, 'markerTo' is the upper right (i.e. the from marker needs to be to the left of and below the to marker). The zone will also not be created if parts (or all) of the area over which it is being created already is no build (we don't track who gave no build, therefore we wouldn't know if it's ok to get rid of it come removal time).
+---
+--- *Source: LuaW40k.cpp*
+---@param markerFrom string
+---@param markerTo string
+---@return integer
+function W40k_NoBuildZoneMarker(markerFrom, markerTo) end
+
+--- Marks the rectangular area between the two points as a no build zone.
+---
+--- 'positionFrom' is the lower left corner of the rectangular zone, 'positionTo' is the upper right (i.e. the from position needs to be to the left of and below the to position). The zone will also not be created if parts (or all) of the area over which it is being created already is no build (we don't track who gave no build, therefore we wouldn't know if it's ok to get rid of it come removal time).
+---
+--- *Source: LuaW40k.cpp*
+---@param positionFrom Position
+---@param positionTo Position
+---@return integer
+function W40k_NoBuildZonePosition(positionFrom, positionTo) end
+
 --- Removes a no build zone.
 ---
 --- *Source: LuaW40k.cpp*
-function W40k_NoBuildZoneRemove() end
+---@param zoneID integer
+function W40k_NoBuildZoneRemove(zoneID) end
 
 --- Starts a movie.  Use the shortname for moviename (ie mymovie) with no extension.
 ---
