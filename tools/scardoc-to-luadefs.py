@@ -51,6 +51,14 @@ TYPE_MAP = {
     "LocString":      "LocString",
     "Blueprint":      "Blueprint",
     "PropertyBagGroup": "PropertyBagGroup",
+    "ScarPos":        "Position",
+    "LuaTable":       "table",
+    "StringTable":    "table",
+    "ButtonID":       "ButtonID",
+    "SoundChannel":   "SoundChannel",
+    "Modifier":       "Modifier",
+    "ProxType":       "ProxType",
+    "PingID":         "PingID",
 }
 
 

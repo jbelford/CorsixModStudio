@@ -67,3 +67,23 @@ local LocString = {}
 ---Blueprint handle
 ---@class Blueprint
 local Blueprint = {}
+
+---UI button handle (returned by Util_AbilityButton_Create, etc.)
+---@class ButtonID
+local ButtonID = {}
+
+---Sound playlist channel (e.g. PC_Music, PC_Ambient)
+---@class SoundChannel
+local SoundChannel = {}
+
+---Modifier handle (used with ModifierUtil_* functions)
+---@class Modifier
+local Modifier = {}
+
+---Proximity type handle
+---@class ProxType
+local ProxType = {}
+
+---Minimap ping handle (returned by ping functions)
+---@class PingID
+local PingID = {}
