@@ -4,17 +4,18 @@
 -- These opaque handle types are used by both Dawn of War and Company of Heroes.
 -- Auto-generated type stubs — do not edit manually.
 
+---@class _SGroupHandle Squad group engine handle
+---@class _EGroupHandle Entity group engine handle
+
 ---Squad group handle (collection of military squads).
 ---Created by SGroup_Create() or SGroup_CreateIfNotFound().
----Pass the group name as a string to most SGroup_* functions.
----@class SGroupID
-local SGroupID = {}
+---The engine accepts either the handle or the group name string.
+---@alias SGroupID _SGroupHandle|string
 
 ---Entity group handle (collection of buildings/objects).
 ---Created by EGroup_Create() or EGroup_CreateIfNotFound().
----Pass the group name as a string to most EGroup_* functions.
----@class EGroupID
-local EGroupID = {}
+---The engine accepts either the handle or the group name string.
+---@alias EGroupID _EGroupHandle|string
 
 ---Individual squad handle.
 ---Obtained from SGroup_GetSpawnedSquadAt(), Squad_Create(), etc.
