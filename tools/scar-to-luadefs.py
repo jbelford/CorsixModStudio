@@ -178,6 +178,21 @@ def parse_scardoc_dat(filepath: str) -> tuple[list[dict], list[str]]:
     return functions, constants
 
 
+def _clean_html(text: str) -> str:
+    """Strip HTML tags and convert whitespace to plain text."""
+    # Convert <BR> tags to newlines.
+    text = re.sub(r"<[Bb][Rr]\s*/?>", "\n", text)
+    # Strip remaining HTML tags.
+    text = re.sub(r"<[^>]+>", "", text)
+    # Replace non-breaking spaces with regular spaces.
+    text = text.replace("\xa0", " ")
+    # Replace tabs with spaces.
+    text = text.replace("\t", "    ")
+    # Collapse runs of blank lines into single blank lines.
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
+
+
 def parse_scardoc_html(filepath: str) -> list[dict]:
     """Parse Relic's ScarDoc function_list.htm into function dicts.
 
@@ -248,8 +263,8 @@ def parse_scardoc_html(filepath: str) -> list[dict]:
 
         # Parse description paragraphs.
         desc_parts = re.findall(r'<p>(.*?)</p>', desc_html, re.DOTALL)
-        shortdesc = desc_parts[0].strip() if desc_parts else ""
-        extdesc = " ".join(p.strip() for p in desc_parts[1:]) if len(desc_parts) > 1 else ""
+        shortdesc = _clean_html(desc_parts[0]) if desc_parts else ""
+        extdesc = _clean_html(" ".join(p.strip() for p in desc_parts[1:])) if len(desc_parts) > 1 else ""
 
         source_file = source_path.rsplit("/", 1)[-1] if "/" in source_path else source_path
 
@@ -269,16 +284,14 @@ def _write_func(out, func):
     """Write a single function stub to the output file."""
     if func["shortdesc"]:
         for i, line in enumerate(func["shortdesc"].split("\n")):
-            out.write(f"---{line}\n") if i > 0 else out.write(f"--- {line}\n")
+            out.write(f"--- {line}\n")
     if func.get("extdesc"):
-        ext = func["extdesc"].replace("\\n", "\n--- ").replace("\\t", "  ")
-        for ext_line in ext.split("\n"):
+        out.write("---\n")
+        for ext_line in func["extdesc"].split("\n"):
             ext_line = ext_line.rstrip()
-            if not ext_line or ext_line == "---":
-                continue
-            if ext_line.startswith("--- "):
-                out.write(f"{ext_line}\n")
-            elif ext_line:
+            if not ext_line:
+                out.write("---\n")
+            else:
                 out.write(f"--- {ext_line}\n")
 
     for param in func["params"]:
