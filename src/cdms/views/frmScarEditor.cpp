@@ -65,6 +65,7 @@ EVT_CHOICE(IDC_FunctionDrop, frmScarEditor::OnFuncListChoose)
 EVT_TIMER(wxID_ANY, frmScarEditor::OnLspTimer)
 EVT_STC_DWELLSTART(IDC_Text, frmScarEditor::OnDwellStart)
 EVT_STC_DWELLEND(IDC_Text, frmScarEditor::OnDwellEnd)
+EVT_STC_UPDATEUI(IDC_Text, frmScarEditor::OnUpdateUI)
 EVT_MENU(IDC_GoToDefinition, frmScarEditor::OnContextGoToDef)
 END_EVENT_TABLE()
 
@@ -548,6 +549,38 @@ void frmScarEditor::OnStyleNeeded(wxStyledTextEvent &event)
     m_pSTC->Colourise(iEndStyle, event.GetPosition());
 }
 
+void frmScarEditor::OnUpdateUI(wxStyledTextEvent &event)
+{
+    event.Skip();
+
+    // Expand horizontal scroll width to fit the widest visible line + buffer,
+    // so users can always scroll a bit past the end of long lines.
+    static constexpr int kScrollBuffer = 100;
+    int iFirstLine = m_pSTC->GetFirstVisibleLine();
+    int iLinesOnScreen = m_pSTC->LinesOnScreen();
+    int iXOffset = m_pSTC->GetXOffset();
+    int iMaxWidth = 0;
+    for (int i = 0; i < iLinesOnScreen; ++i)
+    {
+        int iDocLine = m_pSTC->DocLineFromVisible(iFirstLine + i);
+        if (iDocLine >= m_pSTC->GetLineCount())
+        {
+            break;
+        }
+        int iEndPos = m_pSTC->GetLineEndPosition(iDocLine);
+        int iX = m_pSTC->PointFromPosition(iEndPos).x + iXOffset;
+        if (iX > iMaxWidth)
+        {
+            iMaxWidth = iX;
+        }
+    }
+    int iDesired = iMaxWidth + kScrollBuffer;
+    if (iDesired > m_pSTC->GetScrollWidth())
+    {
+        m_pSTC->SetScrollWidth(iDesired);
+    }
+}
+
 const char *lua_tolstring(lua_State *L, int index, size_t *len)
 {
     if (len)
@@ -726,6 +759,7 @@ frmScarEditor::frmScarEditor(const wxTreeItemId &oFileParent, wxString sFilename
 
     // misc. STC stuff
     m_pSTC->SetMarginWidth(0, m_pSTC->TextWidth(wxSTC_STYLE_LINENUMBER, _T("_999999")));
+    m_pSTC->SetScrollWidth(1);
 
     // Buttons
     wxBoxSizer *pButtonSizer = new wxBoxSizer(wxHORIZONTAL);
