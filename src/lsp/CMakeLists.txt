@@ -8,7 +8,8 @@ find_package(spdlog CONFIG REQUIRED)
 # Auto-download LuaLS binary (Lua Language Server)
 # Downloaded once at configure time; cached in build/luals/.
 # ---------------------------------------------------------------------------
-set(LUALS_VERSION "3.17.1")
+# Must use 3.5.6 because of https://github.com/LuaLS/lua-language-server/issues/2961
+set(LUALS_VERSION "3.5.6")
 set(LUALS_DIR "${CMAKE_BINARY_DIR}/luals")
 set(LUALS_EXE "${LUALS_DIR}/bin/lua-language-server.exe")
 set(LUALS_ZIP "${LUALS_DIR}/lua-language-server-${LUALS_VERSION}-win32-x64.zip")
