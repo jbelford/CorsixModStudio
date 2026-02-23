@@ -42,8 +42,10 @@
 #include "views/interfaces/ISearchable.h"
 #include "presenters/CModuleLoadPresenter.h"
 #include "RelicToolResolver.h"
+#include "views/CLspStatusPanel.h"
 #include <lsp/LspClient.h>
 #include <memory>
+#include <wx/timer.h>
 
 class ConstructFrame : public wxFrame, public IMainFrameView
 {
@@ -63,6 +65,9 @@ class ConstructFrame : public wxFrame, public IMainFrameView
     RelicToolResolver m_relicToolResolver;
     std::unique_ptr<lsp::CLspClient> m_pLspClient;
     bool m_bLspShutDown = false;
+    wxTimer m_lspStatusTimer;
+    CLspStatusPanel *m_pLspStatusPanel = nullptr;
+    ELspStatus m_eLspDisplayState = ELspStatus::Idle;
 
   public:
     ConstructFrame(const wxString &sTitle, const wxPoint &oPos, const wxSize &oSize);
@@ -114,6 +119,10 @@ class ConstructFrame : public wxFrame, public IMainFrameView
     void HideDonate(wxCommandEvent &event);
     void OnThemeChange(wxCommandEvent &event);
     void OnLspToggle(wxCommandEvent &event);
+    void OnLspStatusTimer(wxTimerEvent &event);
+
+    /// Refresh the LSP status indicator in the status bar.
+    void UpdateLspStatus();
 
     static void LaunchURL(wxString sURL);
 
@@ -223,6 +232,9 @@ enum
     IDM_CloseActiveTab,
     IDM_NextTab,
     IDM_FindInFile,
+
+    // Timers
+    IDT_LspStatus,
 
     // Stuff
     IDC_Splitter

@@ -91,6 +91,7 @@ EVT_SPLITTER_SASH_POS_CHANGED(IDC_Splitter, ConstructFrame::OnSashMove)
 
 EVT_CLOSE(ConstructFrame::OnCloseWindow)
 EVT_AUINOTEBOOK_PAGE_CLOSE(wxID_ANY, ConstructFrame::OnTabClosing)
+EVT_TIMER(IDT_LspStatus, ConstructFrame::OnLspStatusTimer)
 END_EVENT_TABLE()
 
 frmFiles *ConstructFrame::GetFilesList() { return m_tabManager.GetFilesList(); }
@@ -383,10 +384,54 @@ void ConstructFrame::OnLspToggle(wxCommandEvent &event)
             m_pLspClient->Stop();
             m_pLspClient.reset();
         }
+        UpdateLspStatus();
     }
     else
     {
         m_bLspShutDown = false;
+        UpdateLspStatus();
+    }
+}
+
+void ConstructFrame::OnLspStatusTimer(wxTimerEvent &event)
+{
+    UNUSED(event);
+    UpdateLspStatus();
+}
+
+void ConstructFrame::UpdateLspStatus()
+{
+    ELspStatus eNew;
+
+    if (m_bLspShutDown)
+    {
+        eNew = ELspStatus::Disabled;
+    }
+    else if (!m_pLspClient)
+    {
+        eNew = ELspStatus::Idle;
+    }
+    else if (m_pLspClient->IsReady())
+    {
+        eNew = ELspStatus::Ready;
+    }
+    else if (m_pLspClient->IsRunning())
+    {
+        eNew = ELspStatus::Starting;
+    }
+    else
+    {
+        // Client exists but process is not running and not ready — failed
+        eNew = ELspStatus::Unavailable;
+    }
+
+    if (eNew != m_eLspDisplayState)
+    {
+        m_eLspDisplayState = eNew;
+        if (m_pLspStatusPanel)
+        {
+            m_pLspStatusPanel->SetStatus(eNew);
+        }
     }
 }
 
@@ -639,9 +684,37 @@ ConstructFrame::ConstructFrame(const wxString &sTitle, const wxPoint &oPos, cons
     // Initial scan for Relic tools (no module loaded yet)
     UpdateRelicToolsState();
 
-    // Make Statusbar
-    CreateStatusBar();
+    // Make Statusbar with LSP status field
+    CreateStatusBar(2);
+    static const int widths[] = {-1, 140};
+    GetStatusBar()->SetStatusWidths(2, widths);
     SetStatusText(AppStr(statusbar_message_default));
+
+    // Create LSP status indicator panel overlaying field 1
+    m_pLspStatusPanel = new CLspStatusPanel(GetStatusBar());
+    {
+        wxRect rect;
+        GetStatusBar()->GetFieldRect(1, rect);
+        m_pLspStatusPanel->SetSize(rect);
+    }
+    GetStatusBar()->Bind(wxEVT_SIZE,
+                         [this](wxSizeEvent &evt)
+                         {
+                             evt.Skip();
+                             wxRect rect;
+                             GetStatusBar()->GetFieldRect(1, rect);
+                             m_pLspStatusPanel->SetSize(rect);
+                         });
+
+    if (m_bLspShutDown)
+    {
+        m_pLspStatusPanel->SetStatus(ELspStatus::Disabled);
+        m_eLspDisplayState = ELspStatus::Disabled;
+    }
+
+    // Start LSP status polling timer
+    m_lspStatusTimer.SetOwner(this, IDT_LspStatus);
+    m_lspStatusTimer.Start(500);
 
     // Keyboard accelerators
     wxAcceleratorEntry accel[] = {
@@ -675,6 +748,8 @@ void ConstructFrame::DoTool(wxString sName) { m_toolRegistry.DoTool(sName); }
 
 ConstructFrame::~ConstructFrame()
 {
+    m_lspStatusTimer.Stop();
+
     // Shut down LSP before children are destroyed, so that
     // frmScarEditor::~frmScarEditor can safely skip the close notification.
     m_bLspShutDown = true;
@@ -778,7 +853,7 @@ lsp::CLspClient *ConstructFrame::GetLspClient()
 
     m_pLspClient = std::make_unique<lsp::CLspClient>();
     m_pLspClient->StartAsync(serverPath.ToStdWstring(), workspaceRoot, runtimeConfigPath.ToStdWstring(),
-                             [](bool success)
+                             [this](bool success)
                              {
                                  if (success)
                                  {
@@ -788,7 +863,10 @@ lsp::CLspClient *ConstructFrame::GetLspClient()
                                  {
                                      CDMS_LOG_WARN("LSP: Language server failed to initialize");
                                  }
+                                 UpdateLspStatus();
                              });
+
+    UpdateLspStatus();
 
     return m_pLspClient.get();
 }
@@ -1174,6 +1252,9 @@ void ConstructFrame::OnCloseWindow(wxCloseEvent &event)
         event.Veto();
         return;
     }
+
+    // Stop the LSP status timer before shutting down
+    m_lspStatusTimer.Stop();
 
     // Shut down the language server before destroying the frame
     m_bLspShutDown = true;
