@@ -56,6 +56,7 @@ EVT_BUTTON(IDC_Compile, frmScarEditor::OnCheckLua)
 EVT_TOOL(IDC_ToolSave, frmScarEditor::OnSave)
 EVT_BUTTON(wxID_SAVE, frmScarEditor::OnSave)
 EVT_STC_CHARADDED(IDC_Text, frmScarEditor::OnCharAdded)
+EVT_STC_MODIFIED(IDC_Text, frmScarEditor::OnModified)
 EVT_STC_STYLENEEDED(IDC_Text, frmScarEditor::OnStyleNeeded)
 EVT_STC_USERLISTSELECTION(IDC_Text, frmScarEditor::OnAutoCompChoose)
 EVT_STC_SAVEPOINTLEFT(IDC_Text, frmScarEditor::OnSavePointLeave)
@@ -364,7 +365,6 @@ void frmScarEditor::_PushThisCalltip()
 
 void frmScarEditor::OnCharAdded(wxStyledTextEvent &event)
 {
-    m_bLspNeedsSync = true;
     int iCurrentLine = m_pSTC->GetCurrentLine();
     if ((char)event.GetKey() == '\n')
     {
@@ -547,6 +547,16 @@ void frmScarEditor::OnStyleNeeded(wxStyledTextEvent &event)
 {
     int iEndStyle = m_pSTC->GetEndStyled();
     m_pSTC->Colourise(iEndStyle, event.GetPosition());
+}
+
+void frmScarEditor::OnModified(wxStyledTextEvent &event)
+{
+    event.Skip();
+    int mod = event.GetModificationType();
+    if (mod & (wxSTC_MOD_INSERTTEXT | wxSTC_MOD_DELETETEXT))
+    {
+        m_bLspNeedsSync = true;
+    }
 }
 
 void frmScarEditor::OnUpdateUI(wxStyledTextEvent &event)

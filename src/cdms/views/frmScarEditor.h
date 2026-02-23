@@ -103,6 +103,7 @@ class frmScarEditor : public wxWindow, public ISaveable, public ISearchable
     void OnSize(wxSizeEvent &event);
 
     void OnCharAdded(wxStyledTextEvent &event);
+    void OnModified(wxStyledTextEvent &event);
     void OnStyleNeeded(wxStyledTextEvent &event);
     void OnUpdateUI(wxStyledTextEvent &event);
     void OnSavePointLeave(wxStyledTextEvent &event);
