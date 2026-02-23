@@ -37,6 +37,11 @@ local Position = {}
 
 ---NIS actor reference
 ---@class ActorTable
+---@field blueprint string?
+---@field icon string?
+---@field squadID any
+---@field squadGameID any
+---@field [string] any
 local ActorTable = {}
 
 ---Ability handle
