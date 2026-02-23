@@ -1,5 +1,5 @@
 [general]
-firstrun=1
+firstrun=0
 sash_position=325
 show_donate=0
 [files]

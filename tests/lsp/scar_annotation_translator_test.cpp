@@ -329,6 +329,27 @@ TEST(ScarAnnotationTranslator, RegularComments_Preserved)
     EXPECT_NE(result.text.find("--- This is a LuaLS annotation"), std::string::npos);
 }
 
+TEST(ScarAnnotationTranslator, MidLineQuestionMark_NotMatched)
+{
+    // --? appearing inside a string or mid-comment should NOT be treated as a SCAR annotation
+    std::string source =
+        "local s = \"What is this --? I wonder\"\n"
+        "-- Is this valid? --? maybe\n"
+        "function Foo()\nend\n";
+    auto result = CScarAnnotationTranslator::Translate(source);
+    // Both lines should pass through unchanged (not consumed as --? blocks)
+    EXPECT_NE(result.text.find("local s = \"What is this --? I wonder\""), std::string::npos);
+    EXPECT_NE(result.text.find("-- Is this valid? --? maybe"), std::string::npos);
+    // Line count should be preserved (no expansion or contraction)
+    EXPECT_EQ(result.originalToTranslated.size(), 4u);
+    EXPECT_EQ(result.translatedToOriginal.size(), 4u);
+    for (int i = 0; i < 4; ++i)
+    {
+        EXPECT_EQ(result.originalToTranslated[i], i);
+        EXPECT_EQ(result.translatedToOriginal[i], i);
+    }
+}
+
 TEST(ScarAnnotationTranslator, WindowsLineEndings)
 {
     std::string source = "--? @shortdesc Hello.\r\nfunction Foo()\r\nend\r\n";

@@ -97,12 +97,19 @@ static std::string Trim(const std::string &s)
     return std::string(start, end.base());
 }
 
-/// Split a line into (indent, content_after_--?) if it starts with --?.
+/// Split a line into (indent, content_after_--?) if it starts with --? (after optional whitespace).
 /// Returns false if the line is not a --? comment.
+/// Only matches --? at the start of the line to avoid false matches in strings or regular comments.
 static bool ParseScarComment(const std::string &line, std::string &indent, std::string &content)
 {
-    auto pos = line.find("--?");
-    if (pos == std::string::npos)
+    // Find first non-whitespace character
+    auto pos = line.find_first_not_of(" \t");
+    if (pos == std::string::npos || pos + 3 > line.size())
+    {
+        return false;
+    }
+    // Check that the line starts with --? (after leading whitespace)
+    if (line.compare(pos, 3, "--?") != 0)
     {
         return false;
     }
