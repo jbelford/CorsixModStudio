@@ -202,7 +202,13 @@ void frmScarEditor::ShowAutoComplete()
         {
             int line = m_pSTC->LineFromPosition(iPos);
             int col = iPos - m_pSTC->PositionFromLine(line);
-            pClient->RequestCompletion(m_sLspUri, line, col,
+            // Remap cursor position to translated coordinates for LSP
+            lsp::Position lspPos{line, col};
+            if (m_lspTranslation)
+            {
+                lspPos = lsp::CScarAnnotationTranslator::MapToTranslated(*m_lspTranslation, lspPos);
+            }
+            pClient->RequestCompletion(m_sLspUri, lspPos.line, lspPos.character,
                                        [this, iWordLen](lsp::CompletionList completions)
                                        {
                                            if (completions.items.empty())
@@ -426,9 +432,15 @@ void frmScarEditor::OnCharAdded(wxStyledTextEvent &event)
             {
                 int line = m_pSTC->LineFromPosition(m_pSTC->GetCurrentPos());
                 int col = m_pSTC->GetCurrentPos() - m_pSTC->PositionFromLine(line);
+                // Remap cursor position to translated coordinates for LSP
+                lsp::Position lspPos{line, col};
+                if (m_lspTranslation)
+                {
+                    lspPos = lsp::CScarAnnotationTranslator::MapToTranslated(*m_lspTranslation, lspPos);
+                }
                 int wordPos = iWordPos;
                 pClient->RequestSignatureHelp(
-                    m_sLspUri, line, col,
+                    m_sLspUri, lspPos.line, lspPos.character,
                     [this, wordPos](std::optional<lsp::SignatureHelp> help)
                     {
                         if (!help || help->signatures.empty())
@@ -781,7 +793,10 @@ void frmScarEditor::LspOpenDocument()
 
     m_iLspVersion = 1;
     std::string text(m_pSTC->GetText().ToUTF8());
-    pClient->OpenDocument(m_sLspUri, "lua", text);
+
+    // Translate --? SCAR annotations to ---@ LuaLS annotations before sending
+    m_lspTranslation = lsp::CScarAnnotationTranslator::Translate(text);
+    pClient->OpenDocument(m_sLspUri, "lua", m_lspTranslation->text);
     m_bLspOpen = true;
 
     // Register per-URI diagnostics callback
@@ -809,7 +824,10 @@ void frmScarEditor::LspSyncDocument()
 
     ++m_iLspVersion;
     std::string text(m_pSTC->GetText().ToUTF8());
-    pClient->ChangeDocument(m_sLspUri, text);
+
+    // Translate --? SCAR annotations to ---@ LuaLS annotations before sending
+    m_lspTranslation = lsp::CScarAnnotationTranslator::Translate(text);
+    pClient->ChangeDocument(m_sLspUri, m_lspTranslation->text);
 }
 
 void frmScarEditor::LspCloseDocument()
@@ -890,6 +908,16 @@ void frmScarEditor::ApplyDiagnostics(const std::string &uri, std::vector<lsp::Di
     // Store diagnostics for hover tooltip lookup
     m_vDiagnostics = diagnostics;
 
+    // Remap diagnostic positions from translated (LSP) coordinates to original (editor) coordinates
+    if (m_lspTranslation)
+    {
+        for (auto &diag : m_vDiagnostics)
+        {
+            diag.range.start = lsp::CScarAnnotationTranslator::MapToOriginal(*m_lspTranslation, diag.range.start);
+            diag.range.end = lsp::CScarAnnotationTranslator::MapToOriginal(*m_lspTranslation, diag.range.end);
+        }
+    }
+
     // Clear existing diagnostic indicators
     m_pSTC->SetIndicatorCurrent(INDICATOR_LSP_ERROR);
     m_pSTC->IndicatorClearRange(0, m_pSTC->GetLength());
@@ -898,7 +926,7 @@ void frmScarEditor::ApplyDiagnostics(const std::string &uri, std::vector<lsp::Di
     m_pSTC->SetIndicatorCurrent(INDICATOR_LSP_INFO);
     m_pSTC->IndicatorClearRange(0, m_pSTC->GetLength());
 
-    for (const auto &diag : diagnostics)
+    for (const auto &diag : m_vDiagnostics)
     {
         int startPos = m_pSTC->PositionFromLine(diag.range.start.line) + diag.range.start.character;
         int endPos = m_pSTC->PositionFromLine(diag.range.end.line) + diag.range.end.character;
@@ -986,9 +1014,15 @@ void frmScarEditor::OnDwellStart(wxStyledTextEvent &event)
     {
         int line = m_pSTC->LineFromPosition(pos);
         int col = pos - m_pSTC->PositionFromLine(line);
+        // Remap cursor position to translated coordinates for LSP
+        lsp::Position lspPos{line, col};
+        if (m_lspTranslation)
+        {
+            lspPos = lsp::CScarAnnotationTranslator::MapToTranslated(*m_lspTranslation, lspPos);
+        }
         int hoverPos = pos;
 
-        pClient->RequestHover(m_sLspUri, line, col,
+        pClient->RequestHover(m_sLspUri, lspPos.line, lspPos.character,
                               [this, hoverPos, diags = std::move(matchedDiags)](std::optional<lsp::HoverResult> hover)
                               {
                                   HoverParts parts;
@@ -1119,6 +1153,13 @@ void frmScarEditor::GoToDefinition()
     int line = m_pSTC->LineFromPosition(pos);
     int col = pos - m_pSTC->PositionFromLine(line);
 
+    // Remap cursor position to translated coordinates for LSP
+    lsp::Position lspPos{line, col};
+    if (m_lspTranslation)
+    {
+        lspPos = lsp::CScarAnnotationTranslator::MapToTranslated(*m_lspTranslation, lspPos);
+    }
+
     // Decode percent-encoded characters in a file URI (e.g. %3A → ':')
     auto decodeUri = [](const std::string &uri) -> std::string
     {
@@ -1141,7 +1182,7 @@ void frmScarEditor::GoToDefinition()
         return result;
     };
 
-    pClient->RequestDefinition(m_sLspUri, line, col,
+    pClient->RequestDefinition(m_sLspUri, lspPos.line, lspPos.character,
                                [this, decodeUri](std::optional<lsp::Location> location)
                                {
                                    if (!location)
@@ -1165,6 +1206,14 @@ void frmScarEditor::GoToDefinition()
                                    }
 
                                    int targetLine = location->range.start.line;
+
+                                   // Remap from translated to original coordinates
+                                   if (targetUri == m_sLspUri && m_lspTranslation)
+                                   {
+                                       lsp::Position origPos = lsp::CScarAnnotationTranslator::MapToOriginal(
+                                           *m_lspTranslation, location->range.start);
+                                       targetLine = origPos.line;
+                                   }
 
                                    // Check if it's the same file
                                    if (targetUri == m_sLspUri)

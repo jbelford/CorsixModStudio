@@ -42,6 +42,7 @@
 #include "interfaces/ISearchable.h"
 #include "ScarReferenceLoader.h"
 #include <lsp/Protocol.h>
+#include <lsp/ScarAnnotationTranslator.h>
 
 class FindBar;
 
@@ -64,6 +65,7 @@ class frmScarEditor : public wxWindow, public ISaveable, public ISearchable
     int m_iLspVersion = 0;
     bool m_bLspNeedsSync = false;
     std::vector<lsp::Diagnostic> m_vDiagnostics;
+    std::optional<lsp::TranslationResult> m_lspTranslation; // --? to ---@ line mapping
     wxPopupTransientWindow *m_pHoverPopup = nullptr;
     static constexpr int INDICATOR_LSP_ERROR = 8;
     static constexpr int INDICATOR_LSP_WARNING = 9;

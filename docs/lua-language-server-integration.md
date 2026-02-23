@@ -700,12 +700,13 @@ Option A is cleaner. Option B is the fallback.
 10. **Lua 5.0.2 compat stubs** — `lua502-compat.lua`
 11. **SCAR type definitions** — `scar-types.lua`
 12. **LuaLS configs** — `dow-config.json` + `coh-config.json`
+13. **SCAR annotation translator** — `CScarAnnotationTranslator` in `src/lsp/`
 
 ### Phase 4: GUI Integration (future)
-13. **Wire diagnostics** into Scintilla indicators
-14. **Wire completions** into `AutoCompShow()` (replace `_`-triggered system)
-15. **Wire signature help** into `CallTipShow()` (replace `_ScarFunction` calltips)
-16. **Documentation**
+14. **Wire diagnostics** into Scintilla indicators
+15. **Wire completions** into `AutoCompShow()` (replace `_`-triggered system)
+16. **Wire signature help** into `CallTipShow()` (replace `_ScarFunction` calltips)
+17. **Documentation**
 
 ---
 
@@ -714,6 +715,7 @@ Option A is cleaner. Option B is the fallback.
 | Decision | Rationale |
 |----------|-----------|
 | **Separate `lsp` library** | Testable independently, no wxWidgets dependency |
+| **SCAR annotation translation** | `--?` comments translated to `---@` on-the-fly before sending to LSP; bidirectional line mapping preserves editor↔LSP position correspondence |
 | **Single-threaded Poll()** | Avoids thread-safety complexity in GUI; wxTimer drives it |
 | **Full document sync** | Simple to implement; LuaLS handles incremental analysis internally |
 | **nlohmann/json** | Industry standard C++ JSON, available in vcpkg |
