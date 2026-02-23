@@ -243,8 +243,49 @@ static AnnotationBlock ParseBlock(const std::vector<std::string> &lines, int sta
     return block;
 }
 
+/// Extract parameter names from a function declaration line.
+/// e.g. "function Actor_SetFromSGroup( actor, groupname )" → {"actor", "groupname"}
+static std::vector<std::string> ParseFunctionParams(const std::string &line)
+{
+    std::vector<std::string> params;
+    auto parenOpen = line.find('(');
+    if (parenOpen == std::string::npos)
+    {
+        return params;
+    }
+    auto parenClose = line.find(')', parenOpen);
+    if (parenClose == std::string::npos)
+    {
+        return params;
+    }
+
+    std::string paramStr = line.substr(parenOpen + 1, parenClose - parenOpen - 1);
+    std::istringstream stream(paramStr);
+    std::string token;
+    while (std::getline(stream, token, ','))
+    {
+        std::string trimmed = Trim(token);
+        if (!trimmed.empty())
+        {
+            params.push_back(trimmed);
+        }
+    }
+    return params;
+}
+
+/// Check if a line starts a function declaration (ignoring leading whitespace).
+static bool IsFunctionDeclaration(const std::string &line)
+{
+    std::string trimmed = TrimLeft(line);
+    return trimmed.rfind("function ", 0) == 0 || trimmed.rfind("function(", 0) == 0 ||
+           trimmed.rfind("local function ", 0) == 0;
+}
+
 /// Emit the translated annotation lines from a parsed block.
-static std::vector<std::string> EmitBlock(const AnnotationBlock &block)
+/// If @p funcParamNames is non-empty, use those names instead of @args names
+/// (positional mapping) so that @param annotations match the actual function signature.
+static std::vector<std::string> EmitBlock(const AnnotationBlock &block,
+                                          const std::vector<std::string> &funcParamNames = {})
 {
     std::vector<std::string> output;
 
@@ -254,16 +295,20 @@ static std::vector<std::string> EmitBlock(const AnnotationBlock &block)
         output.push_back(block.indent + "---" + block.shortdesc);
     }
 
-    // Parameters
-    for (const auto &arg : block.args)
+    // Parameters — use function signature names when available to ensure
+    // @param annotations match the actual parameter names in the function declaration.
+    for (size_t idx = 0; idx < block.args.size(); ++idx)
     {
+        const auto &arg = block.args[idx];
         std::string mapped = CScarAnnotationTranslator::MapType(arg.type);
         if (mapped.empty())
         {
             mapped = "any";
         }
+        // Prefer function param name over @args name for LuaLS matching
+        std::string paramName = (idx < funcParamNames.size()) ? funcParamNames[idx] : arg.name;
         std::string optMark = arg.optional ? "?" : "";
-        output.push_back(block.indent + "---@param " + arg.name + optMark + " " + mapped);
+        output.push_back(block.indent + "---@param " + paramName + optMark + " " + mapped);
     }
 
     // Return type
@@ -327,8 +372,16 @@ TranslationResult CScarAnnotationTranslator::Translate(const std::string &source
                 result.originalToTranslated[origLine] = translatedStart;
             }
 
+            // Look ahead for the function declaration to get actual parameter names
+            std::vector<std::string> funcParams;
+            if (!block.args.empty() && pastEnd < static_cast<int>(lines.size()) &&
+                IsFunctionDeclaration(lines[pastEnd]))
+            {
+                funcParams = ParseFunctionParams(lines[pastEnd]);
+            }
+
             // Emit translated block
-            auto emitted = EmitBlock(block);
+            auto emitted = EmitBlock(block, funcParams);
             for (const auto &eline : emitted)
             {
                 result.translatedToOriginal.push_back(i); // All emitted lines trace back to block start

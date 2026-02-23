@@ -173,9 +173,11 @@ TEST(ScarAnnotationTranslator, FullBlock_ScreenshotExample)
     // Should contain the description
     EXPECT_NE(result.text.find("---Assign an sgroup to a actor."), std::string::npos);
 
-    // Should have @param annotations
+    // Should have @param annotations using function param names (not @args names)
     EXPECT_NE(result.text.find("---@param actor ActorTable"), std::string::npos);
-    EXPECT_NE(result.text.find("---@param sgroupname string"), std::string::npos);
+    EXPECT_NE(result.text.find("---@param groupname string"), std::string::npos);
+    // Should NOT use the @args name 'sgroupname' — function param name takes priority
+    EXPECT_EQ(result.text.find("sgroupname"), std::string::npos);
 
     // Should NOT have @return (Void)
     EXPECT_EQ(result.text.find("@return"), std::string::npos);
@@ -333,4 +335,41 @@ TEST(ScarAnnotationTranslator, WindowsLineEndings)
     auto result = CScarAnnotationTranslator::Translate(source);
     EXPECT_NE(result.text.find("---Hello."), std::string::npos);
     EXPECT_EQ(result.text.find("--?"), std::string::npos);
+}
+
+// ---------------------------------------------------------------------------
+// Function param name priority over @args names
+// ---------------------------------------------------------------------------
+
+TEST(ScarAnnotationTranslator, Args_UsesFunctionParamNames)
+{
+    // @args says "sgroupname" but function param is "groupname"
+    std::string source =
+        "--? @args ActorTable actor, String sgroupname\n"
+        "function Foo(actor, groupname)\nend\n";
+    auto result = CScarAnnotationTranslator::Translate(source);
+    // Should use function param names, not @args names
+    EXPECT_NE(result.text.find("---@param actor ActorTable"), std::string::npos);
+    EXPECT_NE(result.text.find("---@param groupname string"), std::string::npos);
+    EXPECT_EQ(result.text.find("sgroupname"), std::string::npos);
+}
+
+TEST(ScarAnnotationTranslator, Args_FallsBackToArgsNamesWithoutFunction)
+{
+    // No function declaration follows — use @args names as fallback
+    std::string source = "--? @args Integer count\nlocal x = 1\n";
+    auto result = CScarAnnotationTranslator::Translate(source);
+    EXPECT_NE(result.text.find("---@param count integer"), std::string::npos);
+}
+
+TEST(ScarAnnotationTranslator, Args_MoreArgsThanFunctionParams)
+{
+    // @args has 3 params but function only has 2 — use function names for first 2, @args for 3rd
+    std::string source =
+        "--? @args Integer a, Integer b, Integer c\n"
+        "function Add(x, y)\nend\n";
+    auto result = CScarAnnotationTranslator::Translate(source);
+    EXPECT_NE(result.text.find("---@param x integer"), std::string::npos);
+    EXPECT_NE(result.text.find("---@param y integer"), std::string::npos);
+    EXPECT_NE(result.text.find("---@param c integer"), std::string::npos);
 }
