@@ -622,7 +622,7 @@ void CLspClient::SendRequest(const std::string &method, const nlohmann::json &pa
 
 void CLspClient::SendNotification(const std::string &method, const nlohmann::json &params)
 {
-    CDMS_LOG_DEBUG("LSP: Sending notification: {}", method);
+    CDMS_LOG_INFO("LSP: Sending notification: {}", method);
     nlohmann::json notification = {{"jsonrpc", "2.0"}, {"method", method}, {"params", params}};
     Send(notification);
 }

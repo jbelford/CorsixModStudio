@@ -943,6 +943,7 @@ void frmScarEditor::OnLspTimer(wxTimerEvent &event)
     }
     else if (m_bLspNeedsSync && m_bLspOpen)
     {
+        CDMS_LOG_INFO("LSP: Timer tick syncing document (version {})", m_iLspVersion + 1);
         m_bLspNeedsSync = false;
         LspSyncDocument();
     }
