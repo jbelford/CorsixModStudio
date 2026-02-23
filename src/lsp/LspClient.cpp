@@ -154,7 +154,6 @@ void CLspClient::Stop()
     m_signatureHelpCallbacks.clear();
     m_hoverCallbacks.clear();
     m_diagnosticsCallbacks.clear();
-    m_workspaceLoadedCallbacks.clear();
     m_activeProgressTokens.clear();
     m_documentVersions.clear();
 }
@@ -162,8 +161,6 @@ void CLspClient::Stop()
 bool CLspClient::IsReady() const { return m_bReady.load(); }
 
 bool CLspClient::IsRunning() const { return m_bReady.load() && m_process.IsRunning(); }
-
-bool CLspClient::IsWorkspaceLoaded() const { return m_bWorkspaceLoaded.load(); }
 
 // ---------------------------------------------------------------------------
 // I/O thread
@@ -431,24 +428,6 @@ void CLspClient::UnregisterDiagnosticsCallback(const std::string &uri)
     m_diagnosticsCallbacks.erase(uri);
 }
 
-void CLspClient::RegisterWorkspaceLoadedCallback(const std::string &key, WorkspaceLoadedCallback callback)
-{
-    std::lock_guard lock(m_mtx);
-    if (m_bWorkspaceLoaded.load())
-    {
-        // Already loaded — fire immediately on next Poll()
-        m_pendingCallbacks.push_back(std::move(callback));
-        return;
-    }
-    m_workspaceLoadedCallbacks[key] = std::move(callback);
-}
-
-void CLspClient::UnregisterWorkspaceLoadedCallback(const std::string &key)
-{
-    std::lock_guard lock(m_mtx);
-    m_workspaceLoadedCallbacks.erase(key);
-}
-
 void CLspClient::Poll()
 {
     // Swap pending callbacks out under lock, then invoke on UI thread
@@ -655,11 +634,6 @@ void CLspClient::HandleNotification(const std::string &method, const nlohmann::j
             {
                 m_bWorkspaceLoaded.store(true);
                 CDMS_LOG_INFO("LSP: All progress tokens complete — workspace loaded");
-                for (auto &[key, cb] : m_workspaceLoadedCallbacks)
-                {
-                    auto cbCopy = cb;
-                    m_pendingCallbacks.push_back([cbCopy]() { cbCopy(); });
-                }
             }
         }
     }

@@ -43,7 +43,6 @@ using SignatureHelpCallback = std::function<void(std::optional<SignatureHelp> he
 using HoverCallback = std::function<void(std::optional<HoverResult> hover)>;
 using DefinitionCallback = std::function<void(std::optional<Location> location)>;
 using ReadyCallback = std::function<void(bool success)>;
-using WorkspaceLoadedCallback = std::function<void()>;
 
 /// High-level LSP client that manages the language server lifecycle
 /// and provides a simple API for document operations.
@@ -81,11 +80,6 @@ class LSP_API CLspClient
     /// Check if the language server process is alive (may still be initializing).
     [[nodiscard]] bool IsRunning() const;
 
-    /// Check if the server has finished loading workspace libraries.
-    /// Returns true after all $/progress tokens have completed, or immediately
-    /// if the server never sent any progress tokens (fast workspace load).
-    [[nodiscard]] bool IsWorkspaceLoaded() const;
-
     // ----- Document operations -----
 
     /// Notify the server that a document was opened.
@@ -119,14 +113,6 @@ class LSP_API CLspClient
 
     /// Unregister a previously registered diagnostics callback.
     void UnregisterDiagnosticsCallback(const std::string &uri);
-
-    /// Register a callback to be invoked when workspace loading completes.
-    /// Keyed by a caller-chosen string (e.g. document URI) for unregistration.
-    /// If the workspace is already loaded, the callback fires on the next Poll().
-    void RegisterWorkspaceLoadedCallback(const std::string &key, WorkspaceLoadedCallback callback);
-
-    /// Unregister a previously registered workspace-loaded callback.
-    void UnregisterWorkspaceLoadedCallback(const std::string &key);
 
     /// Dispatch any pending callbacks on the UI thread.
     /// Must be called periodically (e.g., on a wxTimer at ~100ms interval).
@@ -180,9 +166,6 @@ class LSP_API CLspClient
 
     /// Per-URI diagnostics callbacks (server-initiated notifications). Protected by m_mtx.
     std::map<std::string, DiagnosticsCallback> m_diagnosticsCallbacks;
-
-    /// Workspace-loaded callbacks, keyed by caller string. Protected by m_mtx.
-    std::map<std::string, WorkspaceLoadedCallback> m_workspaceLoadedCallbacks;
 
     /// Active $/progress tokens (workspace loading). Protected by m_mtx.
     std::set<std::string> m_activeProgressTokens;
