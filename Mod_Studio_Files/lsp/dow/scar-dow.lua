@@ -1,14 +1,15 @@
 ---@meta scar-dow
 
 -- Auto-generated SCAR stubs for Dawn of War by scar-to-luadefs.py
--- Sources: scardoc.dat (652 engine), .scar files (121 library)
+-- Sources: scardoc.dat + .scar library files
 -- 773 functions, 139 constants
 -- Do not edit manually — regenerate with: python tools/scar-to-luadefs.py
 --
--- Library function import tiers:
+-- Import tiers:
 --   Tier 1: available after import("ScarUtil.scar")
 --   Tier 2: available after import("WXPScarUtil.scar")  (includes Tier 1)
 --   Standalone: requires explicit import (noted per-section)
+--   Engine-only: C++ built-ins with no .scar wrapper
 --
 -- All mod scripts should import("WXPScarUtil.scar") to get Tier 1 + Tier 2.
 
@@ -434,8 +435,10 @@ UC_VehicleLow = nil
 UC_VehicleMed = nil
 
 --------------------------------------------------------------------------------
--- Engine functions (from scardoc.dat)
+-- Tier 1: Available via import("ScarUtil.scar")
 --------------------------------------------------------------------------------
+
+-- from actor.scar
 
 --- Breaks the relationship between an actor an its sgroup.  
 ---Speech played by this actor after this function call will no
@@ -475,6 +478,2528 @@ function Actor_PlaySpeech(actor, locID, optionalPath) end
 ---@param actor ActorTable
 ---@param sgroupname string
 function Actor_SetFromSGroup(actor, sgroupname) end
+
+-- from camera.scar
+
+--- Focus the camera on a named marker. 
+---This function can be called through a CTRL object in NISlets.
+---@param markername string
+---@param secs number
+function Camera_FocusOnTargetMarker(markername, secs) end
+
+-- from command.scar
+
+--- Attach the squad from sgroupnameAttachee to sgroupname.  Both
+--- SGroups must contain only one squad. 
+---@param sgroupname string
+---@param sgroupnameAttachee string
+function Cmd_AttachSquads(sgroupname, sgroupnameAttachee) end
+
+--- Order a squad group to attack another squad group.  This
+--- function should track the target squad groups position.  
+---The source squads will not stop moving until they reach the
+--- targeted squad group.
+---@param sourcesquadgroup string
+---@param targetentitygroup string
+function Cmd_AttackEGroup(sourcesquadgroup, targetentitygroup) end
+
+--- Order a squad group to ground attack a marker position.  
+---@param sgroupname string
+---@param markername string
+function Cmd_AttackGroundMarker(sgroupname, markername) end
+
+--- Order a squad group to ground attack a position.  
+---@param sgroupname string
+---@param targetposition Position
+function Cmd_AttackGroundPos(sgroupname, targetposition) end
+
+--- Order a squad group to ground move to a marker position.  
+---@param sgroupname string
+---@param markername string
+function Cmd_AttackMoveMarker(sgroupname, markername) end
+
+--- Order a squad group to attack move to a position.  
+---@param sgroupname string
+---@param targetposition Position
+function Cmd_AttackMovePos(sgroupname, targetposition) end
+
+--- Order a squad group to attack another squad group.  This
+--- function should track the target squad groups position.  
+---The source squads will not stop moving until they reach the
+--- targeted squad group.
+---@param sourcesquadgroup string
+---@param targetsquadgroup string
+function Cmd_AttackSGroup(sourcesquadgroup, targetsquadgroup) end
+
+--- Command an sgroup of units to capture an egroup of strategic
+--- points 
+---@param sgroupname string
+---@param egroupname string
+function Cmd_Capture(sgroupname, egroupname) end
+
+--- Checks the egroup for an entity that can cast the ability and casts it on the target.
+---@param egroupname string
+---@param abilityname string
+---@param targetgroup string
+---@return boolean
+function Cmd_CastAbilityEGroupS(egroupname, abilityname, targetgroup) end
+
+--- Checks the sgroup for an entity that can cast the ability and
+--- casts it on the target pos.  Returns false if no items in the
+--- group can cast. 
+---@param sgroupname string
+---@param abilityname string
+---@param targetpos Position
+---@return boolean
+function Cmd_CastAbilityMarker(sgroupname, abilityname, targetpos) end
+
+--- Checks the sgroup for an entity that can cast the ability and
+--- casts it on the target pos.  Returns false if no items in the
+--- group can cast. 
+---@param sgroupname string
+---@param abilityname string
+---@param targetpos Position
+---@return boolean
+function Cmd_CastAbilityPos(sgroupname, abilityname, targetpos) end
+
+--- Checks the sgroup for an entity that can cast the ability and
+--- casts it on the target pos.  Returns false if no items in the
+--- group can cast. 
+---@param sgroupname string
+---@param abilityname string
+---@param targetgroup string
+---@return boolean
+function Cmd_CastAbilitySGroup(sgroupname, abilityname, targetgroup) end
+
+--- Checks the sgroup for an entity that can cast the ability and casts it on the target.
+---@param sgroupname string
+---@param abilityname string
+---@param targetgroup string
+---@return boolean
+function Cmd_CastAbilitySGroupE(sgroupname, abilityname, targetgroup) end
+
+--- Checks the sgroup for an entity that can cast the ability and
+--- casts on itself Returns false if no items in the group can
+--- cast. 
+---@param sgroupname string
+---@param abilityname string
+---@return boolean
+function Cmd_CastAbilitySelf(sgroupname, abilityname) end
+
+--- Command an sgroup of builders to construct a building at a
+--- marker position 
+---@param builderSGroup string
+---@param buildingBlueprint string
+---@param markername string
+function Cmd_ConstructBlueprintMarker(builderSGroup, buildingBlueprint, markername) end
+
+--- Command an sgroup of builders to construct a building an enity
+--- (for listening posts etc) 
+---@param builderSGroup string
+---@param buildingBlueprint string
+---@param egroupName string
+function Cmd_ConstructBlueprintOnEGroup(builderSGroup, buildingBlueprint, egroupName) end
+
+--- Command an sgroup of builders to construct a building at a
+--- position 
+---@param builderSGroup string
+---@param buildingBlueprint string
+---@param pos Position
+function Cmd_ConstructBlueprintPos(builderSGroup, buildingBlueprint, pos) end
+
+--- Command all buildings in an EGroup to unload their squads 
+---@param buildinggroup string
+function Cmd_EmptyBuilding(buildinggroup) end
+
+--- Command all transports in an SGroup to move to position and
+--- unload 
+---@param sgroupname string
+---@param pos Position
+function Cmd_EmptyTransport(sgroupname, pos) end
+
+--- Command a SGroup to enter the first building in buildinggroup 
+---@param sgroupname string
+---@param buildinggroup string
+function Cmd_EnterBuilding(sgroupname, buildinggroup) end
+
+--- Command a SGroup to enter a transport in transportgroup 
+---@param sgroupname string
+---@param transportgroup string
+function Cmd_EnterTransport(sgroupname, transportgroup) end
+
+--- Enables/Disables infiltration for an sgroup 
+---@param sgroupName string
+---@param on boolean
+function Cmd_Infiltrate(sgroupName, on) end
+
+--- Returns true if ALL or ANY squads in a group are currently
+--- capturing something. 
+---Set all to true to check for ALL or set to false to check for
+--- ANY
+---@param sgroupname string
+---@param all boolean
+---@return boolean
+function Cmd_IsCapturing(sgroupname, all) end
+
+--- Returns true if ALL or ANY squads in a group are currently
+--- constructing a building. 
+---Set all to true to check for ALL or set to false to check for
+--- ANY
+---@param sgroupname string
+---@param all boolean
+---@return boolean
+function Cmd_IsConstructingBuilding(sgroupname, all) end
+
+--- Returns true if ALL or ANY entities in a group are currently
+--- producing squads 
+---Set all to true to check for ALL or set to false to check for
+--- ANY
+---@param egroupname string
+---@param all boolean
+---@return boolean
+function Cmd_IsProducingSquads(egroupname, all) end
+
+--- Returns true if ALL or ANY squads in a group are currently
+--- calling for reinforcments. 
+---Set all to true to check for ALL or set to false to check for
+--- ANY
+---@param sgroupname string
+---@param all boolean
+---@return boolean
+function Cmd_IsReinforcing(sgroupname, all) end
+
+--- Returns true if ALL or ANY squads in a group are currently reinforcing a leader.
+--- Set all to true to check for ALL or set to false to check for ANY.
+---@param sgroupname string
+---@param all boolean
+---@return boolean
+function Cmd_IsReinforcingLeader(sgroupname, all) end
+
+--- Returns true if ALL or ANY squads in a group are currently
+--- upgrading. 
+---Set all to true to check for ALL or set to false to check for
+--- ANY
+---@param sgroupname string
+---@param all boolean
+---@return boolean
+function Cmd_IsUpgrading(sgroupname, all) end
+
+--- Command an sgroup to jump to a given marker position.  
+---Note: Jump restrictions such as range etc apply.
+---@param sgroupname string
+---@param markername string
+function Cmd_JumpToMarker(sgroupname, markername) end
+
+--- Command an sgroup to jump to a given position.  The squad will
+--- jump to the closest possible position. 
+---Note: Jump restrictions such as range etc apply.
+---@param sgroupname string
+---@param position Position
+function Cmd_JumpToPos(sgroupname, position) end
+
+--- Moves a squad group to the closest marker in a list of marker
+--- names. 
+---@param sgroupName string
+---@param markerNameTable table
+---@return markerID
+function Cmd_MoveToClosestMarker(sgroupName, markerNameTable) end
+
+--- Move a squad group to the center of an entity group. 
+---The move command will be issued by the player owner of the first
+--- item in the group.  This function does nothing if the group is
+--- empty.
+---@param sgroupname string
+---@param egroupname string
+function Cmd_MoveToEGroup(sgroupname, egroupname) end
+
+--- Move a squad group to a given markers position. 
+---The move command will be issued by the player owner of the first
+--- item in the group.  This function does nothing if the group is
+--- empty.
+---@param sgroupname string
+---@param markername string
+function Cmd_MoveToMarker(sgroupname, markername) end
+
+--- Move a squad group to another squad group.  This function should
+--- track the target squad groups position.  
+---The source squads will not stop moving until they reach the
+--- targeted squad group.
+---@param sourcesquadgroup string
+---@param targetsquadgroup string
+function Cmd_MoveToSGroup(sourcesquadgroup, targetsquadgroup) end
+
+--- Calls possesion on a squads in a group.  Requirments for
+--- possesion must be met 
+---@param sgroupName string
+function Cmd_Possesion(sgroupName) end
+
+--- Order a squad group to ramapge to a marker pos/ 
+---@param sgroupname string
+---@param targetposition Position
+function Cmd_RampageMarker(sgroupname, targetposition) end
+
+--- Order a squad group to ramapge to a position.  
+---@param sgroupname string
+---@param targetposition Position
+function Cmd_RampagePos(sgroupname, targetposition) end
+
+--- Sends a reinforce leader command to all squads in a group. 
+--- count represents the number of commands to send. 
+---Note: To create a squad bypassing the pre-reqs and costs use
+--- Util_CreateSquadsAtPositionEx.
+---@param squadgroupname string
+---@param count integer
+function Cmd_ReinforceLeader(squadgroupname, count) end
+
+--- Sends a reinforce command to all squads in a group.  count
+--- represents the number of commands to send. 
+---Note: To create a squad bypassing the pre-reqs and costs use
+--- Util_CreateSquadsAtPositionEx.
+---@param squadgroupname string
+---@param count integer
+function Cmd_ReinforceTrooper(squadgroupname, count) end
+
+--- Order a squad group set their stance.  Use MSTANCE_Assault,
+--- MSTANCE_Ranged, MSTANCE_Versatile. 
+---The order will be issued by the owner of the squad group.  This
+--- function does nothing if the squad group is empty.
+---@param squadgroupname string
+---@param stance integer
+function Cmd_SetMeleeStance(squadgroupname, stance) end
+
+--- Order a squad group set their stance.  Use STANCE_Hold,
+--- STANCE_StandGround, STANCE_Burn, STANCE_CeaseFire, or
+--- STANCE_Attack. 
+---The order will be issued by the owner of the squad group.  This
+--- function does nothing if the squad group is empty.
+---@param squadgroupname string
+---@param stance integer
+function Cmd_SetStance(squadgroupname, stance) end
+
+--- Command an egroup to stop.  This is the same as issuing a stop
+--- from the taskbar 
+---@param egroupname string
+function Cmd_StopEntities(egroupname) end
+
+--- Command an sgroup to stop.  This is the same as issuing a stop
+--- from the taskbar 
+---@param sgroupname string
+function Cmd_StopSquads(sgroupname) end
+
+-- from cpuplayerutil.scar
+
+--- Lock an EGroup from the cpuplayer 
+--- NOTE: Only use this for strategic points and buildings! It
+--- won't work for anything else
+---@param cpu_player PlayerID
+---@param egroup string
+function Cpu_LockEGroup(cpu_player, egroup) end
+
+--- Lock an EGroup from all cpuplayers 
+--- NOTE: Only use this for strategic points and buildings! It
+--- won't work for anything else
+---@param egroup string
+function Cpu_LockEGroupAcrossPlayers(egroup) end
+
+--- Lock an SGroup from the cpuplayer 
+---@param cpu_player PlayerID
+---@param sgroup string
+function Cpu_LockSGroup(cpu_player, sgroup) end
+
+--- Lock an SGroup from all cpuplayers 
+---@param sgroup string
+function Cpu_LockSGroupAcrossPlayers(sgroup) end
+
+--- Set a build order table for the cpu_player 
+--- An example build table:
+---	local build_table =
+---	{
+---		{"space_marine_squad_servitor", 1, 5},
+---		{"space_marine_squad_scout", 2, 3}
+---	}
+--- The first number in each entry is the starting value -- the
+--- lowest number gets built first
+--- The second number is the increment that happens each time the
+--- unit is built
+--- NOTE: Setting build demand table clobbers the class preferences
+---@param cpu_player PlayerID
+---@param build_table table
+function Cpu_SetBuildTable(cpu_player, build_table) end
+
+--- Set limits to the buildings that an AI can build 
+--- An example buildings table:
+---	local buildings_table =
+---	{
+---		{"space_marine_vehicle_building", 2},
+---		{"space_marine_listening_post", 1}
+---	}
+--- The first argument is the building name, the second is the
+--- number of those buildings the AI can build
+---@param cpu_player PlayerID
+---@param buildings_table table
+function Cpu_SetBuildingLimitsTable(cpu_player, buildings_table) end
+
+--- Set the difficulty without worrying if the Cpu is enabled or not
+--- 
+---If you set the difficulty on a Cpu that's disabled, it'll crash.
+--- This should take care of that. NOTE: You can always use the
+--- regular one, this is only if you don't know or may not know
+---@param cpu_player PlayerID
+---@param difficulty_setting integer
+function Cpu_SetDifficultyForDummies(cpu_player, difficulty_setting) end
+
+--- Unlock an EGroup from the cpuplayer 
+--- NOTE: Only use this for strategic points and buildings! It
+--- won't work for anything else
+---@param cpu_player PlayerID
+---@param egroup string
+function Cpu_UnlockEGroup(cpu_player, egroup) end
+
+--- Lock an EGroup from all cpuplayers 
+--- NOTE: Only use this for strategic points and buildings! It
+--- won't work for anything else
+---@param egroup string
+function Cpu_UnlockEGroupAcrossPlayers(egroup) end
+
+--- Unlock an SGroup from the cpuplayer 
+---@param cpu_player PlayerID
+---@param sgroup string
+function Cpu_UnlockSGroup(cpu_player, sgroup) end
+
+--- Lock an SGroup from all cpuplayers 
+---@param sgroup string
+function Cpu_UnlockSGroupAcrossPlayers(sgroup) end
+
+-- from difficultylevel.scar
+
+--- Returns the difficulty level for the mission (DIFFICULTY_EASY,
+--- DIFFICULTY_NORMAL or DIFFICULTY_HARD) 
+---@return integer
+function Difficulty_Get() end
+
+--- Set the difficulty level for all players in a mission 
+---This function should be called to set the difficulty level for
+--- all players in the mission.  Note that it WILL NOT modify
+--- attributes for the player themselves, just everyone else.  
+--- Values for difficulty are: 0 = easy, 1 = normal, 2 = hard
+---@param difficultlevel integer
+function Difficulty_SetForAll(difficultlevel) end
+
+--- Set the difficulty level for one player 
+---This function should be called to set the difficulty level for a
+--- single player in a mission.  Values for difficulty are: 0 =
+--- easy, 1 = normal, 2 = hard
+---@param playerId PlayerID
+---@param difficultlevel integer
+function Difficulty_SetForPlayer(playerId, difficultlevel) end
+
+---@param race any
+function PopulateListForRace(race) end
+
+---@param difficulty any
+---@param player any
+function SetHealthLevel(difficulty, player) end
+
+-- from entity.scar
+
+--- Returns true if entity is in cover. 
+---@param entityId EntityID
+---@return boolean
+function Entity_IsInCover(entityId) end
+
+-- from groups.scar
+
+--- Returns true if ALL or ANY entities in a group can see ALL or
+--- ANY entities in a given egroup. 
+---@param egroupname string
+---@param targetegroupname string
+---@param all boolean
+---@return boolean
+function EGroup_CanSeeEGroup(egroupname, targetegroupname, all) end
+
+--- Returns true if ALL or ANY entities in a group can see ALL or
+--- ANY squads in a given sgroup. 
+---@param egroupname string
+---@param targetsgroupname string
+---@param all boolean
+---@return boolean
+function EGroup_CanSeeSGroup(egroupname, targetsgroupname, all) end
+
+--- Returns true if ALL or ANY items in a group have the given
+--- active command 
+---See Entity_GetActiveCommand for valid command types
+---@param groupname string
+---@param cmd integer
+---@param all boolean
+---@return boolean
+function EGroup_CheckActiveCommand(groupname, cmd, all) end
+
+--- Returns true if ALL or ANY items in a group have built the given
+--- addon 
+---@param groupname string
+---@param addonname string
+---@param all boolean
+---@return boolean
+function EGroup_ContainsAddOn(groupname, addonname, all) end
+
+--- Find a entity group from name.  Creates a new one with given
+--- name if it doesnt exist. 
+---@param name string
+---@return EGroupID
+function EGroup_CreateIfNotFound(name) end
+
+--- Despawn all spawned entities in a group. 
+---@param groupname string
+function EGroup_DeSpawn(groupname) end
+
+--- Destroys all spawned and despawned entities in a group. 
+--- Be careful not to confuse this with EGroup_Destroy which
+--- destroys the group and NOT the items it contains.  This
+--- function will destroy spawned and despawned items in a group
+---@param groupname string
+function EGroup_DestroyAllEntities(groupname) end
+
+--- Gives addon to all members of the group 
+---@param groupname string
+---@param addonname string
+---@return boolean
+function EGroup_ForceAddOn(groupname, addonname) end
+
+--- Returns the average health of all units in a entity group as a
+--- weighted percent [0.0, 1.0]. 
+---Example: A group of entities with health 20/100 and 100/1000
+--- would return 120/1100 ( approx 11 % )
+---@param groupname string
+---@return number
+function EGroup_GetAvgHealth(groupname) end
+
+--- Check invulnerablity state for ALL or ANY entity in an entity
+--- group. 
+--- Set all param to true to check for ALL or set to false to check
+--- for ANY.
+---@param groupname string
+---@param all boolean
+---@return boolean
+function EGroup_GetHealthInvulnerable(groupname, all) end
+
+--- Return true if any entities in a group contain a strategic point
+--- with a structure on it 
+---@param groupname string
+---@return boolean
+function EGroup_HasStrategicPointWithStructure(groupname) end
+
+--- Returns true if all or any strategic points in a group have been
+--- captured. 
+---This function will ignore all entities that cannot be captured
+--- and will return false if no entities in the group can be
+--- captured.
+---@param groupname string
+---@param playerId PlayerID
+---@param all boolean
+---@return boolean
+function EGroup_IsCapturedByPlayer(groupname, playerId, all) end
+
+--- Returns true if a named entity group contains no spawned or
+--- despawned entities 
+---@param name string
+---@return boolean
+function EGroup_IsEmpty(name) end
+
+--- Returns true if ALL or ANY entities are in cover. 
+---@param egroupname string
+---@param all boolean
+---@return boolean
+function EGroup_IsInCover(egroupname, all) end
+
+--- Return true if all items in a group are selected 
+---@param groupname string
+---@return boolean
+function EGroup_IsSelected(groupname) end
+
+--- Returns true if ALL or ANY entities are under attack. 
+---@param egroupname string
+---@param all boolean
+---@return boolean
+function EGroup_IsUnderAttack(egroupname, all) end
+
+--- Returns true if ALL or ANY entities are under attack. 
+---@param egroupname string
+---@param all boolean
+---@param player PlayerID
+---@return boolean
+function EGroup_IsUnderAttackByPlayer(egroupname, all, player) end
+
+--- Respawn all despawned entities in a group. 
+---@param groupname string
+function EGroup_ReSpawn(groupname) end
+
+--- Respawns all entities in a group at a given position
+---@param groupname string
+---@param markerName string
+function EGroup_ReSpawnMarker(groupname, markerName) end
+
+--- Respawns all entities in a group at a given position
+---@param groupname string
+---@param position Position
+function EGroup_ReSpawnPosition(groupname, position) end
+
+--- Call Entity_ResetConstructionState for all spawned buildings 
+---See Entity_ResetConstructionState for more info
+---@param groupname string
+function EGroup_ResetConstructionState(groupname) end
+
+--- Resets the player owner to the world for all entities in the
+--- group 
+---@param groupname string
+function EGroup_ResetPlayerOwner(groupname) end
+
+--- Sets the health of each unit in an entity group to a given
+--- percent [0.0, 1.0]. 
+---@param groupname string
+---@param healthPercent number
+---@return number
+function EGroup_SetAvgHealth(groupname, healthPercent) end
+
+--- Forces all buildings in progress to complete their construction
+--- state 
+---@param groupname string
+function EGroup_SetConstructionComplete(groupname) end
+
+--- Enable/Disable invulnerablity for an entire entity group. 
+---IMPORTANT: You must disable invulnerability for everytime you
+--- enable it!
+---@param groupname string
+---@param enabled boolean
+function EGroup_SetHealthInvulnerable(groupname, enabled) end
+
+--- Changes the player owner for all spawned and despawned entities
+--- of an EGroup. 
+---@param groupname string
+---@param owner PlayerID
+function EGroup_SetPlayerOwner(groupname, owner) end
+
+--- Adds a leader to all squads in a group that can take a leader. 
+---This function will bypass all cost and queue prereqs
+---@param sgroupname string
+function SGroup_AddLeaders(sgroupname) end
+
+--- Returns true if ALL or ANY squads in a group can see ALL or ANY
+--- squads in a target sgroup. 
+---@param sgroupname string
+---@param targetegroupname string
+---@param all boolean
+---@return boolean
+function SGroup_CanSeeSGroup(sgroupname, targetegroupname, all) end
+
+--- Returns true if ALL or ANY items in a group have the given
+--- active command 
+---See Squad_GetActiveCommand for valid command types
+---@param groupname string
+---@param cmd integer
+---@param all boolean
+---@return boolean
+function SGroup_CheckActiveCommand(groupname, cmd, all) end
+
+--- Check if all or any squads in a group contain (at least) the
+--- given number of weapon blueprints 
+---@param groupname string
+---@param weaponname string
+---@param count integer
+---@param all boolean
+---@return boolean
+function SGroup_ContainsWeaponBlueprints(groupname, weaponname, count, all) end
+
+--- Counts the number of leaders in all squads in the specified group
+---@param groupName string
+---@return integer
+function SGroup_CountLeaders(groupName) end
+
+--- Find a squad group from name.  Creates a new one with given name
+--- if it doesnt exist. 
+---@param name string
+---@return SGroupID
+function SGroup_CreateIfNotFound(name) end
+
+--- Despawn all spawned squads in a group. 
+---@param groupname string
+function SGroup_DeSpawn(groupname) end
+
+--- Destroys all items in a group that are in proximity to a given
+--- marker. 
+---@param groupname string
+---@param markername string
+function SGroup_DestroyAllInMarker(groupname, markername) end
+
+--- Destroys all spawned and despawned squads in a group. 
+--- Be careful not to confuse this with SGroup_Destroy which
+--- destroys the group and NOT the squads it contains.  This
+--- function will destroy spawned and despawned items in a group
+---@param groupname string
+function SGroup_DestroyAllSquads(groupname) end
+
+--- Makes two SGroups face each other 
+---@param sgroupname1 string
+---@param sgroupname2 string
+function SGroup_FaceEachOther(sgroupname1, sgroupname2) end
+
+--- Makes a SGroup face a marker. 
+---@param sgroupname string
+---@param markername string
+function SGroup_FaceMarker(sgroupname, markername) end
+
+--- Makes the first SGroup face the second SGroup 
+---@param sgroupname1 string
+---@param sgroupname2 string
+function SGroup_FaceSGroup(sgroupname1, sgroupname2) end
+
+--- Returns the average health of all units in a squad group as a
+--- weighted percent [0.0, 1.0]. 
+---Example: A group of squads with health 20/100 and 100/1000 would
+--- return 120/1100 ( approx 11 % )
+---@param groupname string
+---@return number
+function SGroup_GetAvgHealth(groupname) end
+
+--- Returns the average loadout of all squads in a group as a
+--- percent [0.0, 1.0]. 
+---Example: A group of squads with loadouts of 4/8 and 1/1 would
+--- return 0.75
+---@param groupname string
+---@return number
+function SGroup_GetAvgLoadout(groupname) end
+
+--- Returns the average morale of all units in a squad group as a
+--- weighted percent [0.0, 1.0]. 
+---Squads that are not affected by morale always have morale of
+--- 1.0.  These squads will count towards your  total average
+---@param groupname string
+---@return number
+function SGroup_GetAvgMorale(groupname) end
+
+--- Check invulnerablity state for ALL or ANY squads in a squad
+--- group. 
+--- Set all param to true to check for ALL or set to false to check
+--- for ANY.
+---@param groupname string
+---@param all boolean
+---@return boolean
+function SGroup_GetHealthInvulnerable(groupname, all) end
+
+--- Check morale invulnerablity state for ALL or ANY squads in a
+--- squad group. 
+--- Set all param to true to check for ALL or set to false to check
+--- for ANY.
+---@param groupname string
+---@param all boolean
+---@return boolean
+function SGroup_GetMoraleInvulnerable(groupname, all) end
+
+--- Returns true if the sgroup has ANY squads of type blueprint have
+--- received reinforcements  
+---@param sgroupname string
+---@param squadblueprint string
+---@return boolean
+function SGroup_HasAnyReinforced(sgroupname, squadblueprint) end
+
+--- Check if ALL or ANY squads in a sgroup have a leader 
+--- Set all param to true to check for ALL or set to false to check
+--- for ANY.
+---@param groupname string
+---@param all boolean
+---@return boolean
+function SGroup_HasLeader(groupname, all) end
+
+--- Returns true if a named squad group is empty 
+---@param name string
+---@return boolean
+function SGroup_IsEmpty(name) end
+
+--- Returns true if ALL or ANY squads are in cover. 
+---@param sgroupname string
+---@param all boolean
+---@return boolean
+function SGroup_IsInCover(sgroupname, all) end
+
+--- Returns true if ALL or ANY squads in a group are infiltrated 
+---@param sgroupname string
+---@param all boolean
+---@return boolean
+function SGroup_IsInfiltrated(sgroupname, all) end
+
+--- Returns true if ALL or ANY items in a group have broken morale 
+---@param groupname string
+---@param all boolean
+---@return boolean
+function SGroup_IsMoraleBroken(groupname, all) end
+
+--- Returns true if ANY entities in ANY squads of a group are on
+--- currently screen 
+---IMPORTANT: This function does not check the FOW.  It will return
+--- true  even if the item is not revealed in FOW
+---@param groupname string
+---@return boolean
+function SGroup_IsOnScreen(groupname) end
+
+--- Return true if all items in a group are selected 
+---@param groupname string
+---@return boolean
+function SGroup_IsSelected(groupname) end
+
+--- Returns true if ALL or ANY squads are under attack. 
+---@param sgroupname string
+---@param all boolean
+---@return boolean
+function SGroup_IsUnderAttack(sgroupname, all) end
+
+--- Returns true if ALL or ANY squads are under attack. 
+---@param sgroupname string
+---@param all boolean
+---@param player PlayerID
+---@return boolean
+function SGroup_IsUnderAttackByPlayer(sgroupname, all, player) end
+
+--- Respawn all despawned squads in a group. 
+---@param groupname string
+function SGroup_ReSpawn(groupname) end
+
+--- Respawns all squads in a group at a given position
+---@param groupname string
+---@param markerName string
+function SGroup_ReSpawnMarker(groupname, markerName) end
+
+--- Respawns all squads in a group at a given position
+---@param groupname string
+---@param position Position
+function SGroup_ReSpawnPosition(groupname, position) end
+
+--- Sets the health of each squad in a squad group to a given
+--- percent [0.0, 1.0]. 
+---@param groupname string
+---@param healthPercent number
+---@return number
+function SGroup_SetAvgHealth(groupname, healthPercent) end
+
+--- Sets the moral of each squad in a squad group to a given percent
+--- [0.0, 1.0]. 
+---@param groupname string
+---@param moralePercent number
+---@return number
+function SGroup_SetAvgMorale(groupname, moralePercent) end
+
+--- Enable/Disable invulnerablity for an entire squad group. 
+---IMPORTANT: You must disable invulnerability for everytime you
+--- enable it!
+---@param groupname string
+---@param enabled boolean
+function SGroup_SetHealthInvulnerable(groupname, enabled) end
+
+--- Enable/Disable morale invulnerablity for an entire squad group.
+--- 
+---IMPORTANT: You must disable invulnerability for everytime you
+--- enable it!
+---@param groupname string
+---@param enabled boolean
+function SGroup_SetMoraleInvulnerable(groupname, enabled) end
+
+--- Changes the player owner of spawned and despawned squads in an
+--- SGroup. 
+---@param groupname string
+---@param owner PlayerID
+function SGroup_SetPlayerOwner(groupname, owner) end
+
+-- from modifiers.scar
+
+--- Applys/Removes a modifier to an egroup 
+---@param groupid EGroupID
+---@param modifier Modifier
+---@param apply boolean
+function ModifierUtil_ApplyToEGroup(groupid, modifier, apply) end
+
+--- Applys/Removes a modifier to a squadgroup 
+---@param groupid SGroupID
+---@param modifier Modifier
+---@param apply boolean
+function ModifierUtil_ApplyToSGroup(groupid, modifier, apply) end
+
+--- Returns the applier table index for a given modifier. 
+---Returns zero if applier for modifier is not found.
+---@param modifier Modifier
+---@param playerid PlayerID
+---@return integer
+function ModifierUtil_GetEntityApplierIndex(modifier, playerid) end
+
+--- Returns the applier table index for a given modifier. 
+---Returns zero if applier for modifier is not found.
+---@param modifier Modifier
+---@param entityid EntityID
+---@return integer
+function ModifierUtil_GetEntityApplierIndex(modifier, entityid) end
+
+--- Returns the applier table index for a given modifier. 
+---Returns zero if applier for modifier is not found.
+---@param modifier Modifier
+---@param squadid SquadID
+---@return integer
+function ModifierUtil_GetSquadApplierIndex(modifier, squadid) end
+
+---@param Modifier any
+---@param entityid any
+function ModifierUtil_IsEntityModifierApplied(Modifier, entityid) end
+
+---@param Modifier any
+---@param playerid any
+function ModifierUtil_IsPlayerModifierApplied(Modifier, playerid) end
+
+---@param Modifier any
+---@param squadid any
+function ModifierUtil_IsSquadModifierApplied(Modifier, squadid) end
+
+--- Toggles the fx for the specified modifer
+---@param modifier Modifier
+function ModifierUtil_ToggleFX(modifier) end
+
+-- from player.scar
+
+--- Add resource to player, as opposed to just setting it. 
+---@param playerId PlayerID
+---@param resourceType integer
+---@param value number
+function Player_AddResource(playerId, resourceType, value) end
+
+--- For the given player, get all of the squads gathered into a
+--- squadgroup of your naming.   
+---Squads will be added to given squad group.  If the given squad
+--- group does not exist it will be created.
+---@param playerId PlayerID
+---@param squadgroupName string
+---@return SGroupID
+function Player_AddSquadsToSGroup(playerId, squadgroupName) end
+
+--- Returns true if ANY of a players squads are in proximity of a
+--- marker 
+---@param playerID PlayerID
+---@param markername string
+---@return boolean
+function Player_AreSquadsNearMarker(playerID, markername) end
+
+--- Returns true if a player can see ALL or ANY items in an egroup 
+---@param playerId PlayerID
+---@param egroupname string
+---@param all boolean
+---@return boolean
+function Player_CanSeeEGroup(playerId, egroupname, all) end
+
+--- Returns true if a player can see ALL or ANY items in an sgroup 
+---@param playerId PlayerID
+---@param sgroupname string
+---@param all boolean
+---@return boolean
+function Player_CanSeeSGroup(playerId, sgroupname, all) end
+
+--- Sets the max squad cap for a player.
+---@param playerId PlayerID
+---@param cap integer
+function Player_ForceSetMaxSquadCap(playerId, cap) end
+
+--- Sets the max support cap for a player.
+---@param playerId PlayerID
+---@param cap integer
+function Player_ForceSetMaxSupportCap(playerId, cap) end
+
+--- Add all players entities that are in proximity to a marker into
+--- a squad group.  Group will be created if it doesnt already
+--- exist. 
+---The proximity of a marker is set in the mission editor.
+---@param playerId PlayerID
+---@param egroupName string
+---@param markerName string
+function Player_GetAllEntitiesNearMarker(playerId, egroupName, markerName) end
+
+--- Add all players squads that are in proximity to a marker into a
+--- squad group.  Group will be created if it doesnt already exist.
+--- 
+---The proximity of a marker is set in the mission editor.
+---@param playerId PlayerID
+---@param squadgroupName string
+---@param markerName string
+function Player_GetAllSquadsNearMarker(playerId, squadgroupName, markerName) end
+
+--- Returns the number of buidlings/sqauds with blueprints owned by
+--- a player 
+---blueprint name can be a squad blueprint OR an entity blueprint
+---@param player PlayerID
+---@param blueprintname string
+---@return integer
+function Player_GetBlueprintCount(player, blueprintname) end
+
+--- Returns the total number of buildings owned by this player. 
+---@param playerId PlayerID
+---@return integer
+function Player_GetBuildingsCount(playerId) end
+
+--- Returns the total number of buildings owned by this player (with
+--- exclusions). 
+---@param playerId PlayerID
+---@param exceptions table
+---@return integer
+function Player_GetBuildingsCountExcept(playerId, exceptions) end
+
+--- Returns the number of buildings owned by this player
+--- (inclusive). 
+---@param playerId PlayerID
+---@param building_names table
+---@return integer
+function Player_GetBuildingsCountOnly(playerId, building_names) end
+
+--- Returns true if this player owns any of the indicated building
+--- type and they are fully constructed 
+---@param playerId PlayerID
+---@param building_blueprint Blueprint
+---@return integer
+function Player_HasBuildingType(playerId, building_blueprint) end
+
+--- Returns true if this player owns any buildings. (with
+--- exclusions). 
+---@param playerId PlayerID
+---@param exceptions table
+---@return integer
+function Player_HasBuildingsExcept(playerId, exceptions) end
+
+--- Returns true if this player owns any squads (with exclusions). 
+---@param playerId PlayerID
+---@param exceptions table
+---@return integer
+function Player_HasSquadsExcept(playerId, exceptions) end
+
+--- Increases the ork pop cap using a modifier 
+---@param playerId PlayerID
+---@param maxcap integer
+function Player_IncreasePopCap(playerId, maxcap) end
+
+--- Returns true if the players are allied and false if they are
+--- not. 
+---@param playerId1 PlayerID
+---@param playerId2 PlayerID
+---@return boolean
+function Player_IsAllied(playerId1, playerId2) end
+
+--- Returns true if a given player exculsivley owns all items in a
+--- group 
+---@param playerID PlayerID
+---@param egroupID EGroupID
+---@return boolean
+function Player_OwnsEGroup(playerID, egroupID) end
+
+--- Returns true if a given player exculsivley owns all items in a
+--- group 
+---@param playerID PlayerID
+---@param sgroupID SGroupID
+---@return boolean
+function Player_OwnsSGroup(playerID, sgroupID) end
+
+--- Restrict a list of names. 
+---list should contain an array of strings to restrict.
+---@param id PlayerID
+---@param list table
+function Player_RestrictAddOnList(id, list) end
+
+--- Restrict a list of names. 
+---list should contain an array of strings to restrict.
+---@param id PlayerID
+---@param list table
+function Player_RestrictBuildingList(id, list) end
+
+--- Restrict a list of names. 
+---list should contain an array of strings to restrict.
+---@param id PlayerID
+---@param list table
+function Player_RestrictResearchList(id, list) end
+
+--- Restrict a list of names.
+--- list should contain an array of strings to restrict.
+---@param playerID PlayerID
+---@param list table
+function Player_RestrictSquadList(playerID, list) end
+
+--- Sets the curretn squad cap for the player. 
+---Note that any modifiers that adjust the current squad cap will
+--- be applied on top of this.  Also note that the current squad
+--- cap cannot go higher than the max squad cap.
+---@param playerId PlayerID
+---@param maxcap integer
+function Player_SetSquadCap(playerId, maxcap) end
+
+--- Sets the current support cap for a player. 
+---Note that any modifiers that adjust the current support cap will
+--- be applied on top of this.  Also note, the current support cap
+--- cannot go higher than the max support cap.
+---@param playerId PlayerID
+---@param cap integer
+function Player_SetSupportCap(playerId, cap) end
+
+--- Unrestricts a list of names.
+--- List should contain an array of research to restrict.
+---@param playerID PlayerID
+---@param list table
+function Player_UnRestrictResearchList(playerID, list) end
+
+--- Adds all the points owned by a given player into a given group. 
+--- use types SPT_StrategicPoint SPT_StrategicObjective or
+--- SPT_Relic 
+---Pass in a playerID of nil to get all relics owned by the world
+---@param strategicpoint_type integer
+---@param playerID PlayerID
+---@param groupname string
+function Util_GetStrategicPoints(strategicpoint_type, playerID, groupname) end
+
+-- from production.scar
+
+--- Adds a add-on item to a production list table. 
+---@param addonname string
+---@param list table
+function Prod_AddAddOnToList(addonname, list) end
+
+--- Adds a research item to a production list table. 
+---@param researchname string
+---@param list table
+function Prod_AddResearchToList(researchname, list) end
+
+--- Adds a squad item to a production list table. 
+---@param blueprintname string
+---@param list table
+function Prod_AddSquadToList(blueprintname, list) end
+
+--- Returns true if a production list contains the given add-on item
+--- 
+---@param addonname string
+---@param list table
+---@return boolean
+function Prod_DoesListContainAddOn(addonname, list) end
+
+--- Returns true if a production list contains the given research
+--- item 
+---@param researchname string
+---@param list table
+---@return boolean
+function Prod_DoesListContainResearch(researchname, list) end
+
+--- Returns true if a production list contains the given squad item 
+---@param blueprintname string
+---@param list table
+---@return boolean
+function Prod_DoesListContainSquad(blueprintname, list) end
+
+--- Gets everything a given player currently has in production. 
+---See Prod_GetProductionList for more info.
+---@param playerId PlayerID
+---@param list table
+function Prod_GetPlayerProductionList(playerId, list) end
+
+--- Checks all entities to see if they're production-capable and if
+--- so, adds their queued items to a Production Table. 
+--- Use Prod_DoesListContainSquad etc to query the resulting
+--- production table.
+---
+--- Example:
+---     local ProductionTable = { }
+---     Prod_GetProductionList( "GRP_ANYENTITYGROUP",
+--- ProductionTable )
+---     if(Prod_DoesListContainSquad("chaos_marine_squad",
+--- ProductionTable) then
+---         -- There is a building in GRP_ANYENTITYGROUP that is
+--- currently producing a space marine Squad_CanSeeEntity
+---     end
+---@param egroupname string
+---@param list table
+function Prod_GetProductionList(egroupname, list) end
+
+--- Returns true the players henchmen are currently constructing a
+--- building with given blueprintname. 
+--- Note: If you find that you are calling this function for tons
+--- of different buildings, we should change this function to take
+--- a constuction list (similar to the way production lists are
+--- handled)
+---@param playerId PlayerID
+---@param buildingname string
+---@return boolean
+function Prod_IsPlayerConstructing(playerId, buildingname) end
+
+--- Returns true if the player is producing all or any items in a
+--- production table.  See Prod_IsProducing for more info. 
+---@param playerId PlayerID
+---@param list table
+---@param all boolean
+---@return boolean
+function Prod_IsPlayerProducing(playerId, list, all) end
+
+--- Returns true if buildings in a entity group are producing ALL or
+--- ANY items in a given production table. 
+--- Use Prod_AddSquadToList etc to add entries to the given
+--- production list.
+---
+--- Example:
+---     local ProductionTable = { }
+---     Prod_AddSquadToList( "chaos_squad_cultist", list )
+---     Prod_AddSquadToList( "chaos_squad_cultist", list )
+---     Prod_AddSquadToList( "chaos_squad_defiler", list )
+---     if( Prod_IsProducing( "GRP_ANYENTITYGROUP", ProcutionTable,
+--- true ) then
+---         -- Of all the buildings in GRP_ANYENTITYGROUP, they are
+--- producing 2 cultists and a defiler.
+---     end
+---@param egroupname string
+---@param list table
+---@param all boolean
+---@return boolean
+function Prod_IsProducing(egroupname, list, all) end
+
+-- from proximity.scar
+
+--- Returns true if ALL entities in a group are in proximity to a
+--- marker. 
+--- The proximity of a marker can only be set in the mission
+--- editor.
+---@param groupname string
+---@param markername string
+---@return boolean
+function Prox_AllEntitiesNearMarker(groupname, markername) end
+
+--- Returns true if ALL squads in a group are in proximity to a
+--- marker. 
+--- The proximity of a marker can only be set in the mission
+--- editor.
+---@param groupname string
+---@param markername string
+---@return boolean
+function Prox_AllSquadsNearMarker(groupname, markername) end
+
+--- Returns true if ANY entity from a group are in proximity to a
+--- marker. 
+--- The proximity of a marker can only be set in the mission
+--- editor.
+---@param groupname string
+---@param markername string
+---@return boolean
+function Prox_AnyEntityNearMarker(groupname, markername) end
+
+--- Returns true if ANY squads from a group are in proximity to a
+--- marker. 
+--- The proximity of a marker can only be set in the mission
+--- editor.
+---@param groupname string
+---@param markername string
+---@return boolean
+function Prox_AnySquadNearMarker(groupname, markername) end
+
+--- Returns the distance between two entity groups. use checktype
+--- PROX_SHORTEST, PROX_LONGEST, or PROX_CENTER. 
+--- If check is PROX_SHORTEST this will return the shortest
+--- distance between the two groups.
+--- If check is PROX_LONGEST this will return the longest distance
+--- between the two groups.
+--- If check is PROX_CENTER this will return the distance between
+--- the two groups centers.
+---
+---@param groupname1 string
+---@param groupname2 string
+---@param checktype ProxType
+---@return number
+function Prox_EGroupEGroup(groupname1, groupname2, checktype) end
+
+--- Returns the distance between an entity group and a squad group. 
+--- use checktype PROX_SHORTEST, PROX_LONGEST, or PROX_CENTER. 
+--- If check is PROX_SHORTEST this will return the shortest
+--- distance between the two groups.
+--- If check is PROX_LONGEST this will return the longest distance
+--- between the two groups.
+--- If check is PROX_CENTER this will return the distance between
+--- the two groups centers.
+---
+---@param egroupname string
+---@param sgroupname string
+---@param checktype ProxType
+---@return number
+function Prox_EGroupSGroup(egroupname, sgroupname, checktype) end
+
+--- Checks if ALL or ANY entities are in proximity of a given entity
+--- group. 
+---Set "all" to true to check that ALL entities are in proximity,
+--- or set "all" to false to check for ANY.
+---@param egroupname1 string
+---@param egroupname2 string
+---@param proximity number
+---@param all boolean
+---@return boolean
+function Prox_EntitiesInProximityOfEntities(egroupname1, egroupname2, proximity, all) end
+
+--- Returns the distance between a marker and an entity group.  use
+--- checktype PROX_SHORTEST, PROX_LONGEST, or PROX_CENTER. 
+--- If check is PROX_SHORTEST this will return the shortest
+--- distance between the two groups.
+--- If check is PROX_LONGEST this will return the longest distance
+--- between the two groups.
+--- If check is PROX_CENTER this will return the distance between
+--- the two groups centers.
+---
+---@param markername string
+---@param egroupname string
+---@param checktype ProxType
+---@return number
+function Prox_MarkerEGroup(markername, egroupname, checktype) end
+
+--- Returns the distance between a marker and a squad group.  use
+--- checktype PROX_SHORTEST, PROX_LONGEST, or PROX_CENTER. 
+--- If check is PROX_SHORTEST this will return the shortest
+--- distance between the two groups.
+--- If check is PROX_LONGEST this will return the longest distance
+--- between the two groups.
+--- If check is PROX_CENTER this will return the distance between
+--- the two groups centers.
+---
+---@param markername string
+---@param sgroupname string
+---@param checktype ProxType
+---@return number
+function Prox_MarkerSGroup(markername, sgroupname, checktype) end
+
+--- Checks if ALL or ANY players squads are in proximity of a given
+--- entity group. 
+---Set "all" to true to check that ALL entities are in proximity,
+--- or set "all" to false to check for ANY.
+---@param playerId PlayerID
+---@param egroupname string
+---@param proximity number
+---@param all boolean
+---@return boolean
+function Prox_PlayerEntitiesInProximityOfEntities(playerId, egroupname, proximity, all) end
+
+--- Checks if ALL or ANY players entities are in proximity of a
+--- given squad group. 
+---Set "all" to true to check that ALL entities are in proximity,
+--- or set "all" to false to check for ANY.
+---@param playerId1 PlayerID
+---@param playerId2 PlayerID
+---@param proximity number
+---@param all boolean
+---@return boolean
+function Prox_PlayerEntitiesInProximityOfPlayerSquads(playerId1, playerId2, proximity, all) end
+
+--- Checks if ALL or ANY players entities are in proximity of a
+--- given squad group. 
+---Set "all" to true to check that ALL entities are in proximity,
+--- or set "all" to false to check for ANY.
+---@param playerId PlayerID
+---@param sgroupname string
+---@param proximity number
+---@param all boolean
+---@return boolean
+function Prox_PlayerEntitiesInProximityOfSquads(playerId, sgroupname, proximity, all) end
+
+--- Checks if ALL or ANY players squads are in proximity of a given
+--- entity group. 
+---Set "all" to true to check that ALL squads are in proximity, or
+--- set "all" to false to check for ANY.
+---@param playerId PlayerID
+---@param sgroupname string
+---@param proximity number
+---@param all boolean
+---@return boolean
+function Prox_PlayerSquadsInProximityOfEntities(playerId, sgroupname, proximity, all) end
+
+--- Checks if ALL or ANY players squads are in proximity of a given
+--- players entities. 
+---Set "all" to true to check that ALL squads are in proximity, or
+--- set "all" to false to check for ANY.
+---@param playerId1 PlayerID
+---@param playerId2 PlayerID
+---@param proximity number
+---@param all boolean
+---@return boolean
+function Prox_PlayerSquadsInProximityOfPlayerEntities(playerId1, playerId2, proximity, all) end
+
+--- Checks if ALL or ANY players squads are in proximity of a given
+--- players squads. 
+---Set "all" to true to check that ALL squads are in proximity, or
+--- set "all" to false to check for ANY.
+---@param playerId1 PlayerID
+---@param playerId2 PlayerID
+---@param proximity number
+---@param all boolean
+---@return boolean
+function Prox_PlayerSquadsInProximityOfPlayerSquads(playerId1, playerId2, proximity, all) end
+
+--- Checks if ALL or ANY players squads are in proximity of a given
+--- squad group. 
+---Set "all" to true to check that ALL squads are in proximity, or
+--- set "all" to false to check for ANY.
+---@param playerId PlayerID
+---@param sgroupname string
+---@param proximity number
+---@param all boolean
+---@return boolean
+function Prox_PlayerSquadsInProximityOfSquads(playerId, sgroupname, proximity, all) end
+
+--- Returns the distance between two squad groups. use checktype
+--- PROX_SHORTEST, PROX_LONGEST, or PROX_CENTER. 
+--- If check is PROX_SHORTEST this will return the shortest
+--- distance between the two groups.
+--- If check is PROX_LONGEST this will return the longest distance
+--- between the two groups.
+--- If check is PROX_CENTER this will return the distance between
+--- the two groups centers.
+---
+---@param groupname1 string
+---@param groupname2 string
+---@param checktype ProxType
+---@return number
+function Prox_SGroupSGroup(groupname1, groupname2, checktype) end
+
+--- Checks if ALL or ANY squads are in proximity of a given entity
+--- group. 
+---Set "all" to true to check that ALL squads are in proximity, or
+--- set "all" to false to check for ANY.
+---@param sgroupname string
+---@param egroupname string
+---@param proximity number
+---@param all boolean
+---@return boolean
+function Prox_SquadsInProximityOfEntities(sgroupname, egroupname, proximity, all) end
+
+--- Checks if ALL or ANY squads are in proximity of a given squad
+--- group. 
+---Set "all" to true to check that ALL squads are in proximity, or
+--- set "all" to false to check for ANY.
+---@param sgroupname1 string
+---@param sgroupname2 string
+---@param proximity number
+---@param all boolean
+---@return boolean
+function Prox_SquadsInProximityOfSquads(sgroupname1, sgroupname2, proximity, all) end
+
+-- from restrict.scar
+
+--- Applies restrictions for space marines.  You should call this at
+--- the begining of your mission for Player 1. 
+---@param playerId PlayerID
+---@param level integer
+function Restrict_SpaceMarines(playerId, level) end
+
+--- Unrestricts a specific addon and gives an intelevent style
+--- dialog and an event cue with it.  Pass in "none" for event cue
+--- or dialog in order to not display the alerts 
+---@param playerId PlayerID
+---@param addon_blueprint blueprint
+---@param eventcuedescription_locId integer
+---@param dialog_locId integer
+function Unrestrict_AddOnWithAlerts(playerId, addon_blueprint, eventcuedescription_locId, dialog_locId) end
+
+--- Unrestricts a specific building and gives an intelevent style
+--- dialog and an event cue with it.  Pass in "none" for event cue
+--- or dialog in order to not display the alerts 
+---@param playerId PlayerID
+---@param building_blueprint blueprint
+---@param eventcuedescription_locId integer
+---@param dialog_locId integer
+function Unrestrict_BuildingWithAlerts(playerId, building_blueprint, eventcuedescription_locId, dialog_locId) end
+
+--- Unrestricts a specific research and gives an intelevent style
+--- dialog and an event cue with it.  Pass in "none" for event cue
+--- or dialog in order to not display the alerts 
+---@param playerId PlayerID
+---@param research_blueprint blueprint
+---@param eventcuedescription_locId integer
+---@param dialog_locId integer
+function Unrestrict_ResearchWithAlerts(playerId, research_blueprint, eventcuedescription_locId, dialog_locId) end
+
+--- Unrestricts a specific squad and gives an intelevent style
+--- dialog and an event cue with it.  Pass in "none" for event cue
+--- or dialog in order to not display the alerts 
+---@param playerId PlayerID
+---@param squad_blueprint blueprint
+---@param eventcuedescription_locId integer
+---@param dialog_locId integer
+function Unrestrict_SquadWithAlerts(playerId, squad_blueprint, eventcuedescription_locId, dialog_locId) end
+
+--- Unrestricts a specific weapon  and gives an intelevent style
+--- dialog and an event cue with it.  Pass in "none" for event cue
+--- or dialog in order to not display the alerts 
+---@param playerId PlayerID
+---@param weapon_blueprint blueprint
+---@param eventcuedescription_locId integer
+---@param dialog_locId integer
+function Unrestrict_WeaponWithAlerts(playerId, weapon_blueprint, eventcuedescription_locId, dialog_locId) end
+
+-- from scarutil.scar
+
+--- Reveals an area the size of a given markers proximity at that
+--- markers position for a given amount of time.  YOU SHOULD ONLY
+--- CALL THIS ONCE FOR EACH AREA. 
+---This function will reveal the FOW for ALL alive players.
+---@param markername string
+---@param durationSecs number
+function FOW_RevealMarker(markername, durationSecs) end
+
+--- Breaks the morale of the currently selected squad 
+function Misc_BreakCurrentlySelectedSquad() end
+
+--- Checks if any input event have occured in the last second 
+function Misc_DetectAnyInput() end
+
+--- Set the Force Commanders weapon to be Power Sword 
+---This function should be used in any mission where the Force
+--- Commander shouldnt have a Daemon hamemr.
+---@param playerId PlayerID
+function SetCommanderPowerSword(playerId) end
+
+--- Set the Inquisitors weapon to be Power Sword 
+---This function should be used in any mission where the Toth
+--- (Inquisitor) shouldnt have a Daemon hamemr.
+---@param playerId PlayerID
+function SetInquisitorPowerSword(playerId) end
+
+--- Creates an Autosave and prints text to screen to let player know
+--- its happening. 
+---Use this function to create a save game in the single player
+--- game
+---@param localizedID string
+function Util_Autosave(localizedID) end
+
+--- If only one team is alive, players on that team win.  Returns
+--- true if one team left. 
+---@param win_condition string
+---@return boolean
+function Util_CheckOneTeamLeft(win_condition) end
+
+--- SGROUP - ADD BATTLEGROUP AT MARKER
+---@param playerId any
+---@param squadgroupName any
+---@param armyType any
+---@param makerName any
+function Util_CreateBattleGroupAtMarker(playerId, squadgroupName, armyType, makerName) end
+
+--- Creates horrors and summons them in 
+---Use loadout of zero to create a squad at its min loadout. 
+--- Squads can never exceed their max loadout.
+---@param playerId PlayerID
+---@param squadgroupName string
+---@param pos Position
+---@param numsquads integer
+---@param loadout integer
+---@return SGroupID
+function Util_CreateHorrorsAndSummon(playerId, squadgroupName, pos, numsquads, loadout) end
+
+--- Creates a given number of squads with a loadout at a position
+--- and adds them to a squadgroup.  The squads are then dropped in
+--- a droppod. 
+---Use loadout of zero to create a squad at its min loadout. 
+--- Squads can never exceed their max loadout.
+---@param playerId PlayerID
+---@param squadgroupName string
+---@param squadBlueprint string
+---@param pos Position
+---@param numsquads integer
+---@param loadout integer
+---@return SGroupID
+function Util_CreateSquadsAndDropPodIn(playerId, squadgroupName, squadBlueprint, pos, numsquads, loadout) end
+
+--- Non-disrupting version of CreatSquadsAndDropPodIn.  Creates a given number of squads with a loadout at a position and adds them to a squadgroup.  The squads are then dropped in a droppod that has no disruption.
+--- Use loadout of zero to create a squad at its min loadout.  Squads can never exceed their max loadout.
+---@param playerId PlayerID
+---@param squadgroupName string
+---@param squadBlueprint string
+---@param pos Position
+---@param numsquads integer
+---@param loadout integer
+---@return SGroupID
+function Util_CreateSquadsAndDropPodIn2(playerId, squadgroupName, squadBlueprint, pos, numsquads, loadout) end
+
+--- Creates a given number of squads at a marker position and adds
+--- them to a squadgroup.  The squadgroup will be created if it
+--- doesnt exist. 
+---Squads will be created with min loadout.
+---@param playerId PlayerID
+---@param squadgroupName string
+---@param squadBlueprint string
+---@param markername string
+---@param numsquads integer
+---@return SGroupID
+function Util_CreateSquadsAtMarker(playerId, squadgroupName, squadBlueprint, markername, numsquads) end
+
+--- Creates a given number of squads at a marker position with a
+--- loadout and adds them to a squadgroup.  The squadgroup will be
+--- created if it doesnt exist. 
+---Use loadout of zero to create a squad at its min loadout. 
+--- Squads can never exceed their max loadout.
+---@param playerId PlayerID
+---@param squadgroupName string
+---@param squadBlueprint string
+---@param markername string
+---@param numsquads integer
+---@param loadout integer
+---@return SGroupID
+function Util_CreateSquadsAtMarkerEx(playerId, squadgroupName, squadBlueprint, markername, numsquads, loadout) end
+
+--- Creates a given number of squads at a marker position and adds
+--- them to a squadgroup.  The squad will spawn at a slightly
+--- random position in relation to the specified position.  The
+--- squadgroup will be created if it doesnt exist. 
+---Squads will be created with min loadout.
+---@param playerId PlayerID
+---@param squadgroupName string
+---@param squadBlueprint string
+---@param markername string
+---@param numsquads integer
+---@return SGroupID
+function Util_CreateSquadsAtMarkerRandom(playerId, squadgroupName, squadBlueprint, markername, numsquads) end
+
+--- Creates a given number of squads at a marker position with a
+--- loadout and adds them to a squadgroup.  The squad will spawn at
+--- a slightly random position in relation to the specified
+--- position.  The squadgroup will be created if it doesnt exist. 
+---Use loadout of zero to create a squad at its min loadout. 
+--- Squads can never exceed their max loadout.
+---@param playerId PlayerID
+---@param squadgroupName string
+---@param squadBlueprint string
+---@param markername string
+---@param numsquads integer
+---@param loadout integer
+---@return SGroupID
+function Util_CreateSquadsAtMarkerRandomEx(playerId, squadgroupName, squadBlueprint, markername, numsquads, loadout) end
+
+--- Creates a given number of squads at a position and adds them to
+--- a squadgroup.  The squadgroup will be created if it doesnt
+--- exist. 
+---Squads will be created with min loadout.
+---@param playerId PlayerID
+---@param squadgroupName string
+---@param squadBlueprint string
+---@param pos Position
+---@param numsquads integer
+---@return SGroupID
+function Util_CreateSquadsAtPosition(playerId, squadgroupName, squadBlueprint, pos, numsquads) end
+
+--- Creates a given number of squads with a loadout at a position
+--- and adds them to a squadgroup.  The squadgroup will be created
+--- if it doesnt exist. 
+---Use loadout of zero to create a squad at its min loadout. 
+--- Squads can never exceed their max loadout.
+---@param playerId PlayerID
+---@param squadgroupName string
+---@param squadBlueprint string
+---@param pos Position
+---@param numsquads integer
+---@param loadout integer
+---@return SGroupID
+function Util_CreateSquadsAtPositionEx(playerId, squadgroupName, squadBlueprint, pos, numsquads, loadout) end
+
+--- Creates a given number of squads at a position and adds them to
+--- a squadgroup.  The squad will spawn at a slightly random
+--- position in relation to the specified position.  The squadgroup
+--- will be created if it doesnt exist. 
+---Squads will be created with min loadout.
+---@param playerId PlayerID
+---@param squadgroupName string
+---@param squadBlueprint string
+---@param pos Position
+---@param numsquads integer
+---@return SGroupID
+function Util_CreateSquadsAtPositionRandom(playerId, squadgroupName, squadBlueprint, pos, numsquads) end
+
+--- Creates a given number of squads with a loadout at a position
+--- and adds them to a squadgroup.  The squad will spawn at a
+--- slightly random position in relation to the specified position.
+---  The squadgroup will be created if it doesnt exist. 
+---Use loadout of zero to create a squad at its min loadout. 
+--- Squads can never exceed their max loadout.
+---@param playerId PlayerID
+---@param squadgroupName string
+---@param squadBlueprint string
+---@param pos Position
+---@param numsquads integer
+---@param loadout integer
+---@return SGroupID
+function Util_CreateSquadsAtPositionRandomEx(playerId, squadgroupName, squadBlueprint, pos, numsquads, loadout) end
+
+--- Drop-pod an existing squadgroup to a position on the map 
+---Works on spawned or depspawned group
+---@param sgroupname string
+---@param pos Position
+function Util_DropPod(sgroupname, pos) end
+
+--- Drop-pod an existing squadgroup to a position on the map with no disruption
+--- Works on spawned or depspawned group
+---@param sgroupname string
+---@param pos Position
+function Util_DropPod2(sgroupname, pos) end
+
+--- Drop-pod an existing squadgroup to a marker on the map 
+---Works on spawned or depspawned group
+---@param sgroupname string
+---@param markername string
+function Util_DropPodMarker(sgroupname, markername) end
+
+--- Find all the entities with a given blueprint in sourcegroup and
+--- add them to destgroup. 
+---destgroup will be created if it does not already exist. 
+---@param sourcegroup string
+---@param destgroup string
+---@param bpname string
+function Util_GetEntitiesByBP(sourcegroup, destgroup, bpname) end
+
+--- Find all the squads with a given armour type in sourcegroup and
+--- add them to destgroup. 
+---destgroup will be created if it does not already exist.  See
+--- Squad_HasArmourType for list of valid armour types.
+---@param sourcegroup string
+---@param destgroup string
+---@param armourtype string
+function Util_GetSquadsByArmourType(sourcegroup, destgroup, armourtype) end
+
+--- Find all the squads with a given blueprint in sourcegroup and
+--- add them to destgroup. 
+---destgroup will be created if it does not already exist. 
+---@param sourcegroup string
+---@param destgroup string
+---@param bpname string
+function Util_GetSquadsByBP(sourcegroup, destgroup, bpname) end
+
+--- Returns trailing numbers from a string, if it exists, nil
+--- otherwise. E.G. "marker23" would return 23. 
+---@param val string
+---@return number
+function Util_GetTrailingNumber(val) end
+
+--- Function takes multiple strings and returns a BlueprintTable (
+--- used for SGroup_ContainsBlueprints ) 
+--- Example:
+---     local bpTable = Util_MakeBlueprintTable( "chaos_marine_squa
+---d", "chaos_marine_squad", "chaos_squad_bloodthirster" )
+---     --Check if SGroup contains ALL items from the list (two
+--- chaos marines and a bloodthirster)
+---     local result = SGroup_ContainsBlueprints( "sg_MyGroup",
+--- bpTable, true )
+---
+---     --Check if an SGroup contains ANY blueprints from the list 
+---    result = SGroup_ContainsBlueprints( "sg_MyGroup", bpTable,
+--- false )
+---
+---     If the first parameter is a table, it will append entries
+--- to the existing table
+---@param args Args
+---@return BlueprintTable
+function Util_MakeBlueprintTable(args) end
+
+--- Play an events file at a given markers location 
+---@param markername string
+---@param eventfile string
+---@return void
+function Util_MarkerFX(markername, eventfile) end
+
+--- Play the mission title fade. 
+---@param loc_str LocString
+function Util_MissionTitle(loc_str) end
+
+--- Muffles / Unmuffles all background FX sounds for NIS's 
+---@param mute boolean
+function Util_MuffleNISSound(mute) end
+
+---@param playerId any
+---@param tableName any
+---@param mkr1 any
+---@param mkr2 any
+function Util_NearMkrGoMkr(playerId, tableName, mkr1, mkr2) end
+
+--- Marks the specified objective as completed 
+---Use this function to complete an objective with the sound
+---@param titleid integer
+function Util_ObjectiveComplete(titleid) end
+
+--- Creates an objective and plays the objective created stinger to
+--- accompany it. 
+---Use this function to create an objective with the sound
+---@param objectiveTable table
+---@param primary boolean
+function Util_ObjectiveCreate(objectiveTable, primary) end
+
+--- Makes the specified objective as failed 
+---Use this function to fail an objective with the sound
+---@param titleid integer
+function Util_ObjectiveFail(titleid) end
+
+--- Create a looping ping. 
+---Works with the Util_Ping_Stop( ) to allow for the easy removal
+--- of looping pings without having to save pingID variables. Make
+--- up a pingname string and pass it in.
+---@param pingname string
+---@param markername string
+function Util_Ping_LoopingMkr(pingname, markername) end
+
+--- Stops a looping ping 
+---Works with the Util_Ping_LoopingMkr( ) to allow for the easy
+--- removal of looping pings without having to save pingID
+--- variables. Use the pingname to recall and stop a previously
+--- created looping ping
+---@param pingname string
+function Util_Ping_Stop(pingname) end
+
+--- Reset the contruction state for a building and order a builder
+--- group to start rebuilding the structure 
+---The building group must contain one and only one structure
+---@param building_groupname string
+---@param builder_groupname string
+function Util_ResetAndRebuild(building_groupname, builder_groupname) end
+
+--- this function orders the squad to move to a location, but to take its time
+---@param sgroup any
+---@param finalMarker any
+function Util_SGroupAmble(sgroup, finalMarker) end
+
+--- Converts a 2D top down position to a 3D ScarPosition. 
+--- 3D ScarPositions have the x axis left to right, the z axis in
+--- to out, and the y axis down to up (y axis represents the height
+--- of the terrain).  Use this function to convert a top-down 2D
+--- position to a 3D world position.
+---
+--- Note: (0,0) is in the center of the map.
+---@param xpos number
+---@param ypos number
+---@return Position
+function Util_ScarPos(xpos, ypos) end
+
+--- Sets sounds properly for Intelevents.  set true for start of IE
+--- and false for end of IE 
+---@param enter boolean
+function Util_SetIE(enter) end
+
+--- Play a Intel event. 
+---This function should used instead of Event_Start because it
+--- handles priorities.  If an nislet is triggered during an intel
+--- event, the intel event will be cancelled, and if an intel event
+--- is triggered during a nislet, the intel event will be queued.
+---@param func function
+function Util_StartIntel(func) end
+
+--- Play a NISlet. 
+---This function should used instead of Event_Start because it
+--- handles priorities.  If an nislet is triggered during an intel
+--- event, the intel event will be cancelled, and if an intel event
+--- is triggered during a nislet, the intel event will be queued.
+---@param func function
+function Util_StartNIS(func) end
+
+--- Summon an existing squadgroup to a position on the map 
+---Works on spawned or depspawned group
+---@param sgroupname string
+---@param pos Position
+function Util_Summon(sgroupname, pos) end
+
+--- Tracks a character and, if dead, drop pods a new one in. 
+---Use this function to track whether the player has a force
+--- commander etc.  If ever that character dies, a replacement will
+--- drop pod in at the specified marker
+---@param playerid integer
+---@param characterGroup string
+---@param characterBlueprint string
+---@param characterDropPodMarkerName string
+function Util_TrackCharacterAndDropPodIn(playerid, characterGroup, characterBlueprint, characterDropPodMarkerName) end
+
+-- from setup.scar
+
+--- Initializes the all of the players settings in one function and
+--- returns the playerID. 
+--- In most cases you will call this function from OnGameSetup and
+--- store the returned playerId in  a global variable.  The player
+--- index should be in the range [0 , (numPlayers-1)].
+---
+--- Valid player races are the shortnames of the race attrib
+--- files.
+---
+--- Example:
+---	function OnGameSetup( )
+---	    g_player1 = Setup_Player(0, "PlayerDisplayName",
+--- "ork_race", 1)
+---     -- g_player2 and g_player3 will be on the same team
+--- (allies)
+---     g_player2 = Setup_Player(1, "$20000", "space_marine_race",
+--- 2)
+---     g_player3 = Setup_Player(2, "$20001", "eldar_race", 2)
+---	end
+---@param playerIndex integer
+---@param playerName string
+---@param playerRace string
+---@param team integer
+---@return PlayerID
+function Setup_Player(playerIndex, playerName, playerRace, team) end
+
+-- from timer.scar
+
+--- Add the amount of time to the specified timer 
+---@param timerId integer
+---@param period number
+function Timer_Add(timerId, period) end
+
+--- Display (in the console) the amount of time remaining in the
+--- specified timer. 
+---@param timerId integer
+function Timer_Display(timerId) end
+
+--- Stop the specified timer. 
+---@param timerId integer
+function Timer_End(timerId) end
+
+--- Get the remaining time for the specified timer. 
+---@param timerId integer
+function Timer_GetRemaining(timerId) end
+
+--- Pause the specified timer. 
+---@param timerId integer
+function Timer_Pause(timerId) end
+
+--- Resume the specified timer. 
+---@param timerId integer
+function Timer_Resume(timerId) end
+
+--- Start a timer with the specified id, taking the required period
+--- ( in seconds ) 
+---@param timerId integer
+---@param period number
+function Timer_Start(timerId, period) end
+
+-- from ui.scar
+
+--- Add a new objective using an objective table. 
+---Example obj_table:
+--- obj_table = { title_id = 400009,	short_desc_id = 400010,
+--- help_tip_id = 400011 }
+---@param obj_table table
+---@param is_primary_obj boolean
+function Objective_Add(obj_table, is_primary_obj) end
+
+--- Scar ping at a marker position. use ping_type 'attack' for
+--- attack pings otherwise default ping will be used 
+---@param markername string
+---@param is_looping boolean
+---@param ping_type string
+---@return PingID
+function Ping_Marker(markername, is_looping, ping_type) end
+
+--- Scar ping at a position.  Scar ping will show up on terrain and
+--- minimap.  use ping_type 'attack' for attack pings otherwise
+--- default ping will be used 
+---@param pos Position
+---@param is_looping boolean
+---@param ping_type string
+---@return PingID
+function Ping_Position(pos, is_looping, ping_type) end
+
+--- Use this to stop a looping ping 
+---@param pingID PingID
+function Ping_Stop(pingID) end
+
+--- Prematurely hide/remove a countdown 
+function UI_HideCountdown() end
+
+--- Start a countdown displaying secsRemaining.  Timer will
+--- automagically countdown and hide once done. 
+---Pass in a formatID with format 'Timer title: %1TIME%'
+---@param formatID integer
+---@param secsRemaining number
+function UI_ShowCountdown(formatID, secsRemaining) end
+
+--- DO NOT SCARDOC - PRIVATE RULE
+function UI_ShowCountdown1SecRule() end
+
+--------------------------------------------------------------------------------
+-- Tier 2: Available via import("WXPScarUtil.scar")
+--------------------------------------------------------------------------------
+
+-- from wxpbutton.scar
+
+--- Create and Ability Button
+--- Must pass in a table of tga file references and localized string numbers.
+---@param textureTable table
+---@param tipTable table
+---@param boolean boolean
+---@return ButtonID
+function Util_AbilityButton_Create(textureTable, tipTable, boolean) end
+
+--- Create and Modal Ability Button
+--- Must pass in a table of tga file references and localized string numbers.
+---@param textureTable any
+---@param tipTable table
+---@param boolean1 boolean
+---@return ButtonID
+function Util_AbilityButton_CreateModal(textureTable, tipTable, boolean1) end
+
+--- Forces an update of all buttons in both the SGroup and EGroup button visibility managers
+--- Calling this function should not be needed in most cases, and should be avoided because of performance overheads.
+function Util_ButtonManagerUpdateAll() end
+
+--- Add an Ability Button that you want on an EGROUP to the Visibility Manager
+--- The function Util_EGroupAbilityButton_ManageVisible() must be added after this function is called for anything to happen.
+---@param buttonID ButtonID
+---@param egroupName string
+function Util_EGroupAbilityButton_Add2Manager(buttonID, egroupName) end
+
+function Util_EGroupAbilityButton_ManageVisible() end
+
+--- Remove an Ability Button from the EGroup Visibility Manager
+--- This will remove the button from the manager and hide it if it is visible.
+---@param buttonID ButtonID
+function Util_EGroupAbilityButton_Remove(buttonID) end
+
+--- Add an Ability Button that you want in the No Selection Visibility Manager
+--- The function Util_NoSelectionAbilityButton_ManageVisible() must be added after this function is called for anything to happen.
+---@param buttonID ButtonID
+function Util_NoSelectionAbilityButton_Add2Manager(buttonID) end
+
+--- Manages the visibility of Ability Buttons conditional on the user having NO selection made.
+--- This function should be added once with Rule_Add() or Rule_AddDelay() in order to avoid lag between having no selection and the button appearing.
+function Util_NoSelectionAbilityButton_ManageVisible() end
+
+--- Remove an Ability Button from the No Selection Visibility Manager
+--- This will remove the button from the manager and hide it if it is visible.
+---@param buttonID ButtonID
+function Util_NoSelectionAbilityButton_Remove(buttonID) end
+
+--- Add an Ability Button that you want on an SGROUP to the Visibility Manager
+--- The function Util_SGroupAbilityButton_ManageVisible() must be added after this function is called for anything to happen.
+---@param buttonID ButtonID
+---@param sgroupName string
+function Util_SGroupAbilityButton_Add2Manager(buttonID, sgroupName) end
+
+function Util_SGroupAbilityButton_ManageVisible() end
+
+--- Remove an Ability Button from the SGroup Visibility Manager
+--- This will remove the button from the manager and hide it if it is visible.
+---@param buttonID ButtonID
+function Util_SGroupAbilityButton_Remove(buttonID) end
+
+--- Create and Scar Button
+--- Must pass in a valid widget name and table of tga file references and localized string numbers.
+---@param widgetName string
+---@param textureTable any
+---@param tipTable table
+---@param boolean1 boolean
+---@param boolean2 boolean
+---@return ButtonID
+function Util_ScarButton_Create(widgetName, textureTable, tipTable, boolean1, boolean2) end
+
+-- from wxpcommand.scar
+
+--- Orders an entity to build a squad in it's build queue
+--- The squadBlueprintToBuild is the name of the squad you want to build from the building.
+---@param egroupname string
+---@param squadBlueprintToBuild string
+function Cmd_BuildSquad(egroupname, squadBlueprintToBuild) end
+
+--- Checks the egroup for all entities that can cast the ability and has those entities casts on themselves
+---@param groupName string
+---@param abilityName string
+---@return boolean
+function Cmd_EGroupCastAbilitySelf(groupName, abilityName) end
+
+--- Relocates every entity in the group that can relocate to the closest free spot withing 'searchRadius' meters of marker 'markerName'
+---@param groupName string
+---@param markerName string
+---@param searchRadius integer
+function Cmd_EGroupRelocateMarker(groupName, markerName, searchRadius) end
+
+--- Relocates every entity in the group that can relocate to the closest free spot within 'searchRadius' meters of 'position'.
+---@param groupName string
+---@param position Position
+---@param searchRadius integer
+function Cmd_EGroupRelocatePosition(groupName, position, searchRadius) end
+
+--- Checks the egroup for an entity that can cast the ability and casts it at the marker.
+---@param egroupname string
+---@param abilityname string
+---@param targetmarker string
+---@return boolean
+function Cmd_EntityCastAbilityMarker(egroupname, abilityname, targetmarker) end
+
+--- Checks the egroup for an entity that can cast the ability and casts it on the target pos.
+---@param egroupname string
+---@param abilityname string
+---@param targetpos Position
+---@return boolean
+function Cmd_EntityCastAbilityPos(egroupname, abilityname, targetpos) end
+
+--- Send a spawn slot A command to a harvester unit
+--- Spawn the unit linked to the spawnslot of the harvester unit
+---@param sgroupname string
+function Cmd_HarvestSpawnSlotA(sgroupname) end
+
+--- Send a spawn slot A command to a harvester unit
+--- Spawn the unit linked to the spawnslot of the harvester unit
+---@param sgroupname string
+function Cmd_HarvestSpawnSlotB(sgroupname) end
+
+--- Send a spawn slot A command to a harvester unit
+--- Spawn the unit linked to the spawnslot of the harvester unit
+---@param sgroupname string
+function Cmd_HarvestSpawnSlotC(sgroupname) end
+
+--- Moves squads in group to a location offset by some distance around 'position'.
+--- The offset is a number from 0 to 7 and indicates a location around 'position' as follows:
+--- 7   0   1
+--- 6  pos  2
+--- 5   4   3
+---@param groupName string
+---@param position Position
+---@param offset integer
+---@param distance number
+function Cmd_MoveToPosOffset(groupName, position, offset, distance) end
+
+--- Moves squads in group to a location offset by some distance around the targert sgroup.
+--- The the target SGroup can only have one squad in it. The offset is a number from 0 to 7 and indicates a location around the target sgroup (oriented based on that group's orientation) as follows:
+--- 7   0   1
+--- 6  pos  2
+--- 5   4   3
+---@param groupName string
+---@param targetGroupName string
+---@param offset integer
+---@param distance number
+function Cmd_MoveToSGroupOffset(groupName, targetGroupName, offset, distance) end
+
+--- Tell a squad to entrench.
+--- The given unit should have an squad entrench extension.
+---@param sgroupname string
+function Cmd_SquadEntrench(sgroupname) end
+
+--- Tell a squad to uproot.
+--- The given unit should have an squad entrench extension.
+---@param sgroupname string
+function Cmd_SquadUproot(sgroupname) end
+
+-- from wxpgroups.scar
+
+--- Returns the sum of the current healths of all entities in the group.
+---@param groupName string
+---@return number
+function EGroup_GetTotalHealthCurrent(groupName) end
+
+--- Returns the sum of the maximum healths of all entities in the group.
+---@param groupName string
+---@return number
+function EGroup_GetTotalHealthMax(groupName) end
+
+--- Returns whether all or any of the entities in the group have the specified modifier applied to them.
+--- If 'all' is true, all entities must have the modifier applied for the function to return true. If 'all' is false, at least one entity must have the modifier.
+---@param groupName string
+---@param modifierType string
+---@param all boolean
+---@return boolean
+function EGroup_HasModifier(groupName, modifierType, all) end
+
+--- Returns whether all or any entities in the group are relocating
+--- If 'all' is true, all entities must be relocating for the function to return true. If 'all' is false, at least one entity must be relocating.
+---@param groupName string
+---@param all boolean
+---@return boolean
+function EGroup_IsRelocating(groupName, all) end
+
+--- Uncaptures any captured strategic point or relic in the group
+---@param groupName string
+function EGroup_Uncapture(groupName) end
+
+--- Adds a leader at the given index to all squads in a group that can take a leader.
+--- This function will bypass all cost and queue prereqs
+---@param sgroupname string
+---@param leaderIndex integer
+function SGroup_AddLeadersAtIndex(sgroupname, leaderIndex) end
+
+--- Returns the sum of the current healths of all entities in all squads in the group.
+---@param groupName string
+---@return number
+function SGroup_GetTotalHealthCurrent(groupName) end
+
+--- Returns the sum of the maximum healths of all entities in all squads in the group.
+---@param groupName string
+---@return number
+function SGroup_GetTotalHealthMax(groupName) end
+
+--- Returns true if all or any squads in the sgroup are in the hold of any of the buildings in the buildings egroup
+--- It is not required that all (or even any) buildings in the buildings group have a hold
+---@param groupName string
+---@param buildingsGroupName string
+---@param all boolean
+---@return boolean
+function SGroup_IsInHold(groupName, buildingsGroupName, all) end
+
+--- Respawns the group at a location and triggers the event file at the location of every entity belonging to every squad in the group
+--- Example: SGroup_ReSpawnWithEffect("my_group", "mymarker", "data:Art/Events/Unit_Upgrade_Morale_FX/Reinforce_Trooper")
+---@param groupName string
+---@param markername string
+---@param eventFilename string
+function SGroup_ReSpawnMarkerWithEffect(groupName, markername, eventFilename) end
+
+-- from wxpmetamap.scar
+
+--- Returns a list of starting entities a race will currently be allocated.
+--- This function will throw an exception if called outside of a Meta Map game, an unknown race is specified or an out of range index is given.
+---@param startingEntityNameList table
+function MetaMap_GetAttackingRaceStartingEntitiesList(startingEntityNameList) end
+
+--- Returns a list of starting squads a race will currently be allocated.
+--- This function will throw an exception if called outside of a Meta Map game, an unknown race is specified or an out of range index is given.
+---@param raceName string
+---@param startingSquadNameList table
+function MetaMap_GetRaceStartingSquadsList(raceName, startingSquadNameList) end
+
+-- from wxprestrict.scar
+
+--- Applies restrictions for space marines.  You should call this at the begining of your mission for Player 1.
+---@param level integer
+function WXP_Restrict(level) end
+
+-- from wxpscarutil.scar
+
+--- Positions the camera view at the start of the first path so the game can fade up to a 'ready' shot. MUST be used first before any other CPath's are started. Should use CPath_CutToPath() to follow up.
+---@param canimName string
+---@param startKey string
+---@param endKey string
+function CPath_PresetCamera(canimName, startKey, endKey) end
+
+--- Returns whether all or any entities in the group are shrouded
+--- If 'all' is true, all entities must be shrouded for the function to return true. If 'all' is false, at least one entity must be shrouded.
+---@param groupName string
+---@param all boolean
+---@return boolean
+function EGroup_IsShrouded(groupName, all) end
+
+--- Takes the given egroupname and issues the 'Destroy' command to all entities. It should behave the same as if the player hit the delete key for each member.
+--- To absolutely kill entities, this should be used instead of either EGroup_SetAvgHealth(egroupname, 0) or EGroup_DestroyAllEntities(egroupname) as both of these do not always accomplish the desired effect
+---@param egroupname string
+---@param boolean boolean
+function EGroup_SelfDestroy(egroupname, boolean) end
+
+--- Enables or disables the shroud ability for all entities in the group that have the ability
+--- Shroud will be turned on if 'enable' is true and turned off when it is false
+---@param groupName string
+---@param enable boolean
+function EGroup_Shroud(groupName, enable) end
+
+--- Unreveals an area the size of a given markers proximity at that markers position.  YOU SHOULD ONLY CALL THIS IF YOU HAVE USED FOW_RevealMarker ON THAT MARKER PREVIOUSLY.
+--- This function will unreveal the FOW for ALL alive players.
+---@param markername string
+function FOW_UnRevealMarker(markername) end
+
+--- Sets the Requisition, Power and Pop for the player. Pass in a 'nil' value instead of a Real amount to skip the associated Resource Type. Ignores income cap and resource sharing.
+--- Leaving one Real amount off will automatically skip setting RT_Pop. Leaving two Real amounts off will skip RT_Power and RT_Pop.
+---@param playerID PlayerID
+---@param requisition number
+---@param power number
+---@param pop number
+function Player_SetAllResources(playerID, requisition, power, pop) end
+
+--- Adds a set of tracks to the requested playlist channel, sets how the next track to be played will be chosen, ordered (true) or random (false), and sets silence intervals between tracks for the requested playlist channel.
+---@param channel SoundChannel
+---@param tracksTable table
+---@param sequential boolean
+---@param looping boolean
+---@param silenceTable table
+function Playlist_Manager(channel, tracksTable, sequential, looping, silenceTable) end
+
+--- Checks to see if a Rule exists. If it does not exist, the rule will be added to be executed at every 'interval' seconds
+---@param functionName function
+---@param delay number
+function Rule_Check_AddInterval(functionName, delay) end
+
+--- Checks to see if a Rule exists. If it does not exist, the rule will be added to be executed  'calls' times, at every 'interval' seconds
+---@param functionName function
+---@param delay number
+---@param iter integer
+function Rule_Check_AddIntervalEx(functionName, delay, iter) end
+
+--- Checks to see if a Rule exists. If it does not exist, the rule will be added to be executed once, after 'interval' seconds
+---@param functionName function
+---@param delay number
+function Rule_Check_AddOneShot(functionName, delay) end
+
+--- Checks to see if a Rule exists. If it does, it will be deleted. If it doesn't there will be no result.
+---@param functionName function
+function Rule_Check_Remove(functionName) end
+
+--- Pass in a string of a sgroup. If the group exists, any squads within that group will be destroyed. If the group does not exist or if the group is empty there will be no result.
+--- The sgroupname is not deleted, it will still exist once the members are destroyed
+---@param groupName string
+function SGroup_Check_DestroyAllSquads(groupName) end
+
+--- Takes the given sgroupname and issues the 'Destroy' command to all squads. It should behave the same as if the player hit the delete key for each member.
+--- To absolutely kill squads, this should be used instead of either SGroup_SetAvgHealth(sgroupname, 0) or SGroup_DestroyAllSquads(sgroupname) as both of these do not always accomplish the desired effect
+---@param sgroupname string
+---@param boolean boolean
+function SGroup_SelfDestroy(sgroupname, boolean) end
+
+--- Hide and remove a counter
+---@param counterName string
+function UI_HideCount(counterName) end
+
+--- Hide and remove a ratio
+---@param ratioName string
+function UI_HideRatio(ratioName) end
+
+--- Create a counter with a displayed value. Assign a player and the formatID (aka. Localized String value )
+--- Example: UI_ShowCount( "ct_test", g_Player1, 861016, 5 )
+---@param counterName string
+---@param playerID PlayerID
+---@param formatID integer
+---@param initialValue number
+function UI_ShowCount(counterName, playerID, formatID, initialValue) end
+
+--- Create a counter with a displayed value. Assign a player and the formatID (aka. Localized String value )
+--- Example: UI_ShowCount( "ct_test", g_Player1, 861016, 5 )
+---@param counterName string
+---@param playerID PlayerID
+---@param formatID integer
+---@param initialValue number
+function UI_ShowCountDXP(counterName, playerID, formatID, initialValue) end
+
+--- Update the value of a counter. Pass in the name and the new value for the counter to display
+---@param counterName string
+---@param countValue number
+function UI_ShowCountUpdate(counterName, countValue) end
+
+--- Update the value of a counter. Pass in the name  the new value for the counter to display and the formatID
+---@param counterName string
+---@param countValue number
+---@param formatID integer
+function UI_ShowCountUpdateDxp(counterName, countValue, formatID) end
+
+--- Create a ratio with displayed values. Assign a player and the formatID (aka. Localized String value )
+--- Example: UI_ShowRatioDxp( "ratio_test", g_Player1, 38025, 4, 5 )
+---@param ratioName string
+---@param playerID PlayerID
+---@param formatID integer
+---@param value1 number
+---@param value2 number
+function UI_ShowRatio(ratioName, playerID, formatID, value1, value2) end
+
+--- Update the values of a ratio. Pass in the name, the formatID (aka. Localized String value) and the new values for the ratio to display
+---@param ratioName string
+---@param formatID integer
+---@param value1 number
+---@param value2 number
+function UI_ShowRatioUpdate(ratioName, formatID, value1, value2) end
+
+--- Gets units to attack the ground at a random position within the radius of a marker
+--- Use this function to create controlled random ground attacks to make units appear more lifelike
+---@param squadgroupname string
+---@param markername string
+function Util_AttackGroundMarkerRandomRadius(squadgroupname, markername) end
+
+--- Gets units moving to a random position within the radius of a marker
+--- Use this function to create controlled random movement to make units appear more lifelike
+---@param squadgroupname string
+---@param markername string
+function Util_AttackMoveMarkerRandomRadius(squadgroupname, markername) end
+
+--- Create an Objective Beacon FX at a marker
+---@param marker string
+---@return integer
+function Util_CreateBeaconMarker_Blue(marker) end
+
+--- Create an Objective Beacon FX at a marker
+---@param marker string
+---@return integer
+function Util_CreateBeaconMarker_Red(marker) end
+
+--- Create an Objective Beacon FX at a position
+---@param pos Position
+---@return integer
+function Util_CreateBeaconPosition_Blue(pos) end
+
+--- Create an Objective Beacon FX at a position
+---@param pos Position
+---@return integer
+function Util_CreateBeaconPosition_Red(pos) end
+
+--- Plays the non looping piece of music once through, then, after delay, plays the looping piece of music, looping.
+--- Use this function to setup detailed playlists in missions.
+---@param musictable_non table
+---@param musictable_loop table
+---@param delay integer
+function Util_Music_CreateSingleLoop(musictable_non, musictable_loop, delay) end
+
+--- Toggles all modifier event FX for the player
+--- Use this function to make NIS's look clean without wierd icons above units' heads
+---@param titleid integer
+function Util_NIS_ToggleModifierEvents(titleid) end
+
+--- Create a looping ping.
+--- Works with the Util_Ping_Stop( ) to allow for the easy removal of looping pings without having to save pingID variables. Make up a pingname string and pass it in.
+---@param pingname string
+---@param pos string
+function Util_Ping_LoopingPos(pingname, pos) end
+
+--- Removes an existing Objective Beacon - colour doesn't matter (*snicker*)
+---@param beaconID integer
+function Util_RemoveBeaconMarker(beaconID) end
+
+--- Sets the blood level for every blood pit in the group
+--- The level must be in the [0.0, 1.0] range
+---@param pitGroupName string
+---@param level number
+function Util_SetBloodPitLevel(pitGroupName, level) end
+
+--- Creates an objective and plays the objective created stinger to accompany it, and flashes the objective button.
+--- Use this function to create an objective with the sound
+---@param objectiveTable table
+---@param primary boolean
+---@param playerID integer
+function Util_WXP_ObjectiveCreate(objectiveTable, primary, playerID) end
+
+--- Creates a sub objective and plays the objective created stinger to accompany it, and flashes the objective button. Pass in the objective ID of the 'parent' objective
+--- Use this function to create an objective with the sound
+---@param objectiveTable table
+---@param parent_id integer
+function Util_WXP_ObjectiveSubCreate(objectiveTable, parent_id) end
+
+--- Adds all squads belonging to all players into a group. Removes any from the group that are despawned and destroys whatever is left.
+--- Should only be used when cleaning up, as this will destroy EVERY spawned squad in the entire game.
+function WXP_KillAllPlayersSpawnedSquads() end
+
+--- Adds all squads belonging to all players into a group. Removes any from the group that are despawned or in the indicated sgroup and destroys whatever is left.
+--- Should only be used when cleaning up, as this will destroy EVERY spawned squad in the entire game... except the one that you ask it not to.
+---@param sgroupname string
+function WXP_KillAllPlayersSpawnedSquadsExcept(sgroupname) end
+
+--- Turns off event cues, sets the viewable space to faded out, and presets the UI into letterbox mode
+function WXP_OpeningNISPreset() end
+
+-- from wxpui.scar
+
+--- Add a new objective using an objective table and associates it with a specific player
+--- Example obj_table:
+---@param obj_table table
+---@param is_primary_obj boolean
+---@param player PlayerID
+function Objective_AddPlayer(obj_table, is_primary_obj, player) end
+
+--- Associates a ping with an objective
+--- The ping will be shown at the specified marker on the mini map in the objectives dialog when the objective it is associated with is selected. Use ping_type 'attack' for attack pings, otherwise default ping will be used.
+---@param title_id integer
+---@param marker_name string
+---@param is_looping boolean
+---@param ping_type string
+---@return PingID
+function Objective_PingMarker(title_id, marker_name, is_looping, ping_type) end
+
+--- Associates a ping with an objective
+--- The ping will be shown at the specified position on the mini map in the objectives dialog when the objective it is associated with is selected. Use ping_type 'attack' for attack pings, otherwise default ping will be used.
+---@param title_id integer
+---@param position Position
+---@param is_looping boolean
+---@param ping_type string
+---@return PingID
+function Objective_PingPosition(title_id, position, is_looping, ping_type) end
+
+--- Add a new sub objective using an objective table and associates it with the specified parent objective
+--- Please note the only one level of sub objectives is supported (i.e.  an objective cannot be added as a sub objective of an existing sub objective)
+---@param obj_table table
+---@param parent_id integer
+function Objective_SubAdd(obj_table, parent_id) end
+
+--------------------------------------------------------------------------------
+-- Standalone: Requires explicit import()
+--------------------------------------------------------------------------------
+
+-- from balancetool.scar — requires import("BalanceTool.scar")
+
+function Balance_AddTimer() end
+
+function Balance_ApplyTimeOut() end
+
+--- Creates the maximum number of squads of this loadout given the
+--- resources at a marker position and adds them to a squadgroup. 
+--- The squadgroup will be created if it doesnt exist. 
+---Loadout will be clipped to unitMin and unitMax from the squad
+--- blueprint.
+---@param playerId PlayerID
+---@param squadgroupName string
+---@param squadBlueprint string
+---@param load_out_table table
+---@param markername string
+---@param requisition_amount number
+---@param power_amount number
+---@return SGroupID
+function Balance_CreateSquadsAtMarkerByResource(playerId, squadgroupName, squadBlueprint, load_out_table, markername, requisition_amount, power_amount) end
+
+function Balance_DumpStats() end
+
+function Balance_GameOver() end
+
+function Balance_OnInit() end
+
+function Balance_PrintTime() end
+
+---@param player any
+function Balance_Reset(player) end
+
+function Balance_Run() end
+
+--- Set the Lua Function used to initialize each Balance Tool
+--- iteration.  
+---The function is used to set up the forces that will battle
+---@param func function
+function Balance_SetInit(func) end
+
+---@param iterations any
+function Balance_SetIterations(iterations) end
+
+---@param name any
+function Balance_SetScriptName(name) end
+
+---@param timeout any
+function Balance_SetTimeOut(timeout) end
+
+function Balance_TimeOut() end
+
+-- from camerashake.scar — requires import("CameraShake.scar")
+
+--- Trigger a crazy big camera shake 
+---@param epicentre Position
+---@param duration number
+function CameraShake_Large(epicentre, duration) end
+
+--- Trigger a regular camera shake 
+---@param epicentre Position
+---@param duration number
+function CameraShake_Medium(epicentre, duration) end
+
+--- Trigger a small camera shake 
+---@param epicentre Position
+---@param duration number
+function CameraShake_Small(epicentre, duration) end
+
+-- from debug.scar — requires import("Debug.scar")
+
+---@param T any
+---@param msg any
+---@param indent any
+function Debug_PrintTable(T, msg, indent) end
+
+-- from wcutil.scar — requires import("WCUtil.scar")
+
+--- adds the WCUtil_Rule_CheckTotalAnnihalte if it doesnt already exist
+function WCUtil_AddCheckTotalAnnhilate() end
+
+--- MUST be called every second
+---@param TeamTable any
+---@param SettingsTable any
+function WCUtil_CheckStrategicPoints(TeamTable, SettingsTable) end
+
+--- returns filled out team table
+function WCUtil_InitTeamTable() end
+
+--- checks all player players and kills any that are totally annihilated
+function WCUtil_Rule_CheckTotalAnnihilate() end
+
+--------------------------------------------------------------------------------
+-- Engine-only: C++ built-ins (no .scar wrapper)
+--------------------------------------------------------------------------------
 
 --- Enables / disables the random infantry offset for all spawned
 --- and depsawned units in an sgroup. 
@@ -533,27 +3058,6 @@ function Anim_StopEGroupAnim(egroup, animname) end
 ---@param animname string
 function Anim_StopSGroupAnim(sgroup, animname) end
 
---- Creates the maximum number of squads of this loadout given the
---- resources at a marker position and adds them to a squadgroup. 
---- The squadgroup will be created if it doesnt exist. 
----Loadout will be clipped to unitMin and unitMax from the squad
---- blueprint.
----@param playerId PlayerID
----@param squadgroupName string
----@param squadBlueprint string
----@param load_out_table table
----@param markername string
----@param requisition_amount number
----@param power_amount number
----@return SGroupID
-function Balance_CreateSquadsAtMarkerByResource(playerId, squadgroupName, squadBlueprint, load_out_table, markername, requisition_amount, power_amount) end
-
---- Set the Lua Function used to initialize each Balance Tool
---- iteration.  
----The function is used to set up the forces that will battle
----@param func function
-function Balance_SetInit(func) end
-
 --- Blends out of the current camera path using time from the ME. 
 ---In order to call this, you must have called CPath_Start()
 ---
@@ -604,21 +3108,6 @@ function CPath_IsPlaying() end
 ---@param tokeyframe string
 function CPath_Start(cpath, fromkeyframe, tokeyframe) end
 
---- Trigger a crazy big camera shake 
----@param epicentre Position
----@param duration number
-function CameraShake_Large(epicentre, duration) end
-
---- Trigger a regular camera shake 
----@param epicentre Position
----@param duration number
-function CameraShake_Medium(epicentre, duration) end
-
---- Trigger a small camera shake 
----@param epicentre Position
----@param duration number
-function CameraShake_Small(epicentre, duration) end
-
 --- Resets the camera to default view 
 function Camera_DefaultView() end
 
@@ -632,12 +3121,6 @@ function Camera_Dump() end
 ---@param egroupID EGroupID
 ---@param secs number
 function Camera_FocusOnTargetEGroup(egroupID, secs) end
-
---- Focus the camera on a named marker. 
----This function can be called through a CTRL object in NISlets.
----@param markername string
----@param secs number
-function Camera_FocusOnTargetMarker(markername, secs) end
 
 --- Focus the camera on a target position. 
 ---This function MUST be called through a CTRL object in NISlets if
@@ -755,282 +3238,6 @@ function Camera_SetZoomDist(distance) end
 ---@param radius number
 ---@param falloff number
 function Camera_Shake(epicentre, timeSecs, intensity, radius, falloff) end
-
---- Attach the squad from sgroupnameAttachee to sgroupname.  Both
---- SGroups must contain only one squad. 
----@param sgroupname string
----@param sgroupnameAttachee string
-function Cmd_AttachSquads(sgroupname, sgroupnameAttachee) end
-
---- Order a squad group to attack another squad group.  This
---- function should track the target squad groups position.  
----The source squads will not stop moving until they reach the
---- targeted squad group.
----@param sourcesquadgroup string
----@param targetentitygroup string
-function Cmd_AttackEGroup(sourcesquadgroup, targetentitygroup) end
-
---- Order a squad group to ground attack a marker position.  
----@param sgroupname string
----@param markername string
-function Cmd_AttackGroundMarker(sgroupname, markername) end
-
---- Order a squad group to ground attack a position.  
----@param sgroupname string
----@param targetposition Position
-function Cmd_AttackGroundPos(sgroupname, targetposition) end
-
---- Order a squad group to ground move to a marker position.  
----@param sgroupname string
----@param markername string
-function Cmd_AttackMoveMarker(sgroupname, markername) end
-
---- Order a squad group to attack move to a position.  
----@param sgroupname string
----@param targetposition Position
-function Cmd_AttackMovePos(sgroupname, targetposition) end
-
---- Order a squad group to attack another squad group.  This
---- function should track the target squad groups position.  
----The source squads will not stop moving until they reach the
---- targeted squad group.
----@param sourcesquadgroup string
----@param targetsquadgroup string
-function Cmd_AttackSGroup(sourcesquadgroup, targetsquadgroup) end
-
---- Command an sgroup of units to capture an egroup of strategic
---- points 
----@param sgroupname string
----@param egroupname string
-function Cmd_Capture(sgroupname, egroupname) end
-
---- Checks the sgroup for an entity that can cast the ability and
---- casts it on the target pos.  Returns false if no items in the
---- group can cast. 
----@param sgroupname string
----@param abilityname string
----@param targetpos Position
----@return boolean
-function Cmd_CastAbilityMarker(sgroupname, abilityname, targetpos) end
-
---- Checks the sgroup for an entity that can cast the ability and
---- casts it on the target pos.  Returns false if no items in the
---- group can cast. 
----@param sgroupname string
----@param abilityname string
----@param targetpos Position
----@return boolean
-function Cmd_CastAbilityPos(sgroupname, abilityname, targetpos) end
-
---- Checks the sgroup for an entity that can cast the ability and
---- casts it on the target pos.  Returns false if no items in the
---- group can cast. 
----@param sgroupname string
----@param abilityname string
----@param targetgroup string
----@return boolean
-function Cmd_CastAbilitySGroup(sgroupname, abilityname, targetgroup) end
-
---- Checks the sgroup for an entity that can cast the ability and
---- casts on itself Returns false if no items in the group can
---- cast. 
----@param sgroupname string
----@param abilityname string
----@return boolean
-function Cmd_CastAbilitySelf(sgroupname, abilityname) end
-
---- Command an sgroup of builders to construct a building at a
---- marker position 
----@param builderSGroup string
----@param buildingBlueprint string
----@param markername string
-function Cmd_ConstructBlueprintMarker(builderSGroup, buildingBlueprint, markername) end
-
---- Command an sgroup of builders to construct a building an enity
---- (for listening posts etc) 
----@param builderSGroup string
----@param buildingBlueprint string
----@param egroupName string
-function Cmd_ConstructBlueprintOnEGroup(builderSGroup, buildingBlueprint, egroupName) end
-
---- Command an sgroup of builders to construct a building at a
---- position 
----@param builderSGroup string
----@param buildingBlueprint string
----@param pos Position
-function Cmd_ConstructBlueprintPos(builderSGroup, buildingBlueprint, pos) end
-
---- Command all buildings in an EGroup to unload their squads 
----@param buildinggroup string
-function Cmd_EmptyBuilding(buildinggroup) end
-
---- Command all transports in an SGroup to move to position and
---- unload 
----@param sgroupname string
----@param pos Position
-function Cmd_EmptyTransport(sgroupname, pos) end
-
---- Command a SGroup to enter the first building in buildinggroup 
----@param sgroupname string
----@param buildinggroup string
-function Cmd_EnterBuilding(sgroupname, buildinggroup) end
-
---- Command a SGroup to enter a transport in transportgroup 
----@param sgroupname string
----@param transportgroup string
-function Cmd_EnterTransport(sgroupname, transportgroup) end
-
---- Enables/Disables infiltration for an sgroup 
----@param sgroupName string
----@param on boolean
-function Cmd_Infiltrate(sgroupName, on) end
-
---- Returns true if ALL or ANY squads in a group are currently
---- capturing something. 
----Set all to true to check for ALL or set to false to check for
---- ANY
----@param sgroupname string
----@param all boolean
----@return boolean
-function Cmd_IsCapturing(sgroupname, all) end
-
---- Returns true if ALL or ANY squads in a group are currently
---- constructing a building. 
----Set all to true to check for ALL or set to false to check for
---- ANY
----@param sgroupname string
----@param all boolean
----@return boolean
-function Cmd_IsConstructingBuilding(sgroupname, all) end
-
---- Returns true if ALL or ANY entities in a group are currently
---- producing squads 
----Set all to true to check for ALL or set to false to check for
---- ANY
----@param egroupname string
----@param all boolean
----@return boolean
-function Cmd_IsProducingSquads(egroupname, all) end
-
---- Returns true if ALL or ANY squads in a group are currently
---- calling for reinforcments. 
----Set all to true to check for ALL or set to false to check for
---- ANY
----@param sgroupname string
----@param all boolean
----@return boolean
-function Cmd_IsReinforcing(sgroupname, all) end
-
---- Returns true if ALL or ANY squads in a group are currently
---- upgrading. 
----Set all to true to check for ALL or set to false to check for
---- ANY
----@param sgroupname string
----@param all boolean
----@return boolean
-function Cmd_IsUpgrading(sgroupname, all) end
-
---- Command an sgroup to jump to a given marker position.  
----Note: Jump restrictions such as range etc apply.
----@param sgroupname string
----@param markername string
-function Cmd_JumpToMarker(sgroupname, markername) end
-
---- Command an sgroup to jump to a given position.  The squad will
---- jump to the closest possible position. 
----Note: Jump restrictions such as range etc apply.
----@param sgroupname string
----@param position Position
-function Cmd_JumpToPos(sgroupname, position) end
-
---- Moves a squad group to the closest marker in a list of marker
---- names. 
----@param sgroupName string
----@param markerNameTable table
----@return markerID
-function Cmd_MoveToClosestMarker(sgroupName, markerNameTable) end
-
---- Move a squad group to the center of an entity group. 
----The move command will be issued by the player owner of the first
---- item in the group.  This function does nothing if the group is
---- empty.
----@param sgroupname string
----@param egroupname string
-function Cmd_MoveToEGroup(sgroupname, egroupname) end
-
---- Move a squad group to a given markers position. 
----The move command will be issued by the player owner of the first
---- item in the group.  This function does nothing if the group is
---- empty.
----@param sgroupname string
----@param markername string
-function Cmd_MoveToMarker(sgroupname, markername) end
-
---- Move a squad group to another squad group.  This function should
---- track the target squad groups position.  
----The source squads will not stop moving until they reach the
---- targeted squad group.
----@param sourcesquadgroup string
----@param targetsquadgroup string
-function Cmd_MoveToSGroup(sourcesquadgroup, targetsquadgroup) end
-
---- Calls possesion on a squads in a group.  Requirments for
---- possesion must be met 
----@param sgroupName string
-function Cmd_Possesion(sgroupName) end
-
---- Order a squad group to ramapge to a marker pos/ 
----@param sgroupname string
----@param targetposition Position
-function Cmd_RampageMarker(sgroupname, targetposition) end
-
---- Order a squad group to ramapge to a position.  
----@param sgroupname string
----@param targetposition Position
-function Cmd_RampagePos(sgroupname, targetposition) end
-
---- Sends a reinforce leader command to all squads in a group. 
---- count represents the number of commands to send. 
----Note: To create a squad bypassing the pre-reqs and costs use
---- Util_CreateSquadsAtPositionEx.
----@param squadgroupname string
----@param count integer
-function Cmd_ReinforceLeader(squadgroupname, count) end
-
---- Sends a reinforce command to all squads in a group.  count
---- represents the number of commands to send. 
----Note: To create a squad bypassing the pre-reqs and costs use
---- Util_CreateSquadsAtPositionEx.
----@param squadgroupname string
----@param count integer
-function Cmd_ReinforceTrooper(squadgroupname, count) end
-
---- Order a squad group set their stance.  Use MSTANCE_Assault,
---- MSTANCE_Ranged, MSTANCE_Versatile. 
----The order will be issued by the owner of the squad group.  This
---- function does nothing if the squad group is empty.
----@param squadgroupname string
----@param stance integer
-function Cmd_SetMeleeStance(squadgroupname, stance) end
-
---- Order a squad group set their stance.  Use STANCE_Hold,
---- STANCE_StandGround, STANCE_Burn, STANCE_CeaseFire, or
---- STANCE_Attack. 
----The order will be issued by the owner of the squad group.  This
---- function does nothing if the squad group is empty.
----@param squadgroupname string
----@param stance integer
-function Cmd_SetStance(squadgroupname, stance) end
-
---- Command an egroup to stop.  This is the same as issuing a stop
---- from the taskbar 
----@param egroupname string
-function Cmd_StopEntities(egroupname) end
-
---- Command an sgroup to stop.  This is the same as issuing a stop
---- from the taskbar 
----@param sgroupname string
-function Cmd_StopSquads(sgroupname) end
 
 --- Construct a building at a location 
 ---@param player PlayerID
@@ -1263,34 +3470,12 @@ function Cpu_IsDebugging(player) end
 ---@return boolean
 function Cpu_IsEnabled(player) end
 
---- Lock an EGroup from the cpuplayer 
---- NOTE: Only use this for strategic points and buildings! It
---- won't work for anything else
----@param cpu_player PlayerID
----@param egroup string
-function Cpu_LockEGroup(cpu_player, egroup) end
-
---- Lock an EGroup from all cpuplayers 
---- NOTE: Only use this for strategic points and buildings! It
---- won't work for anything else
----@param egroup string
-function Cpu_LockEGroupAcrossPlayers(egroup) end
-
 --- Lock an entity so the cpuplayer can't touch it 
 ---	Lockable entities: buildings and strategic points. If you would
 --- like to lock a squad, use Cpu_LockSquad 
 ---@param player PlayerID
 ---@param id integer
 function Cpu_LockEntity(player, id) end
-
---- Lock an SGroup from the cpuplayer 
----@param cpu_player PlayerID
----@param sgroup string
-function Cpu_LockSGroup(cpu_player, sgroup) end
-
---- Lock an SGroup from all cpuplayers 
----@param sgroup string
-function Cpu_LockSGroupAcrossPlayers(sgroup) end
 
 --- Lock a squad so the cpuplayer can't touch it 
 ---	Locking a squad forces the cpuplayer to let go of control of
@@ -1316,22 +3501,6 @@ function Cpu_ResetClassPreferences(player) end
 ---@param increment number
 function Cpu_SetBuildDemand(player, name, start, increment) end
 
---- Set a build order table for the cpu_player 
---- An example build table:
----	local build_table =
----	{
----		{"space_marine_squad_servitor", 1, 5},
----		{"space_marine_squad_scout", 2, 3}
----	}
---- The first number in each entry is the starting value -- the
---- lowest number gets built first
---- The second number is the increment that happens each time the
---- unit is built
---- NOTE: Setting build demand table clobbers the class preferences
----@param cpu_player PlayerID
----@param build_table table
-function Cpu_SetBuildTable(cpu_player, build_table) end
-
 --- Puts a limit on the number of this type of building that can be
 --- built 
 --- The building_name corresponds to the file name
@@ -1340,19 +3509,6 @@ function Cpu_SetBuildTable(cpu_player, build_table) end
 ---@param building_name string
 ---@param limit integer
 function Cpu_SetBuildingLimit(player, building_name, limit) end
-
---- Set limits to the buildings that an AI can build 
---- An example buildings table:
----	local buildings_table =
----	{
----		{"space_marine_vehicle_building", 2},
----		{"space_marine_listening_post", 1}
----	}
---- The first argument is the building name, the second is the
---- number of those buildings the AI can build
----@param cpu_player PlayerID
----@param buildings_table table
-function Cpu_SetBuildingLimitsTable(cpu_player, buildings_table) end
 
 --- Set the preference for a particular unit class 
 --- UnitClasses: 
@@ -1392,15 +3548,6 @@ function Cpu_SetClassPreference(player, unit_class, preference) end
 ---@param difficulty integer
 function Cpu_SetDifficulty(player, difficulty) end
 
---- Set the difficulty without worrying if the Cpu is enabled or not
---- 
----If you set the difficulty on a Cpu that's disabled, it'll crash.
---- This should take care of that. NOTE: You can always use the
---- regular one, this is only if you don't know or may not know
----@param cpu_player PlayerID
----@param difficulty_setting integer
-function Cpu_SetDifficultyForDummies(cpu_player, difficulty_setting) end
-
 --- If enabled, cpu player talks smack 
 ---@param player PlayerID
 ---@param enable boolean
@@ -1418,58 +3565,15 @@ function Cpu_SetMaxPercentage(player, percent) end
 ---@param player PlayerID
 function Cpu_UnlockAll(player) end
 
---- Unlock an EGroup from the cpuplayer 
---- NOTE: Only use this for strategic points and buildings! It
---- won't work for anything else
----@param cpu_player PlayerID
----@param egroup string
-function Cpu_UnlockEGroup(cpu_player, egroup) end
-
---- Lock an EGroup from all cpuplayers 
---- NOTE: Only use this for strategic points and buildings! It
---- won't work for anything else
----@param egroup string
-function Cpu_UnlockEGroupAcrossPlayers(egroup) end
-
 --- Unlock an entity so the cpuplayer has control of it 
 ---@param player PlayerID
 ---@param id integer
 function Cpu_UnlockEntity(player, id) end
 
---- Unlock an SGroup from the cpuplayer 
----@param cpu_player PlayerID
----@param sgroup string
-function Cpu_UnlockSGroup(cpu_player, sgroup) end
-
---- Lock an SGroup from all cpuplayers 
----@param sgroup string
-function Cpu_UnlockSGroupAcrossPlayers(sgroup) end
-
 --- Unlock a squad so the cpuplayer has control of it 
 ---@param player PlayerID
 ---@param id integer
 function Cpu_UnlockSquad(player, id) end
-
---- Returns the difficulty level for the mission (DIFFICULTY_EASY,
---- DIFFICULTY_NORMAL or DIFFICULTY_HARD) 
----@return integer
-function Difficulty_Get() end
-
---- Set the difficulty level for all players in a mission 
----This function should be called to set the difficulty level for
---- all players in the mission.  Note that it WILL NOT modify
---- attributes for the player themselves, just everyone else.  
---- Values for difficulty are: 0 = easy, 1 = normal, 2 = hard
----@param difficultlevel integer
-function Difficulty_SetForAll(difficultlevel) end
-
---- Set the difficulty level for one player 
----This function should be called to set the difficulty level for a
---- single player in a mission.  Values for difficulty are: 0 =
---- easy, 1 = normal, 2 = hard
----@param playerId PlayerID
----@param difficultlevel integer
-function Difficulty_SetForPlayer(playerId, difficultlevel) end
 
 --- Returns true if an entity blueprint exists with the given name. 
 ---@param name string
@@ -1494,31 +3598,6 @@ function EGroup_Add(group, entity) end
 ---@param grouptoadd EGroupID
 function EGroup_AddGroup(group, grouptoadd) end
 
---- Returns true if ALL or ANY entities in a group can see ALL or
---- ANY entities in a given egroup. 
----@param egroupname string
----@param targetegroupname string
----@param all boolean
----@return boolean
-function EGroup_CanSeeEGroup(egroupname, targetegroupname, all) end
-
---- Returns true if ALL or ANY entities in a group can see ALL or
---- ANY squads in a given sgroup. 
----@param egroupname string
----@param targetsgroupname string
----@param all boolean
----@return boolean
-function EGroup_CanSeeSGroup(egroupname, targetsgroupname, all) end
-
---- Returns true if ALL or ANY items in a group have the given
---- active command 
----See Entity_GetActiveCommand for valid command types
----@param groupname string
----@param cmd integer
----@param all boolean
----@return boolean
-function EGroup_CheckActiveCommand(groupname, cmd, all) end
-
 --- Removes all entities from a group 
 ---@param egroup EGroupID
 function EGroup_Clear(egroup) end
@@ -1529,14 +3608,6 @@ function EGroup_Clear(egroup) end
 ---@param group2 EGroupID
 ---@return boolean
 function EGroup_Compare(group1, group2) end
-
---- Returns true if ALL or ANY items in a group have built the given
---- addon 
----@param groupname string
----@param addonname string
----@param all boolean
----@return boolean
-function EGroup_ContainsAddOn(groupname, addonname, all) end
 
 --- Check if a group contains ALL or ANY of the items in a blueprint
 --- table. 
@@ -1578,26 +3649,9 @@ function EGroup_CountSpawned(egroup) end
 ---@return EGroupID
 function EGroup_Create(name) end
 
---- Find a entity group from name.  Creates a new one with given
---- name if it doesnt exist. 
----@param name string
----@return EGroupID
-function EGroup_CreateIfNotFound(name) end
-
---- Despawn all spawned entities in a group. 
----@param groupname string
-function EGroup_DeSpawn(groupname) end
-
 --- Manually destroy a group that you dont need anymore. 
 ---@param egroup EGroupID
 function EGroup_Destroy(egroup) end
-
---- Destroys all spawned and despawned entities in a group. 
---- Be careful not to confuse this with EGroup_Destroy which
---- destroys the group and NOT the items it contains.  This
---- function will destroy spawned and despawned items in a group
----@param groupname string
-function EGroup_DestroyAllEntities(groupname) end
 
 --- Returns true if the entity group with the given name exists 
 ---@param name string
@@ -1654,24 +3708,10 @@ function EGroup_ForEachAllOrAnyEx(egroup, all, f, spawned, despawned) end
 ---@return boolean
 function EGroup_ForEachEx(egroup, f, spawned, despawned) end
 
---- Gives addon to all members of the group 
----@param groupname string
----@param addonname string
----@return boolean
-function EGroup_ForceAddOn(groupname, addonname) end
-
 --- Find an entity group with a given name. 
 ---@param name string
 ---@return EGroupID
 function EGroup_FromName(name) end
-
---- Returns the average health of all units in a entity group as a
---- weighted percent [0.0, 1.0]. 
----Example: A group of entities with health 20/100 and 100/1000
---- would return 120/1100 ( approx 11 % )
----@param groupname string
----@return number
-function EGroup_GetAvgHealth(groupname) end
 
 --- Returns the despawned entity at the given index. 
 --- Use EGroup_GetSpawnedEntityAt if you want the spawned items in
@@ -1683,15 +3723,6 @@ function EGroup_GetAvgHealth(groupname) end
 ---@param index integer
 ---@return EntityID
 function EGroup_GetDeSpawnedEntityAt(group, index) end
-
---- Check invulnerablity state for ALL or ANY entity in an entity
---- group. 
---- Set all param to true to check for ALL or set to false to check
---- for ANY.
----@param groupname string
----@param all boolean
----@return boolean
-function EGroup_GetHealthInvulnerable(groupname, all) end
 
 --- Returns the name of a given entity group. 
 ---@param egroup EGroupID
@@ -1714,12 +3745,6 @@ function EGroup_GetPosition(group) end
 ---@return EntityID
 function EGroup_GetSpawnedEntityAt(group, index) end
 
---- Return true if any entities in a group contain a strategic point
---- with a structure on it 
----@param groupname string
----@return boolean
-function EGroup_HasStrategicPointWithStructure(groupname) end
-
 --- Performs a group intersection.  
 --- Only entities that are in both groups will be added to
 --- 'group'.
@@ -1730,90 +3755,10 @@ function EGroup_HasStrategicPointWithStructure(groupname) end
 ---@param grouptointersect EGroupID
 function EGroup_Intersection(group, grouptointersect) end
 
---- Returns true if all or any strategic points in a group have been
---- captured. 
----This function will ignore all entities that cannot be captured
---- and will return false if no entities in the group can be
---- captured.
----@param groupname string
----@param playerId PlayerID
----@param all boolean
----@return boolean
-function EGroup_IsCapturedByPlayer(groupname, playerId, all) end
-
---- Returns true if a named entity group contains no spawned or
---- despawned entities 
----@param name string
----@return boolean
-function EGroup_IsEmpty(name) end
-
---- Returns true if ALL or ANY entities are in cover. 
----@param egroupname string
----@param all boolean
----@return boolean
-function EGroup_IsInCover(egroupname, all) end
-
---- Return true if all items in a group are selected 
----@param groupname string
----@return boolean
-function EGroup_IsSelected(groupname) end
-
---- Returns true if ALL or ANY entities are under attack. 
----@param egroupname string
----@param all boolean
----@return boolean
-function EGroup_IsUnderAttack(egroupname, all) end
-
---- Returns true if ALL or ANY entities are under attack. 
----@param egroupname string
----@param all boolean
----@param player PlayerID
----@return boolean
-function EGroup_IsUnderAttackByPlayer(egroupname, all, player) end
-
---- Respawn all despawned entities in a group. 
----@param groupname string
-function EGroup_ReSpawn(groupname) end
-
 --- Removes an entity from a group. 
 ---@param group EGroupID
 ---@param entity EntityID
 function EGroup_Remove(group, entity) end
-
---- Call Entity_ResetConstructionState for all spawned buildings 
----See Entity_ResetConstructionState for more info
----@param groupname string
-function EGroup_ResetConstructionState(groupname) end
-
---- Resets the player owner to the world for all entities in the
---- group 
----@param groupname string
-function EGroup_ResetPlayerOwner(groupname) end
-
---- Sets the health of each unit in an entity group to a given
---- percent [0.0, 1.0]. 
----@param groupname string
----@param healthPercent number
----@return number
-function EGroup_SetAvgHealth(groupname, healthPercent) end
-
---- Forces all buildings in progress to complete their construction
---- state 
----@param groupname string
-function EGroup_SetConstructionComplete(groupname) end
-
---- Enable/Disable invulnerablity for an entire entity group. 
----IMPORTANT: You must disable invulnerability for everytime you
---- enable it!
----@param groupname string
----@param enabled boolean
-function EGroup_SetHealthInvulnerable(groupname, enabled) end
-
---- Changes the player owner for all spawned and despawned entities
---- of an EGroup. 
----@param groupname string
----@param owner PlayerID
-function EGroup_SetPlayerOwner(groupname, owner) end
 
 --- Removes the attached entity from the path 
 ---@param eanimname string
@@ -2017,11 +3962,6 @@ function Entity_IsBuilding(e) end
 ---@return boolean
 function Entity_IsCapturedByPlayer(entity, player) end
 
---- Returns true if entity is in cover. 
----@param entityId EntityID
----@return boolean
-function Entity_IsInCover(entityId) end
-
 --- Returns true if an entity is a strategic point (eg. it can be
 --- captured) 
 ---@param entity EntityID
@@ -2211,14 +4151,6 @@ function FOW_RevealEGroup(group, durationSecs) end
 ---@param entity EntityID
 ---@param durationSecs number
 function FOW_RevealEntity(entity, durationSecs) end
-
---- Reveals an area the size of a given markers proximity at that
---- markers position for a given amount of time.  YOU SHOULD ONLY
---- CALL THIS ONCE FOR EACH AREA. 
----This function will reveal the FOW for ALL alive players.
----@param markername string
----@param durationSecs number
-function FOW_RevealMarker(markername, durationSecs) end
 
 --- Reveals a squad groups line of sight(LOS) for all alive players
 --- over a given duration. YOU SHOULD ONLY CALL THIS ONCE FOR EACH
@@ -2430,45 +4362,6 @@ function Marker_GetType(marker) end
 ---@return boolean
 function Marker_InProximity(marker, pos) end
 
---- Breaks the morale of the currently selected squad 
-function Misc_BreakCurrentlySelectedSquad() end
-
---- Checks if any input event have occured in the last second 
-function Misc_DetectAnyInput() end
-
---- Applys/Removes a modifier to an egroup 
----@param groupid EGroupID
----@param modifier Modifier
----@param apply boolean
-function ModifierUtil_ApplyToEGroup(groupid, modifier, apply) end
-
---- Applys/Removes a modifier to a squadgroup 
----@param groupid SGroupID
----@param modifier Modifier
----@param apply boolean
-function ModifierUtil_ApplyToSGroup(groupid, modifier, apply) end
-
---- Returns the applier table index for a given modifier. 
----Returns zero if applier for modifier is not found.
----@param modifier Modifier
----@param playerid PlayerID
----@return integer
-function ModifierUtil_GetEntityApplierIndex(modifier, playerid) end
-
---- Returns the applier table index for a given modifier. 
----Returns zero if applier for modifier is not found.
----@param modifier Modifier
----@param entityid EntityID
----@return integer
-function ModifierUtil_GetEntityApplierIndex(modifier, entityid) end
-
---- Returns the applier table index for a given modifier. 
----Returns zero if applier for modifier is not found.
----@param modifier Modifier
----@param squadid SquadID
----@return integer
-function ModifierUtil_GetSquadApplierIndex(modifier, squadid) end
-
 --- Applies a player modifier to a player. 
 ---@param modifier ScarModifier
 ---@param player PlayerID
@@ -2538,14 +4431,6 @@ function Modifier_Remove(modID) end
 ---@param bEnable boolean
 function Modifier_SGroup_FX_Enable(sgroup, modifierName, bEnable) end
 
---- Add a new objective using an objective table. 
----Example obj_table:
---- obj_table = { title_id = 400009,	short_desc_id = 400010,
---- help_tip_id = 400011 }
----@param obj_table table
----@param is_primary_obj boolean
-function Objective_Add(obj_table, is_primary_obj) end
-
 --- Returns true if an objective exists 
 ---@param title_id integer
 ---@return boolean
@@ -2573,27 +4458,6 @@ function Objective_ShowScreen() end
 ---@param keyframe string
 function Path_KeyframeWait(pathname, keyframe) end
 
---- Scar ping at a marker position. use ping_type 'attack' for
---- attack pings otherwise default ping will be used 
----@param markername string
----@param is_looping boolean
----@param ping_type string
----@return PingID
-function Ping_Marker(markername, is_looping, ping_type) end
-
---- Scar ping at a position.  Scar ping will show up on terrain and
---- minimap.  use ping_type 'attack' for attack pings otherwise
---- default ping will be used 
----@param pos Position
----@param is_looping boolean
----@param ping_type string
----@return PingID
-function Ping_Position(pos, is_looping, ping_type) end
-
---- Use this to stop a looping ping 
----@param pingID PingID
-function Ping_Stop(pingID) end
-
 --- Retrieve a custom value in current player profile.  Returns an
 --- empty string if value does not exist 
 ---@param varName string
@@ -2604,35 +4468,6 @@ function PlayerProfile_GetVar(varName) end
 ---@param varName string
 ---@param val string
 function PlayerProfile_SetVar(varName, val) end
-
---- Add resource to player, as opposed to just setting it. 
----@param playerId PlayerID
----@param resourceType integer
----@param value number
-function Player_AddResource(playerId, resourceType, value) end
-
---- For the given player, get all of the squads gathered into a
---- squadgroup of your naming.   
----Squads will be added to given squad group.  If the given squad
---- group does not exist it will be created.
----@param playerId PlayerID
----@param squadgroupName string
----@return SGroupID
-function Player_AddSquadsToSGroup(playerId, squadgroupName) end
-
---- Returns true if ANY of a players squads are in proximity of a
---- marker 
----@param playerID PlayerID
----@param markername string
----@return boolean
-function Player_AreSquadsNearMarker(playerID, markername) end
-
---- Returns true if a player can see ALL or ANY items in an egroup 
----@param playerId PlayerID
----@param egroupname string
----@param all boolean
----@return boolean
-function Player_CanSeeEGroup(playerId, egroupname, all) end
 
 --- Returns true if a player can see a given entity 
 ---@param player PlayerID
@@ -2645,13 +4480,6 @@ function Player_CanSeeEntity(player, entity) end
 ---@param pos Position
 ---@return boolean
 function Player_CanSeePosition(player, pos) end
-
---- Returns true if a player can see ALL or ANY items in an sgroup 
----@param playerId PlayerID
----@param sgroupname string
----@param all boolean
----@return boolean
-function Player_CanSeeSGroup(playerId, sgroupname, all) end
 
 --- Returns true if a player can see ALL or ANY troopers in a given
 --- squad 
@@ -2675,15 +4503,6 @@ function Player_FromId(id) end
 ---@return PlayerID
 function Player_FromName(name) end
 
---- Add all players entities that are in proximity to a marker into
---- a squad group.  Group will be created if it doesnt already
---- exist. 
----The proximity of a marker is set in the mission editor.
----@param playerId PlayerID
----@param egroupName string
----@param markerName string
-function Player_GetAllEntitiesNearMarker(playerId, egroupName, markerName) end
-
 --- Add all players entities that are in proximity to a position
 --- into an entity group.  Group will be created if it doesnt
 --- already exist. 
@@ -2694,15 +4513,6 @@ function Player_GetAllEntitiesNearMarker(playerId, egroupName, markerName) end
 ---@param proximity number
 function Player_GetAllEntitiesNearPos(p, egroupName, pos, proximity) end
 
---- Add all players squads that are in proximity to a marker into a
---- squad group.  Group will be created if it doesnt already exist.
---- 
----The proximity of a marker is set in the mission editor.
----@param playerId PlayerID
----@param squadgroupName string
----@param markerName string
-function Player_GetAllSquadsNearMarker(playerId, squadgroupName, markerName) end
-
 --- Add all players squads that are in proximity to a point into a
 --- squad group.  Group will be created if it doesnt already exist.
 --- 
@@ -2712,33 +4522,6 @@ function Player_GetAllSquadsNearMarker(playerId, squadgroupName, markerName) end
 ---@param pos Position
 ---@param proximity number
 function Player_GetAllSquadsNearPos(p, sgroupName, pos, proximity) end
-
---- Returns the number of buidlings/sqauds with blueprints owned by
---- a player 
----blueprint name can be a squad blueprint OR an entity blueprint
----@param player PlayerID
----@param blueprintname string
----@return integer
-function Player_GetBlueprintCount(player, blueprintname) end
-
---- Returns the total number of buildings owned by this player. 
----@param playerId PlayerID
----@return integer
-function Player_GetBuildingsCount(playerId) end
-
---- Returns the total number of buildings owned by this player (with
---- exclusions). 
----@param playerId PlayerID
----@param exceptions table
----@return integer
-function Player_GetBuildingsCountExcept(playerId, exceptions) end
-
---- Returns the number of buildings owned by this player
---- (inclusive). 
----@param playerId PlayerID
----@param building_names table
----@return integer
-function Player_GetBuildingsCountOnly(playerId, building_names) end
 
 --- Use capType CT_SquadCap to get current squad cap or CT_Support
 --- to get current support cap. 
@@ -2872,43 +4655,11 @@ function Player_GetUnitCount(player) end
 ---@param researchName string
 function Player_GrantResearch(player, researchName) end
 
---- Returns true if this player owns any of the indicated building
---- type and they are fully constructed 
----@param playerId PlayerID
----@param building_blueprint Blueprint
----@return integer
-function Player_HasBuildingType(playerId, building_blueprint) end
-
---- Returns true if this player owns any buildings. (with
---- exclusions). 
----@param playerId PlayerID
----@param exceptions table
----@return integer
-function Player_HasBuildingsExcept(playerId, exceptions) end
-
---- Returns true if this player owns any squads (with exclusions). 
----@param playerId PlayerID
----@param exceptions table
----@return integer
-function Player_HasSquadsExcept(playerId, exceptions) end
-
---- Increases the ork pop cap using a modifier 
----@param playerId PlayerID
----@param maxcap integer
-function Player_IncreasePopCap(playerId, maxcap) end
-
 --- Returns true if player is still alive and false if player is
 --- dead.  Will error if playerIdx is an invalid index. 
 ---@param player PlayerID
 ---@return boolean
 function Player_IsAlive(player) end
-
---- Returns true if the players are allied and false if they are
---- not. 
----@param playerId1 PlayerID
----@param playerId2 PlayerID
----@return boolean
-function Player_IsAllied(playerId1, playerId2) end
 
 --- A player is totally annihilated when they have no 'killable'
 --- squads or entities. 
@@ -2923,52 +4674,20 @@ function Player_IsAnnihilated(player) end
 ---@param player PlayerID
 function Player_Kill(player) end
 
---- Returns true if a given player exculsivley owns all items in a
---- group 
----@param playerID PlayerID
----@param egroupID EGroupID
----@return boolean
-function Player_OwnsEGroup(playerID, egroupID) end
-
---- Returns true if a given player exculsivley owns all items in a
---- group 
----@param playerID PlayerID
----@param sgroupID SGroupID
----@return boolean
-function Player_OwnsSGroup(playerID, sgroupID) end
-
 --- Restrict an addon for a player 
 ---@param player PlayerID
 ---@param name string
 function Player_RestrictAddOn(player, name) end
-
---- Restrict a list of names. 
----list should contain an array of strings to restrict.
----@param id PlayerID
----@param list table
-function Player_RestrictAddOnList(id, list) end
 
 --- Restricts a building for a player. 
 ---@param player PlayerID
 ---@param name string
 function Player_RestrictBuilding(player, name) end
 
---- Restrict a list of names. 
----list should contain an array of strings to restrict.
----@param id PlayerID
----@param list table
-function Player_RestrictBuildingList(id, list) end
-
 --- Restricts a research item for a player 
 ---@param player PlayerID
 ---@param name string
 function Player_RestrictResearch(player, name) end
-
---- Restrict a list of names. 
----list should contain an array of strings to restrict.
----@param id PlayerID
----@param list table
-function Player_RestrictResearchList(id, list) end
 
 --- Restricts a squad for a player. 
 ---@param player PlayerID
@@ -3002,22 +4721,6 @@ function Player_SetMaxSupportCap(playerId, maxcap) end
 ---@param resourceType integer
 ---@param amt number
 function Player_SetResource(player, resourceType, amt) end
-
---- Sets the curretn squad cap for the player. 
----Note that any modifiers that adjust the current squad cap will
---- be applied on top of this.  Also note that the current squad
---- cap cannot go higher than the max squad cap.
----@param playerId PlayerID
----@param maxcap integer
-function Player_SetSquadCap(playerId, maxcap) end
-
---- Sets the current support cap for a player. 
----Note that any modifiers that adjust the current support cap will
---- be applied on top of this.  Also note, the current support cap
---- cannot go higher than the max support cap.
----@param playerId PlayerID
----@param cap integer
-function Player_SetSupportCap(playerId, cap) end
 
 --- Put a player in a team. Use TEAM_NEUTRAL as the team_id to set
 --- the player as neutral 
@@ -3061,332 +4764,6 @@ function Player_UpdateAllEntities(player) end
 ---@param player PlayerID
 ---@return SGroupID
 function Player_UpdateAllSquads(player) end
-
---- Adds a add-on item to a production list table. 
----@param addonname string
----@param list table
-function Prod_AddAddOnToList(addonname, list) end
-
---- Adds a research item to a production list table. 
----@param researchname string
----@param list table
-function Prod_AddResearchToList(researchname, list) end
-
---- Adds a squad item to a production list table. 
----@param blueprintname string
----@param list table
-function Prod_AddSquadToList(blueprintname, list) end
-
---- Returns true if a production list contains the given add-on item
---- 
----@param addonname string
----@param list table
----@return boolean
-function Prod_DoesListContainAddOn(addonname, list) end
-
---- Returns true if a production list contains the given research
---- item 
----@param researchname string
----@param list table
----@return boolean
-function Prod_DoesListContainResearch(researchname, list) end
-
---- Returns true if a production list contains the given squad item 
----@param blueprintname string
----@param list table
----@return boolean
-function Prod_DoesListContainSquad(blueprintname, list) end
-
---- Gets everything a given player currently has in production. 
----See Prod_GetProductionList for more info.
----@param playerId PlayerID
----@param list table
-function Prod_GetPlayerProductionList(playerId, list) end
-
---- Checks all entities to see if they're production-capable and if
---- so, adds their queued items to a Production Table. 
---- Use Prod_DoesListContainSquad etc to query the resulting
---- production table.
----
---- Example:
----     local ProductionTable = { }
----     Prod_GetProductionList( "GRP_ANYENTITYGROUP",
---- ProductionTable )
----     if(Prod_DoesListContainSquad("chaos_marine_squad",
---- ProductionTable) then
----         -- There is a building in GRP_ANYENTITYGROUP that is
---- currently producing a space marine Squad_CanSeeEntity
----     end
----@param egroupname string
----@param list table
-function Prod_GetProductionList(egroupname, list) end
-
---- Returns true the players henchmen are currently constructing a
---- building with given blueprintname. 
---- Note: If you find that you are calling this function for tons
---- of different buildings, we should change this function to take
---- a constuction list (similar to the way production lists are
---- handled)
----@param playerId PlayerID
----@param buildingname string
----@return boolean
-function Prod_IsPlayerConstructing(playerId, buildingname) end
-
---- Returns true if the player is producing all or any items in a
---- production table.  See Prod_IsProducing for more info. 
----@param playerId PlayerID
----@param list table
----@param all boolean
----@return boolean
-function Prod_IsPlayerProducing(playerId, list, all) end
-
---- Returns true if buildings in a entity group are producing ALL or
---- ANY items in a given production table. 
---- Use Prod_AddSquadToList etc to add entries to the given
---- production list.
----
---- Example:
----     local ProductionTable = { }
----     Prod_AddSquadToList( "chaos_squad_cultist", list )
----     Prod_AddSquadToList( "chaos_squad_cultist", list )
----     Prod_AddSquadToList( "chaos_squad_defiler", list )
----     if( Prod_IsProducing( "GRP_ANYENTITYGROUP", ProcutionTable,
---- true ) then
----         -- Of all the buildings in GRP_ANYENTITYGROUP, they are
---- producing 2 cultists and a defiler.
----     end
----@param egroupname string
----@param list table
----@param all boolean
----@return boolean
-function Prod_IsProducing(egroupname, list, all) end
-
---- Returns true if ALL entities in a group are in proximity to a
---- marker. 
---- The proximity of a marker can only be set in the mission
---- editor.
----@param groupname string
----@param markername string
----@return boolean
-function Prox_AllEntitiesNearMarker(groupname, markername) end
-
---- Returns true if ALL squads in a group are in proximity to a
---- marker. 
---- The proximity of a marker can only be set in the mission
---- editor.
----@param groupname string
----@param markername string
----@return boolean
-function Prox_AllSquadsNearMarker(groupname, markername) end
-
---- Returns true if ANY entity from a group are in proximity to a
---- marker. 
---- The proximity of a marker can only be set in the mission
---- editor.
----@param groupname string
----@param markername string
----@return boolean
-function Prox_AnyEntityNearMarker(groupname, markername) end
-
---- Returns true if ANY squads from a group are in proximity to a
---- marker. 
---- The proximity of a marker can only be set in the mission
---- editor.
----@param groupname string
----@param markername string
----@return boolean
-function Prox_AnySquadNearMarker(groupname, markername) end
-
---- Returns the distance between two entity groups. use checktype
---- PROX_SHORTEST, PROX_LONGEST, or PROX_CENTER. 
---- If check is PROX_SHORTEST this will return the shortest
---- distance between the two groups.
---- If check is PROX_LONGEST this will return the longest distance
---- between the two groups.
---- If check is PROX_CENTER this will return the distance between
---- the two groups centers.
----
----@param groupname1 string
----@param groupname2 string
----@param checktype ProxType
----@return number
-function Prox_EGroupEGroup(groupname1, groupname2, checktype) end
-
---- Returns the distance between an entity group and a squad group. 
---- use checktype PROX_SHORTEST, PROX_LONGEST, or PROX_CENTER. 
---- If check is PROX_SHORTEST this will return the shortest
---- distance between the two groups.
---- If check is PROX_LONGEST this will return the longest distance
---- between the two groups.
---- If check is PROX_CENTER this will return the distance between
---- the two groups centers.
----
----@param egroupname string
----@param sgroupname string
----@param checktype ProxType
----@return number
-function Prox_EGroupSGroup(egroupname, sgroupname, checktype) end
-
---- Checks if ALL or ANY entities are in proximity of a given entity
---- group. 
----Set "all" to true to check that ALL entities are in proximity,
---- or set "all" to false to check for ANY.
----@param egroupname1 string
----@param egroupname2 string
----@param proximity number
----@param all boolean
----@return boolean
-function Prox_EntitiesInProximityOfEntities(egroupname1, egroupname2, proximity, all) end
-
---- Returns the distance between a marker and an entity group.  use
---- checktype PROX_SHORTEST, PROX_LONGEST, or PROX_CENTER. 
---- If check is PROX_SHORTEST this will return the shortest
---- distance between the two groups.
---- If check is PROX_LONGEST this will return the longest distance
---- between the two groups.
---- If check is PROX_CENTER this will return the distance between
---- the two groups centers.
----
----@param markername string
----@param egroupname string
----@param checktype ProxType
----@return number
-function Prox_MarkerEGroup(markername, egroupname, checktype) end
-
---- Returns the distance between a marker and a squad group.  use
---- checktype PROX_SHORTEST, PROX_LONGEST, or PROX_CENTER. 
---- If check is PROX_SHORTEST this will return the shortest
---- distance between the two groups.
---- If check is PROX_LONGEST this will return the longest distance
---- between the two groups.
---- If check is PROX_CENTER this will return the distance between
---- the two groups centers.
----
----@param markername string
----@param sgroupname string
----@param checktype ProxType
----@return number
-function Prox_MarkerSGroup(markername, sgroupname, checktype) end
-
---- Checks if ALL or ANY players squads are in proximity of a given
---- entity group. 
----Set "all" to true to check that ALL entities are in proximity,
---- or set "all" to false to check for ANY.
----@param playerId PlayerID
----@param egroupname string
----@param proximity number
----@param all boolean
----@return boolean
-function Prox_PlayerEntitiesInProximityOfEntities(playerId, egroupname, proximity, all) end
-
---- Checks if ALL or ANY players entities are in proximity of a
---- given squad group. 
----Set "all" to true to check that ALL entities are in proximity,
---- or set "all" to false to check for ANY.
----@param playerId1 PlayerID
----@param playerId2 PlayerID
----@param proximity number
----@param all boolean
----@return boolean
-function Prox_PlayerEntitiesInProximityOfPlayerSquads(playerId1, playerId2, proximity, all) end
-
---- Checks if ALL or ANY players entities are in proximity of a
---- given squad group. 
----Set "all" to true to check that ALL entities are in proximity,
---- or set "all" to false to check for ANY.
----@param playerId PlayerID
----@param sgroupname string
----@param proximity number
----@param all boolean
----@return boolean
-function Prox_PlayerEntitiesInProximityOfSquads(playerId, sgroupname, proximity, all) end
-
---- Checks if ALL or ANY players squads are in proximity of a given
---- entity group. 
----Set "all" to true to check that ALL squads are in proximity, or
---- set "all" to false to check for ANY.
----@param playerId PlayerID
----@param sgroupname string
----@param proximity number
----@param all boolean
----@return boolean
-function Prox_PlayerSquadsInProximityOfEntities(playerId, sgroupname, proximity, all) end
-
---- Checks if ALL or ANY players squads are in proximity of a given
---- players entities. 
----Set "all" to true to check that ALL squads are in proximity, or
---- set "all" to false to check for ANY.
----@param playerId1 PlayerID
----@param playerId2 PlayerID
----@param proximity number
----@param all boolean
----@return boolean
-function Prox_PlayerSquadsInProximityOfPlayerEntities(playerId1, playerId2, proximity, all) end
-
---- Checks if ALL or ANY players squads are in proximity of a given
---- players squads. 
----Set "all" to true to check that ALL squads are in proximity, or
---- set "all" to false to check for ANY.
----@param playerId1 PlayerID
----@param playerId2 PlayerID
----@param proximity number
----@param all boolean
----@return boolean
-function Prox_PlayerSquadsInProximityOfPlayerSquads(playerId1, playerId2, proximity, all) end
-
---- Checks if ALL or ANY players squads are in proximity of a given
---- squad group. 
----Set "all" to true to check that ALL squads are in proximity, or
---- set "all" to false to check for ANY.
----@param playerId PlayerID
----@param sgroupname string
----@param proximity number
----@param all boolean
----@return boolean
-function Prox_PlayerSquadsInProximityOfSquads(playerId, sgroupname, proximity, all) end
-
---- Returns the distance between two squad groups. use checktype
---- PROX_SHORTEST, PROX_LONGEST, or PROX_CENTER. 
---- If check is PROX_SHORTEST this will return the shortest
---- distance between the two groups.
---- If check is PROX_LONGEST this will return the longest distance
---- between the two groups.
---- If check is PROX_CENTER this will return the distance between
---- the two groups centers.
----
----@param groupname1 string
----@param groupname2 string
----@param checktype ProxType
----@return number
-function Prox_SGroupSGroup(groupname1, groupname2, checktype) end
-
---- Checks if ALL or ANY squads are in proximity of a given entity
---- group. 
----Set "all" to true to check that ALL squads are in proximity, or
---- set "all" to false to check for ANY.
----@param sgroupname string
----@param egroupname string
----@param proximity number
----@param all boolean
----@return boolean
-function Prox_SquadsInProximityOfEntities(sgroupname, egroupname, proximity, all) end
-
---- Checks if ALL or ANY squads are in proximity of a given squad
---- group. 
----Set "all" to true to check that ALL squads are in proximity, or
---- set "all" to false to check for ANY.
----@param sgroupname1 string
----@param sgroupname2 string
----@param proximity number
----@param all boolean
----@return boolean
-function Prox_SquadsInProximityOfSquads(sgroupname1, sgroupname2, proximity, all) end
-
---- Applies restrictions for space marines.  You should call this at
---- the begining of your mission for Player 1. 
----@param playerId PlayerID
----@param level integer
-function Restrict_SpaceMarines(playerId, level) end
 
 --- Add a rule to be executed every frame 
 ---@param f function
@@ -3438,28 +4815,6 @@ function SGroup_Add(group, squadron) end
 ---@param grouptoadd SGroupID
 function SGroup_AddGroup(group, grouptoadd) end
 
---- Adds a leader to all squads in a group that can take a leader. 
----This function will bypass all cost and queue prereqs
----@param sgroupname string
-function SGroup_AddLeaders(sgroupname) end
-
---- Returns true if ALL or ANY squads in a group can see ALL or ANY
---- squads in a target sgroup. 
----@param sgroupname string
----@param targetegroupname string
----@param all boolean
----@return boolean
-function SGroup_CanSeeSGroup(sgroupname, targetegroupname, all) end
-
---- Returns true if ALL or ANY items in a group have the given
---- active command 
----See Squad_GetActiveCommand for valid command types
----@param groupname string
----@param cmd integer
----@param all boolean
----@return boolean
-function SGroup_CheckActiveCommand(groupname, cmd, all) end
-
 --- Removes all entities from a group. 
 ---@param sgroup SGroupID
 function SGroup_Clear(sgroup) end
@@ -3500,15 +4855,6 @@ function SGroup_ContainsBlueprints(sgroup, blueprintTable, all) end
 ---@return boolean
 function SGroup_ContainsSquad(sgroup, squad) end
 
---- Check if all or any squads in a group contain (at least) the
---- given number of weapon blueprints 
----@param groupname string
----@param weaponname string
----@param count integer
----@param all boolean
----@return boolean
-function SGroup_ContainsWeaponBlueprints(groupname, weaponname, count, all) end
-
 --- Returns the total number of spawned and despawned squads in a
 --- group. 
 ---@param sgroup SGroupID
@@ -3539,47 +4885,14 @@ function SGroup_CountSpawned(sgroup) end
 ---@return SGroupID
 function SGroup_Create(name) end
 
---- Find a squad group from name.  Creates a new one with given name
---- if it doesnt exist. 
----@param name string
----@return SGroupID
-function SGroup_CreateIfNotFound(name) end
-
---- Despawn all spawned squads in a group. 
----@param groupname string
-function SGroup_DeSpawn(groupname) end
-
 --- Manually destroy a group that you dont need anymore. 
 ---@param egroup SGroupID
 function SGroup_Destroy(egroup) end
-
---- Destroys all items in a group that are in proximity to a given
---- marker. 
----@param groupname string
----@param markername string
-function SGroup_DestroyAllInMarker(groupname, markername) end
-
---- Destroys all spawned and despawned squads in a group. 
---- Be careful not to confuse this with SGroup_Destroy which
---- destroys the group and NOT the squads it contains.  This
---- function will destroy spawned and despawned items in a group
----@param groupname string
-function SGroup_DestroyAllSquads(groupname) end
 
 --- Returns true if the squad group with the given name exists 
 ---@param name string
 ---@return boolean
 function SGroup_Exists(name) end
-
---- Makes two SGroups face each other 
----@param sgroupname1 string
----@param sgroupname2 string
-function SGroup_FaceEachOther(sgroupname1, sgroupname2) end
-
---- Makes a SGroup face a marker. 
----@param sgroupname string
----@param markername string
-function SGroup_FaceMarker(sgroupname, markername) end
 
 --- Works like Squad_FacePosition.  All Squads will face the same
 --- direction, with the squad the closest to the center determining
@@ -3588,11 +4901,6 @@ function SGroup_FaceMarker(sgroupname, markername) end
 ---@param sgroup SGroupID
 ---@param pos Position
 function SGroup_FacePosition(sgroup, pos) end
-
---- Makes the first SGroup face the second SGroup 
----@param sgroupname1 string
----@param sgroupname2 string
-function SGroup_FaceSGroup(sgroupname1, sgroupname2) end
 
 --- Call a lua function for each item in a group. Function will
 --- recieve (groupid, itemindex, itemid) and should return true to
@@ -3650,30 +4958,6 @@ function SGroup_ForEachEx(sgroup, f, spawned, despawned) end
 ---@return SGroupID
 function SGroup_FromName(name) end
 
---- Returns the average health of all units in a squad group as a
---- weighted percent [0.0, 1.0]. 
----Example: A group of squads with health 20/100 and 100/1000 would
---- return 120/1100 ( approx 11 % )
----@param groupname string
----@return number
-function SGroup_GetAvgHealth(groupname) end
-
---- Returns the average loadout of all squads in a group as a
---- percent [0.0, 1.0]. 
----Example: A group of squads with loadouts of 4/8 and 1/1 would
---- return 0.75
----@param groupname string
----@return number
-function SGroup_GetAvgLoadout(groupname) end
-
---- Returns the average morale of all units in a squad group as a
---- weighted percent [0.0, 1.0]. 
----Squads that are not affected by morale always have morale of
---- 1.0.  These squads will count towards your  total average
----@param groupname string
----@return number
-function SGroup_GetAvgMorale(groupname) end
-
 --- Returns the despawned squad at a certain position in the group.
 --- 
 ---  This is a one-based index (use index 1 to get the first squad
@@ -3683,24 +4967,6 @@ function SGroup_GetAvgMorale(groupname) end
 ---@param index integer
 ---@return SquadID
 function SGroup_GetDeSpawnedSquadAt(group, index) end
-
---- Check invulnerablity state for ALL or ANY squads in a squad
---- group. 
---- Set all param to true to check for ALL or set to false to check
---- for ANY.
----@param groupname string
----@param all boolean
----@return boolean
-function SGroup_GetHealthInvulnerable(groupname, all) end
-
---- Check morale invulnerablity state for ALL or ANY squads in a
---- squad group. 
---- Set all param to true to check for ALL or set to false to check
---- for ANY.
----@param groupname string
----@param all boolean
----@return boolean
-function SGroup_GetMoraleInvulnerable(groupname, all) end
 
 --- Returns the name of a given squad group. 
 ---@param sgroup SGroupID
@@ -3722,119 +4988,16 @@ function SGroup_GetPosition(group) end
 ---@return SquadID
 function SGroup_GetSpawnedSquadAt(group, index) end
 
---- Returns true if the sgroup has ANY squads of type blueprint have
---- received reinforcements  
----@param sgroupname string
----@param squadblueprint string
----@return boolean
-function SGroup_HasAnyReinforced(sgroupname, squadblueprint) end
-
---- Check if ALL or ANY squads in a sgroup have a leader 
---- Set all param to true to check for ALL or set to false to check
---- for ANY.
----@param groupname string
----@param all boolean
----@return boolean
-function SGroup_HasLeader(groupname, all) end
-
 --- Same as EGroup_Intersection. Note: You cannot mix squad groups
 --- and entity groups. 
 ---@param group SGroupID
 ---@param grouptointersect SGroupID
 function SGroup_Intersection(group, grouptointersect) end
 
---- Returns true if a named squad group is empty 
----@param name string
----@return boolean
-function SGroup_IsEmpty(name) end
-
---- Returns true if ALL or ANY squads are in cover. 
----@param sgroupname string
----@param all boolean
----@return boolean
-function SGroup_IsInCover(sgroupname, all) end
-
---- Returns true if ALL or ANY squads in a group are infiltrated 
----@param sgroupname string
----@param all boolean
----@return boolean
-function SGroup_IsInfiltrated(sgroupname, all) end
-
---- Returns true if ALL or ANY items in a group have broken morale 
----@param groupname string
----@param all boolean
----@return boolean
-function SGroup_IsMoraleBroken(groupname, all) end
-
---- Returns true if ANY entities in ANY squads of a group are on
---- currently screen 
----IMPORTANT: This function does not check the FOW.  It will return
---- true  even if the item is not revealed in FOW
----@param groupname string
----@return boolean
-function SGroup_IsOnScreen(groupname) end
-
---- Return true if all items in a group are selected 
----@param groupname string
----@return boolean
-function SGroup_IsSelected(groupname) end
-
---- Returns true if ALL or ANY squads are under attack. 
----@param sgroupname string
----@param all boolean
----@return boolean
-function SGroup_IsUnderAttack(sgroupname, all) end
-
---- Returns true if ALL or ANY squads are under attack. 
----@param sgroupname string
----@param all boolean
----@param player PlayerID
----@return boolean
-function SGroup_IsUnderAttackByPlayer(sgroupname, all, player) end
-
---- Respawn all despawned squads in a group. 
----@param groupname string
-function SGroup_ReSpawn(groupname) end
-
 --- Removes an squadron from a group. 
 ---@param group SGroupID
 ---@param squadron SquadID
 function SGroup_Remove(group, squadron) end
-
---- Sets the health of each squad in a squad group to a given
---- percent [0.0, 1.0]. 
----@param groupname string
----@param healthPercent number
----@return number
-function SGroup_SetAvgHealth(groupname, healthPercent) end
-
---- Sets the moral of each squad in a squad group to a given percent
---- [0.0, 1.0]. 
----@param groupname string
----@param moralePercent number
----@return number
-function SGroup_SetAvgMorale(groupname, moralePercent) end
-
---- Enable/Disable invulnerablity for an entire squad group. 
----IMPORTANT: You must disable invulnerability for everytime you
---- enable it!
----@param groupname string
----@param enabled boolean
-function SGroup_SetHealthInvulnerable(groupname, enabled) end
-
---- Enable/Disable morale invulnerablity for an entire squad group.
---- 
----IMPORTANT: You must disable invulnerability for everytime you
---- enable it!
----@param groupname string
----@param enabled boolean
-function SGroup_SetMoraleInvulnerable(groupname, enabled) end
-
---- Changes the player owner of spawned and despawned squads in an
---- SGroup. 
----@param groupname string
----@param owner PlayerID
-function SGroup_SetPlayerOwner(groupname, owner) end
 
 --- Call through a CTRL and use a wait to wait until a squad is a
 --- certain size. 
@@ -3901,44 +5064,6 @@ function Scar_InitExists(f) end
 --- Scar_AddInit 
 ---@param f function
 function Scar_RemoveInit(f) end
-
---- Set the Force Commanders weapon to be Power Sword 
----This function should be used in any mission where the Force
---- Commander shouldnt have a Daemon hamemr.
----@param playerId PlayerID
-function SetCommanderPowerSword(playerId) end
-
---- Set the Inquisitors weapon to be Power Sword 
----This function should be used in any mission where the Toth
---- (Inquisitor) shouldnt have a Daemon hamemr.
----@param playerId PlayerID
-function SetInquisitorPowerSword(playerId) end
-
---- Initializes the all of the players settings in one function and
---- returns the playerID. 
---- In most cases you will call this function from OnGameSetup and
---- store the returned playerId in  a global variable.  The player
---- index should be in the range [0 , (numPlayers-1)].
----
---- Valid player races are the shortnames of the race attrib
---- files.
----
---- Example:
----	function OnGameSetup( )
----	    g_player1 = Setup_Player(0, "PlayerDisplayName",
---- "ork_race", 1)
----     -- g_player2 and g_player3 will be on the same team
---- (allies)
----     g_player2 = Setup_Player(1, "$20000", "space_marine_race",
---- 2)
----     g_player3 = Setup_Player(2, "$20001", "eldar_race", 2)
----	end
----@param playerIndex integer
----@param playerName string
----@param playerRace string
----@param team integer
----@return PlayerID
-function Setup_Player(playerIndex, playerName, playerRace, team) end
 
 --- Set the UI name of a given player.  Name can be a localized
 --- string "$10020" or a normal string "PlayerName". 
@@ -4467,38 +5592,6 @@ function Taskbar_SetHelpTextLevel(level) end
 ---@param secsRemaining integer
 function Taskbar_SetStrategicUITimer(strat_ebp_name, player, secsRemaining) end
 
---- Add the amount of time to the specified timer 
----@param timerId integer
----@param period number
-function Timer_Add(timerId, period) end
-
---- Display (in the console) the amount of time remaining in the
---- specified timer. 
----@param timerId integer
-function Timer_Display(timerId) end
-
---- Stop the specified timer. 
----@param timerId integer
-function Timer_End(timerId) end
-
---- Get the remaining time for the specified timer. 
----@param timerId integer
-function Timer_GetRemaining(timerId) end
-
---- Pause the specified timer. 
----@param timerId integer
-function Timer_Pause(timerId) end
-
---- Resume the specified timer. 
----@param timerId integer
-function Timer_Resume(timerId) end
-
---- Start a timer with the specified id, taking the required period
---- ( in seconds ) 
----@param timerId integer
----@param period number
-function Timer_Start(timerId, period) end
-
 --- Displays a breif UI warning in the critical alert message area.
 --- 
 ---PLEASE be very careful how you use this as it can cause
@@ -4508,382 +5601,6 @@ function Timer_Start(timerId, period) end
 --- Loc_FormatText instead.  Ask for help if you are unsure.
 ---@param locText LocString
 function UIWarning_Show(locText) end
-
---- Prematurely hide/remove a countdown 
-function UI_HideCountdown() end
-
---- Start a countdown displaying secsRemaining.  Timer will
---- automagically countdown and hide once done. 
----Pass in a formatID with format 'Timer title: %1TIME%'
----@param formatID integer
----@param secsRemaining number
-function UI_ShowCountdown(formatID, secsRemaining) end
-
---- Unrestricts a specific addon and gives an intelevent style
---- dialog and an event cue with it.  Pass in "none" for event cue
---- or dialog in order to not display the alerts 
----@param playerId PlayerID
----@param addon_blueprint blueprint
----@param eventcuedescription_locId integer
----@param dialog_locId integer
-function Unrestrict_AddOnWithAlerts(playerId, addon_blueprint, eventcuedescription_locId, dialog_locId) end
-
---- Unrestricts a specific building and gives an intelevent style
---- dialog and an event cue with it.  Pass in "none" for event cue
---- or dialog in order to not display the alerts 
----@param playerId PlayerID
----@param building_blueprint blueprint
----@param eventcuedescription_locId integer
----@param dialog_locId integer
-function Unrestrict_BuildingWithAlerts(playerId, building_blueprint, eventcuedescription_locId, dialog_locId) end
-
---- Unrestricts a specific research and gives an intelevent style
---- dialog and an event cue with it.  Pass in "none" for event cue
---- or dialog in order to not display the alerts 
----@param playerId PlayerID
----@param research_blueprint blueprint
----@param eventcuedescription_locId integer
----@param dialog_locId integer
-function Unrestrict_ResearchWithAlerts(playerId, research_blueprint, eventcuedescription_locId, dialog_locId) end
-
---- Unrestricts a specific squad and gives an intelevent style
---- dialog and an event cue with it.  Pass in "none" for event cue
---- or dialog in order to not display the alerts 
----@param playerId PlayerID
----@param squad_blueprint blueprint
----@param eventcuedescription_locId integer
----@param dialog_locId integer
-function Unrestrict_SquadWithAlerts(playerId, squad_blueprint, eventcuedescription_locId, dialog_locId) end
-
---- Unrestricts a specific weapon  and gives an intelevent style
---- dialog and an event cue with it.  Pass in "none" for event cue
---- or dialog in order to not display the alerts 
----@param playerId PlayerID
----@param weapon_blueprint blueprint
----@param eventcuedescription_locId integer
----@param dialog_locId integer
-function Unrestrict_WeaponWithAlerts(playerId, weapon_blueprint, eventcuedescription_locId, dialog_locId) end
-
---- Creates an Autosave and prints text to screen to let player know
---- its happening. 
----Use this function to create a save game in the single player
---- game
----@param localizedID string
-function Util_Autosave(localizedID) end
-
---- If only one team is alive, players on that team win.  Returns
---- true if one team left. 
----@param win_condition string
----@return boolean
-function Util_CheckOneTeamLeft(win_condition) end
-
---- Creates horrors and summons them in 
----Use loadout of zero to create a squad at its min loadout. 
---- Squads can never exceed their max loadout.
----@param playerId PlayerID
----@param squadgroupName string
----@param pos Position
----@param numsquads integer
----@param loadout integer
----@return SGroupID
-function Util_CreateHorrorsAndSummon(playerId, squadgroupName, pos, numsquads, loadout) end
-
---- Creates a given number of squads with a loadout at a position
---- and adds them to a squadgroup.  The squads are then dropped in
---- a droppod. 
----Use loadout of zero to create a squad at its min loadout. 
---- Squads can never exceed their max loadout.
----@param playerId PlayerID
----@param squadgroupName string
----@param squadBlueprint string
----@param pos Position
----@param numsquads integer
----@param loadout integer
----@return SGroupID
-function Util_CreateSquadsAndDropPodIn(playerId, squadgroupName, squadBlueprint, pos, numsquads, loadout) end
-
---- Creates a given number of squads at a marker position and adds
---- them to a squadgroup.  The squadgroup will be created if it
---- doesnt exist. 
----Squads will be created with min loadout.
----@param playerId PlayerID
----@param squadgroupName string
----@param squadBlueprint string
----@param markername string
----@param numsquads integer
----@return SGroupID
-function Util_CreateSquadsAtMarker(playerId, squadgroupName, squadBlueprint, markername, numsquads) end
-
---- Creates a given number of squads at a marker position with a
---- loadout and adds them to a squadgroup.  The squadgroup will be
---- created if it doesnt exist. 
----Use loadout of zero to create a squad at its min loadout. 
---- Squads can never exceed their max loadout.
----@param playerId PlayerID
----@param squadgroupName string
----@param squadBlueprint string
----@param markername string
----@param numsquads integer
----@param loadout integer
----@return SGroupID
-function Util_CreateSquadsAtMarkerEx(playerId, squadgroupName, squadBlueprint, markername, numsquads, loadout) end
-
---- Creates a given number of squads at a marker position and adds
---- them to a squadgroup.  The squad will spawn at a slightly
---- random position in relation to the specified position.  The
---- squadgroup will be created if it doesnt exist. 
----Squads will be created with min loadout.
----@param playerId PlayerID
----@param squadgroupName string
----@param squadBlueprint string
----@param markername string
----@param numsquads integer
----@return SGroupID
-function Util_CreateSquadsAtMarkerRandom(playerId, squadgroupName, squadBlueprint, markername, numsquads) end
-
---- Creates a given number of squads at a marker position with a
---- loadout and adds them to a squadgroup.  The squad will spawn at
---- a slightly random position in relation to the specified
---- position.  The squadgroup will be created if it doesnt exist. 
----Use loadout of zero to create a squad at its min loadout. 
---- Squads can never exceed their max loadout.
----@param playerId PlayerID
----@param squadgroupName string
----@param squadBlueprint string
----@param markername string
----@param numsquads integer
----@param loadout integer
----@return SGroupID
-function Util_CreateSquadsAtMarkerRandomEx(playerId, squadgroupName, squadBlueprint, markername, numsquads, loadout) end
-
---- Creates a given number of squads at a position and adds them to
---- a squadgroup.  The squadgroup will be created if it doesnt
---- exist. 
----Squads will be created with min loadout.
----@param playerId PlayerID
----@param squadgroupName string
----@param squadBlueprint string
----@param pos Position
----@param numsquads integer
----@return SGroupID
-function Util_CreateSquadsAtPosition(playerId, squadgroupName, squadBlueprint, pos, numsquads) end
-
---- Creates a given number of squads with a loadout at a position
---- and adds them to a squadgroup.  The squadgroup will be created
---- if it doesnt exist. 
----Use loadout of zero to create a squad at its min loadout. 
---- Squads can never exceed their max loadout.
----@param playerId PlayerID
----@param squadgroupName string
----@param squadBlueprint string
----@param pos Position
----@param numsquads integer
----@param loadout integer
----@return SGroupID
-function Util_CreateSquadsAtPositionEx(playerId, squadgroupName, squadBlueprint, pos, numsquads, loadout) end
-
---- Creates a given number of squads at a position and adds them to
---- a squadgroup.  The squad will spawn at a slightly random
---- position in relation to the specified position.  The squadgroup
---- will be created if it doesnt exist. 
----Squads will be created with min loadout.
----@param playerId PlayerID
----@param squadgroupName string
----@param squadBlueprint string
----@param pos Position
----@param numsquads integer
----@return SGroupID
-function Util_CreateSquadsAtPositionRandom(playerId, squadgroupName, squadBlueprint, pos, numsquads) end
-
---- Creates a given number of squads with a loadout at a position
---- and adds them to a squadgroup.  The squad will spawn at a
---- slightly random position in relation to the specified position.
----  The squadgroup will be created if it doesnt exist. 
----Use loadout of zero to create a squad at its min loadout. 
---- Squads can never exceed their max loadout.
----@param playerId PlayerID
----@param squadgroupName string
----@param squadBlueprint string
----@param pos Position
----@param numsquads integer
----@param loadout integer
----@return SGroupID
-function Util_CreateSquadsAtPositionRandomEx(playerId, squadgroupName, squadBlueprint, pos, numsquads, loadout) end
-
---- Drop-pod an existing squadgroup to a position on the map 
----Works on spawned or depspawned group
----@param sgroupname string
----@param pos Position
-function Util_DropPod(sgroupname, pos) end
-
---- Drop-pod an existing squadgroup to a marker on the map 
----Works on spawned or depspawned group
----@param sgroupname string
----@param markername string
-function Util_DropPodMarker(sgroupname, markername) end
-
---- Find all the entities with a given blueprint in sourcegroup and
---- add them to destgroup. 
----destgroup will be created if it does not already exist. 
----@param sourcegroup string
----@param destgroup string
----@param bpname string
-function Util_GetEntitiesByBP(sourcegroup, destgroup, bpname) end
-
---- Find all the squads with a given armour type in sourcegroup and
---- add them to destgroup. 
----destgroup will be created if it does not already exist.  See
---- Squad_HasArmourType for list of valid armour types.
----@param sourcegroup string
----@param destgroup string
----@param armourtype string
-function Util_GetSquadsByArmourType(sourcegroup, destgroup, armourtype) end
-
---- Find all the squads with a given blueprint in sourcegroup and
---- add them to destgroup. 
----destgroup will be created if it does not already exist. 
----@param sourcegroup string
----@param destgroup string
----@param bpname string
-function Util_GetSquadsByBP(sourcegroup, destgroup, bpname) end
-
---- Adds all the points owned by a given player into a given group. 
---- use types SPT_StrategicPoint SPT_StrategicObjective or
---- SPT_Relic 
----Pass in a playerID of nil to get all relics owned by the world
----@param strategicpoint_type integer
----@param playerID PlayerID
----@param groupname string
-function Util_GetStrategicPoints(strategicpoint_type, playerID, groupname) end
-
---- Returns trailing numbers from a string, if it exists, nil
---- otherwise. E.G. "marker23" would return 23. 
----@param val string
----@return number
-function Util_GetTrailingNumber(val) end
-
---- Function takes multiple strings and returns a BlueprintTable (
---- used for SGroup_ContainsBlueprints ) 
---- Example:
----     local bpTable = Util_MakeBlueprintTable( "chaos_marine_squa
----d", "chaos_marine_squad", "chaos_squad_bloodthirster" )
----     --Check if SGroup contains ALL items from the list (two
---- chaos marines and a bloodthirster)
----     local result = SGroup_ContainsBlueprints( "sg_MyGroup",
---- bpTable, true )
----
----     --Check if an SGroup contains ANY blueprints from the list 
----    result = SGroup_ContainsBlueprints( "sg_MyGroup", bpTable,
---- false )
----
----     If the first parameter is a table, it will append entries
---- to the existing table
----@param args Args
----@return BlueprintTable
-function Util_MakeBlueprintTable(args) end
-
---- Play an events file at a given markers location 
----@param markername string
----@param eventfile string
----@return void
-function Util_MarkerFX(markername, eventfile) end
-
---- Play the mission title fade. 
----@param loc_str LocString
-function Util_MissionTitle(loc_str) end
-
---- Muffles / Unmuffles all background FX sounds for NIS's 
----@param mute boolean
-function Util_MuffleNISSound(mute) end
-
---- Marks the specified objective as completed 
----Use this function to complete an objective with the sound
----@param titleid integer
-function Util_ObjectiveComplete(titleid) end
-
---- Creates an objective and plays the objective created stinger to
---- accompany it. 
----Use this function to create an objective with the sound
----@param objectiveTable table
----@param primary boolean
-function Util_ObjectiveCreate(objectiveTable, primary) end
-
---- Makes the specified objective as failed 
----Use this function to fail an objective with the sound
----@param titleid integer
-function Util_ObjectiveFail(titleid) end
-
---- Create a looping ping. 
----Works with the Util_Ping_Stop( ) to allow for the easy removal
---- of looping pings without having to save pingID variables. Make
---- up a pingname string and pass it in.
----@param pingname string
----@param markername string
-function Util_Ping_LoopingMkr(pingname, markername) end
-
---- Stops a looping ping 
----Works with the Util_Ping_LoopingMkr( ) to allow for the easy
---- removal of looping pings without having to save pingID
---- variables. Use the pingname to recall and stop a previously
---- created looping ping
----@param pingname string
-function Util_Ping_Stop(pingname) end
-
---- Reset the contruction state for a building and order a builder
---- group to start rebuilding the structure 
----The building group must contain one and only one structure
----@param building_groupname string
----@param builder_groupname string
-function Util_ResetAndRebuild(building_groupname, builder_groupname) end
-
---- Converts a 2D top down position to a 3D ScarPosition. 
---- 3D ScarPositions have the x axis left to right, the z axis in
---- to out, and the y axis down to up (y axis represents the height
---- of the terrain).  Use this function to convert a top-down 2D
---- position to a 3D world position.
----
---- Note: (0,0) is in the center of the map.
----@param xpos number
----@param ypos number
----@return Position
-function Util_ScarPos(xpos, ypos) end
-
---- Sets sounds properly for Intelevents.  set true for start of IE
---- and false for end of IE 
----@param enter boolean
-function Util_SetIE(enter) end
-
---- Play a Intel event. 
----This function should used instead of Event_Start because it
---- handles priorities.  If an nislet is triggered during an intel
---- event, the intel event will be cancelled, and if an intel event
---- is triggered during a nislet, the intel event will be queued.
----@param func function
-function Util_StartIntel(func) end
-
---- Play a NISlet. 
----This function should used instead of Event_Start because it
---- handles priorities.  If an nislet is triggered during an intel
---- event, the intel event will be cancelled, and if an intel event
---- is triggered during a nislet, the intel event will be queued.
----@param func function
-function Util_StartNIS(func) end
-
---- Summon an existing squadgroup to a position on the map 
----Works on spawned or depspawned group
----@param sgroupname string
----@param pos Position
-function Util_Summon(sgroupname, pos) end
-
---- Tracks a character and, if dead, drop pods a new one in. 
----Use this function to track whether the player has a force
---- commander etc.  If ever that character dies, a replacement will
---- drop pod in at the specified marker
----@param playerid integer
----@param characterGroup string
----@param characterBlueprint string
----@param characterDropPodMarkerName string
-function Util_TrackCharacterAndDropPodIn(playerid, characterGroup, characterBlueprint, characterDropPodMarkerName) end
 
 --- Assign a group number [0,9] to the first entity of an egroup. 
 ---@param egroup EGroupID
@@ -5228,700 +5945,4 @@ function import(fileName) end
 ---@param s3 any
 ---@param ... any
 function print(s1, s2, s3, ...) end
-
---------------------------------------------------------------------------------
--- Tier 1: Library functions via import("ScarUtil.scar")
---------------------------------------------------------------------------------
-
--- from command.scar
-
---- Checks the egroup for an entity that can cast the ability and casts it on the target.
----@param egroupname string
----@param abilityname string
----@param targetgroup string
----@return boolean
-function Cmd_CastAbilityEGroupS(egroupname, abilityname, targetgroup) end
-
---- Checks the sgroup for an entity that can cast the ability and casts it on the target.
----@param sgroupname string
----@param abilityname string
----@param targetgroup string
----@return boolean
-function Cmd_CastAbilitySGroupE(sgroupname, abilityname, targetgroup) end
-
---- Returns true if ALL or ANY squads in a group are currently reinforcing a leader.
---- Set all to true to check for ALL or set to false to check for ANY.
----@param sgroupname string
----@param all boolean
----@return boolean
-function Cmd_IsReinforcingLeader(sgroupname, all) end
-
--- from difficultylevel.scar
-
----@param race any
-function PopulateListForRace(race) end
-
----@param difficulty any
----@param player any
-function SetHealthLevel(difficulty, player) end
-
--- from groups.scar
-
---- Respawns all entities in a group at a given position
----@param groupname string
----@param markerName string
-function EGroup_ReSpawnMarker(groupname, markerName) end
-
---- Respawns all entities in a group at a given position
----@param groupname string
----@param position Position
-function EGroup_ReSpawnPosition(groupname, position) end
-
---- Counts the number of leaders in all squads in the specified group
----@param groupName string
----@return integer
-function SGroup_CountLeaders(groupName) end
-
---- Respawns all squads in a group at a given position
----@param groupname string
----@param markerName string
-function SGroup_ReSpawnMarker(groupname, markerName) end
-
---- Respawns all squads in a group at a given position
----@param groupname string
----@param position Position
-function SGroup_ReSpawnPosition(groupname, position) end
-
--- from modifiers.scar
-
----@param Modifier any
----@param entityid any
-function ModifierUtil_IsEntityModifierApplied(Modifier, entityid) end
-
----@param Modifier any
----@param playerid any
-function ModifierUtil_IsPlayerModifierApplied(Modifier, playerid) end
-
----@param Modifier any
----@param squadid any
-function ModifierUtil_IsSquadModifierApplied(Modifier, squadid) end
-
---- Toggles the fx for the specified modifer
----@param modifier Modifier
-function ModifierUtil_ToggleFX(modifier) end
-
--- from player.scar
-
---- Sets the max squad cap for a player.
----@param playerId PlayerID
----@param cap integer
-function Player_ForceSetMaxSquadCap(playerId, cap) end
-
---- Sets the max support cap for a player.
----@param playerId PlayerID
----@param cap integer
-function Player_ForceSetMaxSupportCap(playerId, cap) end
-
---- Restrict a list of names.
---- list should contain an array of strings to restrict.
----@param playerID PlayerID
----@param list table
-function Player_RestrictSquadList(playerID, list) end
-
---- Unrestricts a list of names.
---- List should contain an array of research to restrict.
----@param playerID PlayerID
----@param list table
-function Player_UnRestrictResearchList(playerID, list) end
-
--- from scarutil.scar
-
---- SGROUP - ADD BATTLEGROUP AT MARKER
----@param playerId any
----@param squadgroupName any
----@param armyType any
----@param makerName any
-function Util_CreateBattleGroupAtMarker(playerId, squadgroupName, armyType, makerName) end
-
---- Non-disrupting version of CreatSquadsAndDropPodIn.  Creates a given number of squads with a loadout at a position and adds them to a squadgroup.  The squads are then dropped in a droppod that has no disruption.
---- Use loadout of zero to create a squad at its min loadout.  Squads can never exceed their max loadout.
----@param playerId PlayerID
----@param squadgroupName string
----@param squadBlueprint string
----@param pos Position
----@param numsquads integer
----@param loadout integer
----@return SGroupID
-function Util_CreateSquadsAndDropPodIn2(playerId, squadgroupName, squadBlueprint, pos, numsquads, loadout) end
-
---- Drop-pod an existing squadgroup to a position on the map with no disruption
---- Works on spawned or depspawned group
----@param sgroupname string
----@param pos Position
-function Util_DropPod2(sgroupname, pos) end
-
----@param playerId any
----@param tableName any
----@param mkr1 any
----@param mkr2 any
-function Util_NearMkrGoMkr(playerId, tableName, mkr1, mkr2) end
-
---- this function orders the squad to move to a location, but to take its time
----@param sgroup any
----@param finalMarker any
-function Util_SGroupAmble(sgroup, finalMarker) end
-
--- from ui.scar
-
---- DO NOT SCARDOC - PRIVATE RULE
-function UI_ShowCountdown1SecRule() end
-
---------------------------------------------------------------------------------
--- Tier 2: Library functions via import("WXPScarUtil.scar")
---------------------------------------------------------------------------------
-
--- from wxpbutton.scar
-
---- Create and Ability Button
---- Must pass in a table of tga file references and localized string numbers.
----@param textureTable table
----@param tipTable table
----@param boolean boolean
----@return ButtonID
-function Util_AbilityButton_Create(textureTable, tipTable, boolean) end
-
---- Create and Modal Ability Button
---- Must pass in a table of tga file references and localized string numbers.
----@param textureTable any
----@param tipTable table
----@param boolean1 boolean
----@return ButtonID
-function Util_AbilityButton_CreateModal(textureTable, tipTable, boolean1) end
-
---- Forces an update of all buttons in both the SGroup and EGroup button visibility managers
---- Calling this function should not be needed in most cases, and should be avoided because of performance overheads.
-function Util_ButtonManagerUpdateAll() end
-
---- Add an Ability Button that you want on an EGROUP to the Visibility Manager
---- The function Util_EGroupAbilityButton_ManageVisible() must be added after this function is called for anything to happen.
----@param buttonID ButtonID
----@param egroupName string
-function Util_EGroupAbilityButton_Add2Manager(buttonID, egroupName) end
-
-function Util_EGroupAbilityButton_ManageVisible() end
-
---- Remove an Ability Button from the EGroup Visibility Manager
---- This will remove the button from the manager and hide it if it is visible.
----@param buttonID ButtonID
-function Util_EGroupAbilityButton_Remove(buttonID) end
-
---- Add an Ability Button that you want in the No Selection Visibility Manager
---- The function Util_NoSelectionAbilityButton_ManageVisible() must be added after this function is called for anything to happen.
----@param buttonID ButtonID
-function Util_NoSelectionAbilityButton_Add2Manager(buttonID) end
-
---- Manages the visibility of Ability Buttons conditional on the user having NO selection made.
---- This function should be added once with Rule_Add() or Rule_AddDelay() in order to avoid lag between having no selection and the button appearing.
-function Util_NoSelectionAbilityButton_ManageVisible() end
-
---- Remove an Ability Button from the No Selection Visibility Manager
---- This will remove the button from the manager and hide it if it is visible.
----@param buttonID ButtonID
-function Util_NoSelectionAbilityButton_Remove(buttonID) end
-
---- Add an Ability Button that you want on an SGROUP to the Visibility Manager
---- The function Util_SGroupAbilityButton_ManageVisible() must be added after this function is called for anything to happen.
----@param buttonID ButtonID
----@param sgroupName string
-function Util_SGroupAbilityButton_Add2Manager(buttonID, sgroupName) end
-
-function Util_SGroupAbilityButton_ManageVisible() end
-
---- Remove an Ability Button from the SGroup Visibility Manager
---- This will remove the button from the manager and hide it if it is visible.
----@param buttonID ButtonID
-function Util_SGroupAbilityButton_Remove(buttonID) end
-
---- Create and Scar Button
---- Must pass in a valid widget name and table of tga file references and localized string numbers.
----@param widgetName string
----@param textureTable any
----@param tipTable table
----@param boolean1 boolean
----@param boolean2 boolean
----@return ButtonID
-function Util_ScarButton_Create(widgetName, textureTable, tipTable, boolean1, boolean2) end
-
--- from wxpcommand.scar
-
---- Orders an entity to build a squad in it's build queue
---- The squadBlueprintToBuild is the name of the squad you want to build from the building.
----@param egroupname string
----@param squadBlueprintToBuild string
-function Cmd_BuildSquad(egroupname, squadBlueprintToBuild) end
-
---- Checks the egroup for all entities that can cast the ability and has those entities casts on themselves
----@param groupName string
----@param abilityName string
----@return boolean
-function Cmd_EGroupCastAbilitySelf(groupName, abilityName) end
-
---- Relocates every entity in the group that can relocate to the closest free spot withing 'searchRadius' meters of marker 'markerName'
----@param groupName string
----@param markerName string
----@param searchRadius integer
-function Cmd_EGroupRelocateMarker(groupName, markerName, searchRadius) end
-
---- Relocates every entity in the group that can relocate to the closest free spot within 'searchRadius' meters of 'position'.
----@param groupName string
----@param position Position
----@param searchRadius integer
-function Cmd_EGroupRelocatePosition(groupName, position, searchRadius) end
-
---- Checks the egroup for an entity that can cast the ability and casts it at the marker.
----@param egroupname string
----@param abilityname string
----@param targetmarker string
----@return boolean
-function Cmd_EntityCastAbilityMarker(egroupname, abilityname, targetmarker) end
-
---- Checks the egroup for an entity that can cast the ability and casts it on the target pos.
----@param egroupname string
----@param abilityname string
----@param targetpos Position
----@return boolean
-function Cmd_EntityCastAbilityPos(egroupname, abilityname, targetpos) end
-
---- Send a spawn slot A command to a harvester unit
---- Spawn the unit linked to the spawnslot of the harvester unit
----@param sgroupname string
-function Cmd_HarvestSpawnSlotA(sgroupname) end
-
---- Send a spawn slot A command to a harvester unit
---- Spawn the unit linked to the spawnslot of the harvester unit
----@param sgroupname string
-function Cmd_HarvestSpawnSlotB(sgroupname) end
-
---- Send a spawn slot A command to a harvester unit
---- Spawn the unit linked to the spawnslot of the harvester unit
----@param sgroupname string
-function Cmd_HarvestSpawnSlotC(sgroupname) end
-
---- Moves squads in group to a location offset by some distance around 'position'.
---- The offset is a number from 0 to 7 and indicates a location around 'position' as follows:
---- 7   0   1
---- 6  pos  2
---- 5   4   3
----@param groupName string
----@param position Position
----@param offset integer
----@param distance number
-function Cmd_MoveToPosOffset(groupName, position, offset, distance) end
-
---- Moves squads in group to a location offset by some distance around the targert sgroup.
---- The the target SGroup can only have one squad in it. The offset is a number from 0 to 7 and indicates a location around the target sgroup (oriented based on that group's orientation) as follows:
---- 7   0   1
---- 6  pos  2
---- 5   4   3
----@param groupName string
----@param targetGroupName string
----@param offset integer
----@param distance number
-function Cmd_MoveToSGroupOffset(groupName, targetGroupName, offset, distance) end
-
---- Tell a squad to entrench.
---- The given unit should have an squad entrench extension.
----@param sgroupname string
-function Cmd_SquadEntrench(sgroupname) end
-
---- Tell a squad to uproot.
---- The given unit should have an squad entrench extension.
----@param sgroupname string
-function Cmd_SquadUproot(sgroupname) end
-
--- from wxpgroups.scar
-
---- Returns the sum of the current healths of all entities in the group.
----@param groupName string
----@return number
-function EGroup_GetTotalHealthCurrent(groupName) end
-
---- Returns the sum of the maximum healths of all entities in the group.
----@param groupName string
----@return number
-function EGroup_GetTotalHealthMax(groupName) end
-
---- Returns whether all or any of the entities in the group have the specified modifier applied to them.
---- If 'all' is true, all entities must have the modifier applied for the function to return true. If 'all' is false, at least one entity must have the modifier.
----@param groupName string
----@param modifierType string
----@param all boolean
----@return boolean
-function EGroup_HasModifier(groupName, modifierType, all) end
-
---- Returns whether all or any entities in the group are relocating
---- If 'all' is true, all entities must be relocating for the function to return true. If 'all' is false, at least one entity must be relocating.
----@param groupName string
----@param all boolean
----@return boolean
-function EGroup_IsRelocating(groupName, all) end
-
---- Uncaptures any captured strategic point or relic in the group
----@param groupName string
-function EGroup_Uncapture(groupName) end
-
---- Adds a leader at the given index to all squads in a group that can take a leader.
---- This function will bypass all cost and queue prereqs
----@param sgroupname string
----@param leaderIndex integer
-function SGroup_AddLeadersAtIndex(sgroupname, leaderIndex) end
-
---- Returns the sum of the current healths of all entities in all squads in the group.
----@param groupName string
----@return number
-function SGroup_GetTotalHealthCurrent(groupName) end
-
---- Returns the sum of the maximum healths of all entities in all squads in the group.
----@param groupName string
----@return number
-function SGroup_GetTotalHealthMax(groupName) end
-
---- Returns true if all or any squads in the sgroup are in the hold of any of the buildings in the buildings egroup
---- It is not required that all (or even any) buildings in the buildings group have a hold
----@param groupName string
----@param buildingsGroupName string
----@param all boolean
----@return boolean
-function SGroup_IsInHold(groupName, buildingsGroupName, all) end
-
---- Respawns the group at a location and triggers the event file at the location of every entity belonging to every squad in the group
---- Example: SGroup_ReSpawnWithEffect("my_group", "mymarker", "data:Art/Events/Unit_Upgrade_Morale_FX/Reinforce_Trooper")
----@param groupName string
----@param markername string
----@param eventFilename string
-function SGroup_ReSpawnMarkerWithEffect(groupName, markername, eventFilename) end
-
--- from wxpmetamap.scar
-
---- Returns a list of starting entities a race will currently be allocated.
---- This function will throw an exception if called outside of a Meta Map game, an unknown race is specified or an out of range index is given.
----@param startingEntityNameList table
-function MetaMap_GetAttackingRaceStartingEntitiesList(startingEntityNameList) end
-
---- Returns a list of starting squads a race will currently be allocated.
---- This function will throw an exception if called outside of a Meta Map game, an unknown race is specified or an out of range index is given.
----@param raceName string
----@param startingSquadNameList table
-function MetaMap_GetRaceStartingSquadsList(raceName, startingSquadNameList) end
-
--- from wxprestrict.scar
-
---- Applies restrictions for space marines.  You should call this at the begining of your mission for Player 1.
----@param level integer
-function WXP_Restrict(level) end
-
--- from wxpscarutil.scar
-
---- Positions the camera view at the start of the first path so the game can fade up to a 'ready' shot. MUST be used first before any other CPath's are started. Should use CPath_CutToPath() to follow up.
----@param canimName string
----@param startKey string
----@param endKey string
-function CPath_PresetCamera(canimName, startKey, endKey) end
-
---- Returns whether all or any entities in the group are shrouded
---- If 'all' is true, all entities must be shrouded for the function to return true. If 'all' is false, at least one entity must be shrouded.
----@param groupName string
----@param all boolean
----@return boolean
-function EGroup_IsShrouded(groupName, all) end
-
---- Takes the given egroupname and issues the 'Destroy' command to all entities. It should behave the same as if the player hit the delete key for each member.
---- To absolutely kill entities, this should be used instead of either EGroup_SetAvgHealth(egroupname, 0) or EGroup_DestroyAllEntities(egroupname) as both of these do not always accomplish the desired effect
----@param egroupname string
----@param boolean boolean
-function EGroup_SelfDestroy(egroupname, boolean) end
-
---- Enables or disables the shroud ability for all entities in the group that have the ability
---- Shroud will be turned on if 'enable' is true and turned off when it is false
----@param groupName string
----@param enable boolean
-function EGroup_Shroud(groupName, enable) end
-
---- Unreveals an area the size of a given markers proximity at that markers position.  YOU SHOULD ONLY CALL THIS IF YOU HAVE USED FOW_RevealMarker ON THAT MARKER PREVIOUSLY.
---- This function will unreveal the FOW for ALL alive players.
----@param markername string
-function FOW_UnRevealMarker(markername) end
-
---- Sets the Requisition, Power and Pop for the player. Pass in a 'nil' value instead of a Real amount to skip the associated Resource Type. Ignores income cap and resource sharing.
---- Leaving one Real amount off will automatically skip setting RT_Pop. Leaving two Real amounts off will skip RT_Power and RT_Pop.
----@param playerID PlayerID
----@param requisition number
----@param power number
----@param pop number
-function Player_SetAllResources(playerID, requisition, power, pop) end
-
---- Adds a set of tracks to the requested playlist channel, sets how the next track to be played will be chosen, ordered (true) or random (false), and sets silence intervals between tracks for the requested playlist channel.
----@param channel SoundChannel
----@param tracksTable table
----@param sequential boolean
----@param looping boolean
----@param silenceTable table
-function Playlist_Manager(channel, tracksTable, sequential, looping, silenceTable) end
-
---- Checks to see if a Rule exists. If it does not exist, the rule will be added to be executed at every 'interval' seconds
----@param functionName function
----@param delay number
-function Rule_Check_AddInterval(functionName, delay) end
-
---- Checks to see if a Rule exists. If it does not exist, the rule will be added to be executed  'calls' times, at every 'interval' seconds
----@param functionName function
----@param delay number
----@param iter integer
-function Rule_Check_AddIntervalEx(functionName, delay, iter) end
-
---- Checks to see if a Rule exists. If it does not exist, the rule will be added to be executed once, after 'interval' seconds
----@param functionName function
----@param delay number
-function Rule_Check_AddOneShot(functionName, delay) end
-
---- Checks to see if a Rule exists. If it does, it will be deleted. If it doesn't there will be no result.
----@param functionName function
-function Rule_Check_Remove(functionName) end
-
---- Pass in a string of a sgroup. If the group exists, any squads within that group will be destroyed. If the group does not exist or if the group is empty there will be no result.
---- The sgroupname is not deleted, it will still exist once the members are destroyed
----@param groupName string
-function SGroup_Check_DestroyAllSquads(groupName) end
-
---- Takes the given sgroupname and issues the 'Destroy' command to all squads. It should behave the same as if the player hit the delete key for each member.
---- To absolutely kill squads, this should be used instead of either SGroup_SetAvgHealth(sgroupname, 0) or SGroup_DestroyAllSquads(sgroupname) as both of these do not always accomplish the desired effect
----@param sgroupname string
----@param boolean boolean
-function SGroup_SelfDestroy(sgroupname, boolean) end
-
---- Hide and remove a counter
----@param counterName string
-function UI_HideCount(counterName) end
-
---- Hide and remove a ratio
----@param ratioName string
-function UI_HideRatio(ratioName) end
-
---- Create a counter with a displayed value. Assign a player and the formatID (aka. Localized String value )
---- Example: UI_ShowCount( "ct_test", g_Player1, 861016, 5 )
----@param counterName string
----@param playerID PlayerID
----@param formatID integer
----@param initialValue number
-function UI_ShowCount(counterName, playerID, formatID, initialValue) end
-
---- Create a counter with a displayed value. Assign a player and the formatID (aka. Localized String value )
---- Example: UI_ShowCount( "ct_test", g_Player1, 861016, 5 )
----@param counterName string
----@param playerID PlayerID
----@param formatID integer
----@param initialValue number
-function UI_ShowCountDXP(counterName, playerID, formatID, initialValue) end
-
---- Update the value of a counter. Pass in the name and the new value for the counter to display
----@param counterName string
----@param countValue number
-function UI_ShowCountUpdate(counterName, countValue) end
-
---- Update the value of a counter. Pass in the name  the new value for the counter to display and the formatID
----@param counterName string
----@param countValue number
----@param formatID integer
-function UI_ShowCountUpdateDxp(counterName, countValue, formatID) end
-
---- Create a ratio with displayed values. Assign a player and the formatID (aka. Localized String value )
---- Example: UI_ShowRatioDxp( "ratio_test", g_Player1, 38025, 4, 5 )
----@param ratioName string
----@param playerID PlayerID
----@param formatID integer
----@param value1 number
----@param value2 number
-function UI_ShowRatio(ratioName, playerID, formatID, value1, value2) end
-
---- Update the values of a ratio. Pass in the name, the formatID (aka. Localized String value) and the new values for the ratio to display
----@param ratioName string
----@param formatID integer
----@param value1 number
----@param value2 number
-function UI_ShowRatioUpdate(ratioName, formatID, value1, value2) end
-
---- Gets units to attack the ground at a random position within the radius of a marker
---- Use this function to create controlled random ground attacks to make units appear more lifelike
----@param squadgroupname string
----@param markername string
-function Util_AttackGroundMarkerRandomRadius(squadgroupname, markername) end
-
---- Gets units moving to a random position within the radius of a marker
---- Use this function to create controlled random movement to make units appear more lifelike
----@param squadgroupname string
----@param markername string
-function Util_AttackMoveMarkerRandomRadius(squadgroupname, markername) end
-
---- Create an Objective Beacon FX at a marker
----@param marker string
----@return integer
-function Util_CreateBeaconMarker_Blue(marker) end
-
---- Create an Objective Beacon FX at a marker
----@param marker string
----@return integer
-function Util_CreateBeaconMarker_Red(marker) end
-
---- Create an Objective Beacon FX at a position
----@param pos Position
----@return integer
-function Util_CreateBeaconPosition_Blue(pos) end
-
---- Create an Objective Beacon FX at a position
----@param pos Position
----@return integer
-function Util_CreateBeaconPosition_Red(pos) end
-
---- Plays the non looping piece of music once through, then, after delay, plays the looping piece of music, looping.
---- Use this function to setup detailed playlists in missions.
----@param musictable_non table
----@param musictable_loop table
----@param delay integer
-function Util_Music_CreateSingleLoop(musictable_non, musictable_loop, delay) end
-
---- Toggles all modifier event FX for the player
---- Use this function to make NIS's look clean without wierd icons above units' heads
----@param titleid integer
-function Util_NIS_ToggleModifierEvents(titleid) end
-
---- Create a looping ping.
---- Works with the Util_Ping_Stop( ) to allow for the easy removal of looping pings without having to save pingID variables. Make up a pingname string and pass it in.
----@param pingname string
----@param pos string
-function Util_Ping_LoopingPos(pingname, pos) end
-
---- Removes an existing Objective Beacon - colour doesn't matter (*snicker*)
----@param beaconID integer
-function Util_RemoveBeaconMarker(beaconID) end
-
---- Sets the blood level for every blood pit in the group
---- The level must be in the [0.0, 1.0] range
----@param pitGroupName string
----@param level number
-function Util_SetBloodPitLevel(pitGroupName, level) end
-
---- Creates an objective and plays the objective created stinger to accompany it, and flashes the objective button.
---- Use this function to create an objective with the sound
----@param objectiveTable table
----@param primary boolean
----@param playerID integer
-function Util_WXP_ObjectiveCreate(objectiveTable, primary, playerID) end
-
---- Creates a sub objective and plays the objective created stinger to accompany it, and flashes the objective button. Pass in the objective ID of the 'parent' objective
---- Use this function to create an objective with the sound
----@param objectiveTable table
----@param parent_id integer
-function Util_WXP_ObjectiveSubCreate(objectiveTable, parent_id) end
-
---- Adds all squads belonging to all players into a group. Removes any from the group that are despawned and destroys whatever is left.
---- Should only be used when cleaning up, as this will destroy EVERY spawned squad in the entire game.
-function WXP_KillAllPlayersSpawnedSquads() end
-
---- Adds all squads belonging to all players into a group. Removes any from the group that are despawned or in the indicated sgroup and destroys whatever is left.
---- Should only be used when cleaning up, as this will destroy EVERY spawned squad in the entire game... except the one that you ask it not to.
----@param sgroupname string
-function WXP_KillAllPlayersSpawnedSquadsExcept(sgroupname) end
-
---- Turns off event cues, sets the viewable space to faded out, and presets the UI into letterbox mode
-function WXP_OpeningNISPreset() end
-
--- from wxpui.scar
-
---- Add a new objective using an objective table and associates it with a specific player
---- Example obj_table:
----@param obj_table table
----@param is_primary_obj boolean
----@param player PlayerID
-function Objective_AddPlayer(obj_table, is_primary_obj, player) end
-
---- Associates a ping with an objective
---- The ping will be shown at the specified marker on the mini map in the objectives dialog when the objective it is associated with is selected. Use ping_type 'attack' for attack pings, otherwise default ping will be used.
----@param title_id integer
----@param marker_name string
----@param is_looping boolean
----@param ping_type string
----@return PingID
-function Objective_PingMarker(title_id, marker_name, is_looping, ping_type) end
-
---- Associates a ping with an objective
---- The ping will be shown at the specified position on the mini map in the objectives dialog when the objective it is associated with is selected. Use ping_type 'attack' for attack pings, otherwise default ping will be used.
----@param title_id integer
----@param position Position
----@param is_looping boolean
----@param ping_type string
----@return PingID
-function Objective_PingPosition(title_id, position, is_looping, ping_type) end
-
---- Add a new sub objective using an objective table and associates it with the specified parent objective
---- Please note the only one level of sub objectives is supported (i.e.  an objective cannot be added as a sub objective of an existing sub objective)
----@param obj_table table
----@param parent_id integer
-function Objective_SubAdd(obj_table, parent_id) end
-
---------------------------------------------------------------------------------
--- Standalone: Library functions requiring explicit import()
---------------------------------------------------------------------------------
-
--- from balancetool.scar — requires import("BalanceTool.scar")
-
-function Balance_AddTimer() end
-
-function Balance_ApplyTimeOut() end
-
-function Balance_DumpStats() end
-
-function Balance_GameOver() end
-
-function Balance_OnInit() end
-
-function Balance_PrintTime() end
-
----@param player any
-function Balance_Reset(player) end
-
-function Balance_Run() end
-
----@param iterations any
-function Balance_SetIterations(iterations) end
-
----@param name any
-function Balance_SetScriptName(name) end
-
----@param timeout any
-function Balance_SetTimeOut(timeout) end
-
-function Balance_TimeOut() end
-
--- from debug.scar — requires import("Debug.scar")
-
----@param T any
----@param msg any
----@param indent any
-function Debug_PrintTable(T, msg, indent) end
-
--- from wcutil.scar — requires import("WCUtil.scar")
-
---- adds the WCUtil_Rule_CheckTotalAnnihalte if it doesnt already exist
-function WCUtil_AddCheckTotalAnnhilate() end
-
---- MUST be called every second
----@param TeamTable any
----@param SettingsTable any
-function WCUtil_CheckStrategicPoints(TeamTable, SettingsTable) end
-
---- returns filled out team table
-function WCUtil_InitTeamTable() end
-
---- checks all player players and kills any that are totally annihilated
-function WCUtil_Rule_CheckTotalAnnihilate() end
 

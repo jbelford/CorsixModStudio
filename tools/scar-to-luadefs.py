@@ -346,11 +346,11 @@ def generate(scar_dir: str, scardoc_path: str | None, output_path: str):
     # 1. Parse scardoc.dat if available.
     engine_funcs: list[dict] = []
     constants: list[str] = []
-    engine_names: set[str] = set()
+    engine_by_name: dict[str, dict] = {}
 
     if scardoc_path and os.path.isfile(scardoc_path):
         engine_funcs, constants = parse_scardoc_dat(scardoc_path)
-        engine_names = {f["name"] for f in engine_funcs}
+        engine_by_name = {f["name"]: f for f in engine_funcs}
         print(f"Read {len(engine_funcs)} engine functions + "
               f"{len(constants)} constants from {os.path.basename(scardoc_path)}")
 
@@ -364,19 +364,39 @@ def generate(scar_dir: str, scardoc_path: str | None, output_path: str):
     for sf in scar_files:
         all_scar_funcs.extend(parse_scar_file(str(sf)))
 
-    # Filter SCAR: skip engine-defined, internal (_-prefixed), duplicates.
-    seen: set[str] = set()
-    lib_funcs: list[dict] = []
+    # Build map of SCAR functions (first occurrence wins for duplicates).
+    scar_by_name: dict[str, dict] = {}
     for func in all_scar_funcs:
         name = func["name"]
-        if name in engine_names or name.startswith("_") or name in seen:
-            continue
-        seen.add(name)
-        lib_funcs.append(func)
+        if name not in scar_by_name and not name.startswith("_"):
+            scar_by_name[name] = func
 
-    # Group library functions by source file.
+    # 3. Merge: for functions in both sources, use the engine annotations
+    # (they have full param types from the C++ registration) but place them
+    # under their .scar source file for grouping.
+    # For functions only in scardoc.dat, they go in the "Engine-only" section.
+    merged_funcs: list[dict] = []
+    engine_only_funcs: list[dict] = []
+
+    # Process all engine functions first.
+    for func in engine_funcs:
+        name = func["name"]
+        if name in scar_by_name:
+            # Present in both — use engine data but tag with .scar source file.
+            merged = dict(func)
+            merged["source_file"] = scar_by_name[name]["source_file"]
+            merged_funcs.append(merged)
+        else:
+            engine_only_funcs.append(func)
+
+    # Add SCAR-only functions (not in scardoc.dat).
+    for name, func in scar_by_name.items():
+        if name not in engine_by_name:
+            merged_funcs.append(func)
+
+    # Group merged functions by source file.
     by_file: dict[str, list[dict]] = {}
-    for func in lib_funcs:
+    for func in merged_funcs:
         key = func["source_file"].lower()
         by_file.setdefault(key, []).append(func)
 
@@ -393,27 +413,24 @@ def generate(scar_dir: str, scardoc_path: str | None, output_path: str):
         else:
             other_files.append(sf)
 
-    total_funcs = len(engine_funcs) + len(lib_funcs)
+    total_funcs = len(engine_only_funcs) + len(merged_funcs)
+    overlap_count = sum(1 for f in merged_funcs if f["name"] in engine_by_name)
 
-    # 3. Write consolidated output.
+    # 4. Write consolidated output.
     with open(output_path, "w", encoding="utf-8", newline="\n") as out:
         out.write("---@meta scar-dow\n\n")
         out.write("-- Auto-generated SCAR stubs for Dawn of War by scar-to-luadefs.py\n")
-        sources = []
-        if engine_funcs:
-            sources.append(f"scardoc.dat ({len(engine_funcs)} engine)")
-        sources.append(f".scar files ({len(lib_funcs)} library)")
-        out.write(f"-- Sources: {', '.join(sources)}\n")
+        out.write(f"-- Sources: scardoc.dat + .scar library files\n")
         out.write(f"-- {total_funcs} functions, {len(constants)} constants\n")
         out.write("-- Do not edit manually — regenerate with: python tools/scar-to-luadefs.py\n")
-        if lib_funcs:
-            out.write("--\n")
-            out.write("-- Library function import tiers:\n")
-            out.write('--   Tier 1: available after import("ScarUtil.scar")\n')
-            out.write('--   Tier 2: available after import("WXPScarUtil.scar")  (includes Tier 1)\n')
-            out.write("--   Standalone: requires explicit import (noted per-section)\n")
-            out.write("--\n")
-            out.write('-- All mod scripts should import("WXPScarUtil.scar") to get Tier 1 + Tier 2.\n')
+        out.write("--\n")
+        out.write("-- Import tiers:\n")
+        out.write('--   Tier 1: available after import("ScarUtil.scar")\n')
+        out.write('--   Tier 2: available after import("WXPScarUtil.scar")  (includes Tier 1)\n')
+        out.write("--   Standalone: requires explicit import (noted per-section)\n")
+        out.write("--   Engine-only: C++ built-ins with no .scar wrapper\n")
+        out.write("--\n")
+        out.write('-- All mod scripts should import("WXPScarUtil.scar") to get Tier 1 + Tier 2.\n')
         out.write("\n")
 
         # Constants.
@@ -424,15 +441,7 @@ def generate(scar_dir: str, scardoc_path: str | None, output_path: str):
             for c in sorted(constants):
                 out.write(f"---@type any\n{c} = nil\n\n")
 
-        # Engine functions.
-        if engine_funcs:
-            out.write(f"{'--' * 40}\n")
-            out.write("-- Engine functions (from scardoc.dat)\n")
-            out.write(f"{'--' * 40}\n\n")
-            for func in sorted(engine_funcs, key=lambda f: f["name"]):
-                _write_func(out, func)
-
-        # Library functions by tier.
+        # Library functions by tier (includes both engine+scar overlap and scar-only).
         def _write_tier(files, tier_label):
             if not files:
                 return
@@ -448,17 +457,24 @@ def generate(scar_dir: str, scardoc_path: str | None, output_path: str):
                 for func in by_file[sf]:
                     _write_func(out, func)
 
-        _write_tier(tier1_files, 'Tier 1: Library functions via import("ScarUtil.scar")')
-        _write_tier(tier2_files, 'Tier 2: Library functions via import("WXPScarUtil.scar")')
-        _write_tier(standalone_files, "Standalone: Library functions requiring explicit import()")
-        _write_tier(other_files, "Other library functions")
+        _write_tier(tier1_files, 'Tier 1: Available via import("ScarUtil.scar")')
+        _write_tier(tier2_files, 'Tier 2: Available via import("WXPScarUtil.scar")')
+        _write_tier(standalone_files, "Standalone: Requires explicit import()")
+        _write_tier(other_files, "Other")
+
+        # Engine-only functions (no .scar file counterpart).
+        if engine_only_funcs:
+            out.write(f"{'--' * 40}\n")
+            out.write("-- Engine-only: C++ built-ins (no .scar wrapper)\n")
+            out.write(f"{'--' * 40}\n\n")
+            for func in sorted(engine_only_funcs, key=lambda f: f["name"]):
+                _write_func(out, func)
 
     print(f"Wrote {total_funcs} functions + {len(constants)} constants to {output_path}")
     if engine_funcs:
-        overlap = sum(1 for f in all_scar_funcs
-                      if f["name"] in engine_names and not f["name"].startswith("_"))
-        print(f"  ({len(engine_funcs)} engine, {len(lib_funcs)} library, "
-              f"{overlap} overlap resolved to engine)")
+        print(f"  ({len(engine_only_funcs)} engine-only, "
+              f"{overlap_count} from both sources grouped by .scar file, "
+              f"{len(merged_funcs) - overlap_count} library-only)")
     return True
 
 
