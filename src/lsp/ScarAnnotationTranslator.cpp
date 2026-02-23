@@ -174,12 +174,22 @@ static std::vector<ArgPair> ParseArgs(const std::string &argsStr)
 struct AnnotationBlock
 {
     std::string shortdesc;
+    int shortdescLine = -1; // Original line of @shortdesc
     std::string resultType;
+    int resultLine = -1; // Original line of @result
     std::vector<ArgPair> args;
-    std::vector<std::string> extraLines; // @extdesc text, examples, bare --? lines
-    std::string indent;                  // Indentation of the block
-    int startLine = 0;                   // Original line index where block starts
-    int lineCount = 0;                   // Number of original --? lines consumed
+    int argsLine = -1; // Original line of @args
+
+    struct ExtraLine
+    {
+        std::string text;
+        int originalLine;
+    };
+    std::vector<ExtraLine> extraLines; // @extdesc text, examples, bare --? lines
+
+    std::string indent; // Indentation of the block
+    int startLine = 0;  // Original line index where block starts
+    int lineCount = 0;  // Number of original --? lines consumed
 };
 
 /// Parse consecutive --? lines starting at lines[startIdx].
@@ -210,16 +220,19 @@ static AnnotationBlock ParseBlock(const std::vector<std::string> &lines, int sta
         if (trimmedContent.rfind("@shortdesc", 0) == 0)
         {
             block.shortdesc = Trim(trimmedContent.substr(10));
+            block.shortdescLine = i;
             inExtdesc = false;
         }
         else if (trimmedContent.rfind("@result", 0) == 0)
         {
             block.resultType = Trim(trimmedContent.substr(7));
+            block.resultLine = i;
             inExtdesc = false;
         }
         else if (trimmedContent.rfind("@args", 0) == 0)
         {
             block.args = ParseArgs(Trim(trimmedContent.substr(5)));
+            block.argsLine = i;
             inExtdesc = false;
         }
         else if (trimmedContent.rfind("@extdesc", 0) == 0)
@@ -229,13 +242,13 @@ static AnnotationBlock ParseBlock(const std::vector<std::string> &lines, int sta
             std::string rest = Trim(trimmedContent.substr(8));
             if (!rest.empty())
             {
-                block.extraLines.push_back(rest);
+                block.extraLines.push_back({rest, i});
             }
         }
         else
         {
             // Bare --? line (example code, extended description continuation, etc.)
-            block.extraLines.push_back(content);
+            block.extraLines.push_back({content, i});
         }
     }
 
@@ -281,18 +294,25 @@ static bool IsFunctionDeclaration(const std::string &line)
            trimmed.rfind("local function ", 0) == 0;
 }
 
+/// An emitted line with its original source line number.
+struct EmittedLine
+{
+    std::string text;
+    int originalLine;
+};
+
 /// Emit the translated annotation lines from a parsed block.
 /// If @p funcParamNames is non-empty, use those names instead of @args names
 /// (positional mapping) so that @param annotations match the actual function signature.
-static std::vector<std::string> EmitBlock(const AnnotationBlock &block,
+static std::vector<EmittedLine> EmitBlock(const AnnotationBlock &block,
                                           const std::vector<std::string> &funcParamNames = {})
 {
-    std::vector<std::string> output;
+    std::vector<EmittedLine> output;
 
     // Description
     if (!block.shortdesc.empty())
     {
-        output.push_back(block.indent + "---" + block.shortdesc);
+        output.push_back({block.indent + "---" + block.shortdesc, block.shortdescLine});
     }
 
     // Parameters — use function signature names when available to ensure
@@ -308,7 +328,7 @@ static std::vector<std::string> EmitBlock(const AnnotationBlock &block,
         // Prefer function param name over @args name for LuaLS matching
         std::string paramName = (idx < funcParamNames.size()) ? funcParamNames[idx] : arg.name;
         std::string optMark = arg.optional ? "?" : "";
-        output.push_back(block.indent + "---@param " + paramName + optMark + " " + mapped);
+        output.push_back({block.indent + "---@param " + paramName + optMark + " " + mapped, block.argsLine});
     }
 
     // Return type
@@ -317,14 +337,14 @@ static std::vector<std::string> EmitBlock(const AnnotationBlock &block,
         std::string mapped = CScarAnnotationTranslator::MapType(block.resultType);
         if (!mapped.empty())
         {
-            output.push_back(block.indent + "---@return " + mapped);
+            output.push_back({block.indent + "---@return " + mapped, block.resultLine});
         }
     }
 
     // Extra lines (extended description, examples)
     for (const auto &extra : block.extraLines)
     {
-        output.push_back(block.indent + "---" + extra);
+        output.push_back({block.indent + "---" + extra.text, extra.originalLine});
     }
 
     return output;
@@ -384,8 +404,8 @@ TranslationResult CScarAnnotationTranslator::Translate(const std::string &source
             auto emitted = EmitBlock(block, funcParams);
             for (const auto &eline : emitted)
             {
-                result.translatedToOriginal.push_back(i); // All emitted lines trace back to block start
-                outputLines.push_back(eline);
+                result.translatedToOriginal.push_back(eline.originalLine);
+                outputLines.push_back(eline.text);
             }
 
             i = pastEnd;

@@ -373,3 +373,58 @@ TEST(ScarAnnotationTranslator, Args_MoreArgsThanFunctionParams)
     EXPECT_NE(result.text.find("---@param y integer"), std::string::npos);
     EXPECT_NE(result.text.find("---@param c integer"), std::string::npos);
 }
+
+// ---------------------------------------------------------------------------
+// Per-tag line mapping accuracy
+// ---------------------------------------------------------------------------
+
+TEST(ScarAnnotationTranslator, LineMapping_PerTagAccuracy)
+{
+    // Each tag should map its emitted line back to its own original line
+    std::string source =
+        "--? @shortdesc Description here.\n"  // line 0
+        "--? @result Boolean\n"               // line 1
+        "--? @args Integer x\n"               // line 2
+        "--? @extdesc\n"                      // line 3 (no output)
+        "--?  Example()\n"                    // line 4
+        "function Foo(x)\nend\n";             // line 5, 6
+
+    auto result = CScarAnnotationTranslator::Translate(source);
+
+    // Find which translated line each annotation ended up on
+    // Emitted order: description(line0), @param(line2), @return(line1), extra(line4)
+    // Then: function Foo(x) (line5), end (line6)
+
+    // The @param line should map back to original line 2 (the @args line)
+    // The @return line should map back to original line 1 (the @result line)
+    // The description should map back to original line 0
+
+    // Find the @param line in translated output
+    std::istringstream iss(result.text);
+    std::string line;
+    int translatedLineIdx = 0;
+    while (std::getline(iss, line))
+    {
+        if (line.find("---@param") != std::string::npos)
+        {
+            EXPECT_EQ(result.translatedToOriginal[translatedLineIdx], 2)
+                << "@param should map to original @args line (2)";
+        }
+        else if (line.find("---@return") != std::string::npos)
+        {
+            EXPECT_EQ(result.translatedToOriginal[translatedLineIdx], 1)
+                << "@return should map to original @result line (1)";
+        }
+        else if (line.find("---Description") != std::string::npos)
+        {
+            EXPECT_EQ(result.translatedToOriginal[translatedLineIdx], 0)
+                << "description should map to original @shortdesc line (0)";
+        }
+        else if (line.find("function Foo") != std::string::npos)
+        {
+            EXPECT_EQ(result.translatedToOriginal[translatedLineIdx], 5)
+                << "function line should map to original line 5";
+        }
+        translatedLineIdx++;
+    }
+}
