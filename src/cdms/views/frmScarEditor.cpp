@@ -843,6 +843,13 @@ void frmScarEditor::OnLspTimer(wxTimerEvent &event)
     auto *pClient = pFrame->GetLspClient();
     if (!pClient)
     {
+        // Client was shut down — reset editor state so the document will be
+        // re-opened when a new client becomes available.
+        if (m_bLspOpen)
+        {
+            m_bLspOpen = false;
+            m_bLspNeedsOpen = true;
+        }
         return;
     }
 
