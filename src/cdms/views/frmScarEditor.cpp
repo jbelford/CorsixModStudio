@@ -541,12 +541,11 @@ void frmScarEditor::Load(IFileStore::IStream *pFile)
     {
         LspSyncDocument();
     }
-    // Clear the sync flag that OnModified() set during AddText() above.
-    // The didOpen (or didChange in the reload case) already contains the
-    // current text — a follow-up didChange with identical content would
-    // only cancel the server's in-flight analysis without triggering a
-    // new one, leaving us with no diagnostics.
-    m_bLspNeedsSync = false;
+    // Note: m_bLspNeedsSync may be true here (set by OnModified during
+    // AddText). That's intentional — LuaLS requires a didChange to
+    // publish diagnostics. The else-if in OnLspTimer ensures the
+    // didChange fires on the next tick (100ms after didOpen), not in
+    // the same tick.
 }
 
 void frmScarEditor::OnStyleNeeded(wxStyledTextEvent &event)
