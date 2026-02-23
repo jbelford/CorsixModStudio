@@ -560,7 +560,7 @@ void CLspClient::HandleNotification(const std::string &method, const nlohmann::j
     if (method == "textDocument/publishDiagnostics")
     {
         auto diag = params.get<PublishDiagnosticsParams>();
-        CDMS_LOG_DEBUG("LSP: Received {} diagnostics for {}", diag.diagnostics.size(), diag.uri);
+        CDMS_LOG_INFO("LSP: Received {} diagnostics for {}", diag.diagnostics.size(), diag.uri);
 
         std::lock_guard lock(m_mtx);
         auto it = m_diagnosticsCallbacks.find(diag.uri);

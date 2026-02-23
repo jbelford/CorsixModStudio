@@ -541,6 +541,12 @@ void frmScarEditor::Load(IFileStore::IStream *pFile)
     {
         LspSyncDocument();
     }
+    // Clear the sync flag that OnModified() set during AddText() above.
+    // The didOpen (or didChange in the reload case) already contains the
+    // current text — a follow-up didChange with identical content would
+    // only cancel the server's in-flight analysis without triggering a
+    // new one, leaving us with no diagnostics.
+    m_bLspNeedsSync = false;
 }
 
 void frmScarEditor::OnStyleNeeded(wxStyledTextEvent &event)
@@ -846,6 +852,8 @@ void frmScarEditor::LspOpenDocument()
 
     pClient->OpenDocument(m_sLspUri, "lua", m_lspTranslation->text);
     m_bLspOpen = true;
+    CDMS_LOG_INFO("LSP: Opened document {} ({} bytes, version {})", m_sLspUri, m_lspTranslation->text.size(),
+                  m_iLspVersion);
 }
 
 void frmScarEditor::LspSyncDocument()
@@ -950,6 +958,8 @@ void frmScarEditor::ApplyDiagnostics(const std::string &uri, std::vector<lsp::Di
         return;
     }
 
+    CDMS_LOG_INFO("LSP: Applying {} diagnostics for {}", diagnostics.size(), uri);
+
     // Store diagnostics for hover tooltip lookup
     m_vDiagnostics = diagnostics;
 
@@ -997,6 +1007,14 @@ void frmScarEditor::ApplyDiagnostics(const std::string &uri, std::vector<lsp::Di
 
         m_pSTC->SetIndicatorCurrent(indicator);
         m_pSTC->IndicatorFillRange(startPos, length);
+    }
+
+    // Force repaint so indicators are visible immediately — wxStyledTextCtrl
+    // may not invalidate the affected region automatically when indicators
+    // are set outside of a user-initiated edit.
+    if (!m_vDiagnostics.empty())
+    {
+        m_pSTC->Refresh(false);
     }
 }
 
