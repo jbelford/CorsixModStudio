@@ -1118,8 +1118,30 @@ void frmScarEditor::GoToDefinition()
     int line = m_pSTC->LineFromPosition(pos);
     int col = pos - m_pSTC->PositionFromLine(line);
 
+    // Decode percent-encoded characters in a file URI (e.g. %3A → ':')
+    auto decodeUri = [](const std::string &uri) -> std::string
+    {
+        std::string result;
+        result.reserve(uri.size());
+        for (size_t i = 0; i < uri.size(); ++i)
+        {
+            if (uri[i] == '%' && i + 2 < uri.size())
+            {
+                unsigned int ch = 0;
+                if (sscanf(uri.c_str() + i + 1, "%2x", &ch) == 1)
+                {
+                    result += static_cast<char>(ch);
+                    i += 2;
+                    continue;
+                }
+            }
+            result += uri[i];
+        }
+        return result;
+    };
+
     pClient->RequestDefinition(m_sLspUri, line, col,
-                               [this](std::optional<lsp::Location> location)
+                               [this, decodeUri](std::optional<lsp::Location> location)
                                {
                                    if (!location)
                                    {
@@ -1133,12 +1155,12 @@ void frmScarEditor::GoToDefinition()
                                    wxString sTargetPath;
                                    if (targetUri.find("file:///") == 0)
                                    {
-                                       sTargetPath = wxString::FromUTF8(targetUri.substr(8));
+                                       sTargetPath = wxString::FromUTF8(decodeUri(targetUri.substr(8)));
                                        sTargetPath.Replace(wxT("/"), wxT("\\"));
                                    }
                                    else
                                    {
-                                       sTargetPath = wxString::FromUTF8(targetUri);
+                                       sTargetPath = wxString::FromUTF8(decodeUri(targetUri));
                                    }
 
                                    int targetLine = location->range.start.line;
