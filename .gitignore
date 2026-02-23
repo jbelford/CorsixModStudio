@@ -49,6 +49,10 @@ lua-5.*/
 *.swo
 *~
 
+# Python
+__pycache__/
+*.pyc
+
 # Log output
 logs/
 test_logs/
