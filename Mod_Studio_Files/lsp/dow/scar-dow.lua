@@ -1,8 +1,8 @@
 ---@meta scar-dow
 
 -- Auto-generated SCAR stubs for Dawn of War by scar-to-luadefs.py
--- Sources: function_list.htm + scardoc.dat + .scar library files
--- 935 functions, 139 constants
+-- Sources: function_list.htm + scardoc.dat
+-- 918 functions, 139 constants
 -- Do not edit manually — regenerate with: python tools/scar-to-luadefs.py
 --
 -- Import tiers:
@@ -794,13 +794,6 @@ function Difficulty_SetForAll(difficultlevel) end
 ---@param difficultlevel integer
 function Difficulty_SetForPlayer(playerId, difficultlevel) end
 
----@param race any
-function PopulateListForRace(race) end
-
----@param difficulty any
----@param player any
-function SetHealthLevel(difficulty, player) end
-
 -- from entity.scar
 
 --- Returns true if entity is in cover.
@@ -1179,18 +1172,6 @@ function ModifierUtil_GetEntityApplierIndex(modifier, entityid) end
 ---@param squadid SquadID
 ---@return integer
 function ModifierUtil_GetSquadApplierIndex(modifier, squadid) end
-
----@param Modifier any
----@param entityid any
-function ModifierUtil_IsEntityModifierApplied(Modifier, entityid) end
-
----@param Modifier any
----@param playerid any
-function ModifierUtil_IsPlayerModifierApplied(Modifier, playerid) end
-
----@param Modifier any
----@param squadid any
-function ModifierUtil_IsSquadModifierApplied(Modifier, squadid) end
 
 --- Toggles the fx for the specified modifer
 ---@param modifier Modifier
@@ -1674,13 +1655,6 @@ function Util_Autosave(localizedID) end
 ---@return boolean
 function Util_CheckOneTeamLeft(win_condition) end
 
---- SGROUP - ADD BATTLEGROUP AT MARKER
----@param playerId any
----@param squadgroupName any
----@param armyType any
----@param makerName any
-function Util_CreateBattleGroupAtMarker(playerId, squadgroupName, armyType, makerName) end
-
 --- Creates horrors and summons them in
 --- Use loadout of zero to create a squad at its min loadout.  Squads can never exceed their max loadout.
 ---@param playerId PlayerID
@@ -1871,12 +1845,6 @@ function Util_NIS_ToggleModifierEvents(titleid) end
 --- Use this function to make NIS's look clean without wierd icons above units' heads
 function Util_NIS_ToggleModifierEventsForAllPlayers() end
 
----@param playerId any
----@param tableName any
----@param mkr1 any
----@param mkr2 any
-function Util_NearMkrGoMkr(playerId, tableName, mkr1, mkr2) end
-
 --- Marks the specified objective as completed
 --- Use this function to complete an objective with the sound
 ---@param titleid integer
@@ -1909,11 +1877,6 @@ function Util_Ping_Stop(pingname) end
 ---@param building_groupname string
 ---@param builder_groupname string
 function Util_ResetAndRebuild(building_groupname, builder_groupname) end
-
---- this function orders the squad to move to a location, but to take its time
----@param sgroup any
----@param finalMarker any
-function Util_SGroupAmble(sgroup, finalMarker) end
 
 --- Converts a 2D top down position to a 3D ScarPosition.
 --- 3D ScarPositions have the x axis left to right, the z axis in to out, and the y axis down to up (y axis represents the height of the terrain).  Use this function to convert a top-down 2D position to a 3D world position.<BR><BR> Note: (0,0) is in the center of the map.
@@ -2028,9 +1991,6 @@ function UI_HideCountdown() end
 ---@param secsRemaining number
 function UI_ShowCountdown(formatID, secsRemaining) end
 
---- DO NOT SCARDOC - PRIVATE RULE
-function UI_ShowCountdown1SecRule() end
-
 --------------------------------------------------------------------------------
 -- Tier 2: Available via import("WXPScarUtil.scar")
 --------------------------------------------------------------------------------
@@ -2059,8 +2019,6 @@ function Util_ButtonManagerUpdateAll() end
 ---@param egroupname string
 function Util_EGroupAbilityButton_Add2Manager(button, egroupname) end
 
-function Util_EGroupAbilityButton_ManageVisible() end
-
 --- Remove an Ability Button from the EGroup Visibility Manager
 --- This will remove the button from the manager and hide it if it is visible.
 ---@param button ButtonID
@@ -2085,8 +2043,6 @@ function Util_NoSelectionAbilityButton_Remove(button) end
 ---@param button ButtonID
 ---@param sgroupname string
 function Util_SGroupAbilityButton_Add2Manager(button, sgroupname) end
-
-function Util_SGroupAbilityButton_ManageVisible() end
 
 --- Remove an Ability Button from the SGroup Visibility Manager
 --- This will remove the button from the manager and hide it if it is visible.
@@ -2507,10 +2463,6 @@ function Objective_SubAdd(obj_table, parent_id) end
 
 -- from balancetool.scar — requires import("BalanceTool.scar")
 
-function Balance_AddTimer() end
-
-function Balance_ApplyTimeOut() end
-
 --- Creates the maximum number of squads of this loadout given the resources at a marker position and adds them to a squadgroup.  The squadgroup will be created if it doesnt exist.
 --- Loadout will be clipped to unitMin and unitMax from the squad blueprint.
 ---@param playerId PlayerID
@@ -2523,34 +2475,10 @@ function Balance_ApplyTimeOut() end
 ---@return SGroupID
 function Balance_CreateSquadsAtMarkerByResource(playerId, squadgroupName, squadBlueprint, load_out_table, markername, requisition_amount, power_amount) end
 
-function Balance_DumpStats() end
-
-function Balance_GameOver() end
-
-function Balance_OnInit() end
-
-function Balance_PrintTime() end
-
----@param player any
-function Balance_Reset(player) end
-
-function Balance_Run() end
-
 --- Set the Lua Function used to initialize each Balance Tool iteration.
 --- The function is used to set up the forces that will battle
 ---@param func function
 function Balance_SetInit(func) end
-
----@param iterations any
-function Balance_SetIterations(iterations) end
-
----@param name any
-function Balance_SetScriptName(name) end
-
----@param timeout any
-function Balance_SetTimeOut(timeout) end
-
-function Balance_TimeOut() end
 
 -- from camerashake.scar — requires import("CameraShake.scar")
 
@@ -2568,29 +2496,6 @@ function CameraShake_Medium(epicentre, duration) end
 ---@param epicentre Position
 ---@param duration number
 function CameraShake_Small(epicentre, duration) end
-
--- from debug.scar — requires import("Debug.scar")
-
----@param T any
----@param msg any
----@param indent any
-function Debug_PrintTable(T, msg, indent) end
-
--- from wcutil.scar — requires import("WCUtil.scar")
-
---- adds the WCUtil_Rule_CheckTotalAnnihalte if it doesnt already exist
-function WCUtil_AddCheckTotalAnnhilate() end
-
---- MUST be called every second
----@param TeamTable any
----@param SettingsTable any
-function WCUtil_CheckStrategicPoints(TeamTable, SettingsTable) end
-
---- returns filled out team table
-function WCUtil_InitTeamTable() end
-
---- checks all player players and kills any that are totally annihilated
-function WCUtil_Rule_CheckTotalAnnihilate() end
 
 --------------------------------------------------------------------------------
 -- Engine-only: C++ built-ins (no .scar wrapper)
@@ -5852,4 +5757,59 @@ function Stats_PlayerUnitsLost(playerID) end
 
 --- Dump animator statistics to a file
 function blueprint_dump() end
+
+-- from scardoc.dat
+
+--- Get the current target position for the camera. 
+---@return Position
+function Camera_GetTargetPos() end
+
+--- Get values: TV_SlideTargetRate, TV_SlideTargetBase,
+--- TV_SlideTargetThreshold 
+---@param tuningValue integer
+---@return number
+function Camera_GetTuningValue(tuningValue) end
+
+--- Get the current zoom distance for the camera. 
+---@return number
+function Camera_GetZoomDist() end
+
+--- Reload camere tuning values from Data:Camera.lua. 
+function Camera_Reload() end
+
+--- Set values: TV_SlideTargetRate, TV_SlideTargetBase,
+--- TV_SlideTargetThreshold 
+---@param tuningValue integer
+---@param value number
+function Camera_SetTuningValue(tuningValue, value) end
+
+--- Set the current zoom distance for the camera. 
+---@param distance number
+function Camera_SetZoomDist(distance) end
+
+--- Updates the peristent EGroup that contains all entities for this
+--- player 
+---@param player PlayerID
+---@return EGroupID
+function Player_UpdateAllEntities(player) end
+
+--- Updates the peristent SGroup that contains all squads for this
+--- player 
+---@param player PlayerID
+---@return SGroupID
+function Player_UpdateAllSquads(player) end
+
+--- Quits the app immediately 
+function W40k_QuitApp() end
+
+--- Loads data:scar/fileName and executes it
+---@param fileName string
+function import(fileName) end
+
+--- Receives any number of arguments and prints their values as strings
+---@param s1 any
+---@param s2 any
+---@param s3 any
+---@param ... any
+function print(s1, s2, s3, ...) end
 

@@ -3,14 +3,14 @@
 Generate consolidated LuaLS @meta stubs for Dawn of War SCAR scripting.
 
 Merges two sources into a single definition file:
-  1. scardoc.dat — binary file containing engine-registered C++ functions
-  2. .scar files — Lua library functions with --? scardoc annotations
+  1. function_list.htm — Relic's ScarDoc HTML (complete function reference)
+  2. scardoc.dat — binary with engine constants + a few extra functions
 
 Usage:
-    python tools/scar-to-luadefs.py <scar_dir> [--scardoc <path>]
+    python tools/scar-to-luadefs.py <game_root> [--scardoc <path>]
 
 Example:
-    python tools/scar-to-luadefs.py "C:/Program Files (x86)/Steam/steamapps/common/Dawn of War Definitive Edition/DoWDE/Data/scar"
+    python tools/scar-to-luadefs.py "C:/Program Files (x86)/Steam/steamapps/common/Dawn of War Definitive Edition"
 """
 
 import os
@@ -108,43 +108,6 @@ def map_type(raw_type: str) -> str | None:
         return cleaned
     # Unknown — return as-is.
     return raw_type
-
-
-def parse_scardoc_args(args_str: str) -> list[tuple[str, str]]:
-    """Parse a --? @args line into [(type, name), ...].
-
-    The format is either:
-      'Type1 name1, Type2 name2'      (comma-separated)
-      'Type1 name1 Type2 name2'       (space-separated)
-    """
-    args_str = args_str.strip().rstrip(",")
-    if not args_str or args_str.lower() == "void":
-        return []
-
-    # Try comma-separated first.
-    parts = [p.strip() for p in args_str.split(",") if p.strip()]
-
-    # Handle space-separated "Type Name Type Name ..." (no commas).
-    if len(parts) == 1:
-        tokens = parts[0].split()
-        if len(tokens) >= 4 and len(tokens) % 2 == 0:
-            return [(tokens[k], tokens[k + 1]) for k in range(0, len(tokens), 2)]
-
-    result = []
-    for part in parts:
-        tokens = part.split(None, 1)
-        if len(tokens) == 2:
-            result.append((tokens[0], tokens[1]))
-        elif len(tokens) == 1:
-            # Skip bare type names with no parameter name (malformed annotations).
-            if "::" in tokens[0]:
-                continue
-            result.append(("any", tokens[0]))
-
-    if result:
-        return result
-
-    return []
 
 
 def _read_binary_string(f) -> str:
@@ -302,104 +265,6 @@ def parse_scardoc_html(filepath: str) -> list[dict]:
     return functions
 
 
-def parse_scar_file(filepath: str) -> list[dict]:
-    """Parse a single .scar file and extract function metadata."""
-    functions = []
-    with open(filepath, "r", encoding="utf-8", errors="replace") as f:
-        lines = f.readlines()
-
-    i = 0
-    while i < len(lines):
-        line = lines[i]
-        m = re.match(r"^\s*function\s+(\w[\w]*)\s*\(([^)]*)\)", line)
-        if not m:
-            i += 1
-            continue
-
-        func_name = m.group(1)
-        param_names = [p.strip() for p in m.group(2).split(",") if p.strip()]
-
-        # Collect preceding --? comment lines.
-        comment_lines = []
-        j = i - 1
-        while j >= 0 and re.match(r"^\s*--", lines[j]):
-            comment_lines.insert(0, lines[j].rstrip())
-            j -= 1
-
-        # Parse annotations from comments.
-        shortdesc = ""
-        extdesc = ""
-        args_str = ""
-        result_str = ""
-        group = ""
-
-        for cline in comment_lines:
-            # Strip the --? prefix.
-            cm = re.match(r"^\s*--\?\s*(.*)", cline)
-            if not cm:
-                # Plain -- comment, try to use as description.
-                cm2 = re.match(r"^\s*--\s*(.*)", cline)
-                if cm2 and not shortdesc:
-                    text = cm2.group(1).strip()
-                    # Skip internal markers and block comment delimiters.
-                    if (text and not text.startswith("creator:")
-                            and not text.startswith("TODO")
-                            and not text.startswith("[[")
-                            and not text.startswith("]]")):
-                        shortdesc = text
-                continue
-            text = cm.group(1)
-
-            if text.startswith("@shortdesc"):
-                shortdesc = text[len("@shortdesc"):].strip()
-            elif text.startswith("@shordesc"):
-                shortdesc = text[len("@shordesc"):].strip()
-            elif text.startswith("@extdesc"):
-                extdesc = text[len("@extdesc"):].strip()
-            elif text.startswith("@args"):
-                args_str = text[len("@args"):].strip()
-            elif text.startswith("@result"):
-                result_str = text[len("@result"):].strip()
-            elif text.startswith("@group"):
-                group = text[len("@group"):].strip()
-
-        # Parse typed arguments from @args.
-        typed_args = parse_scardoc_args(args_str)
-
-        # Build final parameter list: prefer @args types, fall back to param names.
-        params = []
-        if typed_args and len(typed_args) == len(param_names):
-            for (atype, _aname), pname in zip(typed_args, param_names):
-                params.append((map_type(atype) or "any", pname))
-        elif typed_args:
-            # Annotation count differs from signature — use annotations.
-            for atype, aname in typed_args:
-                params.append((map_type(atype) or "any", aname))
-        else:
-            # No @args — all params are 'any'.
-            for pname in param_names:
-                params.append(("any", pname))
-
-        # Parse return type.
-        ret_type = None
-        if result_str:
-            ret_type = map_type(result_str)
-
-        functions.append({
-            "name": func_name,
-            "params": params,
-            "return_type": ret_type,
-            "shortdesc": shortdesc,
-            "extdesc": extdesc,
-            "group": group,
-            "source_file": os.path.basename(filepath),
-        })
-
-        i += 1
-
-    return functions
-
-
 def _write_func(out, func):
     """Write a single function stub to the output file."""
     if func["shortdesc"]:
@@ -428,16 +293,15 @@ def _write_func(out, func):
     out.write(f"function {func['name']}({', '.join(param_names)}) end\n\n")
 
 
-def generate(scar_dir: str, scardoc_path: str | None,
+def generate(scardoc_path: str | None,
              scardoc_html_path: str | None, output_path: str):
-    """Merge all SCAR sources and generate consolidated LuaLS stubs.
+    """Merge HTML + scardoc.dat sources and generate consolidated LuaLS stubs.
 
-    Sources (in priority order for the same function name):
-      1. scardoc HTML (function_list.htm) — most complete, typed params
-      2. scardoc.dat binary — constants only (functions overlap with HTML)
-      3. .scar library files — functions with --? annotations
+    Sources:
+      1. scardoc HTML (function_list.htm) — complete function reference
+      2. scardoc.dat binary — constants + functions missing from HTML
     """
-    # 1. Parse scardoc HTML (primary engine source).
+    # 1. Parse scardoc HTML (primary source).
     html_funcs: list[dict] = []
     html_by_name: dict[str, dict] = {}
 
@@ -447,60 +311,45 @@ def generate(scar_dir: str, scardoc_path: str | None,
         print(f"Read {len(html_funcs)} functions from "
               f"{os.path.basename(scardoc_html_path)}")
 
-    # 2. Parse scardoc.dat for constants (not in HTML).
+    # 2. Parse scardoc.dat for constants and extra functions.
     constants: list[str] = []
+    dat_funcs: list[dict] = []
     if scardoc_path and os.path.isfile(scardoc_path):
-        _, constants = parse_scardoc_dat(scardoc_path)
-        print(f"Read {len(constants)} constants from "
+        dat_funcs, constants = parse_scardoc_dat(scardoc_path)
+        print(f"Read {len(dat_funcs)} functions + {len(constants)} constants from "
               f"{os.path.basename(scardoc_path)}")
 
-    # 3. Parse .scar files.
-    scar_files = sorted(Path(scar_dir).glob("*.scar"))
-    if not scar_files:
-        print(f"Error: no .scar files found in {scar_dir}", file=sys.stderr)
+    # Add scardoc.dat functions not already in HTML.
+    dat_only_funcs = [f for f in dat_funcs if f["name"] not in html_by_name]
+    if dat_only_funcs:
+        print(f"  {len(dat_only_funcs)} functions only in scardoc.dat: "
+              f"{', '.join(f['name'] for f in dat_only_funcs)}")
+
+    if not html_funcs and not dat_funcs:
+        print("Error: no functions found from any source", file=sys.stderr)
         return False
 
-    all_scar_funcs: list[dict] = []
-    for sf in scar_files:
-        all_scar_funcs.extend(parse_scar_file(str(sf)))
-
-    scar_by_name: dict[str, dict] = {}
-    for func in all_scar_funcs:
-        name = func["name"]
-        if name not in scar_by_name and not name.startswith("_"):
-            scar_by_name[name] = func
-
-    # 4. Merge all sources.
-    # Functions with a .scar source file (from HTML or from .scar parsing)
-    # are grouped under their file and import tier.
-    # Functions from C++ only (no .scar wrapper) go in "Engine-only".
-    all_names: set[str] = set(html_by_name) | set(scar_by_name)
-    merged_funcs: list[dict] = []
+    # 3. Classify functions by source file.
+    # Functions with a .scar source → library (grouped by file and tier).
+    # Functions with a .cpp source → engine-only.
+    library_funcs: list[dict] = []
     engine_only_funcs: list[dict] = []
 
-    for name in sorted(all_names):
-        html_func = html_by_name.get(name)
-        scar_func = scar_by_name.get(name)
+    for func in html_funcs:
+        sf = func.get("source_file", "")
+        if sf.endswith(".scar"):
+            library_funcs.append(func)
+        else:
+            engine_only_funcs.append(func)
 
-        if html_func and html_func["source_file"].endswith(".scar"):
-            # HTML has it with a .scar source — use HTML data (better typed).
-            merged_funcs.append(html_func)
-        elif scar_func and html_func:
-            # In both .scar files and HTML (with C++ source) — use HTML data
-            # but tag with .scar source file for grouping.
-            merged = dict(html_func)
-            merged["source_file"] = scar_func["source_file"]
-            merged_funcs.append(merged)
-        elif scar_func:
-            # Only in .scar files, not in HTML at all.
-            merged_funcs.append(scar_func)
-        elif html_func:
-            # Only in HTML with C++ source — engine-only.
-            engine_only_funcs.append(html_func)
+    # scardoc.dat-only functions go into engine-only.
+    for func in dat_only_funcs:
+        func["source_file"] = "scardoc.dat"
+        engine_only_funcs.append(func)
 
-    # Group merged functions by source file.
+    # Group library functions by source file.
     by_file: dict[str, list[dict]] = {}
-    for func in merged_funcs:
+    for func in library_funcs:
         key = func["source_file"].lower()
         by_file.setdefault(key, []).append(func)
 
@@ -526,13 +375,13 @@ def generate(scar_dir: str, scardoc_path: str | None,
         else:
             other_files.append(sf)
 
-    total_funcs = len(engine_only_funcs) + len(merged_funcs)
+    total_funcs = len(engine_only_funcs) + len(library_funcs)
 
-    # 5. Write consolidated output.
+    # 4. Write consolidated output.
     with open(output_path, "w", encoding="utf-8", newline="\n") as out:
         out.write("---@meta scar-dow\n\n")
         out.write("-- Auto-generated SCAR stubs for Dawn of War by scar-to-luadefs.py\n")
-        out.write(f"-- Sources: function_list.htm + scardoc.dat + .scar library files\n")
+        out.write(f"-- Sources: function_list.htm + scardoc.dat\n")
         out.write(f"-- {total_funcs} functions, {len(constants)} constants\n")
         out.write("-- Do not edit manually — regenerate with: python tools/scar-to-luadefs.py\n")
         out.write("--\n")
@@ -585,7 +434,7 @@ def generate(scar_dir: str, scardoc_path: str | None,
                     _write_func(out, func)
 
     print(f"Wrote {total_funcs} functions + {len(constants)} constants to {output_path}")
-    print(f"  ({len(merged_funcs)} with .scar source, "
+    print(f"  ({len(library_funcs)} with .scar source, "
           f"{len(engine_only_funcs)} engine-only C++ built-ins)")
     return True
 
@@ -602,18 +451,13 @@ def main():
     scardoc_html_path: str | None = None
 
     if len(sys.argv) < 2:
-        print(f"Usage: {sys.argv[0]} <game_data_dir> [--scardoc <path>]")
+        print(f"Usage: {sys.argv[0]} <game_root> [--scardoc <path>]")
         print()
         print("Generates consolidated SCAR stubs for LuaLS from:")
         print("  - Tools/ScarDoc/function_list.htm (engine + library functions)")
         print("  - Mod_Studio_Files/scardoc.dat (constants)")
-        print("  - <game_data_dir>/scar/*.scar (library functions)")
         print()
-        print("The <game_data_dir> should be the DoWDE Data directory, e.g.:")
-        print(f'  python {sys.argv[0]} "C:/Program Files (x86)/Steam/steamapps/'
-              f'common/Dawn of War Definitive Edition/DoWDE/Data"')
-        print()
-        print("Or the game installation root (auto-detects subdirectories):")
+        print("The <game_root> should be the game installation directory, e.g.:")
         print(f'  python {sys.argv[0]} "C:/Program Files (x86)/Steam/steamapps/'
               f'common/Dawn of War Definitive Edition"')
         sys.exit(1)
@@ -626,44 +470,26 @@ def main():
         if idx + 1 < len(sys.argv):
             scardoc_path = sys.argv[idx + 1]
 
-    # Auto-detect directory structure.
-    # Accept either the game root or the DoWDE/Data directory.
-    scar_dir_candidates = [
-        game_path / "scar",                      # Direct scar dir
-        game_path / "DoWDE" / "Data" / "scar",    # Game root
-    ]
-    scar_dir = None
-    for candidate in scar_dir_candidates:
-        if candidate.is_dir():
-            scar_dir = str(candidate)
-            break
-
-    if not scar_dir:
-        print(f"Error: could not find scar/ directory under {game_path}",
-              file=sys.stderr)
-        sys.exit(1)
-
     # Look for ScarDoc HTML.
     html_candidates = [
         game_path / "Tools" / "ScarDoc" / "function_list.htm",
-        game_path.parent / "Tools" / "ScarDoc" / "function_list.htm",
-        game_path.parent.parent / "Tools" / "ScarDoc" / "function_list.htm",
     ]
     for candidate in html_candidates:
         if candidate.is_file():
             scardoc_html_path = str(candidate)
             break
 
+    if not scardoc_html_path:
+        print(f"Error: function_list.htm not found under {game_path / 'Tools' / 'ScarDoc'}",
+              file=sys.stderr)
+        sys.exit(1)
+
     if not os.path.isfile(scardoc_path):
         print(f"Warning: {scardoc_path} not found, no constants will be emitted",
               file=sys.stderr)
         scardoc_path = None
 
-    if not scardoc_html_path:
-        print("Warning: function_list.htm not found, using scardoc.dat only",
-              file=sys.stderr)
-
-    if not generate(scar_dir, scardoc_path, scardoc_html_path, output_path):
+    if not generate(scardoc_path, scardoc_html_path, output_path):
         sys.exit(1)
 
 
