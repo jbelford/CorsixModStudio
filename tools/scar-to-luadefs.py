@@ -293,6 +293,9 @@ def _write_func(out, func):
                 out.write("---\n")
             else:
                 out.write(f"--- {ext_line}\n")
+    source = func.get("source_file") or func.get("source")
+    if source:
+        out.write(f"---\n--- *Source: {source}*\n")
 
     for param in func["params"]:
         ptype, pname = param[0], param[1]
