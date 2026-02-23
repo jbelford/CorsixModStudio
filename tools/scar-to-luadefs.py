@@ -73,6 +73,30 @@ TYPO_MAP = {
     "beaconID":  "integer",
 }
 
+# Import tier for each SCAR library file.
+# Tier 1: loaded by ScarUtil.scar — available with import("ScarUtil.scar")
+# Tier 2: loaded by WXPScarUtil.scar — available with import("WXPScarUtil.scar")
+FILE_TIER: dict[str, int] = {
+    "scarutil.scar": 1, "setup.scar": 1, "proximity.scar": 1,
+    "timer.scar": 1, "player.scar": 1, "entity.scar": 1,
+    "squad.scar": 1, "command.scar": 1, "groupcallers.scar": 1,
+    "groups.scar": 1, "camera.scar": 1, "restrict.scar": 1,
+    "actor.scar": 1, "modifiers.scar": 1, "cpuplayerutil.scar": 1,
+    "difficultylevel.scar": 1, "ui.scar": 1, "production.scar": 1,
+    "wxpscarutil.scar": 2, "wxpactor.scar": 2, "wxpbutton.scar": 2,
+    "wxpcommand.scar": 2, "wxpdifficultylevel.scar": 2,
+    "wxpentityprecach.scar": 2, "wxpgroups.scar": 2,
+    "wxpmetamap.scar": 2, "wxprestrict.scar": 2, "wxpui.scar": 2,
+}
+
+# Standalone files not imported by ScarUtil or WXPScarUtil.
+STANDALONE_IMPORT: dict[str, str] = {
+    "wcutil.scar": 'import("WCUtil.scar")',
+    "balancetool.scar": 'import("BalanceTool.scar")',
+    "camerashake.scar": 'import("CameraShake.scar")',
+    "debug.scar": 'import("Debug.scar")',
+}
+
 
 def map_type(raw_type: str) -> str | None:
     """Map a scardoc type name to a LuaLS annotation type."""
@@ -102,6 +126,13 @@ def parse_scardoc_args(args_str: str) -> list[tuple[str, str]]:
 
     # Try comma-separated first.
     parts = [p.strip() for p in args_str.split(",") if p.strip()]
+
+    # Handle space-separated "Type Name Type Name ..." (no commas).
+    if len(parts) == 1:
+        tokens = parts[0].split()
+        if len(tokens) >= 4 and len(tokens) % 2 == 0:
+            return [(tokens[k], tokens[k + 1]) for k in range(0, len(tokens), 2)]
+
     result = []
     for part in parts:
         tokens = part.split(None, 1)
@@ -230,6 +261,31 @@ def parse_scar_file(filepath: str) -> list[dict]:
     return functions
 
 
+def _write_func(out, func):
+    """Write a single function stub to the output file."""
+    if func["shortdesc"]:
+        out.write(f"--- {func['shortdesc']}\n")
+    if func["extdesc"]:
+        ext = func["extdesc"].replace("\\n", "\n--- ").replace("\\t", "  ")
+        for ext_line in ext.split("\n"):
+            ext_line = ext_line.rstrip()
+            if not ext_line or ext_line == "---":
+                continue
+            if ext_line.startswith("--- "):
+                out.write(f"{ext_line}\n")
+            elif ext_line:
+                out.write(f"--- {ext_line}\n")
+
+    for ptype, pname in func["params"]:
+        out.write(f"---@param {pname} {ptype}\n")
+
+    if func["return_type"]:
+        out.write(f"---@return {func['return_type']}\n")
+
+    param_names = [p[1] for p in func["params"]]
+    out.write(f"function {func['name']}({', '.join(param_names)}) end\n\n")
+
+
 def generate(scar_dir: str, engine_stubs: str, output_path: str):
     """Scan SCAR directory and generate LuaLS stubs."""
     engine_names = load_engine_function_names(engine_stubs)
@@ -244,57 +300,67 @@ def generate(scar_dir: str, engine_stubs: str, output_path: str):
         all_functions.extend(parse_scar_file(str(sf)))
 
     # Filter: skip engine-defined, internal (_-prefixed), and duplicates.
-    seen = set()
+    seen: set[str] = set()
     filtered = []
     for func in all_functions:
         name = func["name"]
-        if name in engine_names:
-            continue
-        if name.startswith("_"):
-            continue
-        if name in seen:
+        if name in engine_names or name.startswith("_") or name in seen:
             continue
         seen.add(name)
         filtered.append(func)
 
-    # Sort alphabetically.
-    filtered.sort(key=lambda f: f["name"])
+    # Group by source file (lowercase).
+    by_file: dict[str, list[dict]] = {}
+    for func in filtered:
+        key = func["source_file"].lower()
+        by_file.setdefault(key, []).append(func)
+
+    for funcs in by_file.values():
+        funcs.sort(key=lambda f: f["name"])
+
+    # Partition files into tiers.
+    tier1_files, tier2_files, standalone_files, other_files = [], [], [], []
+    for sf in sorted(by_file):
+        if sf in FILE_TIER:
+            (tier1_files if FILE_TIER[sf] == 1 else tier2_files).append(sf)
+        elif sf in STANDALONE_IMPORT:
+            standalone_files.append(sf)
+        else:
+            other_files.append(sf)
 
     # Write output.
     with open(output_path, "w", encoding="utf-8", newline="\n") as out:
         out.write("---@meta scar-dow-lib\n\n")
         out.write("-- Auto-generated from DoWDE .scar library files by scar-to-luadefs.py\n")
         out.write(f"-- {len(filtered)} functions\n")
-        out.write("-- Do not edit manually — regenerate with: python tools/scar-to-luadefs.py\n\n")
+        out.write("-- Do not edit manually — regenerate with: python tools/scar-to-luadefs.py\n")
+        out.write("--\n")
+        out.write("-- Import tiers:\n")
+        out.write('--   Tier 1: available after import("ScarUtil.scar")\n')
+        out.write('--   Tier 2: available after import("WXPScarUtil.scar")  (includes Tier 1)\n')
+        out.write("--   Standalone: requires explicit import (noted per-section)\n")
+        out.write("--\n")
+        out.write('-- All mod scripts should import("WXPScarUtil.scar") to get Tier 1 + Tier 2.\n\n')
 
-        for func in filtered:
-            # Description.
-            if func["shortdesc"]:
-                out.write(f"--- {func['shortdesc']}\n")
-            if func["extdesc"]:
-                # Clean up \n and \t escapes from scardoc format.
-                ext = func["extdesc"].replace("\\n", "\n--- ").replace("\\t", "  ")
-                for ext_line in ext.split("\n"):
-                    ext_line = ext_line.rstrip()
-                    # Skip empty doc lines.
-                    if not ext_line or ext_line == "---":
-                        continue
-                    if ext_line.startswith("--- "):
-                        out.write(f"{ext_line}\n")
-                    elif ext_line:
-                        out.write(f"--- {ext_line}\n")
+        def _write_tier(files, tier_label):
+            if not files:
+                return
+            out.write(f"{'--' * 40}\n")
+            out.write(f"-- {tier_label}\n")
+            out.write(f"{'--' * 40}\n\n")
+            for sf in files:
+                note = STANDALONE_IMPORT.get(sf)
+                if note:
+                    out.write(f"-- from {sf} — requires {note}\n\n")
+                else:
+                    out.write(f"-- from {sf}\n\n")
+                for func in by_file[sf]:
+                    _write_func(out, func)
 
-            # Parameters.
-            for ptype, pname in func["params"]:
-                out.write(f"---@param {pname} {ptype}\n")
-
-            # Return type.
-            if func["return_type"]:
-                out.write(f"---@return {func['return_type']}\n")
-
-            # Function signature.
-            param_names = [p[1] for p in func["params"]]
-            out.write(f"function {func['name']}({', '.join(param_names)}) end\n\n")
+        _write_tier(tier1_files, 'Tier 1: Available via import("ScarUtil.scar")')
+        _write_tier(tier2_files, 'Tier 2: Available via import("WXPScarUtil.scar")')
+        _write_tier(standalone_files, "Standalone: Requires explicit import()")
+        _write_tier(other_files, "Other")
 
     print(f"Wrote {len(filtered)} functions to {output_path}")
     print(f"  (skipped {len(engine_names)} engine functions, "
