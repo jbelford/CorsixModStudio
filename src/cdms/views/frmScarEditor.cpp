@@ -1089,6 +1089,7 @@ void frmScarEditor::OnMouseDown(wxMouseEvent &event)
 void frmScarEditor::OnContextMenu(wxContextMenuEvent &event)
 {
     UNUSED(event);
+    DismissHoverPopup();
     wxMenu menu;
     menu.Append(IDC_GoToDefinition, wxT("Go to Definition\tCtrl+Click"));
     menu.AppendSeparator();
