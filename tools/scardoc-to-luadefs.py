@@ -182,17 +182,13 @@ def main():
     msf_dir = project_root / "Mod_Studio_Files"
     lsp_dir = msf_dir / "lsp"
 
-    # Dawn of War
-    dow_input = msf_dir / "scardoc.dat"
-    if dow_input.exists():
-        convert(str(dow_input), str(lsp_dir / "scar-dow.lua"), "scar-dow")
-    else:
-        print(f"Warning: {dow_input} not found, skipping DoW stubs", file=sys.stderr)
+    # Dawn of War — skipped; use scar-to-luadefs.py for consolidated DoW stubs.
+    # That script reads both scardoc.dat AND .scar library files.
 
     # Company of Heroes
     coh_input = msf_dir / "scardoc_coh.dat"
     if coh_input.exists():
-        convert(str(coh_input), str(lsp_dir / "scar-coh.lua"), "scar-coh")
+        convert(str(coh_input), str(lsp_dir / "coh" / "scar-coh.lua"), "scar-coh")
     else:
         print(f"Warning: {coh_input} not found, skipping CoH stubs", file=sys.stderr)
 

@@ -1,17 +1,13 @@
 #!/usr/bin/env python3
 """
-Parse SCAR library files and generate LuaLS @meta definition stubs.
+Generate consolidated LuaLS @meta stubs for Dawn of War SCAR scripting.
 
-Reads .scar files from a game data directory, extracts function definitions
-and their --? scardoc annotations, and produces a LuaLS-compatible Lua file
-with @param/@return annotations.
-
-Functions already defined in scar-dow.lua (from scardoc.dat) are skipped
-to avoid duplicates.  Internal functions (names starting with '_') are
-also excluded.
+Merges two sources into a single definition file:
+  1. scardoc.dat — binary file containing engine-registered C++ functions
+  2. .scar files — Lua library functions with --? scardoc annotations
 
 Usage:
-    python tools/scar-to-luadefs.py <scar_dir> [--engine-stubs <path>]
+    python tools/scar-to-luadefs.py <scar_dir> [--scardoc <path>]
 
 Example:
     python tools/scar-to-luadefs.py "C:/Program Files (x86)/Steam/steamapps/common/Dawn of War Definitive Edition/DoWDE/Data/scar"
@@ -19,6 +15,7 @@ Example:
 
 import os
 import re
+import struct
 import sys
 from pathlib import Path
 
@@ -150,17 +147,72 @@ def parse_scardoc_args(args_str: str) -> list[tuple[str, str]]:
     return []
 
 
-def load_engine_function_names(stubs_path: str) -> set[str]:
-    """Load function names from the engine stubs file (scar-dow.lua)."""
-    names: set[str] = set()
-    if not os.path.isfile(stubs_path):
-        return names
-    with open(stubs_path, "r", encoding="utf-8") as f:
-        for line in f:
-            m = re.match(r"^function\s+(\w+)\(", line)
-            if m:
-                names.add(m.group(1))
-    return names
+def _read_binary_string(f) -> str:
+    """Read a length-prefixed string from a binary scardoc.dat file."""
+    raw = f.read(4)
+    if len(raw) < 4:
+        return ""
+    length = struct.unpack("<I", raw)[0]
+    if length == 0:
+        return ""
+    return f.read(length).decode("ascii", errors="replace")
+
+
+def parse_scardoc_dat(filepath: str) -> tuple[list[dict], list[str]]:
+    """Parse a scardoc.dat binary file into (functions, constants).
+
+    Returns a tuple of (functions_list, constants_list) where each function
+    dict has the same shape as parse_scar_file output.
+    """
+    functions = []
+    constants: list[str] = []
+
+    with open(filepath, "rb") as f:
+        raw = f.read(4)
+        if len(raw) < 4:
+            return [], []
+        count = struct.unpack("<I", raw)[0]
+
+        for _ in range(count):
+            return_type_str = _read_binary_string(f)
+            name = _read_binary_string(f)
+
+            if not name:
+                # Constant: return_type holds the constant name.
+                constants.append(return_type_str)
+            else:
+                raw_argc = f.read(4)
+                if len(raw_argc) < 4:
+                    break
+                argc = struct.unpack("<I", raw_argc)[0]
+                raw_args = [_read_binary_string(f) for _ in range(argc)]
+                desc = _read_binary_string(f)
+
+                # Parse args into (type, name, optional) tuples.
+                params: list[tuple] = []
+                for arg_str in raw_args:
+                    arg_str = arg_str.strip()
+                    optional = arg_str.startswith("[") and arg_str.endswith("]")
+                    if optional:
+                        arg_str = arg_str[1:-1].strip()
+                    parts = arg_str.split(None, 1)
+                    if len(parts) == 2:
+                        params.append((map_type(parts[0]) or "any", parts[1], optional))
+                    elif len(parts) == 1:
+                        params.append(("any", parts[0], optional))
+
+                ret = map_type(return_type_str)
+
+                functions.append({
+                    "name": name,
+                    "params": params,
+                    "return_type": ret,
+                    "shortdesc": desc,
+                    "extdesc": "",
+                    "source": "engine",
+                })
+
+    return functions, constants
 
 
 def parse_scar_file(filepath: str) -> list[dict]:
@@ -264,8 +316,9 @@ def parse_scar_file(filepath: str) -> list[dict]:
 def _write_func(out, func):
     """Write a single function stub to the output file."""
     if func["shortdesc"]:
-        out.write(f"--- {func['shortdesc']}\n")
-    if func["extdesc"]:
+        for i, line in enumerate(func["shortdesc"].split("\n")):
+            out.write(f"---{line}\n") if i > 0 else out.write(f"--- {line}\n")
+    if func.get("extdesc"):
         ext = func["extdesc"].replace("\\n", "\n--- ").replace("\\t", "  ")
         for ext_line in ext.split("\n"):
             ext_line = ext_line.rstrip()
@@ -276,8 +329,10 @@ def _write_func(out, func):
             elif ext_line:
                 out.write(f"--- {ext_line}\n")
 
-    for ptype, pname in func["params"]:
-        out.write(f"---@param {pname} {ptype}\n")
+    for param in func["params"]:
+        ptype, pname = param[0], param[1]
+        opt = "?" if len(param) > 2 and param[2] else ""
+        out.write(f"---@param {pname}{opt} {ptype}\n")
 
     if func["return_type"]:
         out.write(f"---@return {func['return_type']}\n")
@@ -286,32 +341,42 @@ def _write_func(out, func):
     out.write(f"function {func['name']}({', '.join(param_names)}) end\n\n")
 
 
-def generate(scar_dir: str, engine_stubs: str, output_path: str):
-    """Scan SCAR directory and generate LuaLS stubs."""
-    engine_names = load_engine_function_names(engine_stubs)
+def generate(scar_dir: str, scardoc_path: str | None, output_path: str):
+    """Scan SCAR directory and scardoc.dat, generate consolidated LuaLS stubs."""
+    # 1. Parse scardoc.dat if available.
+    engine_funcs: list[dict] = []
+    constants: list[str] = []
+    engine_names: set[str] = set()
 
+    if scardoc_path and os.path.isfile(scardoc_path):
+        engine_funcs, constants = parse_scardoc_dat(scardoc_path)
+        engine_names = {f["name"] for f in engine_funcs}
+        print(f"Read {len(engine_funcs)} engine functions + "
+              f"{len(constants)} constants from {os.path.basename(scardoc_path)}")
+
+    # 2. Parse .scar files.
     scar_files = sorted(Path(scar_dir).glob("*.scar"))
     if not scar_files:
         print(f"Error: no .scar files found in {scar_dir}", file=sys.stderr)
         return False
 
-    all_functions = []
+    all_scar_funcs: list[dict] = []
     for sf in scar_files:
-        all_functions.extend(parse_scar_file(str(sf)))
+        all_scar_funcs.extend(parse_scar_file(str(sf)))
 
-    # Filter: skip engine-defined, internal (_-prefixed), and duplicates.
+    # Filter SCAR: skip engine-defined, internal (_-prefixed), duplicates.
     seen: set[str] = set()
-    filtered = []
-    for func in all_functions:
+    lib_funcs: list[dict] = []
+    for func in all_scar_funcs:
         name = func["name"]
         if name in engine_names or name.startswith("_") or name in seen:
             continue
         seen.add(name)
-        filtered.append(func)
+        lib_funcs.append(func)
 
-    # Group by source file (lowercase).
+    # Group library functions by source file.
     by_file: dict[str, list[dict]] = {}
-    for func in filtered:
+    for func in lib_funcs:
         key = func["source_file"].lower()
         by_file.setdefault(key, []).append(func)
 
@@ -328,20 +393,46 @@ def generate(scar_dir: str, engine_stubs: str, output_path: str):
         else:
             other_files.append(sf)
 
-    # Write output.
-    with open(output_path, "w", encoding="utf-8", newline="\n") as out:
-        out.write("---@meta scar-dow-lib\n\n")
-        out.write("-- Auto-generated from DoWDE .scar library files by scar-to-luadefs.py\n")
-        out.write(f"-- {len(filtered)} functions\n")
-        out.write("-- Do not edit manually — regenerate with: python tools/scar-to-luadefs.py\n")
-        out.write("--\n")
-        out.write("-- Import tiers:\n")
-        out.write('--   Tier 1: available after import("ScarUtil.scar")\n')
-        out.write('--   Tier 2: available after import("WXPScarUtil.scar")  (includes Tier 1)\n')
-        out.write("--   Standalone: requires explicit import (noted per-section)\n")
-        out.write("--\n")
-        out.write('-- All mod scripts should import("WXPScarUtil.scar") to get Tier 1 + Tier 2.\n\n')
+    total_funcs = len(engine_funcs) + len(lib_funcs)
 
+    # 3. Write consolidated output.
+    with open(output_path, "w", encoding="utf-8", newline="\n") as out:
+        out.write("---@meta scar-dow\n\n")
+        out.write("-- Auto-generated SCAR stubs for Dawn of War by scar-to-luadefs.py\n")
+        sources = []
+        if engine_funcs:
+            sources.append(f"scardoc.dat ({len(engine_funcs)} engine)")
+        sources.append(f".scar files ({len(lib_funcs)} library)")
+        out.write(f"-- Sources: {', '.join(sources)}\n")
+        out.write(f"-- {total_funcs} functions, {len(constants)} constants\n")
+        out.write("-- Do not edit manually — regenerate with: python tools/scar-to-luadefs.py\n")
+        if lib_funcs:
+            out.write("--\n")
+            out.write("-- Library function import tiers:\n")
+            out.write('--   Tier 1: available after import("ScarUtil.scar")\n')
+            out.write('--   Tier 2: available after import("WXPScarUtil.scar")  (includes Tier 1)\n')
+            out.write("--   Standalone: requires explicit import (noted per-section)\n")
+            out.write("--\n")
+            out.write('-- All mod scripts should import("WXPScarUtil.scar") to get Tier 1 + Tier 2.\n')
+        out.write("\n")
+
+        # Constants.
+        if constants:
+            out.write(f"{'--' * 40}\n")
+            out.write("-- Constants\n")
+            out.write(f"{'--' * 40}\n\n")
+            for c in sorted(constants):
+                out.write(f"---@type any\n{c} = nil\n\n")
+
+        # Engine functions.
+        if engine_funcs:
+            out.write(f"{'--' * 40}\n")
+            out.write("-- Engine functions (from scardoc.dat)\n")
+            out.write(f"{'--' * 40}\n\n")
+            for func in sorted(engine_funcs, key=lambda f: f["name"]):
+                _write_func(out, func)
+
+        # Library functions by tier.
         def _write_tier(files, tier_label):
             if not files:
                 return
@@ -357,46 +448,59 @@ def generate(scar_dir: str, engine_stubs: str, output_path: str):
                 for func in by_file[sf]:
                     _write_func(out, func)
 
-        _write_tier(tier1_files, 'Tier 1: Available via import("ScarUtil.scar")')
-        _write_tier(tier2_files, 'Tier 2: Available via import("WXPScarUtil.scar")')
-        _write_tier(standalone_files, "Standalone: Requires explicit import()")
-        _write_tier(other_files, "Other")
+        _write_tier(tier1_files, 'Tier 1: Library functions via import("ScarUtil.scar")')
+        _write_tier(tier2_files, 'Tier 2: Library functions via import("WXPScarUtil.scar")')
+        _write_tier(standalone_files, "Standalone: Library functions requiring explicit import()")
+        _write_tier(other_files, "Other library functions")
 
-    print(f"Wrote {len(filtered)} functions to {output_path}")
-    print(f"  (skipped {len(engine_names)} engine functions, "
-          f"{sum(1 for f in all_functions if f['name'].startswith('_'))} internal)")
+    print(f"Wrote {total_funcs} functions + {len(constants)} constants to {output_path}")
+    if engine_funcs:
+        overlap = sum(1 for f in all_scar_funcs
+                      if f["name"] in engine_names and not f["name"].startswith("_"))
+        print(f"  ({len(engine_funcs)} engine, {len(lib_funcs)} library, "
+              f"{overlap} overlap resolved to engine)")
     return True
 
 
 def main():
     script_dir = Path(__file__).parent
     project_root = script_dir.parent
-    lsp_dir = project_root / "Mod_Studio_Files" / "lsp"
+    msf_dir = project_root / "Mod_Studio_Files"
+    lsp_dir = msf_dir / "lsp"
 
     # Default paths.
-    engine_stubs = str(lsp_dir / "dow" / "scar-dow.lua")
-    output_path = str(lsp_dir / "dow" / "scar-dow-lib.lua")
+    scardoc_path = str(msf_dir / "scardoc.dat")
+    output_path = str(lsp_dir / "dow" / "scar-dow.lua")
 
     if len(sys.argv) < 2:
-        print(f"Usage: {sys.argv[0]} <scar_directory> [--engine-stubs <path>]")
-        print(f"\nExample:")
+        print(f"Usage: {sys.argv[0]} <scar_directory> [--scardoc <path>]")
+        print()
+        print("Generates consolidated SCAR stubs for LuaLS from both")
+        print("scardoc.dat (engine functions) and .scar library files.")
+        print()
+        print(f"Example:")
         print(f'  python {sys.argv[0]} "C:/Program Files (x86)/Steam/steamapps/'
               f'common/Dawn of War Definitive Edition/DoWDE/Data/scar"')
         sys.exit(1)
 
     scar_dir = sys.argv[1]
 
-    # Optional: override engine stubs path.
-    if "--engine-stubs" in sys.argv:
-        idx = sys.argv.index("--engine-stubs")
+    # Optional: override scardoc.dat path.
+    if "--scardoc" in sys.argv:
+        idx = sys.argv.index("--scardoc")
         if idx + 1 < len(sys.argv):
-            engine_stubs = sys.argv[idx + 1]
+            scardoc_path = sys.argv[idx + 1]
 
     if not os.path.isdir(scar_dir):
         print(f"Error: {scar_dir} is not a directory", file=sys.stderr)
         sys.exit(1)
 
-    if not generate(scar_dir, engine_stubs, output_path):
+    if not os.path.isfile(scardoc_path):
+        print(f"Warning: {scardoc_path} not found, generating library stubs only",
+              file=sys.stderr)
+        scardoc_path = None
+
+    if not generate(scar_dir, scardoc_path, output_path):
         sys.exit(1)
 
 
