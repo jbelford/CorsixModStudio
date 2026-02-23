@@ -840,13 +840,12 @@ void frmScarEditor::LspOpenDocument()
 
     // Translate --? SCAR annotations to ---@ LuaLS annotations before sending
     m_lspTranslation = lsp::CScarAnnotationTranslator::Translate(text);
-    pClient->OpenDocument(m_sLspUri, "lua", m_lspTranslation->text);
-    m_bLspOpen = true;
-    m_bLspNeedsSync = true; // Prompt a follow-up didChange to ensure diagnostics
-
-    // Register per-URI diagnostics callback
+    // Register callback before opening so diagnostics are never missed
     pClient->RegisterDiagnosticsCallback(m_sLspUri, [this](const std::string &uri, std::vector<lsp::Diagnostic> diags)
                                          { ApplyDiagnostics(uri, std::move(diags)); });
+
+    pClient->OpenDocument(m_sLspUri, "lua", m_lspTranslation->text);
+    m_bLspOpen = true;
 }
 
 void frmScarEditor::LspSyncDocument()
@@ -928,13 +927,14 @@ void frmScarEditor::OnLspTimer(wxTimerEvent &event)
         return;
     }
 
-    // Retry deferred document open if the server is now ready
+    // Retry deferred document open if the server is now ready.
+    // Use else-if so open and sync are never in the same tick — gives
+    // the server time to process didOpen before receiving didChange.
     if (m_bLspNeedsOpen && !m_bLspOpen)
     {
         LspOpenDocument();
     }
-
-    if (m_bLspNeedsSync && m_bLspOpen)
+    else if (m_bLspNeedsSync && m_bLspOpen)
     {
         m_bLspNeedsSync = false;
         LspSyncDocument();

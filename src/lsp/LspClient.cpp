@@ -234,7 +234,10 @@ void CLspClient::IoThreadMain()
             }
             for (const auto &msg : toSend)
             {
-                m_process.Write(msg);
+                if (!m_process.Write(msg))
+                {
+                    CDMS_LOG_WARN("LSP: Failed to write message to server pipe");
+                }
             }
         }
 
@@ -619,7 +622,7 @@ void CLspClient::SendRequest(const std::string &method, const nlohmann::json &pa
 
 void CLspClient::SendNotification(const std::string &method, const nlohmann::json &params)
 {
-    CDMS_LOG_TRACE("LSP: Sending notification: {}", method);
+    CDMS_LOG_DEBUG("LSP: Sending notification: {}", method);
     nlohmann::json notification = {{"jsonrpc", "2.0"}, {"method", method}, {"params", params}};
     Send(notification);
 }
