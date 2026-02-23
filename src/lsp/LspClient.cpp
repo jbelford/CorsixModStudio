@@ -570,6 +570,10 @@ void CLspClient::HandleNotification(const std::string &method, const nlohmann::j
                 [cb = std::move(cb), uri = std::move(uri), diagnostics = std::move(diagnostics)]() mutable
                 { cb(uri, std::move(diagnostics)); });
         }
+        else
+        {
+            CDMS_LOG_WARN("LSP: No callback registered for diagnostics URI: {}", diag.uri);
+        }
     }
     else if (method == "window/logMessage")
     {

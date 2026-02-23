@@ -842,6 +842,7 @@ void frmScarEditor::LspOpenDocument()
     m_lspTranslation = lsp::CScarAnnotationTranslator::Translate(text);
     pClient->OpenDocument(m_sLspUri, "lua", m_lspTranslation->text);
     m_bLspOpen = true;
+    m_bLspNeedsSync = true; // Prompt a follow-up didChange to ensure diagnostics
 
     // Register per-URI diagnostics callback
     pClient->RegisterDiagnosticsCallback(m_sLspUri, [this](const std::string &uri, std::vector<lsp::Diagnostic> diags)
