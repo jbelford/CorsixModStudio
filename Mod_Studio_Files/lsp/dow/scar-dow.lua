@@ -740,7 +740,7 @@ function Cmd_JumpToPos(sgroupname, position) end
 --- *Source: Command.scar*
 ---@param sgroupName string
 ---@param markerNameTable table
----@return markerID
+---@return MarkerID
 function Cmd_MoveToClosestMarker(sgroupName, markerNameTable) end
 
 --- Move a squad group to the center of an entity group.
@@ -1466,7 +1466,7 @@ function SGroup_SetPlayerOwner(groupname, owner) end
 ---
 --- *Source: Modifiers.scar*
 ---@param groupid EGroupID
----@param modifier Modifier
+---@param modifier ScarModifier
 ---@param apply boolean
 function ModifierUtil_ApplyToEGroup(groupid, modifier, apply) end
 
@@ -1474,7 +1474,7 @@ function ModifierUtil_ApplyToEGroup(groupid, modifier, apply) end
 ---
 --- *Source: Modifiers.scar*
 ---@param groupid SGroupID
----@param modifier Modifier
+---@param modifier ScarModifier
 ---@param apply boolean
 function ModifierUtil_ApplyToSGroup(groupid, modifier, apply) end
 
@@ -1483,7 +1483,7 @@ function ModifierUtil_ApplyToSGroup(groupid, modifier, apply) end
 --- Returns zero if applier for modifier is not found.
 ---
 --- *Source: Modifiers.scar*
----@param modifier Modifier
+---@param modifier ScarModifier
 ---@param entityid EntityID
 ---@return integer
 function ModifierUtil_GetEntityApplierIndex(modifier, entityid) end
@@ -1493,7 +1493,7 @@ function ModifierUtil_GetEntityApplierIndex(modifier, entityid) end
 --- Returns zero if applier for modifier is not found.
 ---
 --- *Source: Modifiers.scar*
----@param modifier Modifier
+---@param modifier ScarModifier
 ---@param squadid SquadID
 ---@return integer
 function ModifierUtil_GetSquadApplierIndex(modifier, squadid) end
@@ -1501,7 +1501,7 @@ function ModifierUtil_GetSquadApplierIndex(modifier, squadid) end
 --- Toggles the fx for the specified modifer
 ---
 --- *Source: Modifiers.scar*
----@param modifier Modifier
+---@param modifier ScarModifier
 function ModifierUtil_ToggleFX(modifier) end
 
 -- from player.scar
@@ -2096,7 +2096,7 @@ function Restrict_SpaceMarines(playerId, level) end
 ---
 --- *Source: Restrict.scar*
 ---@param playerId PlayerID
----@param addon_blueprint blueprint
+---@param addon_blueprint Blueprint
 ---@param eventcuedescription_locId integer
 ---@param dialog_locId integer
 function Unrestrict_AddOnWithAlerts(playerId, addon_blueprint, eventcuedescription_locId, dialog_locId) end
@@ -2105,7 +2105,7 @@ function Unrestrict_AddOnWithAlerts(playerId, addon_blueprint, eventcuedescripti
 ---
 --- *Source: Restrict.scar*
 ---@param playerId PlayerID
----@param building_blueprint blueprint
+---@param building_blueprint Blueprint
 ---@param eventcuedescription_locId integer
 ---@param dialog_locId integer
 function Unrestrict_BuildingWithAlerts(playerId, building_blueprint, eventcuedescription_locId, dialog_locId) end
@@ -2114,7 +2114,7 @@ function Unrestrict_BuildingWithAlerts(playerId, building_blueprint, eventcuedes
 ---
 --- *Source: Restrict.scar*
 ---@param playerId PlayerID
----@param research_blueprint blueprint
+---@param research_blueprint Blueprint
 ---@param eventcuedescription_locId integer
 ---@param dialog_locId integer
 function Unrestrict_ResearchWithAlerts(playerId, research_blueprint, eventcuedescription_locId, dialog_locId) end
@@ -2123,7 +2123,7 @@ function Unrestrict_ResearchWithAlerts(playerId, research_blueprint, eventcuedes
 ---
 --- *Source: Restrict.scar*
 ---@param playerId PlayerID
----@param squad_blueprint blueprint
+---@param squad_blueprint Blueprint
 ---@param eventcuedescription_locId integer
 ---@param dialog_locId integer
 function Unrestrict_SquadWithAlerts(playerId, squad_blueprint, eventcuedescription_locId, dialog_locId) end
@@ -2132,7 +2132,7 @@ function Unrestrict_SquadWithAlerts(playerId, squad_blueprint, eventcuedescripti
 ---
 --- *Source: Restrict.scar*
 ---@param playerId PlayerID
----@param weapon_blueprint blueprint
+---@param weapon_blueprint Blueprint
 ---@param eventcuedescription_locId integer
 ---@param dialog_locId integer
 function Unrestrict_WeaponWithAlerts(playerId, weapon_blueprint, eventcuedescription_locId, dialog_locId) end
@@ -2414,7 +2414,7 @@ function Util_GetTrailingNumber(val) end
 ---      If the first parameter is a table, it will append entries to the existing table
 ---
 --- *Source: ScarUtil.scar*
----@param args Args
+---@param args any
 ---@return BlueprintTable
 function Util_MakeBlueprintTable(args) end
 
@@ -2425,7 +2425,6 @@ function Util_MakeBlueprintTable(args) end
 --- *Source: ScarUtil.scar*
 ---@param markername string
 ---@param eventfile string
----@return void
 function Util_MarkerFX(markername, eventfile) end
 
 --- Play the mission title fade.
@@ -6577,7 +6576,7 @@ function Sound_VolumeModifiersReset() end
 ---
 --- *Source: LuaSquad.cpp*
 ---@param id integer
----@return Squad
+---@return SquadID
 function *Squad_GetSquadFromGameID(id) end
 
 --- Returns true if any of the victims were attacked by any of the attackers in the last one second.

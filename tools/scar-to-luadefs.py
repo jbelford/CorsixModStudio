@@ -54,12 +54,23 @@ TYPE_MAP = {
     "StringTable":    "table",
     "ButtonID":       "ButtonID",
     "SoundChannel":   "SoundChannel",
-    "Modifier":       "Modifier",
+    "Modifier":       "ScarModifier",
+    "ScarModifier":   "ScarModifier",
     "ProxType":       "ProxType",
     "PingID":         "PingID",
+    "Colour":         "Colour",
+    "BlueprintTable": "BlueprintTable",
+    "Args":           "any",
+    "Squad":          "SquadID",
+    "markerID":       "MarkerID",
+    "void":           None,
+    "blueprint":      "Blueprint",
+    "boolean":        "boolean",
+    "string":         "string",
     # Group name strings are passed as plain strings in SCAR.
     "SGroup":         "string",
     "EGroup":         "string",
+    "SigmaPlayer":    "PlayerID",
 }
 
 # Typos found in game files — map to corrected types.
