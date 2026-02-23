@@ -194,9 +194,11 @@ struct AnnotationBlock
     };
     std::vector<ExtraLine> extraLines; // @extdesc text, examples, bare --? lines
 
-    std::string indent; // Indentation of the block
-    int startLine = 0;  // Original line index where block starts
-    int lineCount = 0;  // Number of original --? lines consumed
+    std::string indent;         // Indentation of the block
+    std::string argsLineText;   // Full original text of the @args line
+    std::string resultLineText; // Full original text of the @result line
+    int startLine = 0;          // Original line index where block starts
+    int lineCount = 0;          // Number of original --? lines consumed
 };
 
 /// Parse consecutive --? lines starting at lines[startIdx].
@@ -234,12 +236,14 @@ static AnnotationBlock ParseBlock(const std::vector<std::string> &lines, int sta
         {
             block.resultType = Trim(trimmedContent.substr(7));
             block.resultLine = i;
+            block.resultLineText = lines[i];
             inExtdesc = false;
         }
         else if (trimmedContent.rfind("@args", 0) == 0)
         {
             block.args = ParseArgs(Trim(trimmedContent.substr(5)));
             block.argsLine = i;
+            block.argsLineText = lines[i];
             inExtdesc = false;
         }
         else if (trimmedContent.rfind("@extdesc", 0) == 0)
@@ -301,11 +305,13 @@ static bool IsFunctionDeclaration(const std::string &line)
            trimmed.rfind("local function ", 0) == 0;
 }
 
-/// An emitted line with its original source line number.
+/// An emitted line with its original source line number and column mapping info.
 struct EmittedLine
 {
     std::string text;
     int originalLine;
+    ColumnMapKind colMapKind = ColumnMapKind::Reset;
+    int colDelta = 0;
 };
 
 /// Emit the translated annotation lines from a parsed block.
@@ -319,11 +325,13 @@ static std::vector<EmittedLine> EmitBlock(const AnnotationBlock &block,
     // Description
     if (!block.shortdesc.empty())
     {
-        output.push_back({block.indent + "---" + block.shortdesc, block.shortdescLine});
+        output.push_back({block.indent + "---" + block.shortdesc, block.shortdescLine, ColumnMapKind::Reset, 0});
     }
 
     // Parameters — use function signature names when available to ensure
     // @param annotations match the actual parameter names in the function declaration.
+    // Track search position in original @args line for finding successive type names.
+    size_t argsSearchPos = 0;
     for (size_t idx = 0; idx < block.args.size(); ++idx)
     {
         const auto &arg = block.args[idx];
@@ -335,7 +343,24 @@ static std::vector<EmittedLine> EmitBlock(const AnnotationBlock &block,
         // Prefer function param name over @args name for LuaLS matching
         std::string paramName = (idx < funcParamNames.size()) ? funcParamNames[idx] : arg.name;
         std::string optMark = arg.optional ? "?" : "";
-        output.push_back({block.indent + "---@param " + paramName + optMark + " " + mapped, block.argsLine});
+        std::string lineText = block.indent + "---@param " + paramName + optMark + " " + mapped;
+
+        // Compute column delta: where the type appears on translated vs original line
+        EmittedLine eline;
+        eline.text = std::move(lineText);
+        eline.originalLine = block.argsLine;
+        int translatedTypeCol = static_cast<int>(block.indent.size() + 10 + paramName.size() + optMark.size() + 1);
+        if (!block.argsLineText.empty())
+        {
+            auto pos = block.argsLineText.find(arg.type, argsSearchPos);
+            if (pos != std::string::npos)
+            {
+                eline.colMapKind = ColumnMapKind::Delta;
+                eline.colDelta = static_cast<int>(pos) - translatedTypeCol;
+                argsSearchPos = pos + arg.type.size();
+            }
+        }
+        output.push_back(std::move(eline));
     }
 
     // Return type
@@ -344,14 +369,28 @@ static std::vector<EmittedLine> EmitBlock(const AnnotationBlock &block,
         std::string mapped = CScarAnnotationTranslator::MapType(block.resultType);
         if (!mapped.empty())
         {
-            output.push_back({block.indent + "---@return " + mapped, block.resultLine});
+            std::string lineText = block.indent + "---@return " + mapped;
+            EmittedLine eline;
+            eline.text = std::move(lineText);
+            eline.originalLine = block.resultLine;
+            int translatedTypeCol = static_cast<int>(block.indent.size() + 11);
+            if (!block.resultLineText.empty())
+            {
+                auto pos = block.resultLineText.find(block.resultType);
+                if (pos != std::string::npos)
+                {
+                    eline.colMapKind = ColumnMapKind::Delta;
+                    eline.colDelta = static_cast<int>(pos) - translatedTypeCol;
+                }
+            }
+            output.push_back(std::move(eline));
         }
     }
 
     // Extra lines (extended description, examples)
     for (const auto &extra : block.extraLines)
     {
-        output.push_back({block.indent + "---" + extra.text, extra.originalLine});
+        output.push_back({block.indent + "---" + extra.text, extra.originalLine, ColumnMapKind::Reset, 0});
     }
 
     return output;
@@ -381,7 +420,6 @@ TranslationResult CScarAnnotationTranslator::Translate(const std::string &source
 
     std::vector<std::string> outputLines;
     result.originalToTranslated.resize(lines.size(), 0);
-    result.isBlockLine.resize(lines.size(), false);
 
     int i = 0;
     while (i < static_cast<int>(lines.size()))
@@ -398,7 +436,6 @@ TranslationResult CScarAnnotationTranslator::Translate(const std::string &source
             for (int origLine = i; origLine < pastEnd; ++origLine)
             {
                 result.originalToTranslated[origLine] = translatedStart;
-                result.isBlockLine[origLine] = true;
             }
 
             // Look ahead for the function declaration to get actual parameter names
@@ -414,6 +451,8 @@ TranslationResult CScarAnnotationTranslator::Translate(const std::string &source
             for (const auto &eline : emitted)
             {
                 result.translatedToOriginal.push_back(eline.originalLine);
+                result.columnMapKind.push_back(eline.colMapKind);
+                result.columnDelta.push_back(eline.colDelta);
                 outputLines.push_back(eline.text);
             }
 
@@ -424,6 +463,8 @@ TranslationResult CScarAnnotationTranslator::Translate(const std::string &source
             // Non-comment line — pass through unchanged
             result.originalToTranslated[i] = static_cast<int>(outputLines.size());
             result.translatedToOriginal.push_back(i);
+            result.columnMapKind.push_back(ColumnMapKind::Passthrough);
+            result.columnDelta.push_back(0);
             outputLines.push_back(lines[i]);
             ++i;
         }
@@ -469,12 +510,19 @@ Position CScarAnnotationTranslator::MapToOriginal(const TranslationResult &resul
     if (translated.line >= 0 && translated.line < static_cast<int>(result.translatedToOriginal.size()))
     {
         out.line = result.translatedToOriginal[translated.line];
-        // For lines inside --? blocks, the translated text (e.g. ---@param x T) has
-        // completely different content than the original (--? @args ...), so the
-        // character offset from the translated line is meaningless. Reset to column 0.
-        if (out.line >= 0 && out.line < static_cast<int>(result.isBlockLine.size()) && result.isBlockLine[out.line])
+        if (translated.line < static_cast<int>(result.columnMapKind.size()))
         {
-            out.character = 0;
+            switch (result.columnMapKind[translated.line])
+            {
+            case ColumnMapKind::Passthrough:
+                break;
+            case ColumnMapKind::Reset:
+                out.character = 0;
+                break;
+            case ColumnMapKind::Delta:
+                out.character = std::max(0, translated.character + result.columnDelta[translated.line]);
+                break;
+            }
         }
     }
     return out;

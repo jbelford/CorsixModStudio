@@ -27,6 +27,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 namespace lsp
 {
 
+/// How a translated line's character position maps back to the original line.
+enum class ColumnMapKind : uint8_t
+{
+    Passthrough, ///< Character position preserved as-is (non-block line).
+    Reset,       ///< Character position reset to 0 (block line with no column mapping).
+    Delta        ///< Character position adjusted by a delta (e.g. @param type position).
+};
+
 /// Result of translating a SCAR document's --? annotations to LuaLS ---@ format.
 struct TranslationResult
 {
@@ -42,11 +50,12 @@ struct TranslationResult
     /// Size == number of translated lines.
     std::vector<int> translatedToOriginal;
 
-    /// Marks each original line as being inside a --? annotation block (true) or
-    /// a passthrough line (false). Used by MapToOriginal to reset character positions
-    /// for block lines, since translated annotation text has no column correspondence
-    /// with the original --? source line.
-    std::vector<bool> isBlockLine;
+    /// Per-translated-line column mapping kind. Size == translatedToOriginal.size().
+    std::vector<ColumnMapKind> columnMapKind;
+
+    /// Per-translated-line column delta, used when columnMapKind == Delta.
+    /// Add this value to the translated character position to get the original position.
+    std::vector<int> columnDelta;
 };
 
 /// Translates Relic's --? SCAR documentation comments into LuaLS ---@ annotations.

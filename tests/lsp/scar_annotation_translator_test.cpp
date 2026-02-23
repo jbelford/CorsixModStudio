@@ -450,11 +450,11 @@ TEST(ScarAnnotationTranslator, LineMapping_PerTagAccuracy)
     }
 }
 
-TEST(ScarAnnotationTranslator, MapToOriginal_BlockLineResetsCharacter)
+TEST(ScarAnnotationTranslator, MapToOriginal_BlockLineColumnMapping)
 {
     // When a diagnostic comes from a translated ---@param line, the character
-    // position is meaningless on the original --? @args line. MapToOriginal
-    // should reset character to 0 for block lines.
+    // position should be mapped to where the type name appears on the original
+    // --? @args line (not preserved as-is, and not reset to 0).
     std::string input =
         "--? @shortdesc Do something.\n"
         "--? @args PlayerID id, StringTable list\n"
@@ -462,39 +462,53 @@ TEST(ScarAnnotationTranslator, MapToOriginal_BlockLineResetsCharacter)
         "end\n";
     auto result = CScarAnnotationTranslator::Translate(input);
 
-    // Original lines 0 and 1 are block lines
-    ASSERT_GE(result.isBlockLine.size(), 2u);
-    EXPECT_TRUE(result.isBlockLine[0]);
-    EXPECT_TRUE(result.isBlockLine[1]);
-    // Original lines 2 and 3 are passthrough
-    EXPECT_FALSE(result.isBlockLine[2]);
-    EXPECT_FALSE(result.isBlockLine[3]);
-
-    // Find the translated line for "---@param list StringTable"
+    // Find the translated lines for each ---@param
+    int paramIdLine = -1;
     int paramListLine = -1;
     std::istringstream iss(result.text);
     std::string line;
     for (int idx = 0; std::getline(iss, line); ++idx)
     {
-        if (line.find("---@param list") != std::string::npos)
-        {
+        if (line.find("---@param id ") != std::string::npos)
+            paramIdLine = idx;
+        if (line.find("---@param list ") != std::string::npos)
             paramListLine = idx;
-            break;
-        }
     }
+    ASSERT_GE(paramIdLine, 0) << "Should find ---@param id line";
     ASSERT_GE(paramListLine, 0) << "Should find ---@param list line";
 
-    // Simulate a diagnostic at column 15 on the translated ---@param line
-    // (pointing at "StringTable" in the translated text).
-    Position diagPos{paramListLine, 15};
-    Position mapped = CScarAnnotationTranslator::MapToOriginal(result, diagPos);
+    // These should have Delta column mapping
+    ASSERT_LT(paramIdLine, static_cast<int>(result.columnMapKind.size()));
+    ASSERT_LT(paramListLine, static_cast<int>(result.columnMapKind.size()));
+    EXPECT_EQ(result.columnMapKind[paramIdLine], lsp::ColumnMapKind::Delta);
+    EXPECT_EQ(result.columnMapKind[paramListLine], lsp::ColumnMapKind::Delta);
 
-    // Should map back to the @args original line with character reset to 0
-    EXPECT_EQ(mapped.line, 1);
-    EXPECT_EQ(mapped.character, 0) << "Character should be reset for block lines";
+    // On translated line "---@param id PlayerID":
+    //   "PlayerID" starts at column: 0 + 10 + 2 + 0 + 1 = 13
+    // On original line "--? @args PlayerID id, StringTable list":
+    //   "PlayerID" starts at column 10
+    // So delta = 10 - 13 = -3
+    Position diagId{paramIdLine, 13};
+    Position mappedId = CScarAnnotationTranslator::MapToOriginal(result, diagId);
+    EXPECT_EQ(mappedId.line, 1);
+    EXPECT_EQ(mappedId.character, 10) << "PlayerID should map to column 10 on @args line";
+
+    // On translated line "---@param list StringTable":
+    //   "StringTable" starts at column: 0 + 10 + 4 + 0 + 1 = 15
+    // On original line "--? @args PlayerID id, StringTable list":
+    //   "StringTable" starts at column 23
+    // So delta = 23 - 15 = 8
+    Position diagList{paramListLine, 15};
+    Position mappedList = CScarAnnotationTranslator::MapToOriginal(result, diagList);
+    EXPECT_EQ(mappedList.line, 1);
+    EXPECT_EQ(mappedList.character, 23) << "StringTable should map to column 23 on @args line";
+
+    // End of "StringTable" range (column 15+11=26) should map correctly too
+    Position diagListEnd{paramListLine, 26};
+    Position mappedListEnd = CScarAnnotationTranslator::MapToOriginal(result, diagListEnd);
+    EXPECT_EQ(mappedListEnd.character, 34) << "End of StringTable should map to column 34";
 
     // Passthrough lines should preserve their character position
-    // Find the "function Foo" translated line
     int funcLine = -1;
     iss.clear();
     iss.str(result.text);
@@ -507,8 +521,21 @@ TEST(ScarAnnotationTranslator, MapToOriginal_BlockLineResetsCharacter)
         }
     }
     ASSERT_GE(funcLine, 0);
+    EXPECT_EQ(result.columnMapKind[funcLine], lsp::ColumnMapKind::Passthrough);
     Position funcPos{funcLine, 9};
     Position funcMapped = CScarAnnotationTranslator::MapToOriginal(result, funcPos);
     EXPECT_EQ(funcMapped.line, 2);
     EXPECT_EQ(funcMapped.character, 9) << "Character should be preserved for passthrough lines";
+
+    // Description lines should have Reset mapping
+    iss.clear();
+    iss.str(result.text);
+    for (int idx = 0; std::getline(iss, line); ++idx)
+    {
+        if (line.find("---Do something") != std::string::npos)
+        {
+            EXPECT_EQ(result.columnMapKind[idx], lsp::ColumnMapKind::Reset);
+            break;
+        }
+    }
 }
