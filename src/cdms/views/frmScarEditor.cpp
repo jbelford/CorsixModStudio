@@ -39,7 +39,10 @@ extern "C"
 #include <wx/tbarbase.h>
 #include <wx/popupwin.h>
 #include <wx/display.h>
+#include <wx/menu.h>
+#include <wx/filename.h>
 #include <algorithm>
+#include <fstream>
 #include "common/Common.h"
 #include <cstdint>
 #include <rainman/core/RainmanLog.h>
@@ -62,6 +65,7 @@ EVT_CHOICE(IDC_FunctionDrop, frmScarEditor::OnFuncListChoose)
 EVT_TIMER(wxID_ANY, frmScarEditor::OnLspTimer)
 EVT_STC_DWELLSTART(IDC_Text, frmScarEditor::OnDwellStart)
 EVT_STC_DWELLEND(IDC_Text, frmScarEditor::OnDwellEnd)
+EVT_MENU(IDC_GoToDefinition, frmScarEditor::OnContextGoToDef)
 END_EVENT_TABLE()
 
 void frmScarEditor::_RestorePreviousCalltip()
@@ -86,6 +90,10 @@ void frmScarEditor::OnSave(wxCommandEvent &event)
 
 void frmScarEditor::DoSave()
 {
+    if (m_bReadOnly)
+    {
+        return;
+    }
     BackupFile(TheConstruct->GetModuleService().GetModule(), m_sFilename);
 
     wxString sDir = m_sFilename.BeforeLast('\\');
@@ -671,6 +679,10 @@ frmScarEditor::frmScarEditor(const wxTreeItemId &oFileParent, wxString sFilename
     // Bind Ctrl+Space to show autocomplete
     m_pSTC->Bind(wxEVT_KEY_DOWN, &frmScarEditor::OnKeyDown, this);
 
+    // Bind Ctrl+Click for Go to Definition and right-click context menu
+    m_pSTC->Bind(wxEVT_LEFT_DOWN, &frmScarEditor::OnMouseDown, this);
+    m_pSTC->Bind(wxEVT_CONTEXT_MENU, &frmScarEditor::OnContextMenu, this);
+
     // Register SCAR API keywords for syntax highlighting (keyword sets 2+)
     // ApplyScarSyntaxConfig sets keyword sets 0-1 (builtins, Lua keywords).
     // Count how many keyword sets were already used.
@@ -1052,3 +1064,144 @@ void frmScarEditor::OnSize(wxSizeEvent &event)
 void frmScarEditor::ShowFindBar() { m_pFindBar->Activate(); }
 
 void frmScarEditor::HideFindBar() { m_pFindBar->Deactivate(); }
+
+// ---------------------------------------------------------------------------
+// Go to Definition
+// ---------------------------------------------------------------------------
+
+void frmScarEditor::OnMouseDown(wxMouseEvent &event)
+{
+    if (event.ControlDown() && !event.AltDown() && !event.ShiftDown())
+    {
+        // Ctrl+Click: position the caret first, then trigger Go to Definition
+        int pos = m_pSTC->PositionFromPoint(event.GetPosition());
+        if (pos != wxSTC_INVALID_POSITION)
+        {
+            m_pSTC->SetCurrentPos(pos);
+            m_pSTC->SetAnchor(pos);
+            GoToDefinition();
+            return;
+        }
+    }
+    event.Skip();
+}
+
+void frmScarEditor::OnContextMenu(wxContextMenuEvent &event)
+{
+    UNUSED(event);
+    wxMenu menu;
+    menu.Append(IDC_GoToDefinition, wxT("Go to Definition\tCtrl+Click"));
+    menu.AppendSeparator();
+    menu.Append(wxID_CUT, wxT("Cut"));
+    menu.Append(wxID_COPY, wxT("Copy"));
+    menu.Append(wxID_PASTE, wxT("Paste"));
+    menu.Append(wxID_SELECTALL, wxT("Select All"));
+    PopupMenu(&menu);
+}
+
+void frmScarEditor::OnContextGoToDef(wxCommandEvent &event)
+{
+    UNUSED(event);
+    GoToDefinition();
+}
+
+void frmScarEditor::GoToDefinition()
+{
+    auto *pFrame = GetConstruct();
+    auto *pClient = pFrame ? pFrame->GetLspClient() : nullptr;
+    if (!pClient || !m_bLspOpen)
+    {
+        return;
+    }
+
+    int pos = m_pSTC->GetCurrentPos();
+    int line = m_pSTC->LineFromPosition(pos);
+    int col = pos - m_pSTC->PositionFromLine(line);
+
+    pClient->RequestDefinition(m_sLspUri, line, col,
+                               [this](std::optional<lsp::Location> location)
+                               {
+                                   if (!location)
+                                   {
+                                       // No definition found — show a brief status message
+                                       TheConstruct->SetStatusText(wxT("No definition found"));
+                                       return;
+                                   }
+
+                                   // Convert URI to local file path
+                                   std::string targetUri = location->uri;
+                                   wxString sTargetPath;
+                                   if (targetUri.find("file:///") == 0)
+                                   {
+                                       sTargetPath = wxString::FromUTF8(targetUri.substr(8));
+                                       sTargetPath.Replace(wxT("/"), wxT("\\"));
+                                   }
+                                   else
+                                   {
+                                       sTargetPath = wxString::FromUTF8(targetUri);
+                                   }
+
+                                   int targetLine = location->range.start.line;
+
+                                   // Check if it's the same file
+                                   if (targetUri == m_sLspUri)
+                                   {
+                                       int targetPos = m_pSTC->PositionFromLine(targetLine);
+                                       m_pSTC->GotoPos(targetPos);
+                                       m_pSTC->Home();
+                                       m_pSTC->LineEndExtend();
+                                       m_pSTC->SetFocus();
+                                       return;
+                                   }
+
+                                   // Open the target file in a new read-only tab
+                                   OpenDefinitionFile(sTargetPath, targetLine);
+                               });
+}
+
+void frmScarEditor::LoadFromDiskReadOnly(const wxString &sPath, int iGotoLine)
+{
+    std::ifstream file(sPath.ToStdWstring(), std::ios::binary);
+    if (!file.is_open())
+    {
+        ThemeColours::ShowMessageBox(wxT("Cannot open file: ") + sPath, wxT("Go to Definition"), wxICON_ERROR, this);
+        return;
+    }
+
+    std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    m_pSTC->AddText(wxString::FromUTF8(content));
+    m_pSTC->EmptyUndoBuffer();
+    m_pSTC->SetSavePoint();
+    m_pSTC->SetReadOnly(true);
+    m_bReadOnly = true;
+    m_bNeedsSaving = false;
+
+    m_pFunctionDropdown->Clear();
+    FillFunctionDrop(wxString());
+
+    if (iGotoLine >= 0)
+    {
+        int targetPos = m_pSTC->PositionFromLine(iGotoLine);
+        m_pSTC->GotoPos(targetPos);
+        m_pSTC->Home();
+        m_pSTC->LineEndExtend();
+        m_pSTC->EnsureVisibleEnforcePolicy(iGotoLine);
+        m_pSTC->SetFocus();
+    }
+}
+
+/*static*/ void frmScarEditor::OpenDefinitionFile(const wxString &sPath, int iLine)
+{
+    if (!wxFileExists(sPath))
+    {
+        TheConstruct->SetStatusText(wxT("Definition file not found: ") + sPath);
+        return;
+    }
+
+    wxString sTabLabel = wxString(wxT("Def [")).Append(wxFileName(sPath).GetFullName()).Append(wxT("] [Read-Only]"));
+
+    auto *pForm = new frmScarEditor(wxTreeItemId(), sPath, TheConstruct->GetTabs(), -1, wxDefaultPosition,
+                                    wxDefaultSize, nullptr);
+    TheConstruct->GetTabs()->AddPage(pForm, sTabLabel, true);
+    pForm->LoadFromDiskReadOnly(sPath, iLine);
+}

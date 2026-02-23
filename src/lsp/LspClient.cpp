@@ -175,6 +175,7 @@ bool CLspClient::RunInitHandshake(const std::string &workspaceRoot)
             {"dynamicRegistration", false}}},
           {"signatureHelp", {{"dynamicRegistration", false}}},
           {"hover", {{"dynamicRegistration", false}, {"contentFormat", {"markdown"}}}},
+          {"definition", {{"dynamicRegistration", false}}},
           {"publishDiagnostics", {{"relatedInformation", false}}}}}};
 
     nlohmann::json initParams = {
@@ -384,6 +385,25 @@ void CLspClient::RequestHover(const std::string &uri, int line, int character, H
     Send(request);
 }
 
+void CLspClient::RequestDefinition(const std::string &uri, int line, int character, DefinitionCallback callback)
+{
+    int id;
+    {
+        std::lock_guard lock(m_mtx);
+        id = m_nextRequestId++;
+        m_definitionCallbacks[id] = std::move(callback);
+    }
+
+    DefinitionParams params;
+    params.textDocument.uri = uri;
+    params.position.line = line;
+    params.position.character = character;
+
+    nlohmann::json request = {
+        {"jsonrpc", "2.0"}, {"id", id}, {"method", "textDocument/definition"}, {"params", params}};
+    Send(request);
+}
+
 // ---------------------------------------------------------------------------
 // Polling and callbacks
 // ---------------------------------------------------------------------------
@@ -435,6 +455,7 @@ void CLspClient::HandleMessage(const nlohmann::json &message)
         m_completionCallbacks.erase(id);
         m_signatureHelpCallbacks.erase(id);
         m_hoverCallbacks.erase(id);
+        m_definitionCallbacks.erase(id);
     }
     else if (message.contains("method"))
     {
@@ -493,6 +514,39 @@ void CLspClient::HandleResponse(int id, const nlohmann::json &result)
             auto hover = result.get<HoverResult>();
             m_pendingCallbacks.push_back([cb = std::move(cb), hover = std::move(hover)]() mutable
                                          { cb(std::move(hover)); });
+        }
+        return;
+    }
+
+    // Check definition callbacks
+    auto defIt = m_definitionCallbacks.find(id);
+    if (defIt != m_definitionCallbacks.end())
+    {
+        auto cb = std::move(defIt->second);
+        m_definitionCallbacks.erase(defIt);
+        if (result.is_null())
+        {
+            m_pendingCallbacks.push_back([cb = std::move(cb)]() { cb(std::nullopt); });
+        }
+        else if (result.is_array())
+        {
+            // Definition can return Location[] — take the first one
+            if (result.empty())
+            {
+                m_pendingCallbacks.push_back([cb = std::move(cb)]() { cb(std::nullopt); });
+            }
+            else
+            {
+                auto loc = result[0].get<Location>();
+                m_pendingCallbacks.push_back([cb = std::move(cb), loc = std::move(loc)]() mutable
+                                             { cb(std::move(loc)); });
+            }
+        }
+        else
+        {
+            // Single Location object
+            auto loc = result.get<Location>();
+            m_pendingCallbacks.push_back([cb = std::move(cb), loc = std::move(loc)]() mutable { cb(std::move(loc)); });
         }
         return;
     }

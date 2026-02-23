@@ -505,4 +505,18 @@ inline void to_json(nlohmann::json &j, const HoverResult &h)
 
 using HoverParams = TextDocumentPositionParams;
 
+// ---------------------------------------------------------------------------
+// textDocument/definition
+// ---------------------------------------------------------------------------
+
+struct Location
+{
+    std::string uri;
+    Range range;
+};
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Location, uri, range)
+
+using DefinitionParams = TextDocumentPositionParams;
+
 } // namespace lsp

@@ -40,6 +40,7 @@ using DiagnosticsCallback = std::function<void(const std::string &uri, std::vect
 using CompletionCallback = std::function<void(CompletionList completions)>;
 using SignatureHelpCallback = std::function<void(std::optional<SignatureHelp> help)>;
 using HoverCallback = std::function<void(std::optional<HoverResult> hover)>;
+using DefinitionCallback = std::function<void(std::optional<Location> location)>;
 using ReadyCallback = std::function<void(bool success)>;
 
 /// High-level LSP client that manages the language server lifecycle
@@ -100,6 +101,9 @@ class LSP_API CLspClient
     /// Request hover information at the given position.
     void RequestHover(const std::string &uri, int line, int character, HoverCallback callback);
 
+    /// Request go-to-definition at the given position.
+    void RequestDefinition(const std::string &uri, int line, int character, DefinitionCallback callback);
+
     // ----- Polling and callbacks -----
 
     /// Register a per-document diagnostics callback.
@@ -153,6 +157,7 @@ class LSP_API CLspClient
     std::map<int, CompletionCallback> m_completionCallbacks;
     std::map<int, SignatureHelpCallback> m_signatureHelpCallbacks;
     std::map<int, HoverCallback> m_hoverCallbacks;
+    std::map<int, DefinitionCallback> m_definitionCallbacks;
 
     /// Per-URI diagnostics callbacks (server-initiated notifications). Protected by m_mtx.
     std::map<std::string, DiagnosticsCallback> m_diagnosticsCallbacks;

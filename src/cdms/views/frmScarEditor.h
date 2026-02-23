@@ -54,6 +54,7 @@ class frmScarEditor : public wxWindow, public ISaveable, public ISearchable
     wxChoice *m_pFunctionDropdown;
     wxTreeItemId m_oFileParent;
     bool m_bNeedsSaving;
+    bool m_bReadOnly = false;
 
     // --- LSP integration ---
     wxTimer m_lspTimer;
@@ -120,7 +121,21 @@ class frmScarEditor : public wxWindow, public ISaveable, public ISearchable
 
     void Load(IFileStore::IStream *pFile);
 
+    /// Load content from a plain filesystem path (not IFileStore) and set the editor read-only.
+    /// Used for opening global definition files.
+    void LoadFromDiskReadOnly(const wxString &sPath, int iGotoLine = -1);
+
+    /// Navigate to the definition of the symbol under the cursor via the LSP.
+    void GoToDefinition();
+
+    /// Open a global definition file in a new read-only SCAR editor tab,
+    /// scrolled to the given line. Called from the definition callback.
+    static void OpenDefinitionFile(const wxString &sPath, int iLine);
+
     void OnCloseWindow(wxCloseEvent &event);
+    void OnMouseDown(wxMouseEvent &event);
+    void OnContextMenu(wxContextMenuEvent &event);
+    void OnContextGoToDef(wxCommandEvent &event);
 
     enum
     {
@@ -128,7 +143,8 @@ class frmScarEditor : public wxWindow, public ISaveable, public ISearchable
         IDC_Compile,
         IDC_ToolSave,
         IDC_ToolCheck,
-        IDC_FunctionDrop
+        IDC_FunctionDrop,
+        IDC_GoToDefinition
     };
 
     DECLARE_EVENT_TABLE()
