@@ -76,6 +76,11 @@ TEST(CFileTreePresenter, ClassifyFileIcon_Rgm)
     EXPECT_EQ(CFileTreePresenter::ClassifyFileIcon(wxT("model.rgm")), CFileTreePresenter::Icon_Rgm);
 }
 
+TEST(CFileTreePresenter, ClassifyFileIcon_Nis)
+{
+    EXPECT_EQ(CFileTreePresenter::ClassifyFileIcon(wxT("cutscene.nis")), CFileTreePresenter::Icon_Nis);
+}
+
 TEST(CFileTreePresenter, ClassifyFileIcon_Unknown)
 {
     EXPECT_EQ(CFileTreePresenter::ClassifyFileIcon(wxT("readme.txt")), CFileTreePresenter::Icon_Unknown);

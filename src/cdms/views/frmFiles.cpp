@@ -238,6 +238,7 @@ void CLuaAction::VHandle(wxString sFile, wxTreeItemId &oParent, wxTreeItemId &oF
 #include "actions/CScanHashesAction.h"
 #include "actions/CNilAction.h"
 #include "actions/CScarAction.h"
+#include "actions/CNisAction.h"
 #include "actions/CAiAction.h"
 
 // Proper stuff
@@ -758,6 +759,7 @@ frmFiles::frmFiles(wxWindow *parent, wxWindowID id, const wxPoint &pos, const wx
     pFileTypes->Add(cdms::icons::SvgToBitmap(cdms::icons::kFileAbp, kIconSize));          // (12) ABP
     pFileTypes->Add(cdms::icons::SvgToBitmap(cdms::icons::kFileRgm, kIconSize));          // (13) RGM
     pFileTypes->Add(cdms::icons::SvgToBitmap(cdms::icons::kFileNil, kIconSize));          // (14) Unknown
+    pFileTypes->Add(cdms::icons::SvgToBitmap(cdms::icons::kFileNis, kIconSize));          // (15) NIS
 
     m_pTree->AssignImageList(pFileTypes);
 
@@ -772,6 +774,7 @@ frmFiles::frmFiles(wxWindow *parent, wxWindowID id, const wxPoint &pos, const wx
     AddHandler(new CRGDAction);
     AddHandler(new CRgdToLuaDumpAction);
     AddHandler(new CScarAction);
+    AddHandler(new CNisAction);
     AddHandler(new CAiAction);
     AddHandler(new CMuaxAction);
     AddHandler(new CSuaAction);

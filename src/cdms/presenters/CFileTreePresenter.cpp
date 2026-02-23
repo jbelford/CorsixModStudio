@@ -24,32 +24,60 @@ int CFileTreePresenter::ClassifyFileIcon(const wxString &sFileName)
 {
     int iDot = sFileName.Find('.', true);
     if (iDot == wxNOT_FOUND)
+    {
         return Icon_Unknown;
+    }
 
     wxString sExt = sFileName.Mid(iDot);
 
     if (sExt.IsSameAs(wxT(".ai"), false))
+    {
         return Icon_AI;
+    }
     if (sExt.IsSameAs(wxT(".lua"), false))
+    {
         return Icon_Lua;
+    }
     if (sExt.IsSameAs(wxT(".nil"), false))
+    {
         return Icon_Nil;
+    }
     if (sExt.IsSameAs(wxT(".rgd"), false))
+    {
         return Icon_Rgd;
+    }
     if (sExt.IsSameAs(wxT(".scar"), false))
+    {
         return Icon_Scar;
+    }
     if (sExt.IsSameAs(wxT(".tga"), false))
+    {
         return Icon_Tga;
+    }
     if (sExt.IsSameAs(wxT(".rgt"), false))
+    {
         return Icon_Rgt;
+    }
     if (sExt.IsSameAs(wxT(".dds"), false))
+    {
         return Icon_Dds;
+    }
     if (sExt.IsSameAs(wxT(".bfx"), false))
+    {
         return Icon_Bfx;
+    }
     if (sExt.IsSameAs(wxT(".abp"), false))
+    {
         return Icon_Abp;
+    }
     if (sExt.IsSameAs(wxT(".rgm"), false))
+    {
         return Icon_Rgm;
+    }
+    if (sExt.IsSameAs(wxT(".nis"), false))
+    {
+        return Icon_Nis;
+    }
 
     return Icon_Unknown;
 }
@@ -60,7 +88,9 @@ bool CFileTreePresenter::IsEngineFileMapName(const wxString &sFileMapName,
     for (const auto &sEngine : asEngineFileMapNames)
     {
         if (sFileMapName == sEngine)
+        {
             return true;
+        }
     }
     return false;
 }
@@ -70,8 +100,12 @@ CFileTreePresenter::CategorizeFileSource(const wxString &sFileMapName, const wxS
                                          const std::vector<wxString> &asEngineFileMapNames)
 {
     if (sFileMapName == sThisModFileMapName)
+    {
         return FileSource::ThisMod;
+    }
     if (IsEngineFileMapName(sFileMapName, asEngineFileMapNames))
+    {
         return FileSource::Engine;
+    }
     return FileSource::OtherMod;
 }
