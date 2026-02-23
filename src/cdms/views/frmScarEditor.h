@@ -43,6 +43,7 @@
 #include "ScarReferenceLoader.h"
 #include <lsp/Protocol.h>
 #include <lsp/ScarAnnotationTranslator.h>
+#include <chrono>
 
 class FindBar;
 
@@ -64,6 +65,9 @@ class frmScarEditor : public wxWindow, public ISaveable, public ISearchable
     bool m_bLspNeedsOpen = false; // Deferred open: set when LSP not yet ready
     int m_iLspVersion = 0;
     bool m_bLspNeedsSync = false;
+    bool m_bLspDiagnosticsReceived = false;
+    bool m_bLspWatchdogFired = false; // Prevents watchdog from looping after close+reopen
+    std::chrono::steady_clock::time_point m_tpLspOpenTime{};
     std::vector<lsp::Diagnostic> m_vDiagnostics;
     std::optional<lsp::TranslationResult> m_lspTranslation; // --? to ---@ line mapping
     wxPopupTransientWindow *m_pHoverPopup = nullptr;

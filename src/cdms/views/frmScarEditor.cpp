@@ -533,6 +533,7 @@ void frmScarEditor::Load(IFileStore::IStream *pFile)
     FillFunctionDrop(wxString());
 
     // Now that the text is loaded, open the document with the LSP
+    m_bLspWatchdogFired = false; // Reset for new document
     if (!m_bLspOpen)
     {
         LspOpenDocument();
@@ -828,6 +829,8 @@ void frmScarEditor::LspOpenDocument()
     }
 
     m_bLspNeedsOpen = false;
+    m_bLspDiagnosticsReceived = false;
+    m_tpLspOpenTime = std::chrono::steady_clock::now();
 
     // Build a file:// URI from the filename
     m_sLspUri = "file:///" + std::string(m_sFilename.ToUTF8());
@@ -853,6 +856,26 @@ void frmScarEditor::LspOpenDocument()
     m_bLspOpen = true;
     CDMS_LOG_INFO("LSP: Opened document {} ({} bytes, version {})", m_sLspUri, m_lspTranslation->text.size(),
                   m_iLspVersion);
+
+    // If the workspace hasn't finished loading yet, register a callback
+    // to reopen the document once it does — this ensures diagnostics are produced
+    // even when the document was opened during workspace library loading.
+    // A simple didChange with the same content is a no-op; didClose + didOpen
+    // forces LuaLS to fully re-process the document.
+    if (!pClient->IsWorkspaceLoaded())
+    {
+        pClient->RegisterWorkspaceLoadedCallback(m_sLspUri,
+                                                 [this]()
+                                                 {
+                                                     if (m_bLspOpen && !m_bLspDiagnosticsReceived)
+                                                     {
+                                                         CDMS_LOG_INFO("LSP: Workspace loaded — reopening {}",
+                                                                       m_sLspUri);
+                                                         LspCloseDocument();
+                                                         m_bLspNeedsOpen = true;
+                                                     }
+                                                 });
+    }
 }
 
 void frmScarEditor::LspSyncDocument()
@@ -908,9 +931,12 @@ void frmScarEditor::LspCloseDocument()
     auto *pClient = pFrame->GetLspClient();
     if (pClient)
     {
+        pClient->UnregisterWorkspaceLoadedCallback(m_sLspUri);
         pClient->UnregisterDiagnosticsCallback(m_sLspUri);
         pClient->CloseDocument(m_sLspUri);
     }
+
+    m_bLspDiagnosticsReceived = false;
 }
 
 void frmScarEditor::OnLspTimer(wxTimerEvent &event)
@@ -948,6 +974,22 @@ void frmScarEditor::OnLspTimer(wxTimerEvent &event)
         LspSyncDocument();
     }
 
+    // Watchdog: if the document has been open for >3 seconds with no diagnostics,
+    // close and reopen it. A simple didChange with the same content is a no-op in
+    // LuaLS, so we must force a full reopen to trigger analysis after workspace
+    // libraries finish loading. Only fires once per document open.
+    if (m_bLspOpen && !m_bLspDiagnosticsReceived && !m_bLspWatchdogFired)
+    {
+        auto elapsed = std::chrono::steady_clock::now() - m_tpLspOpenTime;
+        if (elapsed > std::chrono::seconds(3))
+        {
+            CDMS_LOG_INFO("LSP: Diagnostics watchdog — reopening document {}", m_sLspUri);
+            m_bLspWatchdogFired = true;
+            LspCloseDocument();
+            m_bLspNeedsOpen = true; // Reopen on next timer tick
+        }
+    }
+
     pClient->Poll();
 }
 
@@ -959,6 +1001,8 @@ void frmScarEditor::ApplyDiagnostics(const std::string &uri, std::vector<lsp::Di
     }
 
     CDMS_LOG_INFO("LSP: Applying {} diagnostics for {}", diagnostics.size(), uri);
+
+    m_bLspDiagnosticsReceived = true;
 
     // Store diagnostics for hover tooltip lookup
     m_vDiagnostics = diagnostics;

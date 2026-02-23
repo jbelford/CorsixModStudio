@@ -145,6 +145,7 @@ void CLspClient::Stop()
 
     m_bReady.store(false);
     m_bStartFailed.store(false);
+    m_bWorkspaceLoaded.store(false);
 
     std::lock_guard lock(m_mtx);
     m_outQueue.clear();
@@ -153,12 +154,16 @@ void CLspClient::Stop()
     m_signatureHelpCallbacks.clear();
     m_hoverCallbacks.clear();
     m_diagnosticsCallbacks.clear();
+    m_workspaceLoadedCallbacks.clear();
+    m_activeProgressTokens.clear();
     m_documentVersions.clear();
 }
 
 bool CLspClient::IsReady() const { return m_bReady.load(); }
 
 bool CLspClient::IsRunning() const { return m_bReady.load() && m_process.IsRunning(); }
+
+bool CLspClient::IsWorkspaceLoaded() const { return m_bWorkspaceLoaded.load(); }
 
 // ---------------------------------------------------------------------------
 // I/O thread
@@ -182,6 +187,9 @@ bool CLspClient::RunInitHandshake(const std::string &workspaceRoot)
         {"processId", static_cast<int>(GetCurrentProcessId())},
         {"capabilities", capabilities},
         {"rootUri", workspaceRoot.empty() ? nlohmann::json(nullptr) : nlohmann::json("file:///" + workspaceRoot)}};
+
+    // Advertise support for server-initiated progress reporting
+    initParams["capabilities"]["window"] = {{"workDoneProgress", true}};
 
     nlohmann::json initRequest = {{"jsonrpc", "2.0"}, {"id", 0}, {"method", "initialize"}, {"params", initParams}};
     std::string encoded = JsonRpc::Encode(initRequest);
@@ -423,6 +431,24 @@ void CLspClient::UnregisterDiagnosticsCallback(const std::string &uri)
     m_diagnosticsCallbacks.erase(uri);
 }
 
+void CLspClient::RegisterWorkspaceLoadedCallback(const std::string &key, WorkspaceLoadedCallback callback)
+{
+    std::lock_guard lock(m_mtx);
+    if (m_bWorkspaceLoaded.load())
+    {
+        // Already loaded — fire immediately on next Poll()
+        m_pendingCallbacks.push_back(std::move(callback));
+        return;
+    }
+    m_workspaceLoadedCallbacks[key] = std::move(callback);
+}
+
+void CLspClient::UnregisterWorkspaceLoadedCallback(const std::string &key)
+{
+    std::lock_guard lock(m_mtx);
+    m_workspaceLoadedCallbacks.erase(key);
+}
+
 void CLspClient::Poll()
 {
     // Swap pending callbacks out under lock, then invoke on UI thread
@@ -459,6 +485,14 @@ void CLspClient::HandleMessage(const nlohmann::json &message)
         m_signatureHelpCallbacks.erase(id);
         m_hoverCallbacks.erase(id);
         m_definitionCallbacks.erase(id);
+    }
+    else if (message.contains("id") && message.contains("method"))
+    {
+        // Server→client request — requires a response
+        int id = message["id"].get<int>();
+        std::string method = message["method"].get<std::string>();
+        nlohmann::json params = message.value("params", nlohmann::json::object());
+        HandleServerRequest(id, method, params);
     }
     else if (message.contains("method"))
     {
@@ -578,6 +612,57 @@ void CLspClient::HandleNotification(const std::string &method, const nlohmann::j
             CDMS_LOG_WARN("LSP: No callback registered for diagnostics URI: {}", diag.uri);
         }
     }
+    else if (method == "$/progress")
+    {
+        // Track workspace loading progress tokens
+        std::string token;
+        if (params.contains("token"))
+        {
+            if (params["token"].is_string())
+            {
+                token = params["token"].get<std::string>();
+            }
+            else
+            {
+                token = std::to_string(params["token"].get<int>());
+            }
+        }
+
+        std::string kind;
+        if (params.contains("value") && params["value"].contains("kind"))
+        {
+            kind = params["value"]["kind"].get<std::string>();
+        }
+
+        std::string title;
+        if (params.contains("value") && params["value"].contains("title"))
+        {
+            title = params["value"]["title"].get<std::string>();
+        }
+
+        CDMS_LOG_INFO("LSP: $/progress token={} kind={} title={}", token, kind, title);
+
+        if (kind == "begin")
+        {
+            std::lock_guard lock(m_mtx);
+            m_activeProgressTokens.insert(token);
+        }
+        else if (kind == "end")
+        {
+            std::lock_guard lock(m_mtx);
+            m_activeProgressTokens.erase(token);
+            if (m_activeProgressTokens.empty() && !m_bWorkspaceLoaded.load())
+            {
+                m_bWorkspaceLoaded.store(true);
+                CDMS_LOG_INFO("LSP: All progress tokens complete — workspace loaded");
+                for (auto &[key, cb] : m_workspaceLoadedCallbacks)
+                {
+                    auto cbCopy = cb;
+                    m_pendingCallbacks.push_back([cbCopy]() { cbCopy(); });
+                }
+            }
+        }
+    }
     else if (method == "window/logMessage")
     {
         int type = params.value("type", 4);
@@ -602,6 +687,31 @@ void CLspClient::HandleNotification(const std::string &method, const nlohmann::j
     else
     {
         CDMS_LOG_TRACE("LSP: Ignoring notification: {}", method);
+    }
+}
+
+void CLspClient::HandleServerRequest(int id, const std::string &method, const nlohmann::json &params)
+{
+    if (method == "window/workDoneProgress/create")
+    {
+        // Acknowledge the progress token — required by LSP spec
+        CDMS_LOG_DEBUG("LSP: Acknowledging progress token creation (id={})", id);
+        nlohmann::json response = {{"jsonrpc", "2.0"}, {"id", id}, {"result", nlohmann::json::value_t::null}};
+        Send(response);
+    }
+    else if (method == "client/registerCapability")
+    {
+        // Accept dynamic capability registration
+        CDMS_LOG_DEBUG("LSP: Accepting dynamic capability registration (id={})", id);
+        nlohmann::json response = {{"jsonrpc", "2.0"}, {"id", id}, {"result", nlohmann::json::value_t::null}};
+        Send(response);
+    }
+    else
+    {
+        CDMS_LOG_WARN("LSP: Unhandled server request: {} (id={})", method, id);
+        nlohmann::json response = {
+            {"jsonrpc", "2.0"}, {"id", id}, {"error", {{"code", -32601}, {"message", "Method not found: " + method}}}};
+        Send(response);
     }
 }
 
