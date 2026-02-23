@@ -449,3 +449,66 @@ TEST(ScarAnnotationTranslator, LineMapping_PerTagAccuracy)
         translatedLineIdx++;
     }
 }
+
+TEST(ScarAnnotationTranslator, MapToOriginal_BlockLineResetsCharacter)
+{
+    // When a diagnostic comes from a translated ---@param line, the character
+    // position is meaningless on the original --? @args line. MapToOriginal
+    // should reset character to 0 for block lines.
+    std::string input =
+        "--? @shortdesc Do something.\n"
+        "--? @args PlayerID id, StringTable list\n"
+        "function Foo(id, list)\n"
+        "end\n";
+    auto result = CScarAnnotationTranslator::Translate(input);
+
+    // Original lines 0 and 1 are block lines
+    ASSERT_GE(result.isBlockLine.size(), 2u);
+    EXPECT_TRUE(result.isBlockLine[0]);
+    EXPECT_TRUE(result.isBlockLine[1]);
+    // Original lines 2 and 3 are passthrough
+    EXPECT_FALSE(result.isBlockLine[2]);
+    EXPECT_FALSE(result.isBlockLine[3]);
+
+    // Find the translated line for "---@param list StringTable"
+    int paramListLine = -1;
+    std::istringstream iss(result.text);
+    std::string line;
+    for (int idx = 0; std::getline(iss, line); ++idx)
+    {
+        if (line.find("---@param list") != std::string::npos)
+        {
+            paramListLine = idx;
+            break;
+        }
+    }
+    ASSERT_GE(paramListLine, 0) << "Should find ---@param list line";
+
+    // Simulate a diagnostic at column 15 on the translated ---@param line
+    // (pointing at "StringTable" in the translated text).
+    Position diagPos{paramListLine, 15};
+    Position mapped = CScarAnnotationTranslator::MapToOriginal(result, diagPos);
+
+    // Should map back to the @args original line with character reset to 0
+    EXPECT_EQ(mapped.line, 1);
+    EXPECT_EQ(mapped.character, 0) << "Character should be reset for block lines";
+
+    // Passthrough lines should preserve their character position
+    // Find the "function Foo" translated line
+    int funcLine = -1;
+    iss.clear();
+    iss.str(result.text);
+    for (int idx = 0; std::getline(iss, line); ++idx)
+    {
+        if (line.find("function Foo") != std::string::npos)
+        {
+            funcLine = idx;
+            break;
+        }
+    }
+    ASSERT_GE(funcLine, 0);
+    Position funcPos{funcLine, 9};
+    Position funcMapped = CScarAnnotationTranslator::MapToOriginal(result, funcPos);
+    EXPECT_EQ(funcMapped.line, 2);
+    EXPECT_EQ(funcMapped.character, 9) << "Character should be preserved for passthrough lines";
+}

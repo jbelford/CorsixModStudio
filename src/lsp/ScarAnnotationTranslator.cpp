@@ -381,6 +381,7 @@ TranslationResult CScarAnnotationTranslator::Translate(const std::string &source
 
     std::vector<std::string> outputLines;
     result.originalToTranslated.resize(lines.size(), 0);
+    result.isBlockLine.resize(lines.size(), false);
 
     int i = 0;
     while (i < static_cast<int>(lines.size()))
@@ -397,6 +398,7 @@ TranslationResult CScarAnnotationTranslator::Translate(const std::string &source
             for (int origLine = i; origLine < pastEnd; ++origLine)
             {
                 result.originalToTranslated[origLine] = translatedStart;
+                result.isBlockLine[origLine] = true;
             }
 
             // Look ahead for the function declaration to get actual parameter names
@@ -467,6 +469,13 @@ Position CScarAnnotationTranslator::MapToOriginal(const TranslationResult &resul
     if (translated.line >= 0 && translated.line < static_cast<int>(result.translatedToOriginal.size()))
     {
         out.line = result.translatedToOriginal[translated.line];
+        // For lines inside --? blocks, the translated text (e.g. ---@param x T) has
+        // completely different content than the original (--? @args ...), so the
+        // character offset from the translated line is meaningless. Reset to column 0.
+        if (out.line >= 0 && out.line < static_cast<int>(result.isBlockLine.size()) && result.isBlockLine[out.line])
+        {
+            out.character = 0;
+        }
     }
     return out;
 }

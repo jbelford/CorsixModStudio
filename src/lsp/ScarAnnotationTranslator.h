@@ -41,6 +41,12 @@ struct TranslationResult
     /// Maps each translated line number back to the original line number.
     /// Size == number of translated lines.
     std::vector<int> translatedToOriginal;
+
+    /// Marks each original line as being inside a --? annotation block (true) or
+    /// a passthrough line (false). Used by MapToOriginal to reset character positions
+    /// for block lines, since translated annotation text has no column correspondence
+    /// with the original --? source line.
+    std::vector<bool> isBlockLine;
 };
 
 /// Translates Relic's --? SCAR documentation comments into LuaLS ---@ annotations.
