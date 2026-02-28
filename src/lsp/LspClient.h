@@ -77,6 +77,11 @@ class LSP_API CLspClient
     /// Check if the server has completed initialization and is ready for requests.
     [[nodiscard]] bool IsReady() const;
 
+    /// Check if the workspace has finished loading (all $/progress tokens complete).
+    /// Returns true if workspace loading finished, or if the server never announced
+    /// any progress (i.e. no $/progress begin was received).
+    [[nodiscard]] bool IsWorkspaceLoaded() const;
+
     /// Check if the language server process is alive (may still be initializing).
     [[nodiscard]] bool IsRunning() const;
 
@@ -145,6 +150,7 @@ class LSP_API CLspClient
     std::atomic<bool> m_bReady{false};
     std::atomic<bool> m_bStartFailed{false};
     std::atomic<bool> m_bWorkspaceLoaded{false};
+    std::atomic<bool> m_bReceivedProgressBegin{false};
 
     // ----- Threading -----
     std::thread m_ioThread;

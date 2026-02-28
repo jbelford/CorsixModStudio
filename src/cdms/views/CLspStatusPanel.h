@@ -26,7 +26,8 @@ enum class ELspStatus
 {
     Idle,        ///< No LSP client created yet
     Starting,    ///< Client exists, server initializing
-    Ready,       ///< Server initialized and ready
+    Loading,     ///< Server initialized, workspace still loading
+    Ready,       ///< Server initialized and workspace loaded
     Unavailable, ///< Server binary not found or initialization failed
     Disabled,    ///< User disabled LSP via settings
 };

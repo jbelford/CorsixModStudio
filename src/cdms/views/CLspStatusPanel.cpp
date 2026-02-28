@@ -56,6 +56,9 @@ void CLspStatusPanel::SetStatus(ELspStatus eStatus)
     case ELspStatus::Starting:
         sLabel = wxT("LSP: Starting\u2026");
         break;
+    case ELspStatus::Loading:
+        sLabel = wxT("LSP: Loading\u2026");
+        break;
     case ELspStatus::Ready:
         sLabel = wxT("LSP: Ready");
         break;
@@ -88,6 +91,7 @@ void CLspStatusPanel::OnPaint(wxPaintEvent &event)
         dotColour = wxColour(160, 160, 160); // Gray
         break;
     case ELspStatus::Starting:
+    case ELspStatus::Loading:
         dotColour = wxColour(220, 180, 50); // Yellow/amber
         break;
     case ELspStatus::Ready:

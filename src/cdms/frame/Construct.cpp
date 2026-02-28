@@ -375,7 +375,7 @@ void ConstructFrame::UpdateLspStatus()
     }
     else if (m_pLspClient->IsReady())
     {
-        eNew = ELspStatus::Ready;
+        eNew = m_pLspClient->IsWorkspaceLoaded() ? ELspStatus::Ready : ELspStatus::Loading;
     }
     else if (m_pLspClient->IsRunning())
     {

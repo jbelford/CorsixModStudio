@@ -146,6 +146,8 @@ void CLspClient::Stop()
     m_bReady.store(false);
     m_bStartFailed.store(false);
     m_bWorkspaceLoaded.store(false);
+    m_bReceivedProgressBegin.store(false);
+    m_bReceivedProgressBegin.store(false);
 
     std::lock_guard lock(m_mtx);
     m_outQueue.clear();
@@ -159,6 +161,16 @@ void CLspClient::Stop()
 }
 
 bool CLspClient::IsReady() const { return m_bReady.load(); }
+
+bool CLspClient::IsWorkspaceLoaded() const
+{
+    if (m_bWorkspaceLoaded.load())
+    {
+        return true;
+    }
+    // If the server never announced any progress, treat workspace as loaded
+    return !m_bReceivedProgressBegin.load();
+}
 
 bool CLspClient::IsRunning() const { return m_bReady.load() && m_process.IsRunning(); }
 
@@ -625,6 +637,7 @@ void CLspClient::HandleNotification(const std::string &method, const nlohmann::j
         {
             std::lock_guard lock(m_mtx);
             m_activeProgressTokens.insert(token);
+            m_bReceivedProgressBegin.store(true);
         }
         else if (kind == "end")
         {
