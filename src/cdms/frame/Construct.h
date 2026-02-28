@@ -110,13 +110,7 @@ class ConstructFrame : public wxFrame, public IMainFrameView
     void LaunchHelp(wxCommandEvent &event);
     static void StaticLaunchHelp();
     void LaunchDonate(wxCommandEvent &event);
-    void LaunchLuaRef(wxCommandEvent &event);
-    void LaunchKresjahWiki(wxCommandEvent &event);
-    void LaunchForumDoW(wxCommandEvent &event);
-    void LaunchForumCoH(wxCommandEvent &event);
-    void LaunchNewRDNWiki(wxCommandEvent &event);
-    void LaunchRDNWiki(wxCommandEvent &event);
-    void HideDonate(wxCommandEvent &event);
+    void LaunchGitHubRepo(wxCommandEvent &event);
     void OnThemeChange(wxCommandEvent &event);
     void OnLspToggle(wxCommandEvent &event);
     void OnLspStatusTimer(wxTimerEvent &event);
@@ -210,15 +204,8 @@ enum
     IDM_PlayNoMovies,
     // Help Menu
     IDM_Index,
-    IDM_LuaRef,
-    IDM_ForumDoW,
-    IDM_ForumCoH,
-    IDM_RDNWikiNew,
-    IDM_RDNWiki,
-    IDM_KresjahWiki,
-    IDM_About,
+    IDM_GitHubRepo,
     IDM_Credits,
-    IDM_HideDonate,
 
     // View Menu — Theme
     IDM_ThemeSystem,

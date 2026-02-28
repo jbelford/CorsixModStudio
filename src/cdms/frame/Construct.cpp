@@ -78,15 +78,7 @@ EVT_MENU(IDM_PlaySS, ConstructFrame::LaunchSS)
 EVT_MENU(IDM_PlayWarn, ConstructFrame::LaunchWarnings)
 EVT_MENU(wxID_HELP_CONTENTS, ConstructFrame::LaunchHelp)
 EVT_MENU(IDM_Credits, ConstructFrame::LaunchCredits)
-EVT_MENU(IDM_HideDonate, ConstructFrame::HideDonate)
-
-EVT_MENU(IDM_ForumDoW, ConstructFrame::LaunchForumDoW)
-EVT_MENU(IDM_ForumCoH, ConstructFrame::LaunchForumCoH)
-EVT_MENU(IDM_RDNWikiNew, ConstructFrame::LaunchNewRDNWiki)
-
-EVT_MENU(IDM_LuaRef, ConstructFrame::LaunchLuaRef)
-EVT_MENU(IDM_RDNWiki, ConstructFrame::LaunchRDNWiki)
-EVT_MENU(IDM_KresjahWiki, ConstructFrame::LaunchKresjahWiki)
+EVT_MENU(IDM_GitHubRepo, ConstructFrame::LaunchGitHubRepo)
 EVT_SPLITTER_SASH_POS_CHANGED(IDC_Splitter, ConstructFrame::OnSashMove)
 
 EVT_CLOSE(ConstructFrame::OnCloseWindow)
@@ -317,40 +309,10 @@ void ConstructFrame::LaunchDonate(wxCommandEvent &event)
                   "bn=PP%2dDonationsBF&charset=UTF%2d8"));
 }
 
-void ConstructFrame::LaunchLuaRef(wxCommandEvent &event)
+void ConstructFrame::LaunchGitHubRepo(wxCommandEvent &event)
 {
     UNUSED(event);
-    LaunchURL(wxT("http://dowmodstudio.gamemod.net/luaref/index.php"));
-}
-
-void ConstructFrame::LaunchForumDoW(wxCommandEvent &event)
-{
-    UNUSED(event);
-    LaunchURL(wxT("http://forums.relicnews.com/forumdisplay.php?f=96"));
-}
-
-void ConstructFrame::LaunchForumCoH(wxCommandEvent &event)
-{
-    UNUSED(event);
-    LaunchURL(wxT("http://forums.relicnews.com/forumdisplay.php?f=189"));
-}
-
-void ConstructFrame::LaunchNewRDNWiki(wxCommandEvent &event)
-{
-    UNUSED(event);
-    LaunchURL(wxT("http://wiki.relicrank.com/"));
-}
-
-void ConstructFrame::LaunchKresjahWiki(wxCommandEvent &event)
-{
-    UNUSED(event);
-    LaunchURL(wxT("http://astartes.vorbereitungstagung.de/ModdingDocs/doku.php?id=wiki:start"));
-}
-
-void ConstructFrame::LaunchRDNWiki(wxCommandEvent &event)
-{
-    UNUSED(event);
-    LaunchURL(wxT("http://www.relic.com/rdn/wiki/RDNWikiHome"));
+    LaunchURL(wxT("https://github.com/jbelford/CorsixModStudio"));
 }
 
 void ConstructFrame::OnThemeChange(wxCommandEvent &event)
@@ -1066,14 +1028,6 @@ void ConstructFrame::OnOpenModCoH(wxCommandEvent &event)
 {
     UNUSED(event);
     DoLoadMod(wxT(""), LM_CoH_OF);
-}
-
-void ConstructFrame::HideDonate(wxCommandEvent &event)
-{
-    UNUSED(event);
-    ThemeColours::ShowMessageBox(AppStr(hidedonate_text), AppStr(hidedonate_menu), wxICON_INFORMATION,
-                                 wxTheApp->GetTopWindow());
-    TheConfig->Write(AppStr(config_donate), (int)0);
 }
 
 IFileStore::IOutputStream *ConstructFrame::SaveFileCallback(const char *sFile, bool bEraseIfPresent, void *pTag)

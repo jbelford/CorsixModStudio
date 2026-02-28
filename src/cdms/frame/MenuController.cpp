@@ -118,16 +118,9 @@ void MenuController::Build(wxFrame *pFrame, ToolRegistry &registry, RelicToolRes
     // Help menu
     auto *pMenu_Help = new wxMenu;
     pMenu_Help->Append(wxID_HELP_CONTENTS, AppStr(help_index_menu), AppStr(help_index_help));
-    pMenu_Help->Append(IDM_RDNWikiNew, AppStr(rdn_new_wiki_menu), AppStr(rdn_new_wiki_help));
-    pMenu_Help->Append(IDM_ForumDoW, AppStr(forum_dow_menu), AppStr(forum_dow_help));
-    pMenu_Help->Append(IDM_ForumCoH, AppStr(forum_coh_menu), AppStr(forum_coh_help));
-    pMenu_Help->Append(IDM_RDNWiki, AppStr(rdn_wiki_menu), AppStr(rdn_wiki_help));
-    pMenu_Help->Append(IDM_LuaRef, AppStr(lua_ref_menu), AppStr(lua_ref_help));
-    pMenu_Help->Append(IDM_KresjahWiki, AppStr(kresjah_wiki_menu), AppStr(kresjah_wiki_help));
+    pMenu_Help->Append(IDM_GitHubRepo, AppStr(github_repo_menu), AppStr(github_repo_help));
     pMenu_Help->AppendSeparator();
-    pMenu_Help->Append(wxID_ABOUT, AppStr(about_menu), AppStr(about_help));
     pMenu_Help->Append(IDM_Credits, AppStr(credits_menu), AppStr(credits_help));
-    pMenu_Help->Append(IDM_HideDonate, AppStr(hidedonate_menu), AppStr(hidedonate_help));
 
     // Assemble menu bar
     auto *pMenuBar = new wxMenuBar;

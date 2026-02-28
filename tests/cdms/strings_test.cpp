@@ -117,7 +117,7 @@ TEST_F(StringsTest, MenuStringsAreNonEmpty) {
     EXPECT_FALSE(AppStr(new_mod).IsEmpty());
     EXPECT_FALSE(AppStr(open_mod).IsEmpty());
     EXPECT_FALSE(AppStr(exit).IsEmpty());
-    EXPECT_FALSE(AppStr(about_menu).IsEmpty());
+    EXPECT_FALSE(AppStr(github_repo_menu).IsEmpty());
     EXPECT_FALSE(AppStr(credits_menu).IsEmpty());
 }
 

@@ -36,13 +36,15 @@ frmCredits::frmCredits()
     wxString sCredits;
 
     sCredits.Append(wxT("Programming: Corsix, uses squish library (C) 2006 Simon Brown\n"));
+    sCredits.Append(wxT("Modernization: Jack Belford\n"));
     sCredits.Append(wxT("Artwork: Silvestre Herrera (Nuovo iconset), Corsix, GPL-ed artwork\n"));
     sCredits.Append(wxT("Beta testing: Compiler, davisbe, Delphy, Excedrin, Finaldeath, kjon, Kresjah, "
                         "irc.hwcommunity.com #dowmods channel\n"));
     sCredits.Append(wxT("Donators: snake_risken, Delphy, Mannerheim, KoGar, Julian Harris, CrizeCaldron, Kutter, "
                         "MasterofOblivion, Rick Funk\n"));
     sCredits.Append(
-        wxT("\nThis program is free software licensed under the GNU GPL. Email modstudio@corsix.org for details"));
+        wxT("\nThis program is free software licensed under the GNU GPL.  Email modstudio@corsix.org for details\n"
+            "Modern code is located at github.com/jbelford/CorsixModStudio"));
 
     m_pLoadingImage = std::make_unique<wxBitmap>(wxT("RIDB_LOADING"), wxBITMAP_TYPE_BMP_RESOURCE);
     m_pText = new wxStaticText(this, -1, sCredits, FromDIP(wxPoint(0, 317)), FromDIP(wxSize(384, 167)),
