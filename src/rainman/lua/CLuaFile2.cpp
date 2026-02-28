@@ -34,31 +34,41 @@ CLuaFile2::~CLuaFile2()
 {
     _clean();
     if (m_bOwnCache && m_pCache)
+    {
         delete m_pCache;
+    }
 }
 
 void CLuaFile2::_clean()
 {
     m_sFileName.clear();
     if (m_pRefMap && m_bOwnRefMap)
+    {
         delete m_pRefMap;
+    }
     m_bOwnRefMap = false;
 }
 
 bool CLuaFile2::_checkCache()
 {
     if (m_pCache)
+    {
         return true;
+    }
     m_pCache = new CLuaFileCache;
     if (m_pCache)
+    {
         return m_bOwnCache = true;
+    }
     return false;
 }
 
 bool CLuaFile2::setCache(CLuaFileCache *pCache, bool bOwn)
 {
     if (m_pCache)
+    {
         return false;
+    }
     m_pCache = pCache;
     m_bOwnCache = bOwn;
     return true;
@@ -70,10 +80,14 @@ void CLuaFile2::newFile(const char *sFileName)
 {
     _clean();
     if (!_checkCache())
+    {
         throw CRainmanException(__FILE__, __LINE__, "No cache");
+    }
     L = m_pCache->MakeState();
     if (!L)
+    {
         throw CRainmanException(__FILE__, __LINE__, "Unable to create lua state");
+    }
 
     m_sFileName = sFileName;
 
@@ -81,6 +95,7 @@ void CLuaFile2::newFile(const char *sFileName)
     luaopen_string(L);
     luaopen_math(L);
 
+    luax_DeleteGlobal(L, "coroutine");
     luax_DeleteGlobal(L, "dofile");
     luax_DeleteGlobal(L, "getfenv");
     luax_DeleteGlobal(L, "setfenv");
@@ -97,7 +112,9 @@ void CLuaFile2::newFile(const char *sFileName)
 void CLuaFile2::loadFile(IFileStore::IStream *pStream, IFileStore *pFiles, const char *sFileName)
 {
     if (pStream == nullptr || pFiles == nullptr || sFileName == nullptr)
+    {
         QUICK_THROW("Invalid argument")
+    }
     _AutoClean AutoClean_(this);
 
     try
@@ -116,7 +133,9 @@ void CLuaFile2::loadFile(IFileStore::IStream *pStream, IFileStore *pFiles, const
     unsigned long iNameCrc = crc32_case_idt(0, (const Bytef *)sFileName, (uInt)strlen(sFileName));
     // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDelete) -- m_pRefMap is valid; not freed before this access
     if ((*m_pRefMap)[iNameCrc] > (int)1)
+    {
         throw CRainmanException(nullptr, __FILE__, __LINE__, "Circular reference detected (%s)", sFileName);
+    }
     ++(*m_pRefMap)[iNameCrc];
 
     // Load
@@ -140,9 +159,13 @@ void CLuaFile2::loadFile(IFileStore::IStream *pStream, IFileStore *pFiles, const
     int iLuaError = luaL_loadbuffer(L, sBuffer, iDataLength, sFileName);
     sBuffer_.del();
     if (iLuaError == LUA_ERRMEM)
+    {
         QUICK_THROW("Lua memory error")
+    }
     else if (iLuaError == LUA_ERRSYNTAX)
+    {
         throw CRainmanException(nullptr, __FILE__, __LINE__, "Lua error (LUA_ERRSYNTAX): %s", lua_tostring(L, -1));
+    }
 
 // Prepare lua state
 #define quick_fn_register(n, f)                                                                                        \
@@ -195,28 +218,46 @@ static void luaEnquiry(lua_State *L, int i)
     int iType = lua_type(L, i);
     const char *sType = nullptr, *sVal = nullptr;
     if (iType == LUA_TNONE)
+    {
         sType = "none";
+    }
     if (iType == LUA_TNIL)
+    {
         sType = "nil";
+    }
     if (iType == LUA_TNUMBER)
+    {
         sType = "num";
+    }
     if (iType == LUA_TBOOLEAN)
+    {
         sType = "bool";
+    }
     if (iType == LUA_TSTRING)
     {
         sType = "str";
         sVal = lua_tostring(L, i);
     }
     if (iType == LUA_TTABLE)
+    {
         sType = "table";
+    }
     if (iType == LUA_TFUNCTION)
+    {
         sType = "fn";
+    }
     if (iType == LUA_TUSERDATA)
+    {
         sType = "userd";
+    }
     if (iType == LUA_TTHREAD)
+    {
         sType = "thread";
+    }
     if (iType == LUA_TLIGHTUSERDATA)
+    {
         sType = "ptr";
+    }
 
     // Suppress dead-store warnings — this function exists for debugger inspection
     (void)sType;
@@ -248,7 +289,9 @@ int CLuaFile2::_luaIndexEvent(lua_State *L)
     lua_gettable(L, -3);          // V K $PARENT T
     // if(type(V) ~= "table") return V
     if (lua_istable(L, -1) == 0)
+    {
         return 1;
+    }
     lua_insert(L, -2); // K V $PARENT T
     // local R = {}
     lua_newtable(L); // R K V $PARENT T
@@ -287,7 +330,9 @@ int CLuaFile2::_luaParent(const char *sFnName, const char *sTableToGrab)
         auto *pFiles = (IFileStore *)lua_touserdata(L, lua_upvalueindex(1));
         const char *sFileName = lua_tostring(L, -1);
         if (pFiles == nullptr || sFileName == nullptr)
+        {
             QUICK_THROW("Invalid argument")
+        }
 
         // Load parented file
         CLuaFile2 oParentFile;
@@ -595,7 +640,9 @@ CLuaStateStackNode::CLuaStateStackNode(lua_State *L)
     for (int i = -1;; i -= 1)
     {
         if (lua_type(L, i) == LUA_TNONE)
+        {
             break;
+        }
         char sNam[4];
         sNam[0] = '-';
         sNam[1] = '0' + ((i < -9) ? (-i) / 10 : -i);
@@ -744,16 +791,24 @@ CLuaFile2::CTable::CTable(lua_State *pL, bool bG) : m_oTablePtr(pL, -1), m_bGlob
 bool CLuaFile2::_SaveKey::_Sort(_SaveKey *p1, _SaveKey *p2)
 {
     if (p1->iWhat != p2->iWhat)
+    {
         return (p1->iWhat < p2->iWhat);
+    }
     if (p1->iWhat == 1)
+    {
         return p1->f < p2->f;
+    }
     else if (p1->iWhat == 3)
+    {
         return p1->b < p2->b;
+    }
 
     if (p1->s == nullptr || p2->s == nullptr)
     {
         if (p1->s == nullptr && p2->s != nullptr)
+        {
             return true;
+        }
         return false;
     }
 
@@ -761,17 +816,25 @@ bool CLuaFile2::_SaveKey::_Sort(_SaveKey *p1, _SaveKey *p2)
     size_t iLen1 = strlen(p1->s), iLen2 = strlen(p2->s);
 
     while (iLen1 > 0 && p1->s[iLen1 - 1] >= '0' && p1->s[iLen1 - 1] <= '9')
+    {
         --iLen1;
+    }
     sNumBegin1 = p1->s + iLen1;
     while (iLen2 > 0 && p2->s[iLen2 - 1] >= '0' && p2->s[iLen2 - 1] <= '9')
+    {
         --iLen2;
+    }
     sNumBegin2 = p2->s + iLen2;
 
     if (iLen1 != iLen2)
+    {
         return (stricmp(p1->s, p2->s) < 0);
+    }
     int iCmp = strnicmp(p1->s, p2->s, iLen1);
     if (iCmp != 0)
+    {
         return iCmp < 0;
+    }
     return atol(sNumBegin1) < atol(sNumBegin2);
 }
 
@@ -781,7 +844,9 @@ bool CLuaFile2::CTable::_SortNodes(const std::unique_ptr<CLuaFile2::CNode> &p1,
     if (p1->m_sName.empty() || p2->m_sName.empty())
     {
         if (p1->m_sName.empty() && !p2->m_sName.empty())
+        {
             return true;
+        }
         return false;
     }
 
@@ -789,17 +854,25 @@ bool CLuaFile2::CTable::_SortNodes(const std::unique_ptr<CLuaFile2::CNode> &p1,
     size_t iLen1 = p1->m_sName.size(), iLen2 = p2->m_sName.size();
 
     while (iLen1 > 0 && p1->m_sName[iLen1 - 1] >= '0' && p1->m_sName[iLen1 - 1] <= '9')
+    {
         --iLen1;
+    }
     sNumBegin1 = p1->m_sName.c_str() + iLen1;
     while (iLen2 > 0 && p2->m_sName[iLen2 - 1] >= '0' && p2->m_sName[iLen2 - 1] <= '9')
+    {
         --iLen2;
+    }
     sNumBegin2 = p2->m_sName.c_str() + iLen2;
 
     if (iLen1 != iLen2)
+    {
         return (stricmp(p1->m_sName.c_str(), p2->m_sName.c_str()) < 0);
+    }
     int iCmp = strnicmp(p1->m_sName.c_str(), p2->m_sName.c_str(), iLen1);
     if (iCmp != 0)
+    {
         return iCmp < 0;
+    }
     return atol(sNumBegin1) < atol(sNumBegin2);
 }
 
@@ -931,7 +1004,9 @@ void CLuaFile2::CNode::_pushVal()
 float CLuaFile2::CNode::VGetValueFloat()
 {
     if (m_iType != LUA_TNUMBER)
+    {
         QUICK_THROW("Wrong type")
+    }
     _pushVal();
     float V = lua_tonumber(L, -1);
     lua_pop(L, 1);
@@ -943,7 +1018,9 @@ unsigned long CLuaFile2::CNode::VGetValueInteger() { QUICK_THROW("Wrong type") }
 bool CLuaFile2::CNode::VGetValueBool()
 {
     if (m_iType != LUA_TBOOLEAN)
+    {
         QUICK_THROW("Wrong type")
+    }
     _pushVal();
     bool V = lua_toboolean(L, -1);
     lua_pop(L, 1);
@@ -953,7 +1030,9 @@ bool CLuaFile2::CNode::VGetValueBool()
 const char *CLuaFile2::CNode::VGetValueString()
 {
     if (m_iType != LUA_TSTRING)
+    {
         QUICK_THROW("Wrong type")
+    }
     _pushVal();
     const char *V = lua_tostring(L, -1);
     lua_pop(L, 1);
@@ -965,7 +1044,9 @@ const wchar_t *CLuaFile2::CNode::VGetValueWString(){QUICK_THROW("Wrong type")}
 IMetaNode::IMetaTable *CLuaFile2::CNode::VGetValueMetatable()
 {
     if (m_iType != LUA_TTABLE)
+    {
         QUICK_THROW("Wrong type")
+    }
     _pushVal();
     IMetaNode::IMetaTable *V = new CLuaFile2::CTable(L);
     lua_pop(L, 1);
@@ -1015,7 +1096,9 @@ void CLuaFile2::CNode::VSetType(eDataTypes eType)
         QUICK_THROW("Data type not compatible with LUA")
     };
     if (iTargetLuaType == m_iType)
+    {
         return;
+    }
     if (iTargetLuaType != LUA_TTABLE && m_iType != LUA_TTABLE)
     {
         // simple data conversion
@@ -1024,20 +1107,32 @@ void CLuaFile2::CNode::VSetType(eDataTypes eType)
         lua_pushvalue(L, -1);
         lua_gettable(L, -3);
         if (iTargetLuaType == LUA_TBOOLEAN)
+        {
             lua_toboolean(L, -1);
+        }
         else if (iTargetLuaType == LUA_TNUMBER)
+        {
             lua_tonumber(L, -1);
+        }
         else
+        {
             lua_tostring(L, -1);
+        }
         if (lua_type(L, -1) != iTargetLuaType)
         {
             lua_pop(L, 1);
             if (iTargetLuaType == LUA_TBOOLEAN)
+            {
                 lua_pushboolean(L, 1);
+            }
             else if (iTargetLuaType == LUA_TNUMBER)
+            {
                 lua_pushnumber(L, 0.0);
+            }
             else
+            {
                 lua_pushstring(L, "");
+            }
         }
         m_iType = lua_type(L, -1);
         lua_settable(L, -3);
@@ -1050,11 +1145,17 @@ void CLuaFile2::CNode::VSetType(eDataTypes eType)
         _pushKey();
 
         if (m_iNodeHash == 0xF693C657)
+        {
             lua_pushstring(L, "Inherit");
+        }
         else if (m_iNodeHash == 0xCB4DD18B)
+        {
             lua_pushstring(L, "InheritMeta");
+        }
         else
+        {
             lua_pushstring(L, "Reference");
+        }
         lua_gettable(L, LUA_GLOBALSINDEX);
         lua_pushstring(L, "");
         lua_call(L, 1, 1);
@@ -1102,7 +1203,9 @@ void CLuaFile2::CNode::VSetNameHash(unsigned long iHash) { QUICK_THROW("Invalid 
 void CLuaFile2::CNode::VSetValueFloat(float fValue)
 {
     if (m_iType != LUA_TNUMBER)
+    {
         QUICK_THROW("Invalid type")
+    }
     _pushTable();
     _pushKey();
     lua_pushnumber(L, (lua_Number)fValue);
@@ -1114,7 +1217,9 @@ void CLuaFile2::CNode::VSetValueInteger(unsigned long iValue) { QUICK_THROW("Inv
 void CLuaFile2::CNode::VSetValueBool(bool bValue)
 {
     if (m_iType != LUA_TBOOLEAN)
+    {
         QUICK_THROW("Invalid type")
+    }
     _pushTable();
     _pushKey();
     lua_pushboolean(L, bValue ? 1 : 0);
@@ -1124,7 +1229,9 @@ void CLuaFile2::CNode::VSetValueBool(bool bValue)
 void CLuaFile2::CNode::VSetValueString(const char *sValue)
 {
     if (m_iType != LUA_TSTRING)
+    {
         QUICK_THROW("Invalid type")
+    }
     _pushTable();
     _pushKey();
     lua_pushstring(L, sValue);
@@ -1253,9 +1360,13 @@ void CLuaFile2::_saveTable(const char *sPrefix, IFileStore::IOutputStream *pStre
     }
 
     if (iMode == 0)
+    {
         return;
+    }
     if (iMode < 2)
+    {
         iMode = 2;
+    }
 
     if (iMode == 4)
     {
@@ -1329,28 +1440,42 @@ void CLuaFile2::_saveTable(const char *sPrefix, IFileStore::IOutputStream *pStre
         {
             sNewPrefix = new char[strlen(sPrefix) + (lua_strlen(L, -2) * 2) + 1];
             if (iMode == 4)
+            {
                 sNewPrefix[0] = 0;
+            }
             else
+            {
                 sprintf(sNewPrefix, "%s[\"", sPrefix);
+            }
             _appendEscapedString(sNewPrefix, lua_tostring(L, -2));
             if (iMode != 4)
+            {
                 strcat(sNewPrefix, "\"]");
+            }
         }
         else if (lua_isnumber(L, -2))
         {
             sNewPrefix = new char[strlen(sPrefix) + 24];
             if (iMode == 4)
+            {
                 sprintf(sNewPrefix, "%.5f", (double)lua_tonumber(L, -2));
+            }
             else
+            {
                 sprintf(sNewPrefix, "%s[%.5f]", sPrefix, (double)lua_tonumber(L, -2));
+            }
         }
         else if (lua_isboolean(L, -2))
         {
             sNewPrefix = new char[strlen(sPrefix) + 8];
             if (iMode == 4)
+            {
                 sprintf(sNewPrefix, "%s", (lua_toboolean(L, -2) == 1) ? "true" : "false");
+            }
             else
+            {
                 sprintf(sNewPrefix, "%s[%s]", sPrefix, (lua_toboolean(L, -2) == 1) ? "true" : "false");
+            }
         }
         else
         {
@@ -1366,9 +1491,13 @@ void CLuaFile2::_saveTable(const char *sPrefix, IFileStore::IOutputStream *pStre
             pStream->VWriteString(" = ");
             pStream->VWriteString(sSprintSpace);
             if (iMode != 4)
+            {
                 pStream->VWriteString("\r\n");
+            }
             else
+            {
                 pStream->VWriteString(", ");
+            }
             break;
 
         case LUA_TBOOLEAN:
@@ -1376,9 +1505,13 @@ void CLuaFile2::_saveTable(const char *sPrefix, IFileStore::IOutputStream *pStre
             pStream->VWriteString(" = ");
             pStream->VWriteString((lua_toboolean(L, -1) == 1) ? "true" : "false");
             if (iMode != 4)
+            {
                 pStream->VWriteString("\r\n");
+            }
             else
+            {
                 pStream->VWriteString(", ");
+            }
             break;
 
         case LUA_TSTRING:
@@ -1407,9 +1540,13 @@ void CLuaFile2::_saveTable(const char *sPrefix, IFileStore::IOutputStream *pStre
         case LUA_TTABLE:
             _saveTable(sNewPrefix, pStream, (iMode == 3 ? 4 : iMode));
             if (iMode >= 3)
+            {
                 pStream->VWriteString("}");
+            }
             if (iMode == 3)
+            {
                 pStream->VWriteString("\r\n");
+            }
             break;
 
         default:
