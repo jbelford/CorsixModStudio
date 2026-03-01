@@ -46,11 +46,8 @@ class frmWelcome : public wxWindow
     void OnSize(wxSizeEvent &event);
     void OnQuit(wxCommandEvent &event);
     void OnLoadSga(wxCommandEvent &event);
-    void OnLoadMod(wxCommandEvent &event);
-    void OnLoadModDC(wxCommandEvent &event);
-    void OnLoadModSS(wxCommandEvent &event);
     void OnLoadModDE(wxCommandEvent &event);
-    void OnLoadModCoH(wxCommandEvent &event);
+    void OnLoadModSS(wxCommandEvent &event);
     void OnNewMod(wxCommandEvent &event);
     void OnMouseEvent(wxMouseEvent &event);
 
@@ -61,12 +58,9 @@ enum
 {
     // File Menu
     IDC_NewMod = wxID_HIGHEST + 1,
-    IDC_LoadMod,
-    IDC_LoadSga,
-    IDC_LoadModDC,
-    IDC_LoadModSS,
     IDC_LoadModDE,
-    IDC_LoadModCoH,
+    IDC_LoadModSS,
+    IDC_LoadSga,
     IDC_Help,
     IDC_Quit,
     IDC_Donate

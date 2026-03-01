@@ -29,11 +29,8 @@ EVT_SIZE(frmWelcome::OnSize)
 EVT_BUTTON(IDC_Quit, frmWelcome::OnQuit)
 EVT_BUTTON(IDC_NewMod, frmWelcome::OnNewMod)
 EVT_BUTTON(IDC_LoadSga, frmWelcome::OnLoadSga)
-EVT_BUTTON(IDC_LoadMod, frmWelcome::OnLoadMod)
-EVT_BUTTON(IDC_LoadModDC, frmWelcome::OnLoadModDC)
-EVT_BUTTON(IDC_LoadModSS, frmWelcome::OnLoadModSS)
 EVT_BUTTON(IDC_LoadModDE, frmWelcome::OnLoadModDE)
-EVT_BUTTON(IDC_LoadModCoH, frmWelcome::OnLoadModCoH)
+EVT_BUTTON(IDC_LoadModSS, frmWelcome::OnLoadModSS)
 EVT_BUTTON(IDC_Help, ConstructFrame::LaunchHelp)
 EVT_BUTTON(IDC_Donate, ConstructFrame::LaunchDonate)
 EVT_ENTER_WINDOW(frmWelcome::OnMouseEvent)
@@ -66,17 +63,6 @@ frmWelcome::frmWelcome(wxWindow *parent, wxWindowID id, const wxPoint &pos, cons
     pTopSizer->Add(
         SBT(new wxButton(this, IDC_LoadModSS, AppStr(open_modss), wxDefaultPosition, FromDIP(wxSize(150, -1))),
             AppStr(open_modss_help)),
-        0, wxALL | wxALIGN_CENTER, 3);
-    pTopSizer->Add(SBT(new wxButton(this, IDC_LoadMod, AppStr(open_mod), wxDefaultPosition, FromDIP(wxSize(150, -1))),
-                       AppStr(open_mod_help)),
-                   0, wxALL | wxALIGN_CENTER, 3);
-    pTopSizer->Add(
-        SBT(new wxButton(this, IDC_LoadModDC, AppStr(open_moddc), wxDefaultPosition, FromDIP(wxSize(150, -1))),
-            AppStr(open_moddc_help)),
-        0, wxALL | wxALIGN_CENTER, 3);
-    pTopSizer->Add(
-        SBT(new wxButton(this, IDC_LoadModCoH, AppStr(open_modcoh), wxDefaultPosition, FromDIP(wxSize(150, -1))),
-            AppStr(open_modcoh_help)),
         0, wxALL | wxALIGN_CENTER, 3);
     pTopSizer->Add(SBT(new wxButton(this, IDC_LoadSga, AppStr(open_sga), wxDefaultPosition, FromDIP(wxSize(150, -1))),
                        AppStr(open_sga_help)),
@@ -144,18 +130,6 @@ void frmWelcome::OnLoadSga(wxCommandEvent &event)
     TheConstruct->DoLoadSga();
 }
 
-void frmWelcome::OnLoadMod(wxCommandEvent &event)
-{
-    UNUSED(event);
-    TheConstruct->DoLoadMod(wxT(""), ConstructFrame::LM_DoW_WA);
-}
-
-void frmWelcome::OnLoadModDC(wxCommandEvent &event)
-{
-    UNUSED(event);
-    TheConstruct->DoLoadMod(wxT(""), ConstructFrame::LM_DC);
-}
-
 void frmWelcome::OnLoadModSS(wxCommandEvent &event)
 {
     UNUSED(event);
@@ -166,12 +140,6 @@ void frmWelcome::OnLoadModDE(wxCommandEvent &event)
 {
     UNUSED(event);
     TheConstruct->DoLoadMod(wxT(""), ConstructFrame::LM_DE);
-}
-
-void frmWelcome::OnLoadModCoH(wxCommandEvent &event)
-{
-    UNUSED(event);
-    TheConstruct->DoLoadMod(wxT(""), ConstructFrame::LM_CoH_OF);
 }
 
 frmWelcome::~frmWelcome() = default;
