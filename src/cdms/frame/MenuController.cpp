@@ -30,14 +30,15 @@ void MenuController::Build(wxFrame *pFrame, ToolRegistry &registry, RelicToolRes
     // File menu
     auto *pMenu_File = new wxMenu;
     pMenu_File->Append(wxID_NEW, AppStr(new_mod_menu), AppStr(new_mod));
+    pMenu_File->Append(IDM_LoadModDE, AppStr(open_modde_menu), AppStr(open_modde_help));
+    pMenu_File->Append(IDM_LoadModSS, AppStr(open_modss_menu), AppStr(open_modss_help));
+    pMenu_File->Append(IDM_LoadSga, AppStr(open_sga_menu), AppStr(open_sga_help));
+    pMenu_File->AppendSeparator();
     pMenu_File->Append(IDM_LoadModDoWWA, AppStr(open_mod_menu), AppStr(open_mod_help));
     pMenu_File->Append(IDM_LoadModDC, AppStr(open_moddc_menu), AppStr(open_moddc_help));
-    pMenu_File->Append(IDM_LoadModSS, AppStr(open_modss_menu), AppStr(open_modss_help));
-    pMenu_File->Append(IDM_LoadModDE, AppStr(open_modde_menu), AppStr(open_modde_help));
     pMenu_File->Append(IDM_LoadModCoH, AppStr(open_modcoh_menu), AppStr(open_modcoh_help));
-    pMenu_File->Append(IDM_LoadSga, AppStr(open_sga_menu), AppStr(open_sga_help));
-    pMenu_File->Append(wxID_CLOSE, AppStr(close_mod_menu), AppStr(close_mod_help));
     pMenu_File->AppendSeparator();
+    pMenu_File->Append(wxID_CLOSE, AppStr(close_mod_menu), AppStr(close_mod_help));
     pMenu_File->Append(wxID_EXIT, AppStr(exit_menu), AppStr(exit_help));
     pMenu_File->Enable(wxID_CLOSE, false);
 
