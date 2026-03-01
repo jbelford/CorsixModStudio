@@ -380,8 +380,9 @@ void frmScarEditor::OnCharAdded(wxStyledTextEvent &event)
         m_pSTC->SetLineIndentation(iCurrentLine, iLineIndentation);
         m_pSTC->LineEnd();
     }
-    else if ((char)event.GetKey() == '(')
+    else if ((char)event.GetKey() == '(' && !m_bLspOpen)
     {
+        // Legacy SCAR reference calltip — skipped when LSP handles signature help natively
         _PushThisCalltip();
         int iPos = m_pSTC->GetCurrentPos() - 1;
         int iWordPos = m_pSTC->WordStartPosition(iPos, false);
@@ -423,57 +424,6 @@ void frmScarEditor::OnCharAdded(wxStyledTextEvent &event)
         {
             m_pSTC->CallTipCancel();
         }
-
-        // Fall back to LSP signature help when no SCAR match found
-        if (m_bLspOpen)
-        {
-            auto *pFrame = GetConstruct();
-            auto *pClient = pFrame ? pFrame->GetLspClient() : nullptr;
-            if (pClient)
-            {
-                int line = m_pSTC->LineFromPosition(m_pSTC->GetCurrentPos());
-                int col = m_pSTC->GetCurrentPos() - m_pSTC->PositionFromLine(line);
-                // Remap cursor position to translated coordinates for LSP
-                lsp::Position lspPos{line, col};
-                if (m_lspTranslation)
-                {
-                    lspPos = lsp::CScarAnnotationTranslator::MapToTranslated(*m_lspTranslation, lspPos);
-                }
-                int wordPos = iWordPos;
-                pClient->RequestSignatureHelp(
-                    m_sLspUri, lspPos.line, lspPos.character,
-                    [this, wordPos](std::optional<lsp::SignatureHelp> help)
-                    {
-                        if (!help || help->signatures.empty())
-                        {
-                            return;
-                        }
-                        const auto &sig = help->signatures[static_cast<size_t>(help->activeSignature)];
-                        wxString tip = wxString::FromUTF8(sig.label);
-                        if (sig.documentation)
-                        {
-                            tip += wxT("\n") + wxString::FromUTF8(*sig.documentation);
-                        }
-                        m_pSTC->CallTipSetBackground(ThemeColours::CallTipBg());
-                        m_pSTC->CallTipSetForeground(ThemeColours::CallTipFg());
-                        m_pSTC->CallTipShow(wordPos, tip);
-
-                        // Highlight the active parameter
-                        if (!sig.parameters.empty() && help->activeParameter < static_cast<int>(sig.parameters.size()))
-                        {
-                            const auto &param = sig.parameters[static_cast<size_t>(help->activeParameter)];
-                            size_t hlStart = sig.label.find(param.label);
-                            if (hlStart != std::string::npos)
-                            {
-                                m_pSTC->CallTipSetHighlight(static_cast<int>(hlStart),
-                                                            static_cast<int>(hlStart + param.label.size()));
-                            }
-                        }
-                    });
-                return;
-            }
-        }
-
         m_pSTC->CallTipSetBackground(ThemeColours::CallTipBg());
         m_pSTC->CallTipSetForeground(ThemeColours::CallTipFg());
         m_oThisCalltip.sTip = wxT("No help available");
@@ -481,7 +431,11 @@ void frmScarEditor::OnCharAdded(wxStyledTextEvent &event)
     }
     else if ((char)event.GetKey() == '_')
     {
-        ShowAutoComplete();
+        // Legacy autocomplete trigger — skip when LSP handles completions
+        if (!m_bLspOpen)
+        {
+            ShowAutoComplete();
+        }
     }
     else if ((char)event.GetKey() == ')')
     {
