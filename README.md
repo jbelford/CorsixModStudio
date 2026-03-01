@@ -1,8 +1,8 @@
-# CorsixModStudio — Modernization Project
+# Corsix's Mod Studio: Definitive Edition
 
-## What is CorsixModStudio?
+## What is Corsix's Mod Studio?
 
-CorsixModStudio (CDMS) is a modding IDE for Relic Entertainment's games — primarily **Dawn of War** (and its expansions Dark Crusade, Soulstorm, Winter Assault) and **Company of Heroes**. Originally written by [Corsix](mailto:corsix@gmail.com) around 2006–2007, it provides a comprehensive suite of tools for creating and editing game mods:
+Corsix's Mod Studio: Definitive Edition (CDMS) is a modding IDE for Relic Entertainment's games — primarily **Dawn of War** (and its expansions Dark Crusade, Soulstorm, Winter Assault) and **Company of Heroes**. Originally written by [Corsix](mailto:corsix@gmail.com) around 2006–2007, it provides a comprehensive suite of tools for creating and editing game mods:
 
 - **Mod management** — create, load, and configure game mods with dependency tracking
 - **File editors** — visual editors for RGD (game data), UCS (localization strings), SCAR (scripts), and RGM (materials)

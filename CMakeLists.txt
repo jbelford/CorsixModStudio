@@ -8,7 +8,7 @@ endif()
 
 project(CorsixModStudio
     VERSION 0.5.7
-    DESCRIPTION "Dawn of War / Company of Heroes Modding IDE"
+    DESCRIPTION "Corsix's Mod Studio: Definitive Edition - Dawn of War / Company of Heroes Modding IDE"
     LANGUAGES C CXX
 )
 

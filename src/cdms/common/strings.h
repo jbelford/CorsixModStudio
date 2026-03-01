@@ -51,9 +51,9 @@
 
 /* General */
 #ifdef _DEBUG
-S(app_title, "Corsix\'s Mod Studio DEBUG")
+S(app_title, "Corsix\'s Mod Studio: Definitive Edition DEBUG")
 #else
-S(app_title, "Corsix\'s Mod Studio")
+S(app_title, "Corsix\'s Mod Studio: Definitive Edition")
 #endif
 S(app_version, "0.5.7")
 SE(app_name, wxString().Append(AppStr(app_title)).Append(wxT(" ")).Append(AppStr(app_version)))

@@ -44,7 +44,7 @@ frmCredits::frmCredits()
                         "MasterofOblivion, Rick Funk\n"));
     sCredits.Append(
         wxT("\nThis program is free software licensed under the GNU GPL.  Email modstudio@corsix.org for details\n"
-            "Modern code is located at github.com/jbelford/CorsixModStudio"));
+            "Definitive Edition code is located at github.com/jbelford/CorsixModStudio"));
 
     m_pLoadingImage = std::make_unique<wxBitmap>(wxT("RIDB_LOADING"), wxBITMAP_TYPE_BMP_RESOURCE);
     m_pText = new wxStaticText(this, -1, sCredits, FromDIP(wxPoint(0, 317)), FromDIP(wxSize(384, 167)),
