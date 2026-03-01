@@ -253,6 +253,7 @@ void frmScarEditor::ShowAutoComplete()
                                            }
 
                                            _PushThisCalltip();
+                                           m_pSTC->AutoCompSetOrder(wxSTC_ORDER_CUSTOM);
                                            m_pSTC->AutoCompShow(iWordLen, sItems);
                                        });
         }
@@ -335,6 +336,7 @@ void frmScarEditor::ShowAutoComplete()
     }
 
     _PushThisCalltip();
+    m_pSTC->AutoCompSetOrder(wxSTC_ORDER_PRESORTED);
     m_pSTC->AutoCompShow(iWordLen, sItems);
 }
 
