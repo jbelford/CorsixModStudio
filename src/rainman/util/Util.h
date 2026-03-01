@@ -53,7 +53,8 @@ RAINMAN_API char *Rainman_GetDCPath();
 
 //! Retrieves the Dawn of War: Soul Storm installation path
 /*!
-    Looks for the DoW:SS installation path in the registry,
+    Looks for the DoW:SS installation path via Steam uninstall registry,
+    then THQ registry key (including WOW6432Node for 64-bit),
     if not found returns default install location
 
     \return Returns a valid pointer or throws a CRainmanException

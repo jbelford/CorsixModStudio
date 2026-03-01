@@ -121,8 +121,10 @@ RAINMAN_API char *Rainman_GetSSPath()
 {
     /*
         Checks the Windows registry for the Dawn of War: Soulstorm installation path. Looks at (in order):
+        HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 9450\
         HKEY_LOCAL_MACHINE\Software\THQ\Dawn of War - Soulstorm\
-        If neither of these are found then the default DoW:SS installation path is returned (incase the DoW:SS install
+        HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\THQ\Dawn of War - Soulstorm\
+        If none of these are found then the default DoW:SS installation path is returned (incase the DoW:SS install
        didn't do its registry bit correctly)
     */
     char *sDoWPath = nullptr;
@@ -135,9 +137,38 @@ RAINMAN_API char *Rainman_GetSSPath()
     long iReturnVal;
     HKEY hkey;
 
-    // Try to open the DoW:DC registry key
+    // Try the Steam uninstall registry key for Soulstorm
+    iReturnVal =
+        RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Steam App 9450\\",
+                     NULL, KEY_QUERY_VALUE, &hkey);
+    if (iReturnVal == ERROR_SUCCESS)
+    {
+        t = dataLen;
+        iReturnVal = RegQueryValueEx(hkey, "InstallLocation", nullptr, nullptr, (LPBYTE)sDoWPath, &t);
+        RegCloseKey(hkey);
+        if (iReturnVal == ERROR_SUCCESS)
+        {
+            return sDoWPath;
+        }
+    }
+
+    // Try to open the DoW:SS registry key
     iReturnVal =
         RegOpenKeyEx(HKEY_LOCAL_MACHINE, "Software\\THQ\\Dawn of War - Soulstorm\\", NULL, KEY_QUERY_VALUE, &hkey);
+    if (iReturnVal == ERROR_SUCCESS)
+    {
+        t = dataLen;
+        iReturnVal = RegQueryValueEx(hkey, "InstallLocation", nullptr, nullptr, (LPBYTE)sDoWPath, &t);
+        RegCloseKey(hkey);
+        if (iReturnVal == ERROR_SUCCESS)
+        {
+            return sDoWPath;
+        }
+    }
+
+    // Try the WOW6432Node path for 64-bit systems (32-bit THQ installer writes here)
+    iReturnVal = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\WOW6432Node\\THQ\\Dawn of War - Soulstorm\\", NULL,
+                              KEY_QUERY_VALUE, &hkey);
     if (iReturnVal == ERROR_SUCCESS)
     {
         t = dataLen;
