@@ -351,6 +351,17 @@ void ConstructFrame::OnLspToggle(wxCommandEvent &event)
     }
 }
 
+void ConstructFrame::OnPreviewToggle(wxCommandEvent &event)
+{
+    bool bEnabled = event.IsChecked();
+    TheConfig->Write(AppStr(config_preview_enabled), bEnabled);
+
+    if (!bEnabled)
+    {
+        m_tabManager.ClosePreviewTab();
+    }
+}
+
 void ConstructFrame::OnLspStatusTimer(wxTimerEvent &event)
 {
     UNUSED(event);

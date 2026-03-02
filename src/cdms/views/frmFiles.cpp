@@ -28,6 +28,7 @@
 #include "frame/Construct.h"
 #include "common/strconv.h"
 #include "common/strings.h"
+#include "common/config.h"
 #include "common/Utility.h"
 #include "common/ThemeColours.h"
 #include "presenters/CFileTreePresenter.h"
@@ -526,6 +527,14 @@ void frmFiles::OnNodeSelected(wxTreeEvent &event)
         {
             m_pTree->Toggle(oItem);
         }
+        return;
+    }
+
+    // Skip preview if file preview is disabled in View menu
+    bool bPreviewEnabled = true;
+    TheConfig->Read(AppStr(config_preview_enabled), &bPreviewEnabled, true);
+    if (!bPreviewEnabled)
+    {
         return;
     }
 

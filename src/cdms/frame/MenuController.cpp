@@ -76,6 +76,13 @@ void MenuController::Build(wxFrame *pFrame, ToolRegistry &registry, RelicToolRes
     pMenu_View->Check(IDM_LspEnabled, bLspEnabled);
     pConstruct->Bind(wxEVT_MENU, &ConstructFrame::OnLspToggle, pConstruct, IDM_LspEnabled);
 
+    // File preview toggle
+    pMenu_View->AppendCheckItem(IDM_PreviewEnabled, AppStr(view_preview_enabled), AppStr(view_preview_enabled_help));
+    bool bPreviewEnabled = true;
+    TheConfig->Read(AppStr(config_preview_enabled), &bPreviewEnabled, true);
+    pMenu_View->Check(IDM_PreviewEnabled, bPreviewEnabled);
+    pConstruct->Bind(wxEVT_MENU, &ConstructFrame::OnPreviewToggle, pConstruct, IDM_PreviewEnabled);
+
     // Mod menu
     auto *pMenu_Mod = new wxMenu;
     pMenu_Mod->Append(wxID_PROPERTIES, AppStr(mod_properties_menu), AppStr(mod_properties_help));

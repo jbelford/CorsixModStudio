@@ -109,6 +109,7 @@ class ConstructFrame : public wxFrame, public IMainFrameView
     void LaunchGitHubRepo(wxCommandEvent &event);
     void OnThemeChange(wxCommandEvent &event);
     void OnLspToggle(wxCommandEvent &event);
+    void OnPreviewToggle(wxCommandEvent &event);
     void OnLspStatusTimer(wxTimerEvent &event);
 
     /// Refresh the LSP status indicator in the status bar.
@@ -205,6 +206,8 @@ enum
     IDM_ThemeDark,
     // View Menu — Language Server
     IDM_LspEnabled,
+    // View Menu — File Preview
+    IDM_PreviewEnabled,
 
     // Accelerators
     IDM_SaveActive,
