@@ -4,16 +4,15 @@
 
 Corsix's Mod Studio: Definitive Edition (CDMS) is a modding IDE for Relic Entertainment's games — primarily **Dawn of War** (and its expansions Dark Crusade, Soulstorm, Winter Assault) and **Company of Heroes**. Originally written by [Corsix](mailto:corsix@gmail.com) around 2006–2007, this Definitive Edition is a ground-up modernization of the original codebase, bringing it to C++20, 64-bit, and modern tooling while preserving full compatibility with Relic's game file formats.
 
-### Features
+### New Features and Changes
 
-- **Mod management** — create, load, and configure game mods with dependency tracking
-- **File editors** — visual editors for RGD (game data), UCS (localization strings), SCAR (scripts), RGM (materials), and NIS (cutscene scripts)
 - **SCAR editor with Lua Language Server** — real-time diagnostics, autocomplete, hover-to-inspect, go-to-definition, and find-in-file powered by [LuaLS](https://github.com/LuaLS/lua-language-server), with SCAR API stubs for full engine function coverage
-- **Archive tools** — read, extract, and create SGA archives (Relic's proprietary game archive format) with parallel compression
-- **Lua integration** — inheritance tree viewer, script editor, and Lua runtime for data manipulation
-- **Build pipeline** — compile and package mods into distributable SGA archives
-- **Async operations** — background module loading with progress reporting and cancellation
-- **DPI-aware SVG icons** — scalable, color-coded file type icons using the Lucide icon set
+  - **Hotkey Improvements** - Added some common hotkeys to make editor feel more modern. Save with CTRL+S. Use CTRL + TAB to switch tabs. Close tab with CTRL + W. Show autocomplete suggestions with CTRL + SPACE. Etc.
+- **Preview Tab** - Files will open preview on one click for faster navigation
+- **Performance Improvements** — uses multithreading to improve load times and UI responsiveness
+- **DPI-aware Scaling** — updated icons and graphics for modern systems
+- **Dark Mode** - Configurable theming with dark mode support
+- **Removed broken functionality** - Trimmed out or hid functionality that was never used such as the developers big red button, etc.
 
 The software was released as open source under the **GNU GPL v2** (CDMS app) and **GNU LGPL v2.1** (Rainman library).
 
@@ -106,55 +105,6 @@ The SCAR editor integrates [LuaLS](https://github.com/LuaLS/lua-language-server)
 
 See [`docs/lua-language-server-integration.md`](docs/lua-language-server-integration.md) for detailed documentation.
 
-## Project Structure
-
-```
-CorsixModStudio/
-├── CMakeLists.txt                  # Top-level CMake build
-├── CMakePresets.json               # Build presets (default, tidy, debug, release)
-├── vcpkg.json                      # Dependency manifest
-├── triplets/                       # Custom vcpkg triplets (static CRT, wxWidgets fixes)
-├── src/
-│   ├── rainman/                    # Rainman library (static lib)
-│   │   ├── CMakeLists.txt
-│   │   ├── core/                   # Exceptions, logging (spdlog), callbacks, API macros, CThreadPool
-│   │   ├── io/                     # IFileStore, CMemoryStore, CFileSystemStore, StreamGuard
-│   │   ├── archive/                # CSgaFile, CSgaCreator (parallel compression)
-│   │   ├── formats/                # CRgdFile, CChunkyFile, CRgtFile, CRgmFile, CBfxFile
-│   │   ├── lua/                    # CLuaFile, CInheritTable, CLuaScript, CLuaFileCache
-│   │   ├── localization/           # CUcsFile, CCohUcsFile, CUcsMap, CUcsTransaction
-│   │   ├── module/                 # CModuleFile, CDoWModule, CDoWFileView, CResourceLoader
-│   │   ├── util/                   # CRC32, hash, MD5
-│   │   └── vendor/                 # Vendored Lua 5.0.2 + 5.1.2 (do not modify)
-│   └── cdms/                       # CDMS GUI application (wxWidgets 3.2)
-│       ├── CMakeLists.txt
-│       ├── presenters/             # 14 MVP presenters (business logic)
-│       ├── views/                  # wxWidgets frames + view interfaces
-│       │   ├── interfaces/         # 16 I*View pure-virtual interfaces
-│       │   ├── frm*.cpp/h          # Concrete wxWidgets frames
-│       │   ├── FindBar.cpp/h       # VS Code-style find-in-file
-│       │   ├── CHoverPopup.cpp/h   # Rich hover popup with syntax highlighting
-│       │   └── CLspStatusPanel.*   # LSP status bar indicator
-│       ├── services/               # Result<T>, ModuleService, FileService, etc.
-│       ├── async/                  # CTaskRunner, CWxTaskRunner, CCancellationToken
-│       ├── actions/                # File-type action handlers (incl. NIS support)
-│       ├── res/                    # SVG icons (Lucide, DPI-aware)
-│       ├── frame/                  # Main window, AUI notebook management
-│       ├── common/                 # Common.h, strconv, config, strings
-│       └── tools/                  # ITool interface and tool implementations
-├── tests/
-│   ├── rainman/                    # Rainman unit tests (Google Test)
-│   └── cdms/                       # CDMS unit tests (Google Test, incl. presenter mocks)
-├── tools/
-│   ├── run-clang-tidy.ps1          # Static analysis runner
-│   ├── scar-to-luadefs.py          # SCAR → LuaLS stub generator
-│   ├── scardoc-to-luadefs.py       # ScarDoc HTML → LuaLS stub generator
-│   └── git-hooks/                  # Pre-commit / post-commit hooks
-├── docs/                           # Architecture docs, file format specs, LSP integration
-├── Mod_Studio_Files/               # Runtime data files (game definitions, templates)
-└── CDMSSrc_055/                    # Original source code (read-only reference)
-```
-
 ## Building
 
 ### Prerequisites
@@ -195,56 +145,6 @@ cmake --build --preset tidy-debug
 - **wxWidgets 3.x** — GUI framework
 - **spdlog** — structured logging
 
-### Release Build Optimizations
-
-The release configuration enables link-time optimization (`/GL` + `/LTCG`), global data optimization (`/Gw`), dead-code elimination (`/OPT:REF,ICF`), and static CRT linking (`/MT`) via a custom vcpkg overlay triplet.
-
-## What's New in the Definitive Edition
-
-A summary of major improvements over the original 2006 codebase:
-
-### Modern C++ & 64-bit
-
-- Full C++20 compilation with MSVC 2026 (x64)
-- Smart pointer refactoring: 19 classes converted from raw `new`/`delete`/`strdup`/`free` to `std::unique_ptr`, `std::shared_ptr`, `std::string`
-- Stack-based exception handling (no heap-allocated exceptions)
-- Thread pool (`CThreadPool`) replaces scattered `std::async` calls
-- Parallel SGA archive compression and mod resource loading
-
-### Lua Language Server (LuaLS) for SCAR Editing
-
-- Real-time diagnostics, autocomplete, hover-to-inspect, and go-to-definition
-- Auto-generated SCAR API stubs covering ~500 (DoW) and ~1000+ (CoH) engine functions
-- On-the-fly translation of Relic's `--?` doc comments to LuaLS `---@` annotations
-- Status bar indicator and View menu toggle
-
-### Model-View-Presenter Architecture
-
-- 14 presenters and 16 view interfaces decouple business logic from wxWidgets
-- Presenters are unit-testable with mock view implementations
-- Async task runners (`CTaskRunner` / `CWxTaskRunner`) with cancellation and progress
-
-### Editor Improvements
-
-- Find-in-file (Ctrl+F) with match highlighting, count display, and keyboard navigation
-- Rich hover popup with syntax-highlighted signatures and markdown descriptions
-- NIS (Non-Interactive Sequence / cutscene script) file type support
-- Improved file tree with expand/collapse navigation and default file icons
-
-### DPI-Aware SVG Icon System
-
-- Lucide icon set (MIT license) rendered via `wxBitmapBundle::FromSVG()`
-- Color-coded by file type: scripts, game data, textures, models, cutscenes
-- Scales cleanly at any DPI
-
-### Build & Quality
-
-- CMake presets with vcpkg integration (one-command build)
-- 635 unit tests across Rainman and CDMS layers
-- clang-tidy static analysis with `run-clang-tidy.ps1` script
-- Release build with LTO, static CRT, and dead-code elimination
-- spdlog structured logging throughout
-
 ## Key Technical Decisions
 
 ### Lua Strategy
@@ -263,34 +163,6 @@ The original bundled a modified zlib with a custom `crc32_case_idt()` function f
 ### Static vs Dynamic Library
 
 Rainman was originally a DLL (`__declspec(dllexport/import)`). We build it as a **static library** for simplicity — the only consumer is the CDMS executable. The `RAINMAN_NO_EXPORTS` define makes `RAINMAN_API` expand to nothing.
-
-## Contributing
-
-### Conventions
-
-- **Naming**: `C` prefix for concrete classes, `I` for interfaces, `V` for virtual methods, `m_` with Hungarian prefixes for members. CDMS window classes use `frm` prefix (`frmRgdEditor`), event IDs use `ID_` prefix.
-- **Error handling**: Stack-based exceptions (`throw CRainmanException(...)`, catch by `const CRainmanException &`). In the service layer, convert to `Result<T>` via `ResultFromException()`.
-- **Include order**: CDMS `.cpp` files include `Common.h` first, then Rainman headers (with fully-qualified `rainman/` prefix).
-- **Concurrency**: Use `CThreadPool::Instance().Submit()` (`rainman/core/CThreadPool.h`) instead of `std::async`.
-- **Stream ownership**: `VOpenStream()` / `VOpenOutputStream()` return caller-owned heap-allocated streams — the caller must `delete` them.
-- **Source discovery**: Production sources are auto-discovered via `file(GLOB)`. Test files must be explicitly listed in their `CMakeLists.txt`.
-- **MVP pattern**: New editors should follow the presenter/view-interface pattern. Presenters depend on `I*View` interfaces, not concrete frames.
-- **Git**: Never use `git commit --amend`. Always create new commits.
-
-### Modern C++ — Boy-Scout Rule
-
-This codebase follows a **boy-scout modernization** approach: when touching existing code, improve it toward modern C++20 if the change is safe and localized. Examples:
-
-- `NULL` → `nullptr`
-- Add `override` to virtual method overrides
-- Replace raw `new[]`/`delete[]` with `std::vector` or `std::unique_ptr` (internal code only)
-- C-style casts → `static_cast`/`reinterpret_cast`
-- Index-based loops → range-based `for`
-- Add `const` to parameters and methods that don't mutate
-
-**Preserve** at API boundaries: `unsigned long` in existing virtual signatures, `RAINMAN_API` macro, `C`/`I`/`V`/`m_` naming conventions, include guards (`_C_CLASS_NAME_H_` style), LGPL headers, and vendored Lua code.
-
-For detailed AI-assisted development guidelines, see [`.github/copilot-instructions.md`](.github/copilot-instructions.md).
 
 ## Documentation
 
