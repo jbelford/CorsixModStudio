@@ -70,11 +70,7 @@ EVT_MENU(IDM_CloseActiveTab, ConstructFrame::OnCloseActiveTab)
 EVT_MENU(IDM_NextTab, ConstructFrame::OnNextTab)
 EVT_MENU(IDM_FindInFile, ConstructFrame::OnFindInFile)
 
-EVT_MENU(IDM_PlayCOH, ConstructFrame::LaunchCOH)
-EVT_MENU(IDM_PlayW40k, ConstructFrame::LaunchW40k)
-EVT_MENU(IDM_PlayWXP, ConstructFrame::LaunchW40kWA)
-EVT_MENU(IDM_PlayDC, ConstructFrame::LaunchDC)
-EVT_MENU(IDM_PlaySS, ConstructFrame::LaunchSS)
+EVT_MENU(IDM_PlayMod, ConstructFrame::LaunchMod)
 EVT_MENU(IDM_PlayWarn, ConstructFrame::LaunchWarnings)
 EVT_MENU(wxID_HELP_CONTENTS, ConstructFrame::LaunchHelp)
 EVT_MENU(IDM_Credits, ConstructFrame::LaunchCredits)
@@ -399,175 +395,52 @@ void ConstructFrame::UpdateLspStatus()
 
 wxAuiNotebook *ConstructFrame::GetTabs() { return m_tabManager.GetTabs(); }
 
-void ConstructFrame::LaunchW40k(wxCommandEvent &event)
+void ConstructFrame::LaunchMod(wxCommandEvent &event)
 {
     UNUSED(event);
-    wxString sCommand, sFolder, sCmdLine;
-    try
+    if (!m_moduleManager.GetModule())
     {
-        sFolder = ConfGetDoWFolder();
-    }
-    catch (const CRainmanException &e)
-    {
-        ErrorBoxE(e);
         return;
     }
-    sCommand = sFolder;
-    sCommand.Append(wxT("W40k.exe"));
-    sCmdLine = wxT("");
-    if (m_moduleManager.GetModule())
+
+    wxString sModuleFile = m_moduleManager.GetModuleFile();
+    wxString sFolder = sModuleFile.BeforeLast('\\');
+    if (!sFolder.EndsWith(wxT("\\")))
     {
-        sCmdLine = m_moduleManager.GetModuleFile();
-        sCmdLine = sCmdLine.BeforeLast('.');
-        sCmdLine = sCmdLine.AfterLast('\\');
-        sCmdLine.Prepend(wxT("-modname "));
+        sFolder.Append(wxT("\\"));
     }
 
-    if (GetMenuBar()->GetMenu(4)->FindItem(IDM_PlayDev)->IsChecked())
+    // Scan for known executables in priority order
+    static const wxChar *kExeNames[] = {wxT("Soulstorm.exe"), wxT("DarkCrusade.exe"), wxT("W40kWA.exe"),
+                                        wxT("W40k.exe"), wxT("RelicCOH.exe")};
+    wxString sCommand;
+    for (const auto *exe : kExeNames)
     {
-        sCmdLine.Append(wxT(" -dev"));
-    }
-    if (GetMenuBar()->GetMenu(4)->FindItem(IDM_PlayNoMovies)->IsChecked())
-    {
-        sCmdLine.Append(wxT(" -nomovies"));
+        wxString sCandidate = sFolder + exe;
+        if (wxFileExists(sCandidate))
+        {
+            sCommand = sCandidate;
+            break;
+        }
     }
 
-    ShellExecute((HWND)TheConstruct->GetHandle(), wxT("open"), sCommand, sCmdLine, sFolder, 3);
-}
-
-void ConstructFrame::LaunchDC(wxCommandEvent &event)
-{
-    UNUSED(event);
-    wxString sCommand, sFolder, sCmdLine;
-    try
+    if (sCommand.IsEmpty())
     {
-        sFolder = ConfGetDCFolder();
-    }
-    catch (const CRainmanException &e)
-    {
-        ErrorBoxE(e);
+        wxMessageBox(AppStr(play_no_exe), AppStr(app_title), wxOK | wxICON_ERROR, this);
         return;
     }
-    sCommand = sFolder;
-    sCommand.Append(wxT("DarkCrusade.exe"));
-    sCmdLine = wxT("");
-    if (m_moduleManager.GetModule())
-    {
-        sCmdLine = m_moduleManager.GetModuleFile();
-        sCmdLine = sCmdLine.BeforeLast('.');
-        sCmdLine = sCmdLine.AfterLast('\\');
-        sCmdLine.Prepend(wxT("-modname "));
-    }
 
-    if (GetMenuBar()->GetMenu(4)->FindItem(IDM_PlayDev)->IsChecked())
-    {
-        sCmdLine.Append(wxT(" -dev"));
-    }
-    if (GetMenuBar()->GetMenu(4)->FindItem(IDM_PlayNoMovies)->IsChecked())
-    {
-        sCmdLine.Append(wxT(" -nomovies"));
-    }
-
-    ShellExecute((HWND)TheConstruct->GetHandle(), wxT("open"), sCommand, sCmdLine, sFolder, 3);
-}
-
-void ConstructFrame::LaunchSS(wxCommandEvent &event)
-{
-    UNUSED(event);
-    wxString sCommand, sFolder, sCmdLine;
-    try
-    {
-        sFolder = ConfGetDCFolder();
-    }
-    catch (const CRainmanException &e)
-    {
-        ErrorBoxE(e);
-        return;
-    }
-    sCommand = sFolder;
-    sCommand.Append(wxT("Soulstorm.exe"));
-    sCmdLine = wxT("");
-    if (m_moduleManager.GetModule())
-    {
-        sCmdLine = m_moduleManager.GetModuleFile();
-        sCmdLine = sCmdLine.BeforeLast('.');
-        sCmdLine = sCmdLine.AfterLast('\\');
-        sCmdLine.Prepend(wxT("-modname "));
-    }
-
-    if (GetMenuBar()->GetMenu(4)->FindItem(IDM_PlayDev)->IsChecked())
-    {
-        sCmdLine.Append(wxT(" -dev"));
-    }
-    if (GetMenuBar()->GetMenu(4)->FindItem(IDM_PlayNoMovies)->IsChecked())
-    {
-        sCmdLine.Append(wxT(" -nomovies"));
-    }
-
-    ShellExecute((HWND)TheConstruct->GetHandle(), wxT("open"), sCommand, sCmdLine, sFolder, 3);
-}
-
-void ConstructFrame::LaunchCOH(wxCommandEvent &event)
-{
-    UNUSED(event);
-    wxString sCommand, sFolder, sCmdLine;
-    try
-    {
-        sFolder = ConfGetCoHFolder();
-    }
-    catch (const CRainmanException &e)
-    {
-        ErrorBoxE(e);
-        return;
-    }
-    sCommand = sFolder;
-    if (sCommand.Last() != wxChar('\\'))
-    {
-        sCommand.Append(wxT("\\"));
-    }
-    sCommand.Append(wxT("RelicCOH.exe"));
-    sCmdLine = wxT("");
-    if (m_moduleManager.GetModule())
+    // Build -modname argument
+    wxString sCmdLine;
+    if (GetModuleService().GetModuleType() != CModuleFile::MT_DawnOfWar)
     {
         sCmdLine = AsciiTowxString(m_moduleManager.GetModule()->GetName());
-        sCmdLine.Prepend(wxT("-modname "));
     }
-
-    if (GetMenuBar()->GetMenu(4)->FindItem(IDM_PlayDev)->IsChecked())
+    else
     {
-        sCmdLine.Append(wxT(" -dev"));
+        sCmdLine = sModuleFile.BeforeLast('.').AfterLast('\\');
     }
-    if (GetMenuBar()->GetMenu(4)->FindItem(IDM_PlayNoMovies)->IsChecked())
-    {
-        sCmdLine.Append(wxT(" -nomovies"));
-    }
-
-    ShellExecute((HWND)TheConstruct->GetHandle(), wxT("open"), sCommand, sCmdLine, sFolder, 3);
-}
-
-void ConstructFrame::LaunchW40kWA(wxCommandEvent &event)
-{
-    UNUSED(event);
-    wxString sCommand, sFolder, sCmdLine;
-    try
-    {
-        sFolder = ConfGetDoWFolder();
-    }
-    catch (const CRainmanException &e)
-    {
-        ErrorBoxE(e);
-        return;
-    }
-    sCommand = sFolder;
-    sCommand.Append(wxT("W40kWA.exe"));
-    sCmdLine = wxT("");
-    if (m_moduleManager.GetModule())
-    {
-        sCmdLine = m_moduleManager.GetModuleFile();
-        sCmdLine = sCmdLine.BeforeLast('.');
-        sCmdLine = sCmdLine.AfterLast('\\');
-        sCmdLine.Prepend(wxT("-modname "));
-    }
+    sCmdLine.Prepend(wxT("-modname "));
 
     if (GetMenuBar()->GetMenu(4)->FindItem(IDM_PlayDev)->IsChecked())
     {
@@ -595,14 +468,10 @@ void ConstructFrame::LaunchWarnings(wxCommandEvent &event)
     }
     else
     {
-        try
+        sFolder = m_moduleManager.GetModuleFile().BeforeLast('\\');
+        if (!sFolder.EndsWith(wxT("\\")))
         {
-            sFolder = ConfGetDoWFolder();
-        }
-        catch (const CRainmanException &e)
-        {
-            ErrorBoxE(e);
-            return;
+            sFolder.Append(wxT("\\"));
         }
         sCommand = wxT("\"");
         sCommand.Append(sFolder);
@@ -867,37 +736,14 @@ void ConstructFrame::SetModule(CModuleFile *pMod, const wxString &sModuleFile)
                 m_tabManager.GetTabs()->DeletePage(0);
             }
 
-            GetMenuBar()->GetMenu(4)->Enable(IDM_PlayCOH, false);
-            GetMenuBar()->GetMenu(4)->Enable(IDM_PlayW40k, false);
-            GetMenuBar()->GetMenu(4)->Enable(IDM_PlayWXP, false);
-            GetMenuBar()->GetMenu(4)->Enable(IDM_PlayDC, false);
-            GetMenuBar()->GetMenu(4)->Enable(IDM_PlaySS, false);
-
-            switch (pMod->GetModuleType())
-            {
-            case CModuleFile::MT_DawnOfWar:
-                GetMenuBar()->GetMenu(4)->Enable(IDM_PlayW40k, true);
-                GetMenuBar()->GetMenu(4)->Enable(IDM_PlayWXP, true);
-                GetMenuBar()->GetMenu(4)->Enable(IDM_PlayDC, true);
-                GetMenuBar()->GetMenu(4)->Enable(IDM_PlaySS, true);
-                break;
-
-            case CModuleFile::MT_CompanyOfHeroes:
-            case CModuleFile::MT_CompanyOfHeroesEarly:
-                GetMenuBar()->GetMenu(4)->Enable(IDM_PlayCOH, true);
-                break;
-            }
+            GetMenuBar()->GetMenu(4)->Enable(IDM_PlayMod, true);
         }
 
         UpdateRelicToolsState();
     }
     else
     {
-        GetMenuBar()->GetMenu(4)->Enable(IDM_PlayCOH, false);
-        GetMenuBar()->GetMenu(4)->Enable(IDM_PlayW40k, false);
-        GetMenuBar()->GetMenu(4)->Enable(IDM_PlayWXP, false);
-        GetMenuBar()->GetMenu(4)->Enable(IDM_PlayDC, false);
-        GetMenuBar()->GetMenu(4)->Enable(IDM_PlaySS, false);
+        GetMenuBar()->GetMenu(4)->Enable(IDM_PlayMod, false);
 
         if (m_tabManager.IsSplit())
         {

@@ -100,11 +100,7 @@ class ConstructFrame : public wxFrame, public IMainFrameView
     void OnToolMenuCommand(wxCommandEvent &event);
     void OnRelicToolCommand(wxCommandEvent &event);
     void UpdateRelicToolsState();
-    void LaunchCOH(wxCommandEvent &event);
-    void LaunchW40k(wxCommandEvent &event);
-    void LaunchW40kWA(wxCommandEvent &event);
-    void LaunchDC(wxCommandEvent &event);
-    void LaunchSS(wxCommandEvent &event);
+    void LaunchMod(wxCommandEvent &event);
     void LaunchWarnings(wxCommandEvent &event);
     void LaunchCredits(wxCommandEvent &event);
     void LaunchHelp(wxCommandEvent &event);
@@ -194,11 +190,7 @@ enum
     IDM_RelicToolBase,
     IDM_RelicToolLast = IDM_RelicToolBase + 19, // Reserve 20 slots for Relic tools
                                                 // Play Menu
-    IDM_PlayCOH,
-    IDM_PlayW40k,
-    IDM_PlayWXP,
-    IDM_PlayDC,
-    IDM_PlaySS,
+    IDM_PlayMod,
     IDM_PlayWarn,
     IDM_PlayDev,
     IDM_PlayNoMovies,

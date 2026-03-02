@@ -100,21 +100,13 @@ void MenuController::Build(wxFrame *pFrame, ToolRegistry &registry, RelicToolRes
 
     // Play menu
     auto *pMenu_Play = new wxMenu;
-    pMenu_Play->Append(IDM_PlayCOH, AppStr(play_coh), AppStr(play_coh_help));
-    pMenu_Play->Append(IDM_PlayW40k, AppStr(play_w40k), AppStr(play_w40k_help));
-    pMenu_Play->Append(IDM_PlayWXP, AppStr(play_wxp), AppStr(play_wxp_help));
-    pMenu_Play->Append(IDM_PlayDC, AppStr(play_dc), AppStr(play_dc_help));
-    pMenu_Play->Append(IDM_PlaySS, AppStr(play_ss), AppStr(play_ss_help));
+    pMenu_Play->Append(IDM_PlayMod, AppStr(play_mod), AppStr(play_mod_help));
     pMenu_Play->Append(IDM_PlayWarn, AppStr(play_warn), AppStr(play_warn_help));
     pMenu_Play->AppendSeparator();
     pMenu_Play->AppendCheckItem(IDM_PlayDev, AppStr(play_dev), AppStr(play_dev_help));
     pMenu_Play->AppendCheckItem(IDM_PlayNoMovies, AppStr(play_nomov), AppStr(play_nomov_help));
     pMenu_Play->Check(IDM_PlayNoMovies, true);
-    pMenu_Play->Enable(IDM_PlayCOH, false);
-    pMenu_Play->Enable(IDM_PlayW40k, false);
-    pMenu_Play->Enable(IDM_PlayWXP, false);
-    pMenu_Play->Enable(IDM_PlayDC, false);
-    pMenu_Play->Enable(IDM_PlaySS, false);
+    pMenu_Play->Enable(IDM_PlayMod, false);
 
     // Help menu
     auto *pMenu_Help = new wxMenu;
